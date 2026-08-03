@@ -143,7 +143,7 @@ export default function FiguresPage() {
               </p>
               <Link
                 href="/policies/editorial"
-                className="display-plain mt-7 inline-block text-sm text-chalk underline decoration-steel-dim underline-offset-[6px] transition-colors duration-[140ms] ease-[var(--ease-control)] hover:decoration-signal"
+                className="display-plain mt-7 inline-flex min-h-6 items-center text-sm text-chalk underline decoration-steel-dim underline-offset-[6px] transition-colors duration-[140ms] ease-[var(--ease-control)] hover:decoration-signal"
               >
                 Editorial policy
               </Link>

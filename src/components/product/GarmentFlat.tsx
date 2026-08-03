@@ -202,7 +202,7 @@ export function GarmentFlat({
                   onFocus={() => setActiveCode(point.code)}
                   onBlur={() => setActiveCode(null)}
                   onClick={() => setActiveCode(live ? null : point.code)}
-                  className={`notation text-xs transition-colors duration-[140ms] ease-[var(--ease-control)] ${
+                  className={`notation inline-flex min-h-[24px] items-center text-xs transition-colors duration-[140ms] ease-[var(--ease-control)] ${
                     live ? "text-signal" : "text-steel hover:text-chalk"
                   }`}
                 >

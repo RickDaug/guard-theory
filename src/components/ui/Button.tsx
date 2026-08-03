@@ -14,8 +14,12 @@ import type { ComponentPropsWithoutRef, ReactNode } from "react";
  */
 type Intent = "signal" | "outline" | "quiet";
 
+/**
+ * min-h-6 is not styling — it is WCAG 2.2 SC 2.5.8, which requires a 24x24 CSS
+ * pixel target. The quiet intent has no padding to reach that on its own.
+ */
 const BASE =
-  "display-plain inline-flex items-center justify-center gap-2 text-sm no-underline transition-[background-color,border-color,color,opacity] duration-[140ms] ease-[var(--ease-control)] disabled:cursor-not-allowed disabled:opacity-45";
+  "display-plain inline-flex min-h-6 items-center justify-center gap-2 text-sm no-underline transition-[background-color,border-color,color,opacity] duration-[140ms] ease-[var(--ease-control)] disabled:cursor-not-allowed disabled:opacity-45";
 
 const INTENT: Record<Intent, string> = {
   signal: "bg-signal px-7 py-3.5 text-ink hover:opacity-85",

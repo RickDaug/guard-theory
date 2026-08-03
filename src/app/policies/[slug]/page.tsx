@@ -79,7 +79,7 @@ export default async function PolicyPage({ params }: Params) {
                 <li key={item.slug}>
                   <Link
                     href={`/policies/${item.slug}`}
-                    className="text-base text-steel no-underline transition-colors duration-[140ms] ease-[var(--ease-control)] hover:text-chalk"
+                    className="inline-flex min-h-[24px] items-center text-base text-steel no-underline transition-colors duration-[140ms] ease-[var(--ease-control)] hover:text-chalk"
                   >
                     {item.title}
                   </Link>

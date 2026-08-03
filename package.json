@@ -11,7 +11,8 @@
     "test:unit": "node --test \"tests/unit/*.test.ts\"",
     "typecheck": "tsc --noEmit",
     "screens": "playwright test --grep-invert nothing tests/screenshots",
-    "e2e": "playwright test tests/e2e"
+    "e2e": "playwright test tests/e2e",
+    "lighthouse": "node scripts/lighthouse.mjs"
   },
   "dependencies": {
     "next": "16.2.12",
@@ -19,13 +20,16 @@
     "react-dom": "19.2.4"
   },
   "devDependencies": {
+    "@axe-core/playwright": "^4.12.1",
     "@playwright/test": "^1.62.1",
     "@tailwindcss/postcss": "^4",
     "@types/node": "^20",
     "@types/react": "^19",
     "@types/react-dom": "^19",
+    "chrome-launcher": "^1.2.1",
     "eslint": "^9",
     "eslint-config-next": "16.2.12",
+    "lighthouse": "^13.4.1",
     "sharp": "^0.35.3",
     "tailwindcss": "^4",
     "typescript": "^5"

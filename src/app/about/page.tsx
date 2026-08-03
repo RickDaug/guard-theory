@@ -109,7 +109,7 @@ export default function AboutPage() {
                 <li key={item.href}>
                   <Link
                     href={item.href}
-                    className="text-base text-steel no-underline transition-colors duration-[140ms] ease-[var(--ease-control)] hover:text-chalk"
+                    className="inline-flex min-h-[24px] items-center text-base text-steel no-underline transition-colors duration-[140ms] ease-[var(--ease-control)] hover:text-chalk"
                   >
                     {item.label}
                   </Link>

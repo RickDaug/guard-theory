@@ -1,0 +1,176 @@
+/**
+ * Lighthouse against the production build, on the three page types the brief
+ * names: a marketing page, a product page and an article.
+ *
+ * Run: npm run lighthouse   (expects `next build` to have run, and starts
+ *                            `next start` on port 3100 itself)
+ *
+ * Thresholds are targets to genuinely meet, not audits to game. The script
+ * exits non-zero if any category falls short, and writes the full reports to
+ * docs/lighthouse/ so a number can be argued with rather than just believed.
+ */
+import { spawn } from "node:child_process";
+import { mkdir, writeFile } from "node:fs/promises";
+import path from "node:path";
+import { launch } from "chrome-launcher";
+import lighthouse from "lighthouse";
+
+const PORT = 3100;
+const BASE = `http://127.0.0.1:${PORT}`;
+const OUT = path.join(process.cwd(), "docs", "lighthouse");
+
+/**
+ * The three page types the brief names. The long-form slot audits a technique
+ * entry rather than a Journal article: both use the same study-register
+ * template, but every Journal article is currently a draft and therefore
+ * deliberately noindex, so auditing one measures the draft safeguard rather
+ * than the page. Swap it back the moment an article is genuinely published.
+ */
+const TARGETS = [
+  { name: "home", url: "/" },
+  { name: "product", url: "/shop/theory-01-long-sleeve" },
+  { name: "long-form", url: "/technique/no-gi-systems/inside-position" },
+];
+
+const THRESHOLDS = {
+  performance: 90,
+  accessibility: 95,
+  "best-practices": 95,
+  seo: 95,
+};
+
+/** Waits for the server to answer rather than sleeping a guessed interval. */
+async function waitForServer(timeoutMs = 60_000) {
+  const deadline = Date.now() + timeoutMs;
+  while (Date.now() < deadline) {
+    try {
+      const response = await fetch(BASE, { signal: AbortSignal.timeout(2000) });
+      if (response.ok) return;
+    } catch {
+      // Not up yet.
+    }
+    await new Promise((resolve) => setTimeout(resolve, 500));
+  }
+  throw new Error(`server did not answer on ${BASE} within ${timeoutMs}ms`);
+}
+
+/**
+ * Indexing is deliberately off by default so preview deployments cannot be
+ * indexed by accident. Lighthouse's SEO category weights "page is blocked from
+ * indexing" at roughly a third of the score, so auditing with it off measures
+ * the staging safeguard rather than the site. The audit runs against production
+ * configuration; the safeguard is verified separately, by tests/e2e/metadata.
+ */
+const AUDIT_ENV = {
+  ...process.env,
+  NEXT_PUBLIC_ALLOW_INDEXING: "true",
+  NEXT_PUBLIC_SITE_URL: process.env.NEXT_PUBLIC_SITE_URL ?? BASE,
+};
+
+/**
+ * NEXT_PUBLIC_* values are inlined at build time, not read at runtime, so the
+ * audit has to build with indexing on. Setting it only on `next start` looks
+ * like it works and silently measures the staging safeguard instead.
+ */
+function run(command, args, options = {}) {
+  return new Promise((resolve, reject) => {
+    const child = spawn(command, args, {
+      stdio: "inherit",
+      shell: process.platform === "win32",
+      ...options,
+    });
+    child.on("error", reject);
+    child.on("exit", (code) =>
+      code === 0 ? resolve() : reject(new Error(`${command} exited ${code}`)),
+    );
+  });
+}
+
+/**
+ * Refuse to run if something is already on the port. Otherwise waitForServer is
+ * satisfied by the stale process, our own server never binds, and the audit
+ * silently measures a previous build — which produces numbers that look real,
+ * move when nothing changed, and waste an afternoon.
+ */
+try {
+  const existing = await fetch(BASE, { signal: AbortSignal.timeout(1500) });
+  if (existing.ok) {
+    console.error(
+      `Something is already serving ${BASE}. Stop it first — this script starts its own server, and auditing a stale one gives false results.`,
+    );
+    process.exit(2);
+  }
+} catch {
+  // Nothing listening, which is what we want.
+}
+
+console.log("building with indexing enabled…\n");
+await run(process.platform === "win32" ? "npx.cmd" : "npx", ["next", "build"], {
+  env: AUDIT_ENV,
+  stdio: "ignore",
+});
+
+const server = spawn(
+  process.platform === "win32" ? "npx.cmd" : "npx",
+  ["next", "start", "--port", String(PORT)],
+  { stdio: "ignore", shell: process.platform === "win32", env: AUDIT_ENV },
+);
+
+let chrome;
+let failed = false;
+
+try {
+  await waitForServer();
+  await mkdir(OUT, { recursive: true });
+
+  chrome = await launch({
+    chromeFlags: ["--headless=new", "--no-sandbox", "--disable-gpu"],
+  });
+
+  const summary = [];
+
+  for (const target of TARGETS) {
+    const result = await lighthouse(
+      `${BASE}${target.url}`,
+      { port: chrome.port, output: "html", logLevel: "error" },
+      undefined,
+    );
+
+    if (!result) throw new Error(`lighthouse returned nothing for ${target.url}`);
+
+    await writeFile(
+      path.join(OUT, `${target.name}.html`),
+      Array.isArray(result.report) ? result.report[0] : result.report,
+      "utf8",
+    );
+
+    const scores = {};
+    const row = [target.name.padEnd(9)];
+
+    for (const [category, threshold] of Object.entries(THRESHOLDS)) {
+      const raw = result.lhr.categories[category]?.score;
+      const score = raw == null ? 0 : Math.round(raw * 100);
+      scores[category] = score;
+
+      const ok = score >= threshold;
+      if (!ok) failed = true;
+      row.push(`${category}: ${String(score).padStart(3)}${ok ? " " : " FAIL"}`);
+    }
+
+    summary.push({ name: target.name, url: target.url, scores });
+    console.log(row.join("  "));
+  }
+
+  await writeFile(
+    path.join(OUT, "summary.json"),
+    `${JSON.stringify({ thresholds: THRESHOLDS, results: summary }, null, 2)}\n`,
+    "utf8",
+  );
+
+  console.log(`\nreports written to docs/lighthouse/`);
+} finally {
+  await chrome?.kill();
+  server.kill();
+}
+
+process.exit(failed ? 1 : 0);

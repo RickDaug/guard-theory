@@ -65,7 +65,7 @@ export function SearchClient({ index }: { index: SearchDocument[] }) {
           </p>
           <Link
             href="/technique"
-            className="display-plain mt-6 inline-block text-sm text-chalk underline decoration-steel-dim underline-offset-[6px] transition-colors duration-[140ms] ease-[var(--ease-control)] hover:decoration-signal"
+            className="display-plain mt-6 inline-flex min-h-6 items-center text-sm text-chalk underline decoration-steel-dim underline-offset-[6px] transition-colors duration-[140ms] ease-[var(--ease-control)] hover:decoration-signal"
           >
             Browse the Technique Library instead
           </Link>

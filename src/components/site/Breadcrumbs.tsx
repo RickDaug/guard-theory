@@ -28,7 +28,9 @@ export function Breadcrumbs({ trail }: { trail: Crumb[] }) {
   return (
     <>
       <nav aria-label="Breadcrumb">
-        <ol className="m-0 flex list-none flex-wrap items-center gap-x-3 gap-y-1 p-0">
+        {/* Height reserved so a font swap in this one line cannot reflow everything
+            below it. */}
+        <ol className="m-0 flex min-h-6 list-none flex-wrap items-center gap-x-3 gap-y-1 p-0">
           {full.map((crumb, index) => {
             const isCurrent = index === full.length - 1;
             return (
@@ -40,7 +42,7 @@ export function Breadcrumbs({ trail }: { trail: Crumb[] }) {
                 ) : (
                   <Link
                     href={crumb.href}
-                    className="notation text-2xs text-steel no-underline transition-colors duration-[140ms] ease-[var(--ease-control)] hover:text-chalk"
+                    className="notation inline-flex min-h-[24px] items-center text-2xs text-steel no-underline transition-colors duration-[140ms] ease-[var(--ease-control)] hover:text-chalk"
                   >
                     {crumb.label}
                   </Link>

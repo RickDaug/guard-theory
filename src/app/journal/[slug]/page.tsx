@@ -104,7 +104,7 @@ export default async function ArticlePage({ params }: Params) {
                   </span>
                   <a
                     href={`#${section.id}`}
-                    className="text-sm text-steel no-underline transition-colors duration-[140ms] ease-[var(--ease-control)] hover:text-chalk"
+                    className="inline-flex min-h-[24px] items-center text-sm text-steel no-underline transition-colors duration-[140ms] ease-[var(--ease-control)] hover:text-chalk"
                   >
                     {section.heading}
                   </a>

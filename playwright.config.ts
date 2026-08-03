@@ -28,7 +28,12 @@ export default defineConfig({
   webServer: {
     command: "npx next start --port 3100",
     url: "http://127.0.0.1:3100",
-    reuseExistingServer: !process.env.CI,
+    // Never reuse. A server started before the last build keeps serving the
+    // previous build's asset hashes, so CSS chunks 404 or 500 and the run
+    // reports failures that do not exist in the code — or worse, passes while
+    // screenshotting an unstyled page. Starting fresh costs a few seconds and
+    // removes the whole class of false result.
+    reuseExistingServer: false,
     timeout: 120_000,
   },
 });

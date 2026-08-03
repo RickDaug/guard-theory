@@ -1,0 +1,40 @@
+{
+  "thresholds": {
+    "performance": 90,
+    "accessibility": 95,
+    "best-practices": 95,
+    "seo": 95
+  },
+  "results": [
+    {
+      "name": "home",
+      "url": "/",
+      "scores": {
+        "performance": 94,
+        "accessibility": 100,
+        "best-practices": 100,
+        "seo": 100
+      }
+    },
+    {
+      "name": "product",
+      "url": "/shop/theory-01-long-sleeve",
+      "scores": {
+        "performance": 90,
+        "accessibility": 100,
+        "best-practices": 100,
+        "seo": 100
+      }
+    },
+    {
+      "name": "long-form",
+      "url": "/technique/no-gi-systems/inside-position",
+      "scores": {
+        "performance": 91,
+        "accessibility": 100,
+        "best-practices": 100,
+        "seo": 100
+      }
+    }
+  ]
+}

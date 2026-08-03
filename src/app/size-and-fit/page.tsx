@@ -62,7 +62,7 @@ export default function SizeAndFitPage() {
               </ul>
               <Link
                 href="/journal/how-a-bjj-rash-guard-should-fit"
-                className="display-plain mt-8 inline-block text-sm text-chalk underline decoration-steel-dim underline-offset-[6px] transition-colors duration-[140ms] ease-[var(--ease-control)] hover:decoration-signal"
+                className="display-plain mt-8 inline-flex min-h-6 items-center text-sm text-chalk underline decoration-steel-dim underline-offset-[6px] transition-colors duration-[140ms] ease-[var(--ease-control)] hover:decoration-signal"
               >
                 Read the full piece on rash guard fit
               </Link>

@@ -57,7 +57,7 @@ export default async function TechniqueCategoryPage({ params }: Params) {
             </p>
             <Link
               href="/technique"
-              className="display-plain mt-8 inline-block text-sm text-chalk underline decoration-steel-dim underline-offset-[6px] transition-colors duration-[140ms] ease-[var(--ease-control)] hover:decoration-signal"
+              className="display-plain mt-8 inline-flex min-h-6 items-center text-sm text-chalk underline decoration-steel-dim underline-offset-[6px] transition-colors duration-[140ms] ease-[var(--ease-control)] hover:decoration-signal"
             >
               Back to the Technique Library
             </Link>

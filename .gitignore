@@ -47,3 +47,6 @@ next-env.d.ts
 
 # Local waitlist store (no mail provider connected yet)
 /.data/
+
+# Lighthouse HTML reports are large; summary.json is committed
+/docs/lighthouse/*.html

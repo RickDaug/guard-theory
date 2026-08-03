@@ -25,6 +25,8 @@ const ROUTES = [
   { name: "first-edition", path: "/first-edition" },
   { name: "shop", path: "/shop" },
   { name: "product", path: "/shop/theory-01-long-sleeve" },
+  { name: "journal", path: "/journal" },
+  { name: "article", path: "/journal/how-a-bjj-rash-guard-should-fit" },
 ] as const;
 
 const OUT = path.join("docs", "screenshots");

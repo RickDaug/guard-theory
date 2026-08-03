@@ -10,27 +10,19 @@ export const metadata: Metadata = {
   alternates: { canonical: "/size-and-fit" },
 };
 
+/**
+ * This page is deliberately narrow: it covers Guard Theory's own sizing.
+ *
+ * The general question — how a rash guard should fit, on anyone's garment — is
+ * answered at length in the Journal. Two pages competing for one intent would
+ * produce two thin pages, so this one summarises and points at the full
+ * treatment rather than restating it.
+ */
 const CHECKS = [
-  {
-    heading: "It should be tight enough to stay put",
-    body: "A rash guard that rides up during a scramble is doing none of its job. Pull it down, sit in a deep guard, and stand up. If the hem has travelled, it is too loose.",
-  },
-  {
-    heading: "The seams should sit where your body bends",
-    body: "The raglan seam should run through the armpit rather than across the point of the shoulder, which is where most contact lands. If a seam sits on a bony landmark, it will be felt in a long round.",
-  },
-  {
-    heading: "The sleeve should end where you want it to end",
-    body: "A long sleeve that stops short of the wrist will be dragged there anyway. A short sleeve that sits below the elbow restricts the arm at exactly the angle a frame needs.",
-  },
-  {
-    heading: "You should be able to breathe out fully",
-    body: "Compression garments are sized down more often than they should be. If a full exhale is uncomfortable standing still, a hard round will be worse.",
-  },
-  {
-    heading: "Check it grappling, not in a mirror",
-    body: "Fit problems in a rash guard appear under load and nowhere else. Take a few rounds in it before deciding.",
-  },
+  "Tight enough that the hem does not travel when you sit in guard and stand up.",
+  "Seams sitting where the body bends, not across the point of the shoulder.",
+  "Sleeves ending where you want them to, not where they get dragged to.",
+  "A full exhale that is comfortable standing still.",
 ];
 
 export default function SizeAndFitPage() {
@@ -46,29 +38,35 @@ export default function SizeAndFitPage() {
             </h1>
 
             <p className="mt-10 max-w-[36rem] text-lg text-steel">
-              A rash guard is a compression garment, so &ldquo;fits&rdquo; means
-              something more specific than it does for a t-shirt. Here is what to
-              check, whether or not you ever buy one from us.
+              This page covers Guard Theory&rsquo;s own sizing. For the general
+              question — how a rash guard should fit on anyone&rsquo;s garment —
+              there is a longer piece in the Journal.
             </p>
 
-            <ol className="m-0 mt-14 flex list-none flex-col gap-10 p-0">
-              {CHECKS.map((check, index) => (
-                <li key={check.heading} className="flex max-w-[36rem] gap-6">
-                  <span
-                    className="notation mt-1.5 shrink-0 text-2xs text-signal"
-                    aria-hidden="true"
-                  >
-                    {String(index + 1).padStart(2, "0")}
-                  </span>
-                  <div>
-                    <h2 className="display-condensed text-lg text-chalk">
-                      {check.heading}
-                    </h2>
-                    <p className="mt-3 text-base text-steel">{check.body}</p>
-                  </div>
-                </li>
-              ))}
-            </ol>
+            <section aria-labelledby="quick" className="mt-14">
+              <h2 id="quick" className="display-condensed text-2xl text-chalk">
+                The short version
+              </h2>
+              <ul className="m-0 mt-6 flex max-w-[36rem] list-none flex-col gap-4 p-0">
+                {CHECKS.map((check) => (
+                  <li key={check} className="flex gap-5">
+                    <span
+                      className="notation mt-1.5 shrink-0 text-2xs text-signal"
+                      aria-hidden="true"
+                    >
+                      —
+                    </span>
+                    <span className="text-base text-steel">{check}</span>
+                  </li>
+                ))}
+              </ul>
+              <Link
+                href="/journal/how-a-bjj-rash-guard-should-fit"
+                className="display-plain mt-8 inline-block text-sm text-chalk underline decoration-steel-dim underline-offset-[6px] transition-colors duration-[140ms] ease-[var(--ease-control)] hover:decoration-signal"
+              >
+                Read the full piece on rash guard fit
+              </Link>
+            </section>
 
             <section aria-labelledby="between" className="mt-16 max-w-[36rem]">
               <h2 id="between" className="display-condensed text-2xl text-chalk">

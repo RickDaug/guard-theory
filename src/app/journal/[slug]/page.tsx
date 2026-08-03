@@ -1,0 +1,260 @@
+import type { Metadata } from "next";
+import Link from "next/link";
+import { notFound } from "next/navigation";
+import { Breadcrumbs } from "@/components/site/Breadcrumbs";
+import {
+  ARTICLES,
+  getArticle,
+  getJournalCategory,
+  isPublished,
+  readingTimeMinutes,
+} from "@/content/journal";
+import { absoluteUrl } from "@/lib/site";
+
+type Params = { params: Promise<{ slug: string }> };
+
+export function generateStaticParams() {
+  return ARTICLES.map((article) => ({ slug: article.slug }));
+}
+
+export async function generateMetadata({ params }: Params): Promise<Metadata> {
+  const { slug } = await params;
+  const article = getArticle(slug);
+  if (!article) return {};
+
+  return {
+    title: article.title,
+    description: article.standfirst,
+    alternates: { canonical: `/journal/${article.slug}` },
+    // A draft is readable but is not offered to search. It has no publication
+    // date, and indexing something undated as though it were published is the
+    // exact dishonesty the editorial policy rules out.
+    robots: isPublished(article)
+      ? undefined
+      : { index: false, follow: true },
+  };
+}
+
+export default async function ArticlePage({ params }: Params) {
+  const { slug } = await params;
+  const article = getArticle(slug);
+  if (!article) notFound();
+
+  const category = getJournalCategory(article.category);
+  if (!category) notFound();
+
+  const related = article.relatedSlugs
+    .map((s) => getArticle(s))
+    .filter((a): a is NonNullable<typeof a> => Boolean(a));
+
+  const published = isPublished(article);
+
+  /**
+   * Article structured data is emitted only for genuinely published pieces.
+   * A draft has no datePublished to state, and inventing one to satisfy a
+   * schema validator would be backdating by another name.
+   */
+  const jsonLd = published
+    ? {
+        "@context": "https://schema.org",
+        "@type": "Article",
+        "@id": absoluteUrl(`/journal/${article.slug}#article`),
+        headline: article.title,
+        description: article.standfirst,
+        datePublished: article.publishedAt,
+        ...(article.updatedAt ? { dateModified: article.updatedAt } : {}),
+        articleSection: category.name,
+        publisher: { "@id": absoluteUrl("/#organization") },
+        mainEntityOfPage: absoluteUrl(`/journal/${article.slug}`),
+      }
+    : null;
+
+  return (
+    <main id="main" className="px-6 py-16 md:px-12">
+      <div className="mx-auto max-w-[104rem]">
+        <Breadcrumbs
+          trail={[
+            { href: "/journal", label: "Journal" },
+            {
+              href: `/journal/category/${category.slug}`,
+              label: category.name,
+            },
+            { href: `/journal/${article.slug}`, label: article.title },
+          ]}
+        />
+
+        <div className="mt-10 grid gap-12 lg:grid-cols-12 lg:gap-16">
+          {/* Contents. A real navigation aid on a 2,000-word piece, and it sits
+              beside the text rather than interrupting it. */}
+          <nav
+            aria-labelledby="contents"
+            className="lg:col-span-3 lg:sticky lg:top-8 lg:self-start"
+          >
+            <h2 id="contents" className="notation mb-5 text-2xs text-signal">
+              Contents
+            </h2>
+            <ol className="m-0 flex list-none flex-col gap-3 p-0">
+              {article.sections.map((section, index) => (
+                <li key={section.id} className="flex gap-4">
+                  <span
+                    className="notation shrink-0 text-2xs text-steel"
+                    aria-hidden="true"
+                  >
+                    {String(index + 1).padStart(2, "0")}
+                  </span>
+                  <a
+                    href={`#${section.id}`}
+                    className="text-sm text-steel no-underline transition-colors duration-[140ms] ease-[var(--ease-control)] hover:text-chalk"
+                  >
+                    {section.heading}
+                  </a>
+                </li>
+              ))}
+            </ol>
+          </nav>
+
+          {/* The study register: a sheet of paper laid on the dark ground. */}
+          <article className="lg:col-span-8 lg:col-start-5">
+            <div className="bg-bone px-7 py-14 sm:px-16 sm:py-20">
+              <header className="pb-10">
+                <p className="notation text-2xs text-signal-dim">
+                  {category.name} · {readingTimeMinutes(article)} min read
+                </p>
+                <h1 className="display-condensed mt-6 text-3xl text-ink">
+                  {article.title}
+                </h1>
+                <p className="mt-7 text-lg text-slate">{article.standfirst}</p>
+
+                {!published ? (
+                  <p className="mt-8 border-l-2 border-signal-dim py-1 pl-6 text-base text-slate">
+                    <span className="text-ink">Draft — not yet published.</span>{" "}
+                    This piece is written and fact-checked. It carries no
+                    publication date and no byline because an article needs a
+                    real named author with real credentials, and we are not
+                    inventing one.
+                  </p>
+                ) : null}
+              </header>
+
+              <div className="flex flex-col gap-12">
+                {article.sections.map((section) => (
+                  <section
+                    key={section.id}
+                    id={section.id}
+                    className="scroll-mt-8 border-t border-slate/25 pt-8"
+                  >
+                    <h2 className="display-condensed text-xl text-ink">
+                      {section.heading}
+                    </h2>
+                    <div className="mt-5 flex flex-col gap-5">
+                      {section.paragraphs.map((paragraph) => (
+                        <p key={paragraph} className="text-base text-ink">
+                          {paragraph}
+                        </p>
+                      ))}
+                    </div>
+                  </section>
+                ))}
+              </div>
+
+              {article.contestedNotes.length > 0 ? (
+                <section className="mt-14 border-t border-slate/25 pt-8">
+                  <h2 className="display-condensed text-xl text-ink">
+                    Where the record is contested
+                  </h2>
+                  <ul className="m-0 mt-5 flex list-none flex-col gap-4 p-0">
+                    {article.contestedNotes.map((note) => (
+                      <li key={note} className="flex gap-5">
+                        <span
+                          className="notation mt-1.5 shrink-0 text-2xs text-signal-dim"
+                          aria-hidden="true"
+                        >
+                          ?
+                        </span>
+                        <span className="text-base text-ink">{note}</span>
+                      </li>
+                    ))}
+                  </ul>
+                </section>
+              ) : null}
+
+              <section className="mt-14 border-t border-slate/25 pt-8">
+                <h2 className="display-condensed text-xl text-ink">Sources</h2>
+                <ol className="m-0 mt-5 flex list-none flex-col gap-4 p-0">
+                  {article.sources.map((source, index) => (
+                    <li key={source.url} className="flex gap-5">
+                      <span
+                        className="notation mt-1.5 shrink-0 text-2xs text-slate"
+                        aria-hidden="true"
+                      >
+                        {String(index + 1).padStart(2, "0")}
+                      </span>
+                      <span className="text-sm text-ink">
+                        <a
+                          href={source.url}
+                          rel="noopener noreferrer nofollow"
+                          target="_blank"
+                          className="underline decoration-slate/40 underline-offset-[5px] transition-colors duration-[140ms] ease-[var(--ease-control)] hover:decoration-signal-dim"
+                        >
+                          {source.title}
+                        </a>
+                        <span className="block text-slate">
+                          {source.publisher} · consulted {source.accessed}
+                        </span>
+                      </span>
+                    </li>
+                  ))}
+                </ol>
+              </section>
+
+              {related.length > 0 ? (
+                <section className="mt-14 border-t border-slate/25 pt-8">
+                  <h2 className="display-condensed text-xl text-ink">
+                    Related reading
+                  </h2>
+                  <ul className="m-0 mt-5 flex list-none flex-col gap-3 p-0">
+                    {related.map((item) => (
+                      <li key={item.slug}>
+                        <Link
+                          href={`/journal/${item.slug}`}
+                          className="text-base text-ink underline decoration-slate/40 underline-offset-[5px] transition-colors duration-[140ms] ease-[var(--ease-control)] hover:decoration-signal-dim"
+                        >
+                          {item.title}
+                        </Link>
+                      </li>
+                    ))}
+                  </ul>
+                </section>
+              ) : null}
+
+              <footer className="mt-14 border-t border-slate/25 pt-8">
+                <p className="notation text-2xs text-slate">
+                  <Link
+                    href="/policies/editorial"
+                    className="underline underline-offset-[5px]"
+                  >
+                    Editorial policy
+                  </Link>
+                  {" · "}
+                  <Link
+                    href="/policies/corrections"
+                    className="underline underline-offset-[5px]"
+                  >
+                    Corrections
+                  </Link>
+                </p>
+              </footer>
+            </div>
+          </article>
+        </div>
+      </div>
+
+      {jsonLd ? (
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+        />
+      ) : null}
+    </main>
+  );
+}

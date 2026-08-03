@@ -2,6 +2,10 @@ import type { MetadataRoute } from "next";
 import { CATEGORIES as TECHNIQUE_CATEGORIES, ENTRIES } from "@/content/technique";
 import { PRODUCTS } from "@/content/products";
 import { POLICIES } from "@/content/policies";
+import {
+  CATEGORIES as JOURNAL_CATEGORIES,
+  publishedArticles,
+} from "@/content/journal";
 import { absoluteUrl } from "@/lib/site";
 
 /**
@@ -39,6 +43,15 @@ export default function sitemap(): MetadataRoute.Sitemap {
     })),
     ...ENTRIES.map((entry) => ({
       url: absoluteUrl(`/technique/${entry.category}/${entry.slug}`),
+    })),
+    ...JOURNAL_CATEGORIES.map((category) => ({
+      url: absoluteUrl(`/journal/category/${category.slug}`),
+    })),
+    // Only published articles. Drafts render and are readable, but they carry
+    // no publication date, so offering them to crawlers as though they were
+    // published is exactly the dishonesty the editorial policy rules out.
+    ...publishedArticles().map((article) => ({
+      url: absoluteUrl(`/journal/${article.slug}`),
     })),
     ...POLICIES.map((policy) => ({ url: absoluteUrl(`/policies/${policy.slug}`) })),
   ];

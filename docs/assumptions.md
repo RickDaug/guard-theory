@@ -51,9 +51,15 @@ be set only when something is genuinely published.
 `/journal/technique-notes`, to resolve a collision with the Technique Library
 at `/technique`. Flagged for owner confirmation in `owner-decisions.md`.
 
-**Sizing and fit are one page, not two.** "Rash guard sizing" and "how a BJJ
-rash guard should fit" are the same intent; splitting them would produce two
-thin pages competing with each other.
+**Sizing and fit are split by audience, not by keyword.** `/size-and-fit`
+covers Guard Theory's own sizing — our measurements, our size labels, what we
+will do if our chart is wrong. The Journal article *How a BJJ rash guard
+should fit* covers the general question on anyone's garment. The product page
+summarises in four lines and links to the article rather than restating it, so
+the two do not compete for one intent.
+
+This resolves an escalation raised during editorial: the article and the
+product page were initially assigned the same intent by the keyword map.
 
 **Repository location.** `C:\Users\RickD\AndroidStudioProjects\guard-theory`,
 alongside the owner's other projects. Git identity matches the other repos

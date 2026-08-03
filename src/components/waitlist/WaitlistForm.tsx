@@ -1,6 +1,7 @@
 "use client";
 
 import { useActionState, useEffect, useRef } from "react";
+import Link from "next/link";
 import { Button } from "@/components/ui/Button";
 import {
   CheckboxField,
@@ -208,12 +209,12 @@ export function WaitlistForm() {
         We store your name, email and the preferences you give us, and we use
         them only for this. We do not sell or share them. You can ask us to
         delete your details at any time — see the{" "}
-        <a
+        <Link
           href="/policies/privacy"
           className="text-chalk underline decoration-steel-dim underline-offset-[5px]"
         >
           privacy policy
-        </a>
+        </Link>
         .
       </p>
 

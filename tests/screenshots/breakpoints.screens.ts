@@ -22,6 +22,7 @@ const ROUTES = [
   { name: "design-system", path: "/design-system" },
   { name: "technique-index", path: "/technique" },
   { name: "technique-entry", path: "/technique/no-gi-systems/inside-position" },
+  { name: "first-edition", path: "/first-edition" },
 ] as const;
 
 const OUT = path.join("docs", "screenshots");

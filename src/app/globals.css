@@ -31,6 +31,8 @@
      never carry text. */
   --color-steel: #8a95a1;
   --color-steel-dim: #3a444f;
+  /* slate is secondary TEXT on the study ground — 5.0:1 on bone. */
+  --color-slate: #5a5f63;
   --color-bone: #e6e3da;
   --color-bone-raised: #edeae2;
   --color-chalk: #f4f3ef;

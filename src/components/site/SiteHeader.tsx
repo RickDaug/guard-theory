@@ -33,7 +33,10 @@ export function SiteHeader() {
                 </Link>
               </li>
             ))}
-            <li>
+            {/* Below sm this would wrap onto a line of its own and read as a
+                stranded element. The hero carries the same action, prominently,
+                so the header simply does without it on the narrowest screens. */}
+            <li className="hidden sm:block">
               <Link
                 href="/first-edition"
                 className="display-plain border border-steel-dim px-4 py-2 text-sm text-chalk no-underline transition-colors duration-[140ms] ease-[var(--ease-control)] hover:border-signal hover:text-signal"

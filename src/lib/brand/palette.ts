@@ -44,6 +44,12 @@ export const PALETTE: Swatch[] = [
     usage: "hairline",
   },
   {
+    token: "slate",
+    hex: "#5A5F63",
+    role: "Secondary text on the study ground. Clears AA on bone.",
+    usage: "text",
+  },
+  {
     token: "bone",
     hex: "#E6E3DA",
     role: "Study ground. Uncoated technical paper for long-form reading.",
@@ -91,4 +97,5 @@ export const TEXT_ON_GROUND: Array<{
   { fgToken: "ink", fg: INK, bgToken: "bone", bg: BONE },
   { fgToken: "ink", fg: INK, bgToken: "signal", bg: "#E3C74B" },
   { fgToken: "signal-dim", fg: "#6B5C1B", bgToken: "bone", bg: BONE },
+  { fgToken: "slate", fg: "#5A5F63", bgToken: "bone", bg: BONE },
 ];

@@ -9,7 +9,9 @@
     "lint": "eslint",
     "brand:build": "node scripts/brand/raster.mjs",
     "test:unit": "node --test \"tests/unit/*.test.ts\"",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "screens": "playwright test --grep-invert nothing tests/screenshots",
+    "e2e": "playwright test tests/e2e"
   },
   "dependencies": {
     "next": "16.2.12",
@@ -17,6 +19,7 @@
     "react-dom": "19.2.4"
   },
   "devDependencies": {
+    "@playwright/test": "^1.62.1",
     "@tailwindcss/postcss": "^4",
     "@types/node": "^20",
     "@types/react": "^19",

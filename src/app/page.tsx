@@ -1,13 +1,9 @@
 import Link from "next/link";
-import { SiteHeader } from "@/components/site/SiteHeader";
 import { GuardSystemMap } from "@/components/notation/GuardSystemMap";
 
 export default function HomePage() {
   return (
-    <>
-      <SiteHeader />
-
-      <main id="main">
+    <main id="main">
         <section className="px-6 pt-16 pb-28 md:px-12 md:pt-24">
           <div className="mx-auto grid max-w-[104rem] gap-16 lg:grid-cols-12 lg:gap-20">
             <div className="lg:col-span-5">
@@ -54,8 +50,7 @@ export default function HomePage() {
               <GuardSystemMap />
             </div>
           </div>
-        </section>
-      </main>
-    </>
+      </section>
+    </main>
   );
 }

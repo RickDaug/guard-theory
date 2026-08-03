@@ -88,29 +88,31 @@ export function Plate({
           strokeWidth={1}
         />
         <line
-          x1={width - 132}
+          x1={width - 150}
           y1={fieldHeight}
-          x2={width - 132}
+          x2={width - 150}
           y2={height - 0.5}
           stroke="var(--color-steel-dim)"
           strokeWidth={1}
         />
+        {/* Sized in user units, stepped up at narrow viewports. The plate scales
+            with its container, so a fixed size that reads on desktop collapses
+            to roughly 6px on a phone. */}
         <text
           x={16}
           y={fieldHeight + PLATE_BLOCK_HEIGHT / 2}
           dominantBaseline="central"
-          className="notation"
-          fontSize={10}
+          className="notation text-[15px] sm:text-[12px] lg:text-[10px]"
           fill="var(--color-steel)"
         >
           {title}
         </text>
         <text
-          x={width - 116}
+          x={width - 16}
           y={fieldHeight + PLATE_BLOCK_HEIGHT / 2}
+          textAnchor="end"
           dominantBaseline="central"
-          className="notation"
-          fontSize={10}
+          className="notation text-[15px] sm:text-[12px] lg:text-[10px]"
           fill="var(--color-steel)"
         >
           {reference}

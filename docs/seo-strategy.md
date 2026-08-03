@@ -117,10 +117,12 @@ the page size), and `/figures`.
 - **Each paginated page is indexable** (`index, follow`) and has a unique title
   (`The Guard Theory Journal — Page 2`) and description. Rationale: they are the crawl path to
   older articles.
-- **No `rel=next` / `rel=prev`.** Google announced in 2019 that it no longer uses these as an
-  indexing signal (https://x.com/googlewmc/status/1108726443251519489, and the current pagination
-  guidance at https://developers.google.com/search/docs/specialty/ecommerce/pagination-and-incremental-page-loading,
-  observed 2026-08-03). Harmless to include for other consumers; not a substitute for real links.
+- **No reliance on `rel=next` / `rel=prev`.** Google's current pagination guidance
+  (https://developers.google.com/search/docs/specialty/ecommerce/pagination-and-incremental-page-loading,
+  observed 2026-08-03) is built around real `<a href>` links between pages, not these annotations.
+  Harmless to include for other consumers; **not** a substitute for crawlable links, which are
+  required. Confirm the current status of `rel=next`/`prev` against that page before relying on it
+  either way.
 - **No "view all" page** unless the archive stays small enough to load fast. If one is ever added,
   it becomes the canonical target and the paginated set canonicals to it — but do not do this
   halfway.

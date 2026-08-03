@@ -1,26 +1,210 @@
 @import "tailwindcss";
 
-:root {
-  --background: #ffffff;
-  --foreground: #171717;
+/* ==========================================================================
+   GUARD THEORY — design tokens
+   The single source of truth. Every colour, size and duration on the site
+   resolves to something declared here. Live output: /design-system
+   ========================================================================== */
+
+@theme {
+  /* --- Colour ------------------------------------------------------------
+     Two grounds, one accent.
+
+     INK is the brand ground: black pulled toward the blue of a competition
+     mat rather than a neutral black, so drawn line work sits on something
+     with a temperature.
+
+     BONE is the study ground: uncoated technical paper, cool and low-chroma,
+     for long-form reading in the Journal and Technique Library.
+
+     SIGNAL is the only saturated colour on the site and it is reserved for
+     live state — focus, active notation nodes, the current step. It is a
+     citrine: the colour of annotation ink on a technical plate. Warm against
+     a cold system, and deliberately not the red every combat-sports brand
+     reaches for. 11.4:1 against ink.
+     -------------------------------------------------------------------- */
+  --color-ink: #0a0f14;
+  --color-ink-raised: #101820;
+  --color-graphite: #151c24;
+  --color-steel: #64707e;
+  --color-steel-dim: #3a444f;
+  --color-bone: #e6e3da;
+  --color-bone-raised: #edeae2;
+  --color-chalk: #f4f3ef;
+  --color-signal: #e3c74b;
+  --color-signal-dim: #8a7726;
+
+  /* --- Type --------------------------------------------------------------
+     Fluid modular scale, ratio 1.25. Display sizes clamp between a mobile
+     and a wide-desktop bound so nothing needs a breakpoint override.
+     -------------------------------------------------------------------- */
+  --font-display: var(--font-archivo), "Arial Narrow", system-ui, sans-serif;
+  --font-body: var(--font-newsreader), Georgia, "Times New Roman", serif;
+  --font-notation: var(--font-martian), ui-monospace, "SFMono-Regular", monospace;
+
+  --text-2xs: 0.6875rem;
+  --text-2xs--line-height: 1.45;
+  --text-xs: 0.75rem;
+  --text-xs--line-height: 1.5;
+  --text-sm: 0.875rem;
+  --text-sm--line-height: 1.6;
+  --text-base: 1.0625rem;
+  --text-base--line-height: 1.7;
+  --text-lg: 1.25rem;
+  --text-lg--line-height: 1.55;
+  --text-xl: 1.5rem;
+  --text-xl--line-height: 1.35;
+  --text-2xl: clamp(1.75rem, 1.4rem + 1.6vw, 2.25rem);
+  --text-2xl--line-height: 1.2;
+  --text-3xl: clamp(2.25rem, 1.7rem + 2.6vw, 3.25rem);
+  --text-3xl--line-height: 1.08;
+  --text-4xl: clamp(3rem, 2rem + 5vw, 5.5rem);
+  --text-4xl--line-height: 0.98;
+  --text-5xl: clamp(3.75rem, 1.9rem + 8.6vw, 8.5rem);
+  --text-5xl--line-height: 0.92;
+
+  /* --- Spacing: 4px base ------------------------------------------------ */
+  --spacing: 0.25rem;
+
+  /* --- Motion ------------------------------------------------------------
+     Two durations and one curve. Motion exists to explain a state change,
+     never to announce itself.
+     -------------------------------------------------------------------- */
+  --ease-control: cubic-bezier(0.2, 0, 0, 1);
 }
 
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
-}
+/* --- Base ----------------------------------------------------------------- */
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
+@layer base {
+  html {
+    -webkit-text-size-adjust: 100%;
+    scroll-behavior: smooth;
+  }
+
+  body {
+    background-color: var(--color-ink);
+    color: var(--color-chalk);
+    font-family: var(--font-body);
+    font-size: var(--text-base);
+    line-height: 1.7;
+    -webkit-font-smoothing: antialiased;
+    text-rendering: optimizeLegibility;
+  }
+
+  /* Headings default to the display family. Individual components set their
+     own width and weight; nothing here assumes a size. */
+  h1,
+  h2,
+  h3,
+  h4,
+  h5,
+  h6 {
+    font-family: var(--font-display);
+    font-weight: 600;
+    text-wrap: balance;
+  }
+
+  p {
+    text-wrap: pretty;
+  }
+
+  img,
+  svg,
+  video {
+    display: block;
+    max-width: 100%;
+  }
+
+  /* One focus treatment everywhere, in the accent, never removed. */
+  :focus-visible {
+    outline: 2px solid var(--color-signal);
+    outline-offset: 3px;
+    border-radius: 1px;
+  }
+
+  ::selection {
+    background-color: var(--color-signal);
+    color: var(--color-ink);
   }
 }
 
-body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+/* --- Reduced motion -------------------------------------------------------
+   Honoured globally rather than per-component, so a new component cannot
+   forget it. Transitions collapse to an instant state change; they do not
+   simply run faster.
+   ------------------------------------------------------------------------ */
+
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+/* --- Type utilities -------------------------------------------------------
+   The width and optical-size axes are the identity, and Tailwind exposes
+   neither by default, so the brand's core type moves live here as named
+   utilities rather than as repeated arbitrary values.
+   ------------------------------------------------------------------------ */
+
+@utility wordmark {
+  font-family: var(--font-display);
+  font-variation-settings: "wdth" 125;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+@utility display-condensed {
+  font-family: var(--font-display);
+  font-variation-settings: "wdth" 66;
+  font-weight: 700;
+  letter-spacing: -0.005em;
+  text-transform: uppercase;
+}
+
+@utility display-plain {
+  font-family: var(--font-display);
+  font-variation-settings: "wdth" 100;
+  font-weight: 500;
+}
+
+@utility notation {
+  font-family: var(--font-notation);
+  font-variation-settings: "wdth" 87.5;
+  letter-spacing: 0.02em;
+  font-weight: 400;
+}
+
+@utility prose-measure {
+  max-width: 34rem;
+}
+
+/* Skip link: always in the DOM, visible only on focus. */
+@utility skip-link {
+  position: absolute;
+  left: 1rem;
+  top: 1rem;
+  z-index: 100;
+  transform: translateY(-250%);
+  background-color: var(--color-signal);
+  color: var(--color-ink);
+  padding: 0.75rem 1.25rem;
+  font-family: var(--font-display);
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  font-size: var(--text-xs);
+  transition: transform var(--tw-duration, 140ms) var(--ease-control);
+
+  &:focus {
+    transform: translateY(0);
+  }
 }

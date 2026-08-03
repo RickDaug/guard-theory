@@ -100,6 +100,40 @@ export function TextField({
   );
 }
 
+type TextAreaFieldProps = {
+  id: string;
+  label: string;
+  hint?: ReactNode;
+  error?: string;
+  optional?: boolean;
+} & Omit<ComponentPropsWithoutRef<"textarea">, "id">;
+
+export function TextAreaField({
+  id,
+  label,
+  hint,
+  error,
+  optional,
+  className = "",
+  rows = 7,
+  ...rest
+}: TextAreaFieldProps) {
+  return (
+    <FieldShell id={id} label={label} hint={hint} error={error} optional={optional}>
+      {(a11y) => (
+        <textarea
+          {...a11y}
+          {...rest}
+          rows={rows}
+          className={`${CONTROL} resize-y ${
+            error ? "border-signal" : "border-steel-dim"
+          } ${className}`}
+        />
+      )}
+    </FieldShell>
+  );
+}
+
 type SelectFieldProps = {
   id: string;
   label: string;

@@ -23,6 +23,8 @@ const ROUTES = [
   { name: "technique-index", path: "/technique" },
   { name: "technique-entry", path: "/technique/no-gi-systems/inside-position" },
   { name: "first-edition", path: "/first-edition" },
+  { name: "shop", path: "/shop" },
+  { name: "product", path: "/shop/theory-01-long-sleeve" },
 ] as const;
 
 const OUT = path.join("docs", "screenshots");

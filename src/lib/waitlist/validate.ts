@@ -56,7 +56,6 @@ function readString(data: FormData, key: string): string {
 
 /** Strips control characters that have no business in a name or size label. */
 function sanitise(value: string): string {
-  // eslint-disable-next-line no-control-regex
   return value.replace(/[\u0000-\u001F\u007F]/g, "");
 }
 

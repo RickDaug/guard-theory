@@ -1,6 +1,7 @@
 "use client";
 
 import { useId, useState } from "react";
+import { Plate } from "./Plate";
 
 /**
  * Fig. 01 — the guard as a system.
@@ -91,58 +92,22 @@ const EDGES: ReadonlyArray<readonly [string, string]> = [
 const byCode = new Map(FAMILIES.map((f) => [f.code, f]));
 
 const W = 660;
-const H = 460;
-/** Height of the title block strip along the bottom of the frame. */
-const BLOCK = 38;
-const FIELD_H = H - BLOCK;
-
-/** Registration mark — the corner crosses on a drawn plate. */
-function Registration({ x, y }: { x: number; y: number }) {
-  return (
-    <g stroke="var(--color-steel-dim)" strokeWidth={1}>
-      <line x1={x - 5} y1={y} x2={x + 5} y2={y} />
-      <line x1={x} y1={y - 5} x2={x} y2={y + 5} />
-    </g>
-  );
-}
+const FIELD_H = 422;
 
 export function GuardSystemMap() {
   const [activeCode, setActiveCode] = useState<string | null>(null);
   const captionId = useId();
-  const gridId = useId();
 
   const active = activeCode ? byCode.get(activeCode) : undefined;
 
   return (
     <figure className="m-0">
-      <svg viewBox={`0 0 ${W} ${H}`} className="w-full" aria-hidden="true">
-        <defs>
-          <pattern
-            id={gridId}
-            width={30}
-            height={30}
-            patternUnits="userSpaceOnUse"
-          >
-            <circle cx={0.75} cy={0.75} r={0.75} fill="var(--color-steel-dim)" />
-          </pattern>
-        </defs>
-
-        {/* Field: the drawing area, dotted like graph paper */}
-        <rect
-          x={0.5}
-          y={0.5}
-          width={W - 1}
-          height={FIELD_H}
-          fill={`url(#${gridId})`}
-          stroke="var(--color-steel-dim)"
-          strokeWidth={1}
-        />
-
-        <Registration x={16} y={16} />
-        <Registration x={W - 16} y={16} />
-        <Registration x={16} y={FIELD_H - 16} />
-        <Registration x={W - 16} y={FIELD_H - 16} />
-
+      <Plate
+        width={W}
+        fieldHeight={FIELD_H}
+        title="GUARD THEORY — THE GUARD, AS A SYSTEM"
+        reference="FIG. 01 / REV A"
+      >
         {/* Transitions. Drawn before the rings so the rings sit on top. */}
         <g strokeWidth={2}>
           {EDGES.map(([from, to]) => {
@@ -200,47 +165,7 @@ export function GuardSystemMap() {
           );
         })}
 
-        {/* Title block — what the plate is, stated on the plate itself. */}
-        <g>
-          <rect
-            x={0.5}
-            y={FIELD_H + 0.5}
-            width={W - 1}
-            height={BLOCK - 1}
-            fill="none"
-            stroke="var(--color-steel-dim)"
-            strokeWidth={1}
-          />
-          <line
-            x1={W - 132}
-            y1={FIELD_H}
-            x2={W - 132}
-            y2={H - 0.5}
-            stroke="var(--color-steel-dim)"
-            strokeWidth={1}
-          />
-          <text
-            x={16}
-            y={FIELD_H + BLOCK / 2}
-            dominantBaseline="central"
-            className="notation"
-            fontSize={10}
-            fill="var(--color-steel)"
-          >
-            GUARD THEORY — THE GUARD, AS A SYSTEM
-          </text>
-          <text
-            x={W - 116}
-            y={FIELD_H + BLOCK / 2}
-            dominantBaseline="central"
-            className="notation"
-            fontSize={10}
-            fill="var(--color-steel-dim)"
-          >
-            FIG. 01 / REV A
-          </text>
-        </g>
-      </svg>
+      </Plate>
 
       <figcaption className="mt-8">
         {/* The key. Real content, real controls, in the tab order. */}

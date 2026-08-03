@@ -42,7 +42,7 @@ export default function HomePage() {
                 </Link>
               </div>
 
-              <p className="notation mt-14 text-2xs text-steel-dim">
+              <p className="notation mt-14 text-2xs text-steel">
                 First Edition — release date to be announced
               </p>
             </div>

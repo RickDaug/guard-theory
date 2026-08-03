@@ -26,13 +26,16 @@
   --color-ink: #0a0f14;
   --color-ink-raised: #101820;
   --color-graphite: #151c24;
-  --color-steel: #64707e;
+  /* steel is a TEXT colour and must clear 4.5:1 on ink at any size — it reads
+     6.2:1. steel-dim is for rules, borders and hairlines ONLY; at 2.4:1 it must
+     never carry text. */
+  --color-steel: #8a95a1;
   --color-steel-dim: #3a444f;
   --color-bone: #e6e3da;
   --color-bone-raised: #edeae2;
   --color-chalk: #f4f3ef;
   --color-signal: #e3c74b;
-  --color-signal-dim: #8a7726;
+  --color-signal-dim: #6b5c1b;
 
   /* --- Type --------------------------------------------------------------
      Fluid modular scale, ratio 1.25. Display sizes clamp between a mobile

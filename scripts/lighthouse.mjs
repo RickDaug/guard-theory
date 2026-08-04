@@ -129,35 +129,63 @@ try {
 
   const summary = [];
 
+  /**
+   * A single Lighthouse run is not a measurement.
+   *
+   * Performance varies with whatever else the machine is doing, and on a
+   * shared CI runner that variance is large — the same commit scored 94 here
+   * and 69 on a GitHub runner. Median of an odd number of runs is the standard
+   * answer: it discards a one-off stall without letting a single lucky run
+   * set the number.
+   *
+   * Accessibility, best practices and SEO are deterministic and would be fine
+   * with one run; they are included for free.
+   */
+  const RUNS = Number(process.env.LIGHTHOUSE_RUNS ?? (process.env.CI ? 3 : 1));
+
+  const median = (values) => {
+    const sorted = [...values].sort((a, b) => a - b);
+    return sorted[Math.floor(sorted.length / 2)];
+  };
+
   for (const target of TARGETS) {
-    const result = await lighthouse(
-      `${BASE}${target.url}`,
-      { port: chrome.port, output: "html", logLevel: "error" },
-      undefined,
-    );
+    /** @type {Record<string, number[]>} */
+    const observed = {};
+    let lastReport = "";
 
-    if (!result) throw new Error(`lighthouse returned nothing for ${target.url}`);
+    for (let run = 0; run < RUNS; run += 1) {
+      const result = await lighthouse(
+        `${BASE}${target.url}`,
+        { port: chrome.port, output: "html", logLevel: "error" },
+        undefined,
+      );
 
-    await writeFile(
-      path.join(OUT, `${target.name}.html`),
-      Array.isArray(result.report) ? result.report[0] : result.report,
-      "utf8",
-    );
+      if (!result) throw new Error(`lighthouse returned nothing for ${target.url}`);
+      lastReport = Array.isArray(result.report) ? result.report[0] : result.report;
+
+      for (const category of Object.keys(THRESHOLDS)) {
+        const raw = result.lhr.categories[category]?.score;
+        (observed[category] ??= []).push(raw == null ? 0 : Math.round(raw * 100));
+      }
+    }
+
+    await writeFile(path.join(OUT, `${target.name}.html`), lastReport, "utf8");
 
     const scores = {};
     const row = [target.name.padEnd(9)];
 
     for (const [category, threshold] of Object.entries(THRESHOLDS)) {
-      const raw = result.lhr.categories[category]?.score;
-      const score = raw == null ? 0 : Math.round(raw * 100);
+      const runs = observed[category] ?? [0];
+      const score = median(runs);
       scores[category] = score;
+      if (RUNS > 1) scores[`${category}_runs`] = runs;
 
       const ok = score >= threshold;
       if (!ok) failed = true;
       row.push(`${category}: ${String(score).padStart(3)}${ok ? " " : " FAIL"}`);
     }
 
-    summary.push({ name: target.name, url: target.url, scores });
+    summary.push({ name: target.name, url: target.url, runs: RUNS, scores });
     console.log(row.join("  "));
   }
 

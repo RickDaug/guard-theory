@@ -37,6 +37,16 @@ function Registration({ x, y }: { x: number; y: number }) {
   );
 }
 
+/** "GUARD THEORY — THEORY 01, LONG SLEEVE" → "GUARD THEORY" */
+function narrowTitle(title: string): string {
+  return title.split("—")[0]?.trim() || title;
+}
+
+/** "FIG. 02 / REV A" → "FIG. 02" */
+function narrowReference(reference: string): string {
+  return reference.split("/")[0]?.trim() || reference;
+}
+
 export function Plate({
   width,
   fieldHeight,
@@ -47,6 +57,8 @@ export function Plate({
 }: PlateProps) {
   const height = fieldHeight + PLATE_BLOCK_HEIGHT;
   const gridId = `plate-grid-${width}-${fieldHeight}`;
+  const shortTitle = narrowTitle(title);
+  const shortReference = narrowReference(reference);
 
   return (
     <svg
@@ -95,24 +107,50 @@ export function Plate({
           stroke="var(--color-steel-dim)"
           strokeWidth={1}
         />
-        {/* Sized in user units, stepped up at narrow viewports. The plate scales
-            with its container, so a fixed size that reads on desktop collapses
-            to roughly 6px on a phone. */}
+        {/* Sized in SVG USER UNITS, not CSS pixels. The plate scales with its
+            container: from a 660-unit viewBox at ~340px on a phone, one unit is
+            about 0.52 CSS px, so a 10-unit label that reads on desktop becomes
+            ~5 CSS px there.
+
+            Scaling the type up alone does not work — the title block's cells
+            are a fixed width, and the full strings overflow and collide well
+            before they become legible. Narrow screens therefore get less text
+            at a readable size rather than the same text unreadably small. */}
         <text
           x={16}
           y={fieldHeight + PLATE_BLOCK_HEIGHT / 2}
           dominantBaseline="central"
-          className="notation text-[15px] sm:text-[12px] lg:text-[10px]"
+          className="notation text-[24px] sm:hidden"
+          fill="var(--color-steel)"
+        >
+          {shortTitle}
+        </text>
+        <text
+          x={16}
+          y={fieldHeight + PLATE_BLOCK_HEIGHT / 2}
+          dominantBaseline="central"
+          className="notation hidden text-[13px] sm:block lg:text-[10px]"
           fill="var(--color-steel)"
         >
           {title}
+        </text>
+
+        <text
+          x={width - 16}
+          y={fieldHeight + PLATE_BLOCK_HEIGHT / 2}
+          textAnchor="end"
+          dominantBaseline="central"
+          className="notation text-[24px] sm:hidden"
+          fill="var(--color-steel)"
+        >
+          {shortReference}
         </text>
         <text
           x={width - 16}
           y={fieldHeight + PLATE_BLOCK_HEIGHT / 2}
           textAnchor="end"
           dominantBaseline="central"
-          className="notation text-[15px] sm:text-[12px] lg:text-[10px]"
+          className="notation hidden text-[13px] sm:block lg:text-[10px]"
           fill="var(--color-steel)"
         >
           {reference}

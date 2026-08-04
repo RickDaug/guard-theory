@@ -56,13 +56,12 @@ export default function ManifestoPage() {
           </p>
         </header>
 
-        <ol className="m-0 grid list-none gap-px bg-steel-dim p-0 lg:grid-cols-2">
-          {CLAUSES.map((clause, index) => (
+        {/* A list, not a sequence. These clauses have no order, so they carry
+            no numbers - see the numbering rule in docs/visual-identity.md. */}
+        <ul className="m-0 grid list-none gap-px bg-steel-dim p-0 lg:grid-cols-2">
+          {CLAUSES.map((clause) => (
             <li key={clause.heading} className="bg-ink p-8 sm:p-10">
-              <span className="notation text-2xs text-signal">
-                {String(index + 1).padStart(2, "0")}
-              </span>
-              <h2 className="display-condensed mt-5 text-xl text-chalk">
+              <h2 className="display-condensed text-xl text-chalk">
                 {clause.heading}
               </h2>
               <p className="mt-4 max-w-[34rem] text-base text-steel">
@@ -70,7 +69,7 @@ export default function ManifestoPage() {
               </p>
             </li>
           ))}
-        </ol>
+        </ul>
 
         <div className="mt-20">
           <ButtonLink href="/first-edition">

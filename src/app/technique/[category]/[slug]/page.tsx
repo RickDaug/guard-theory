@@ -27,27 +27,23 @@ export async function generateMetadata({ params }: Params): Promise<Metadata> {
 }
 
 /**
- * A numbered section of the entry. The numbers are real structure — an entry
- * is read in this order, and the order is the same in every entry — so they
- * are doing work rather than decorating.
+ * A section of the entry.
+ *
+ * Deliberately unnumbered. The reading order is fixed and identical in every
+ * entry, but nothing anywhere refers to "section 03" — and the rule in
+ * docs/visual-identity.md is that numbers appear only where they refer to
+ * something. The order is carried by the order.
  */
 function Part({
-  index,
   title,
   children,
 }: {
-  index: number;
   title: string;
   children: React.ReactNode;
 }) {
   return (
     <section className="border-t border-slate/25 pt-8 pb-12">
-      <h2 className="display-condensed mb-6 flex items-baseline gap-4 text-lg text-ink">
-        <span className="notation text-2xs text-signal-dim">
-          {String(index).padStart(2, "0")}
-        </span>
-        {title}
-      </h2>
+      <h2 className="display-condensed mb-6 text-lg text-ink">{title}</h2>
       {children}
     </section>
   );
@@ -109,23 +105,23 @@ export default async function TechniqueEntryPage({ params }: Params) {
             <p className="mt-7 text-lg text-slate">{entry.summary}</p>
           </header>
 
-          <Part index={1} title="Position and problem">
+          <Part title="Position and problem">
             <p className="text-base text-ink">{entry.positionAndProblem}</p>
           </Part>
 
-          <Part index={2} title="Objective">
+          <Part title="Objective">
             <p className="text-base text-ink">{entry.objective}</p>
           </Part>
 
-          <Part index={3} title="Core concept">
+          <Part title="Core concept">
             <p className="text-base text-ink">{entry.coreConcept}</p>
           </Part>
 
-          <Part index={4} title="Key mechanics">
+          <Part title="Key mechanics">
             <OrderedNotes items={entry.keyMechanics} />
           </Part>
 
-          <Part index={5} title="Common errors">
+          <Part title="Common errors">
             <ul className="m-0 flex list-none flex-col gap-5 p-0">
               {entry.commonErrors.map((error) => (
                 <li key={error} className="flex gap-5">
@@ -141,18 +137,18 @@ export default async function TechniqueEntryPage({ params }: Params) {
             </ul>
           </Part>
 
-          <Part index={6} title="Safety">
+          <Part title="Safety">
             <p className="border-l-2 border-signal-dim pl-6 text-base text-ink">
               {entry.safetyNote}
             </p>
           </Part>
 
-          <Part index={7} title="Training progression">
+          <Part title="Training progression">
             <OrderedNotes items={entry.trainingProgression} />
           </Part>
 
           {related.length > 0 ? (
-            <Part index={8} title="Related">
+            <Part title="Related">
               <ul className="m-0 flex list-none flex-col gap-3 p-0">
                 {related.map((item) => (
                   <li key={item.slug}>

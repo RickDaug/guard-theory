@@ -96,7 +96,7 @@ export const howNoGiRulesetsReshapedTechniqueSelection: DraftArticle = {
   sources: [
     {
       title:
-        "IBJJF Rule Book, version 6.1 (2024JUN): scoring table 2.5.2, cumulative points 3.4, guard-pull provisions 3.5 and 4.1.10-4.1.12, lack of combativeness 6.2.1, serious fouls 6.2.2, 50/50 advantages 5.7.5, technical fouls table",
+        "IBJJF Rule Book (PDF footer reads v6.1, 2024JUN): scoring table 2.5.2, cumulative points 3.4, guard-pull provisions 3.5 and 4.1.10-4.1.12, lack of combativeness 6.2.1, serious fouls 6.2.2, 50/50 advantages 5.7.5, technical fouls table",
       publisher: "International Brazilian Jiu-Jitsu Federation",
       url: "https://ibjjf.com/books-videos",
       accessed: "2026-08-03",

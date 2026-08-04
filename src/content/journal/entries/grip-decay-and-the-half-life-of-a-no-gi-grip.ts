@@ -30,7 +30,7 @@ export const gripDecayAndTheHalfLifeOfANoGiGrip: DraftArticle = {
       heading: "The literature measured the latch",
       paragraphs: [
         "Start with the awkward part. The published work on grip in grappling almost entirely measures either a cloth grip or a laboratory handle, and the two are not interchangeable.",
-        "A 2023 study in Frontiers in Physiology tested 73 participants, split into 31 students and 42 grapplers, on an electromechanical functional dynamometer, comparing a standard grip against a judo and jiu-jitsu specific grip in an isometric rowing task performed unilaterally and bilaterally. The grapplers produced significantly higher maximal isometric force than the students in every comparison. There was also a main effect of grip type, with the standard grip producing higher force values than the sport-specific cloth grip. The authors close by saying more research is needed on specific judogi and jiu-jitsu-gi grips.",
+        "A 2023 study in Frontiers in Sports and Active Living tested 73 participants, split into 31 students and 42 grapplers, on an electromechanical functional dynamometer, comparing a standard grip against a judo and jiu-jitsu specific grip in an isometric rowing task performed unilaterally and bilaterally. The grapplers produced significantly higher maximal isometric force than the students in every comparison. There was also a main effect of grip type, with the standard grip producing higher force values than the sport-specific cloth grip. The authors close by saying more research is needed on specific judogi and jiu-jitsu-gi grips.",
         "Note what that study is and is not. It establishes that changing the shape of the grip changes the force you can express through it, which is a genuinely useful result. It says nothing about a hand closed on a wet forearm, because nobody in it ever gripped a person.",
       ],
     },
@@ -47,7 +47,7 @@ export const gripDecayAndTheHalfLifeOfANoGiGrip: DraftArticle = {
       id: "how-long-a-hard-grip-lasts",
       heading: "How long a hard grip lasts",
       paragraphs: [
-        "For the shape of the decline, the nearest evidence is a 2024 study in Sports by Junior and colleagues, which applied the critical power model to handgrip work in grappling combat sport athletes.",
+        "For the shape of the decline, the nearest evidence is a 2024 study in Sports, which applied the critical power model to handgrip work in grappling combat sport athletes.",
         "Eleven recreational fighters, with an average of eight years of practice, and twelve untrained men performed an all-out handgrip test to establish critical torque and the curvature constant, then an intermittent test in the severe-intensity domain, at critical torque plus fifteen per cent, until they could no longer hold the target. Critical torque did not differ between the groups, and neither did the magnitude of neuromuscular fatigue at task failure. What differed was the size of the reservoir above critical torque and how long they lasted: the fighters managed 8.38 plus or minus 2.93 minutes against 5.36 plus or minus 1.42 minutes for the untrained group.",
         "The framework is the useful part, more than the numbers. Below a certain intensity of gripping, you can continue more or less indefinitely. Above it, you are spending from a finite account, the account does not refill while you are still above the line, and the training difference showed up in the size of the account rather than in where the line sits. A grip held hard is not a state you are in. It is a withdrawal.",
         "The same caveat applies as everywhere else in this literature: this was a handgrip device in a laboratory, with a fixed geometry and no opponent trying to remove it.",
@@ -76,8 +76,8 @@ export const gripDecayAndTheHalfLifeOfANoGiGrip: DraftArticle = {
   sources: [
     {
       title:
-        "Analysis of grip specificity on force production in grapplers and its effect on bilateral deficit, Frontiers in Physiology (2023)",
-      publisher: "Frontiers, via PubMed Central",
+        "Analysis of grip specificity on force production in grapplers and its effect on bilateral deficit, Frontiers in Sports and Active Living (2023), doi 10.3389/fspor.2023.1190369",
+      publisher: "Frontiers Media, via PubMed Central",
       url: "https://pmc.ncbi.nlm.nih.gov/articles/PMC10563762/",
       accessed: "2026-08-03",
     },

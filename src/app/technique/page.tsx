@@ -29,7 +29,7 @@ export default function TechniqueIndexPage() {
         </header>
 
         <ul className="m-0 grid list-none gap-px bg-steel-dim p-0 sm:grid-cols-2 lg:grid-cols-3">
-          {CATEGORIES.map((category, index) => {
+          {CATEGORIES.map((category) => {
             const entries = entriesInCategory(category.slug);
             return (
               <li key={category.slug} className="bg-ink">
@@ -37,10 +37,7 @@ export default function TechniqueIndexPage() {
                   href={`/technique/${category.slug}`}
                   className="group flex h-full flex-col p-8 no-underline transition-colors duration-[140ms] ease-[var(--ease-control)] hover:bg-ink-raised"
                 >
-                  <span className="notation text-2xs text-steel">
-                    {String(index + 1).padStart(2, "0")}
-                  </span>
-                  <h2 className="display-condensed mt-5 text-xl text-chalk transition-colors duration-[140ms] ease-[var(--ease-control)] group-hover:text-signal">
+                  <h2 className="display-condensed text-xl text-chalk transition-colors duration-[140ms] ease-[var(--ease-control)] group-hover:text-signal">
                     {category.name}
                   </h2>
                   <p className="mt-4 text-sm text-steel">{category.summary}</p>

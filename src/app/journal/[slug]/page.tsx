@@ -86,22 +86,20 @@ export default async function ArticlePage({ params }: Params) {
         <div className="mt-10 grid gap-12 lg:grid-cols-12 lg:gap-16">
           {/* Contents. A real navigation aid on a 2,000-word piece, and it sits
               beside the text rather than interrupting it. */}
+          {/* Order matters below lg: unstyled, this nav precedes the h1 both
+              visually and in the heading order. The article is ordered first
+              on narrow screens and the contents move back to the left column
+              once there is room for a sidebar. */}
           <nav
             aria-labelledby="contents"
-            className="lg:col-span-3 lg:sticky lg:top-8 lg:self-start"
+            className="order-2 lg:order-1 lg:col-span-3 lg:sticky lg:top-8 lg:self-start"
           >
             <h2 id="contents" className="notation mb-5 text-2xs text-signal">
               Contents
             </h2>
             <ol className="m-0 flex list-none flex-col gap-3 p-0">
-              {article.sections.map((section, index) => (
-                <li key={section.id} className="flex gap-4">
-                  <span
-                    className="notation shrink-0 text-2xs text-steel"
-                    aria-hidden="true"
-                  >
-                    {String(index + 1).padStart(2, "0")}
-                  </span>
+              {article.sections.map((section) => (
+                <li key={section.id}>
                   <a
                     href={`#${section.id}`}
                     className="inline-flex min-h-[24px] items-center text-sm text-steel no-underline transition-colors duration-[140ms] ease-[var(--ease-control)] hover:text-chalk"
@@ -114,7 +112,7 @@ export default async function ArticlePage({ params }: Params) {
           </nav>
 
           {/* The study register: a sheet of paper laid on the dark ground. */}
-          <article className="lg:col-span-8 lg:col-start-5">
+          <article className="order-1 lg:order-2 lg:col-span-8 lg:col-start-5">
             <div className="bg-bone px-7 py-14 sm:px-16 sm:py-20">
               <header className="pb-10">
                 <p className="notation text-2xs text-signal-dim">

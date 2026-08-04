@@ -91,7 +91,7 @@ export const howABjjRashGuardShouldFit: DraftArticle = {
   ],
   sources: [
     {
-      title: "IBJJF Rule Book, version 6.1 (2024JUN), section 8.1.16, No-Gi attire requirements",
+      title: "IBJJF Rule Book, section 8.1.16, No-Gi attire requirements — PDF footer reads v6.1 (2024JUN)",
       publisher: "International Brazilian Jiu-Jitsu Federation",
       url: "https://ibjjf.com/books-videos",
       accessed: "2026-08-03",

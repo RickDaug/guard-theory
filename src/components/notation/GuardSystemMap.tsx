@@ -178,8 +178,7 @@ export function GuardSystemMap() {
                 y={family.y}
                 textAnchor="middle"
                 dominantBaseline="central"
-                className="notation"
-                fontSize={12}
+                className="notation text-[21px] sm:text-[15px] lg:text-[12px]"
                 fill={live ? "var(--color-signal)" : "var(--color-steel)"}
               >
                 {family.code}

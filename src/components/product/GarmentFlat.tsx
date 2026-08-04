@@ -177,7 +177,7 @@ export function GarmentFlat({
                 y={geometry.ring[1]}
                 textAnchor="middle"
                 dominantBaseline="central"
-                className="notation text-[11px]"
+                className="notation text-[19px] sm:text-[14px] lg:text-[11px]"
                 fill={stroke}
               >
                 {point.code}

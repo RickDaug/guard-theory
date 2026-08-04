@@ -122,8 +122,10 @@ to executable script, and `application/ld+json` is not executed.
 This is the one place the security posture is weaker than it looks, which is
 why it is commented in the config, stated here, and not quietly omitted.
 
-**No CI pipeline yet.** Every gate runs locally and passes. They need to run on
-push before this has more than one contributor.
+**CI runs every gate on push and pull request** — `.github/workflows/ci.yml`.
+Fast gates first, then the browser suite, then Lighthouse in a second job that
+only starts once the cheap ones pass. Lint runs with `--max-warnings 0`, so a
+warning fails the build rather than scrolling past.
 
 ## Commands
 

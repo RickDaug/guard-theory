@@ -10,7 +10,7 @@
       "name": "home",
       "url": "/",
       "scores": {
-        "performance": 90,
+        "performance": 91,
         "accessibility": 100,
         "best-practices": 100,
         "seo": 100
@@ -20,7 +20,7 @@
       "name": "product",
       "url": "/shop/theory-01-long-sleeve",
       "scores": {
-        "performance": 90,
+        "performance": 91,
         "accessibility": 100,
         "best-practices": 100,
         "seo": 100
@@ -30,7 +30,7 @@
       "name": "long-form",
       "url": "/technique/no-gi-systems/inside-position",
       "scores": {
-        "performance": 91,
+        "performance": 93,
         "accessibility": 100,
         "best-practices": 100,
         "seo": 100

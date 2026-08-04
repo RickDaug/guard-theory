@@ -127,5 +127,5 @@ will serve it. Before the first production deploy:
   Next to 9.3.3, which is not a fix. Revisit on the next patch release.
 - `script-src` in the CSP keeps `'unsafe-inline'`. The reason and the two ways
   out are in `docs/technical-architecture.md`.
-- No CI pipeline. Every gate runs locally and passes; they need to run on push
-  before this repo has a second contributor.
+- No visual-regression testing. The committed screenshots are review
+  artefacts a human reads, not assertions a machine checks.

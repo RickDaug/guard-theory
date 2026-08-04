@@ -61,6 +61,17 @@ the two do not compete for one intent.
 This resolves an escalation raised during editorial: the article and the
 product page were initially assigned the same intent by the keyword map.
 
+**Article URLs are flat: `/journal/<slug>`, not `/journal/<category>/<slug>`.**
+A flat article URL survives recategorisation, which happens; the category
+segment exists for browsing at `/journal/category/<slug>`, not for addressing.
+
+The SEO planning documents were written before the routes existed and assumed
+the nested form throughout, including in three worked internal-linking
+examples that would have produced broken links. Corrected across
+`internal-linking-map.md`, `keyword-map.md`, `seo-strategy.md` and
+`structured-data-map.md`. There is also no per-figure route — `/figures` is a
+single index page.
+
 **Repository location.** `C:\Users\RickD\AndroidStudioProjects\guard-theory`,
 alongside the owner's other projects. Git identity matches the other repos
 (RickDaug / urielruiz2134@gmail.com).

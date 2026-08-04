@@ -157,7 +157,7 @@ Field notes:
 ```jsonc
 {
   "@type": "Article",
-  "@id": "https://guardtheory.com/journal/equipment-and-apparel/how-to-wash-a-bjj-rash-guard/#article",
+  "@id": "https://guardtheory.com/journal/how-to-wash-a-bjj-rash-guard/#article",
   "isPartOf": { "@id": "…/#webpage" },
   "headline": "How to Wash a BJJ Rash Guard (and Keep It)",
   "description": "…",

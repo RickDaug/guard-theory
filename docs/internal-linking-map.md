@@ -27,7 +27,7 @@ want to click it.
                    ┌──────────────────────────────────────────┐
                    │  B  Apparel decisions                     │
                    │     /size-and-fit  /journal/equipment-*   │
-                   │     /journal/training-culture/*           │
+                   │     /journal/*           │
                    └──────────┬───────────────────────────────┘
                               │ one contextual link, in-body,
                               │ below the fold
@@ -103,7 +103,7 @@ reference document; it should read like one.
 
 **Rule T→J-4.** No Technique page links to a commercial page in body copy (G4). The single
 sanctioned exception: `/technique/no-gi-systems` may link once to
-`/journal/equipment-and-apparel/rash-guard-fabric-explained` — a Cluster B *article*, not a
+`/journal/rash-guard-fabric-explained` — a Cluster B *article*, not a
 product — because friction and skin contact are literally the subject of that category page. It
 still does not link to `/first-edition`.
 
@@ -134,13 +134,13 @@ paragraph has to be written in order to justify the link, the link should not ex
 intent. It is the one Cluster B page where that is honest.
 
 **Rule P-4.** `/first-edition` links **out** to: `/size-and-fit` (fit before you commit),
-`/journal/competition-analysis/ibjjf-no-gi-uniform-rules-explained` (why the design is
-constrained), `/journal/equipment-and-apparel/rash-guard-fabric-explained` (what we chose and
+`/journal/ibjjf-no-gi-uniform-rules-explained` (why the design is
+constrained), `/journal/rash-guard-fabric-explained` (what we chose and
 why), `/lookbook`, and `/returns` + `/shipping` (what happens after). Outbound links from a
 conversion page to substantiating content raise conversion; they do not leak it.
 
 **Rule P-5.** `/shop/[slug]` PDPs link to: the Technique Library entry for the position the cut
-was designed around, `/size-and-fit`, `/journal/equipment-and-apparel/how-to-wash-a-bjj-rash-guard`
+was designed around, `/size-and-fit`, `/journal/how-to-wash-a-bjj-rash-guard`
 (care), and `/returns`. This is the one place a product page links *into* Cluster A — one link,
 and only where the design rationale is real.
 
@@ -148,7 +148,7 @@ and only where the design rationale is real.
 relevant PDP or `/first-edition` from the garment name. Nothing else.
 
 **Rule P-7.** No product link ever appears inside a `/technique/*` page, a `/figures/*` profile, or
-`/journal/bjj-history/*` article body. Those are the pages other sites might cite; keep them
+`/journal/*` article body. Those are the pages other sites might cite; keep them
 citable.
 
 ---
@@ -203,7 +203,7 @@ link plans below are written to be executed at publish time, not retrofitted.
 
 ---
 
-### Example 1 — `/journal/equipment-and-apparel/long-sleeve-vs-short-sleeve-rash-guard-bjj`
+### Example 1 — `/journal/long-sleeve-vs-short-sleeve-rash-guard-bjj`
 
 **"Long Sleeve vs Short Sleeve Rash Guard for BJJ"** · Cluster B · commercial-investigation intent
 · target length ~1,600 words → link budget 5–8.
@@ -212,8 +212,8 @@ link plans below are written to be executed at publish time, not retrofitted.
 | --- | --- | --- | --- | --- |
 | 1 | Section on grip friction and skin contact | `/technique/no-gi-systems` | `how grips behave without a gi` | The whole sleeve argument rests on no-gi grip mechanics. A reader who does not know that context needs it. |
 | 2 | Same section, on mat burn during scrambles | `/technique/guard-retention` | `scrambles where you are on your back` | Names the specific situation where forearm skin contact happens most. |
-| 3 | Competition-legality section | `/journal/competition-analysis/ibjjf-no-gi-uniform-rules-explained` | `what the IBJJF rule book actually says` | Both sleeve lengths are legal for IBJJF no-gi and sleeveless is not — a factual claim that must be substantiated, not asserted. |
-| 4 | Heat and session-length section | `/journal/equipment-and-apparel/rash-guard-fabric-explained` | `fabric weight and how it moves heat` | Sleeve length is only half the heat variable; fabric is the other half. Sending the reader on is the honest answer. |
+| 3 | Competition-legality section | `/journal/ibjjf-no-gi-uniform-rules-explained` | `what the IBJJF rule book actually says` | Both sleeve lengths are legal for IBJJF no-gi and sleeveless is not — a factual claim that must be substantiated, not asserted. |
+| 4 | Heat and session-length section | `/journal/rash-guard-fabric-explained` | `fabric weight and how it moves heat` | Sleeve length is only half the heat variable; fabric is the other half. Sending the reader on is the honest answer. |
 | 5 | Decision-rule section, on getting the size right first | `/size-and-fit` | `sleeve length is downstream of getting the fit right` | A long sleeve in the wrong size is worse than a short sleeve in the right one. Genuine advice. |
 | 6 | Closing paragraph, below the fold | `/first-edition` | `the long-sleeve version we are building` | **The single sanctioned commercial link (G3, P-2).** The closing paragraph is already about what we chose and why. |
 | 7 | Byline / sources block | `/editorial-policy` | `how we research gear pieces` | Cluster C trust link; standard on every equipment article. |
@@ -221,7 +221,7 @@ link plans below are written to be executed at publish time, not retrofitted.
 **Inbound links this article should receive:** from `/journal/equipment-and-apparel` (category
 listing + "Further reading"), from `/size-and-fit` (a "still deciding on sleeve length?" line),
 from `/first-edition` (in the construction rationale), and from
-`/journal/training-culture/what-to-wear-first-no-gi-class` (see Example 3, link 3). That is four
+`/journal/what-to-wear-first-no-gi-class` (see Example 3, link 3). That is four
 contextual inbound links — comfortably past G7.
 
 **Anchor-stuffing check:** the exact phrase "long sleeve vs short sleeve rash guard" is **not**
@@ -229,7 +229,7 @@ used as an anchor by any of those four inbound links. Each describes the destina
 
 ---
 
-### Example 2 — `/journal/guard-systems/why-guard-is-a-system-not-a-position`
+### Example 2 — `/journal/why-guard-is-a-system-not-a-position`
 
 **"Why the Guard Is a System, Not a Position"** · Cluster A pillar · informational
 · target length ~2,400 words → link budget 8–16, at the top of the range because this is a hub.
@@ -242,7 +242,7 @@ used as an anchor by any of those four inbound links. Each describes the destina
 | 4 | Section: what happens when the system breaks | `/technique/guard-retention` | `the retention ladder` | The failure mode of a system is a retention problem. |
 | 5 | Same section | `/technique/passing` | `passing as three incompatible strategies` | Mirrors the argument from the top position — strengthens the thesis. |
 | 6 | Section: the no-gi case | `/technique/no-gi-systems` | `what changes when the grips have a time limit` | The brand's core ground. |
-| 7 | Historical aside | `/journal/bjj-history/where-the-guard-came-from` | `where the position came from in the first place` | Cluster A internal, gives the essay depth. |
+| 7 | Historical aside | `/journal/where-the-guard-came-from` | `where the position came from in the first place` | Cluster A internal, gives the essay depth. |
 | 8 | Historical aside | `/figures` | `the people who built each piece of it` | Feeds the Figures index, which otherwise struggles for inbound links. |
 | 9 | Closing | `/manifesto` | `the shorter version of this argument` | Cluster C. Also the correct destination for a reader who finished a 2,400-word essay and wants to know who wrote it. |
 | 10 | "Referenced positions" block (Rule J→T-3) | `/technique/closed-guard`, `/technique/open-guard`, `/technique/back-control` | position names, each with a one-clause reason | The structural block; a reader affordance, not a link farm. |
@@ -261,7 +261,7 @@ Approved rotation: `the systems argument` · `why we treat the guard as one syst
 
 ---
 
-### Example 3 — `/journal/training-culture/what-to-wear-first-no-gi-class`
+### Example 3 — `/journal/what-to-wear-first-no-gi-class`
 
 **"What to Wear to Your First No-Gi BJJ Class"** · Cluster B, top of funnel · informational
 · target length ~1,200 words → link budget 4–6. Deliberately at the low end: this reader is a
@@ -270,8 +270,8 @@ beginner and every extra link is a chance to lose them.
 | # | Where in the piece | Destination | Anchor text | Why it earns its place |
 | --- | --- | --- | --- | --- |
 | 1 | After "you probably already own most of this" | `/size-and-fit` | `what a fitted top should actually feel like` | The reader's real question is whether their gym t-shirt counts. Fit is the answer. |
-| 2 | Hygiene / skin-contact paragraph | `/journal/equipment-and-apparel/how-to-wash-a-bjj-rash-guard` | `washing it properly, from day one` | Beginners are the group most likely to ruin a garment and most at risk from mat hygiene. |
-| 3 | "Once you decide to buy something" section | `/journal/equipment-and-apparel/long-sleeve-vs-short-sleeve-rash-guard-bjj` | `whether to get long or short sleeves` | Natural next decision. Reciprocal with Example 1's inbound set. |
+| 2 | Hygiene / skin-contact paragraph | `/journal/how-to-wash-a-bjj-rash-guard` | `washing it properly, from day one` | Beginners are the group most likely to ruin a garment and most at risk from mat hygiene. |
+| 3 | "Once you decide to buy something" section | `/journal/long-sleeve-vs-short-sleeve-rash-guard-bjj` | `whether to get long or short sleeves` | Natural next decision. Reciprocal with Example 1's inbound set. |
 | 4 | Mat-etiquette paragraph | `/journal/training-culture` | `the rest of the unwritten rules` | Category link, keeps a nervous beginner in the cluster. |
 | 5 | Optional, only if the piece runs long enough | `/faq` | `questions people are too embarrassed to ask` | Cluster C. Also honest — the FAQ answers beginner questions. |
 
@@ -282,7 +282,7 @@ present and sufficient for anyone who wants it (G3 exempts header/footer). Revis
 piece is later rewritten to be a buying guide, which it should not be.
 
 **Inbound links:** `/journal/training-culture` (listing + featured), `/faq` (from
-"what do I wear?"), `/journal/equipment-and-apparel/long-sleeve-vs-short-sleeve-rash-guard-bjj`
+"what do I wear?"), `/journal/long-sleeve-vs-short-sleeve-rash-guard-bjj`
 (from its intro, for readers earlier in the journey), `/about` is not required.
 
 **Anchor-stuffing check:** inbound anchors rotate across `your first no-gi class` ·
@@ -302,7 +302,7 @@ Run at every content milestone (roughly every 10 published pages) and before lau
 2. **Anchor-distribution check.** For each destination with ≥ 5 inbound internal links, no single
    anchor string exceeds 30% (A1). Report the top three anchors per destination.
 3. **Commercial-link-leak check.** Assert that no `/technique/*`, `/figures/*` or
-   `/journal/bjj-history/*` page body contains a link to `/first-edition`, `/shop` or `/shop/*`
+   `/journal/*` page body contains a link to `/first-edition`, `/shop` or `/shop/*`
    (G4, P-7). Header/footer excluded. This one should be automated and should fail the build.
 4. **Depth check.** Every page ≤ 3 clicks from `/` (G6).
 5. **Broken-link check.** Zero broken internal links; automated (G12).

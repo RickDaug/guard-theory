@@ -41,10 +41,10 @@ Three clusters. Each has one pillar, supporting pages, and a defined link direct
 
 ### Cluster A — The Guard (authority cluster, no commercial intent)
 
-- **Pillar:** `/journal/guard-systems/why-guard-is-a-system-not-a-position`
+- **Pillar:** `/journal/why-guard-is-a-system-not-a-position`
 - **Structural hub:** `/technique` (the library index)
 - **Supporting:** all twelve `/technique/[category]` pages and their entries;
-  `/journal/guard-systems/*`; `/journal/technique-notes/*`
+  `/journal/*`; `/journal/*`
 - **Reinforcing:** `/manifesto` (the brand's version of the same argument),
   `/figures/*` (who developed which part of the system)
 - **Job:** earn links and establish that we know the subject. Converts nothing directly.
@@ -52,10 +52,10 @@ Three clusters. Each has one pillar, supporting pages, and a defined link direct
 ### Cluster B — Choosing and Living With Grappling Apparel (commercial cluster)
 
 - **Pillar:** `/size-and-fit`
-- **Supporting:** `/journal/equipment-and-apparel/how-to-wash-a-bjj-rash-guard`,
+- **Supporting:** `/journal/how-to-wash-a-bjj-rash-guard`,
   `.../long-sleeve-vs-short-sleeve-rash-guard-bjj`, `.../rash-guard-fabric-explained`,
-  `/journal/training-culture/what-to-wear-first-no-gi-class`,
-  `/journal/competition-analysis/ibjjf-no-gi-uniform-rules-explained`
+  `/journal/what-to-wear-first-no-gi-class`,
+  `/journal/ibjjf-no-gi-uniform-rules-explained`
 - **Converts to:** `/first-edition`
 - **Job:** capture pre-purchase research intent and hand it to the waitlist.
 
@@ -71,7 +71,7 @@ Three clusters. Each has one pillar, supporting pages, and a defined link direct
 ### Cluster interaction rule
 
 Cluster A links **down** into Cluster B only where the connection is technical and true
-(e.g. `/technique/no-gi-systems` → `/journal/equipment-and-apparel/rash-guard-fabric-explained`,
+(e.g. `/technique/no-gi-systems` → `/journal/rash-guard-fabric-explained`,
 because friction and skin contact are genuinely the topic). Cluster A **never** links to
 `/first-edition` from body copy — only from the site-wide footer/header. Full rules in
 `internal-linking-map.md`.
@@ -109,7 +109,7 @@ abuse by another name.
 Applies to `/journal`, `/journal/[category]`, `/technique/[category]` (if any category exceeds
 the page size), and `/figures`.
 
-- **Format:** `/journal/page/2`, `/journal/bjj-history/page/2`. Path-based, not
+- **Format:** `/journal/page/2`, `/journal/page/2`. Path-based, not
   `?page=2` — cleaner to canonicalise and to exclude selectively.
 - **Page 1 has no suffix.** `/journal/page/1` must 301 to `/journal`. Never let both exist.
 - **Each paginated page is self-canonical.** `/journal/page/2` canonicals to itself, *not* to

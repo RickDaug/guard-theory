@@ -68,13 +68,27 @@ test.describe("keyboard and structure", () => {
     await expect(page.locator("#main")).toBeVisible();
   });
 
-  test("every page has exactly one h1", async ({ page }) => {
+  test("every page has exactly one h1, and it is the first heading", async ({
+    page,
+  }) => {
     for (const route of ROUTES) {
       await page.goto(route.path, { waitUntil: "load" });
       await expect(
         page.locator("h1"),
         `${route.path} should have exactly one h1`,
       ).toHaveCount(1);
+
+      // axe's heading-order rule is tagged best-practice, so the tag selection
+      // above never runs it. An article page once opened with an h2 "Contents"
+      // before its own title and the suite reported a clean pass.
+      const first = await page
+        .locator("h1, h2, h3, h4, h5, h6")
+        .first()
+        .evaluate((el) => el.tagName.toLowerCase());
+
+      expect(first, `${route.path} starts with <${first}> before its h1`).toBe(
+        "h1",
+      );
     }
   });
 

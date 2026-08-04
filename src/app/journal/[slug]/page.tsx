@@ -86,17 +86,19 @@ export default async function ArticlePage({ params }: Params) {
         <div className="mt-10 grid gap-12 lg:grid-cols-12 lg:gap-16">
           {/* Contents. A real navigation aid on a 2,000-word piece, and it sits
               beside the text rather than interrupting it. */}
-          {/* Order matters below lg: unstyled, this nav precedes the h1 both
-              visually and in the heading order. The article is ordered first
-              on narrow screens and the contents move back to the left column
-              once there is room for a sidebar. */}
+          {/* DOM order is the order: jump links before the content they jump
+              to, which is conventional and keeps focus order, paint order and
+              reading order identical at every width. CSS order was tried here
+              and reverted - it moves the paint only, so a keyboard user tabbed
+              through the contents while looking at the article.
+
+              "Contents" is a label rather than a heading, so the first heading
+              on the page is the article title. */}
           <nav
-            aria-labelledby="contents"
-            className="order-2 lg:order-1 lg:col-span-3 lg:sticky lg:top-8 lg:self-start"
+            aria-label="Contents"
+            className="lg:col-span-3 lg:sticky lg:top-8 lg:self-start"
           >
-            <h2 id="contents" className="notation mb-5 text-2xs text-signal">
-              Contents
-            </h2>
+            <p className="notation mb-5 text-2xs text-signal">Contents</p>
             <ol className="m-0 flex list-none flex-col gap-3 p-0">
               {article.sections.map((section) => (
                 <li key={section.id}>
@@ -112,7 +114,7 @@ export default async function ArticlePage({ params }: Params) {
           </nav>
 
           {/* The study register: a sheet of paper laid on the dark ground. */}
-          <article className="order-1 lg:order-2 lg:col-span-8 lg:col-start-5">
+          <article className="lg:col-span-8 lg:col-start-5">
             <div className="bg-bone px-7 py-14 sm:px-16 sm:py-20">
               <header className="pb-10">
                 <p className="notation text-2xs text-signal-dim">

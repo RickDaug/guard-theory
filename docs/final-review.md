@@ -493,3 +493,317 @@ strongest thing on the site.
 All nine blocking items are single-line edits. Fixing B1–B9 moves this to SHIP
 WITH FIXES with S1, S2, S3 and S4 as the ranked remainder. Nothing here calls for
 a rebuild.
+
+---
+---
+
+# Second-pass review
+
+Reviewer: Final Creative and Engineering Reviewer. No involvement in the build.
+Date of review: 2026-08-03, after the first pass above.
+
+This section is **appended**. The first review is the record and is unchanged.
+
+Scope of this pass: verify B1–B9 and S1–S4 are genuinely fixed; look for
+regressions introduced by the fixes; fact-check the six articles added since the
+first pass; re-run every gate.
+
+---
+
+## Verdict
+
+# SHIP WITH FIXES
+
+**Twelve of the thirteen previous findings are genuinely fixed. One (S3) is
+partially fixed. There are no new blocking issues.**
+
+I tried hard to break this pass and could not. In particular:
+
+- **B9 is fixed and I confirmed it in the committed pixels**, not the source.
+  `docs/screenshots/desktop/home.png` renders `01 Closed guard` with a space, as
+  do `mobile/home.png` and `mobile/product.png`.
+- **S2 was fixed without introducing the overflow it invited.** The implementer
+  did not simply enlarge the type — it swaps to a shortened string below `sm`
+  (`Plate.tsx:41-48, 119-157`). I checked the title block at mobile and tablet:
+  `GUARD THEORY` / `FIG. 02` at 390px, and the full
+  `GUARD THEORY — THEORY 01, LONG SLEEVE RASH GUARD` / `FIG. 02 / REV A` at
+  768px. No collision with the cell divider at either. The callout rings that
+  were empty circles in the last pass now legibly read `01`–`05`.
+- **Twenty-seven source URLs were verified across the six new articles.** Every
+  one resolves and says what is attributed to it. **Zero fabricated citations.**
+  Every clause number I scrutinised — NAC 467.00285, N.J.A.C. 13:46-24A/24B,
+  PRN 2002-314, IBJJF 4.6.1–4.6.3, 6.2.1, 6.2.2, Note 1 to 4.2, Graduation
+  3.1.3 and 3.2.1–3.2.2, ASTM D2594/D2594M-21, DOI 10.5604/01.3001.0012.7513 —
+  **exists and means what is claimed.** After finding an invented NAC clause
+  last time, I expected to find another. There is not one.
+
+### Gates — all six run by me, exit codes checked
+
+Port 3100 was free before the run (TimeWait only, no listener). Gates ran
+sequentially from a clean build; no server was reused.
+
+| Gate | Exit | Result |
+|---|---|---|
+| `npm run typecheck` | 0 | clean |
+| `npm run lint` | 0 | zero warnings |
+| `npm run test:unit` | 0 | 27 tests |
+| `npm run build` | 0 | **81 routes** (was 75) |
+| `npx playwright test` | 0 | **86 passed** (was 85) |
+| `npm run lighthouse` | 0 | perf 91/91/91, a11y 100, BP 100, SEO 100 |
+
+---
+
+## Previous findings — verification table
+
+| # | Finding | Status |
+|---|---|---|
+| **B1** | Fabricated NAC 467.430 citation | **FIXED** |
+| **B2** | "has made" on flagship product page | **FIXED** |
+| **B3** | ADCC "both knees" stated too narrowly | **FIXED** |
+| **B4** | "A person reads every message" | **FIXED** |
+| **B5** | "Writing … is commissioned" | **FIXED** |
+| **B6** | "sells apparel" vs "nothing is for sale yet" | **FIXED** |
+| **B7** | "once in six attempts" invented statistic | **FIXED** |
+| **B8** | Diagram's meaning only in the drawing | **FIXED** |
+| **B9** | Key labels render `01Closed guard` | **FIXED** |
+| **S1** | Decorative 01/02/03 on four surfaces | **FIXED** |
+| **S2** | Plate text and callouts illegible on mobile | **FIXED** |
+| **S3** | Contents renders above the headline | **PARTIALLY FIXED** |
+| **S4** | IBJJF citation unverifiable from URL | **FIXED** |
+
+### Detail where it matters
+
+**B1** — `why-sport-jiu-jitsu-does-not-transfer-directly-to-mma.ts:111` now reads
+`NAC 467.427(7)`, and so does the research file. I re-confirmed against
+leg.state.nv.us that **467.430 does not exist** (the code jumps 467.427 →
+467.432) and that 467.427 is the glove rule. `467.430` appears nowhere in live
+content. One stale residue in an internal doc — see N9.
+
+**B3** — now "one or both knees on the mat", matching ADCC's page **verbatim**:
+*"if both fighters are standing up and one of them puts one or both of his knees
+on the mat for more than 3 sec."* Confirmed against the live page.
+
+**B6** — `src/content/policies/index.ts:225` now reads "Guard Theory **intends to
+sell** apparel". The contradiction with `:93` is gone. The "same people" phrasing
+survives; it is a much weaker assertion than before and I am not re-raising it.
+
+**B8** — the fix is better than the one I proposed. `GuardSystemMap.tsx:103-115`
+**derives** the adjacency from the same `EDGES` array the lines are drawn from,
+so the key and the drawing cannot drift apart. The caption now ends
+"Connects to Butterfly guard, De la Riva and Half guard." The code comment at
+`:94-102` states exactly why. This is the right shape of fix.
+
+**S1** — numbering removed from the manifesto, the technique index, and the
+technique entry's section headings; the journal contents list is no longer
+numbered, so "01" no longer means two things on one screen. What remains is
+ordinal (`OrderedNotes` for training progressions, source lists) or referential
+(`Plate 01` / `PL. 01` on the lookbook). That is the rule as written. The
+technique entry's self-defeating `<Part index={8} title="Related">` is gone —
+`Part` no longer takes an index at all (`technique/[category]/[slug]/page.tsx:37-50`).
+
+**S4 — the previous finding was itself partly wrong, and I am correcting the
+record.** I claimed the v6.1 citation was contradicted by the cited page. On
+re-verification the linked PDF (`2024JUN_IBJJF_Rules_EN.pdf`) carries
+`JUN.2024` and `VERSION 6.1 2024` on its cover and every page footer. **The
+landing page's "v6.0" label is stale; the citation was right.** The implementer
+handled this correctly — `how-a-bjj-rash-guard-should-fit.ts:94` now names its
+provenance in the citation itself ("PDF footer reads v6.1 (2024JUN)") and the
+research files record the discrepancy explicitly. Marked FIXED. The second half
+of S4 — the two research files disagreeing about method — is **not** fixed; see
+N9.
+
+---
+
+## New — blocking
+
+**None.**
+
+---
+
+## New — should fix, ranked
+
+### N1 — A published rule is again stated more narrowly than it is
+
+`src/content/journal/entries/what-the-early-ufc-tournaments-demonstrated.ts:42`
+
+> "No contestant shall exceed competing more than five rounds **and**
+> twenty-five minutes of fighting in a twenty-four hour period."
+
+The Unified Rules clause 1.c reads *"five (5) rounds **and/or** twenty-five (25)
+minutes."* Verified in the ABC PDF. The sentence is set as the rule's own words
+(unquoted but verbatim in shape), and `and` reads as requiring both limits to be
+exceeded where the rule binds on either. This is the **same failure mode as B3**,
+which was blocking last pass. I rank it should-fix rather than blocking only
+because no reader's conduct turns on it and the paragraph's argument holds under
+either reading. One-word fix.
+
+### N2 — An invented year in the article that exists to refuse dating
+
+`src/content/journal/entries/de-la-riva-and-the-guard-that-took-his-name.ts:53`
+
+> "Somebody solving a problem on the mat **in 1983** was not inventing a named
+> guard."
+
+No source gives 1983. The research file commits the article to "the first half
+of the 1980s" and nothing narrower (`content/research/de-la-riva-…md:31`), and
+the article's own `contestedNotes[0]` at `:118` states **"this article states no
+date."** It states one. It reads as rhetorical scene-setting, and it sits three
+sentences after the de la Riva quotation, in the paragraph about his discovery,
+where a reader will take it as the date. Under `AGENTS.md:20` this is an invented
+specific. Replace `1983` with "in the early 1980s".
+
+### N3 — A claim the cited page does not support
+
+`src/content/journal/entries/how-to-wash-a-rash-guard.ts:74`
+
+> "AATCC maintains test methods for dimensional change and colourfastness in
+> laundering."
+
+`https://www.aatcc.org/testing` resolves but says none of this — it lists
+"Colorfastness" only as one of seven proficiency-testing programmes, and never
+mentions dimensional change or laundering. The underlying fact is true (AATCC
+135 and AATCC 61 exist), so this is a wrong-page citation rather than an invented
+one. On an article whose thesis is that everyone else's laundry advice is
+unsourced, it is the worst possible place for it. Cite a page that carries the
+methods, or soften to what the page shows.
+
+### N4 — Provenance misdescribed in the article about misdescribed provenance
+
+`src/content/journal/entries/the-dropout-number-nobody-can-source.ts:33`
+
+> "carries one line about provenance **under each chart**"
+
+On the live BJJ Analytics page the per-chart footer reads "Data by
+BJJAnalytics.com | Track your BJJ at BJJChat.com". The "compiled from IBJJF,
+surveys, and industry research" line sits at the **bottom of the page**. The
+criticism is entirely sound; only the placement is wrong. Same wording in
+`content/research/the-dropout-number-nobody-can-source.md:20`. Fix to "at the
+foot of the page".
+
+### N5 — Sweep clause drops its three-second condition
+
+`src/content/journal/entries/seated-guard-and-supine-guard.ts:31`
+
+Renders IBJJF 4.6.3 as "gets to their feet, puts the opponent down and holds the
+top position". The clause requires *maintaining the grips necessary to hold the
+opponent in bottom position **for 3 (three) seconds**.* The research file has it
+right at `:16`; the body dropped it. Substantively correct, looser than its own
+research.
+
+### N6 — A source's arithmetic error reproduced without comment
+
+`src/content/journal/entries/the-dropout-number-nobody-can-source.ts:61`
+
+> "881 participants, of whom 817, or **ninety per cent**, were male"
+
+817/881 = 92.7%, which is what the paper's own Table 1 prints. The BMJ **abstract**
+says "817 (90%)", so the article is faithfully quoting its source — I verified
+this directly. But this is the one article on the site whose entire subject is
+interrogating where numbers come from, and it passes through a source's internal
+inconsistency silently. Either drop the percentage and keep "817 of 881", or name
+the discrepancy the way this article names every other one.
+
+### N7 — S3's fix trades a visual defect for an order mismatch
+
+`src/app/journal/[slug]/page.tsx:93-95` and `:115`
+
+The `order-2 lg:order-1` / `order-1 lg:order-2` fix works visually — I confirmed
+in `docs/screenshots/mobile/article.png` that the headline now precedes the
+contents. But CSS `order` is **visual only**. In the built HTML the nav still
+comes first: I checked `.next/server/app/journal/how-a-bjj-rash-guard-should-fit.html`
+and `<h2 id="contents">` sits at byte 6722, the `<h1>` at 8787.
+
+So: the heading-order side effect I named last pass (`h2` before `h1`) is
+unchanged, **and** below `lg` the DOM/focus order now disagrees with the visual
+order — a keyboard user meets seven contents links before an article that appears
+above them. This follows the fix I recommended, so it is my recommendation that
+was incomplete. The `<details>` alternative I offered as option two resolves both.
+Marking S3 PARTIALLY FIXED on this basis.
+
+### N8 — Citation URL that 403s to anything automated
+
+`src/content/journal/entries/how-to-wash-a-rash-guard.ts:126` —
+`www.astm.org/d2594_d2594m-21.html` returns 403 to non-browser requests;
+`store.astm.org/d2594_d2594m-21.html` returns 200 with the full record. The
+designation, title and 2021 approval are all correct. `content.test.ts` parses
+URLs rather than fetching them, so CI will not catch this. Prefer the `store.`
+URL.
+
+### N9 — Two research files still disagree about how the work was done
+
+`content/research/why-sport-jiu-jitsu-does-not-transfer-directly-to-mma.md:134`
+says the IBJJF rule book "could not be retrieved from `ibjjf.com` in this pass
+(the download link is JavaScript-driven and four URL patterns 404'd)". Five other
+research files dated **the same day** (all twelve read "All sources consulted:
+2026-08-03") cite that PDF clause by clause, and it is retrievable — I retrieved
+it. The clause citations are correct, so nothing downstream is wrong; the
+methodological record is. This is the unfixed half of S4.
+
+Related: `docs/agent-handoffs/05-editorial-flagships.md:74` still carries the
+fabricated `NAC 467.430(7)`. Internal only, but it is the document a future
+agent would treat as source of truth.
+
+### N10 — Overstated corroboration, contradicted by its own note
+
+`src/content/journal/entries/de-la-riva-and-the-guard-that-took-his-name.ts:43` —
+"a match between the two is described by **more than one source**". Only BJJ
+Heroes ties a match to the Copa Cantão, across two pages of one publisher — and
+`contestedNotes[4]` at `:122` says precisely that two such pages "is not two
+independent sources". Fix to "on more than one page of that source".
+
+---
+
+## Carried forward, still open
+
+Not claimed fixed, not regressions, listed so nothing is lost: **S5** (ADCC
+qualifying "no positive points",
+`how-no-gi-rulesets-reshaped-technique-selection.ts:53`), **S6** ("Development
+note … See docs/owner-decisions.md", `contact/page.tsx:67`,
+`first-edition/page.tsx:83`), **S7** (home page is still one section,
+`app/page.tsx`), **S8** (`/shop` still shows no flat), **S10** (`size-4`
+checkboxes, `Field.tsx:200`, `WaitlistForm.tsx:188`), **S11** (success state
+does not move focus — `WaitlistForm.tsx:99` and `ContactForm.tsx:59` still have
+no `tabIndex`/ref, while the error paths do), **S12** (`aria-pressed` still
+driven by hover/focus, `GuardSystemMap.tsx:203-207`), **S13**, **S14**
+(`host: absoluteUrl("/")`, `robots.ts:37`), **S15** (`page.tsx:29` still
+hand-rolls the signal button), **S16**, **S17**, **S18**.
+
+**S9 is materially better.** The journal now carries twelve articles across all
+eight categories, two to a category at most and none empty — "Nothing here yet"
+no longer renders anywhere. The Technique Library is unchanged at twelve
+categories × one entry, and all twelve articles remain `draft`, so the gap the
+owner should see before launch is narrower but real.
+
+Trivial: `src/app/page.tsx:7` and `:53` have stray indentation left by a removed
+wrapper. Lint passes; cosmetic only.
+
+---
+
+## What is genuinely good
+
+Briefly, and once.
+
+**The fixes are real fixes, not test-silencing.** Every one changed the thing the
+finding was about. Two are better than what I asked for: B8 derives the adjacency
+from the edge array rather than restating it in prose, and S2 shortens the string
+at narrow widths rather than scaling type until it overflows — the failure mode I
+was specifically watching for.
+
+**The citation discipline held across six new articles.** Twenty-seven URLs,
+every clause number, every DOI, every volume and page range — verified, correct.
+The `contestedNotes` are the strongest editorial device on this site: BJJ Heroes
+dating one match three ways, the Andreato paper giving four seconds in its
+abstract and three in its discussion, the Sular and Oner 10–20% figure correctly
+attributed as *their* citation of Lau et al. rather than as their own result.
+That last distinction is one most published writing gets wrong.
+
+**`how-to-wash-a-rash-guard` is the piece I expected to sink this review.** Care
+instructions are an open invitation to hygiene and durability claims. It refuses
+them explicitly at `:82` — "We are not going to tell you that any washing routine
+sanitises anything, prevents anything, or extends the life of a garment by a
+number of months" — and devotes a whole section to the four claims it could not
+source. It is the best argument the brand has for its own premise.
+
+**`the-dropout-number-nobody-can-source` attributes every figure in the sentence
+it appears in** and ends without an answer. N4 and N6 are the two places it slips,
+and both are small enough to be worth naming precisely because the rest is exact.

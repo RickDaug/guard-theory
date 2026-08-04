@@ -50,3 +50,5 @@ next-env.d.ts
 
 # Lighthouse HTML reports are large; summary.json is committed
 /docs/lighthouse/*.html
+
+.vercel

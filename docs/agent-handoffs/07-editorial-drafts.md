@@ -63,6 +63,8 @@ Every URL was fetched during this pass. Three notes the next agent needs:
 - **R2 — three publishers block automated requests.** `journals.sagepub.com` (403), `mdpi.com` (403) and `iso.org` (403) all refuse `curl` with a browser user agent. Where a PMC mirror existed it was used; for Crane & Temple the ERIC record (`EJ1050586`) is cited instead of SAGE; the ISO 3758 fact is taken from GINETEX rather than from ISO. **None of these is a broken link, and none should be "fixed" by removing the citation.**
 - **R3 — a summarising fetch produced a filename that was not in the page HTML**, and it turned out to be real only after the `active_storage` link list was grepped out of the raw markup. Everything numeric in these six articles was read from raw HTML or from a PDF via `pdftotext`, not from a summary. Keep doing that.
 
+- **R4 — `shura.shu.ac.uk` is slow, not broken.** The Sheffield Hallam repository record for Spanias et al. timed out on one sweep and returned 200 on retry with a longer timeout. It is already cited by three existing articles. Do not remove it on the strength of a single failed check.
+
 Primary documents read in full rather than summarised: the IBJJF Rule Book v6.1 (2024JUN) PDF, the IBJJF *General System of Graduation* June 2026 PDF, the ABC Unified Rules of MMA August 2025 PDF, the NJ SACB 2002 rules proposal, the ADCC rules page, and the Sülar & Öner PDF.
 
 ## 5. Key decisions

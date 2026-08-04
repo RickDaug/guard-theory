@@ -53,9 +53,12 @@ npx playwright test
 npm run lighthouse
 ```
 
-Current state: 27 unit tests, 85 Playwright specs, zero lint warnings, and
+Current state: 27 unit tests, 86 Playwright specs, zero lint warnings, and
 Lighthouse at 90+ performance with 100 accessibility, best practices and SEO
 on the home page, a product page and a long-form page.
+
+Content: twelve Journal articles (all drafts, pending a byline), twelve
+Technique Library entries across twelve categories, two garments.
 
 ## Where things live
 

@@ -9,94 +9,34 @@
     {
       "name": "home",
       "url": "/",
-      "runs": 3,
+      "runs": 1,
       "scores": {
         "performance": 91,
-        "performance_runs": [
-          91,
-          90,
-          91
-        ],
         "accessibility": 100,
-        "accessibility_runs": [
-          100,
-          100,
-          100
-        ],
         "best-practices": 100,
-        "best-practices_runs": [
-          100,
-          100,
-          100
-        ],
-        "seo": 100,
-        "seo_runs": [
-          100,
-          100,
-          100
-        ]
+        "seo": 100
       }
     },
     {
       "name": "product",
       "url": "/shop/theory-01-long-sleeve",
-      "runs": 3,
+      "runs": 1,
       "scores": {
         "performance": 91,
-        "performance_runs": [
-          91,
-          91,
-          91
-        ],
         "accessibility": 100,
-        "accessibility_runs": [
-          100,
-          100,
-          100
-        ],
         "best-practices": 100,
-        "best-practices_runs": [
-          100,
-          100,
-          100
-        ],
-        "seo": 100,
-        "seo_runs": [
-          100,
-          100,
-          100
-        ]
+        "seo": 100
       }
     },
     {
       "name": "long-form",
       "url": "/technique/no-gi-systems/inside-position",
-      "runs": 3,
+      "runs": 1,
       "scores": {
-        "performance": 90,
-        "performance_runs": [
-          90,
-          91,
-          90
-        ],
+        "performance": 91,
         "accessibility": 100,
-        "accessibility_runs": [
-          100,
-          100,
-          100
-        ],
         "best-practices": 100,
-        "best-practices_runs": [
-          100,
-          100,
-          100
-        ],
-        "seo": 100,
-        "seo_runs": [
-          100,
-          100,
-          100
-        ]
+        "seo": 100
       }
     }
   ]

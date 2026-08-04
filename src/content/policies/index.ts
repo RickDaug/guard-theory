@@ -222,7 +222,7 @@ export const POLICIES: Policy[] = [
         id: "independence",
         heading: "Independence",
         paragraphs: [
-          "Guard Theory sells apparel, and the Journal is written by the same people. Where an article touches something we sell, it says so. Reference material — the Technique Library, historical writing — carries no commercial links in its body, because that is what makes it worth citing.",
+          "Guard Theory intends to sell apparel, and the Journal is written by the same people who are making it. Where an article touches something we plan to sell, it says so. Reference material — the Technique Library, historical writing — carries no commercial links in its body, because that is what makes it worth citing.",
         ],
       },
     ],

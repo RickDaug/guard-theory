@@ -37,7 +37,7 @@ export const armDrag: TechniqueEntry = {
     "Angle drill: complete the drag and then move only your feet, arriving behind their shoulder line five times in a row without touching their back.",
     "Constrained game: hand fighting from standing or from seated, drags only, no takedowns and no submissions. Point scored for arriving at their side.",
     "Positional sparring: from seated engagement, both players may drag and defend; the round restarts when either establishes chest connection at the back.",
-    "Live rounds: count your drag attempts. A drag that works once in six attempts is doing its job, because the five failures are what open the grips.",
+    "Live rounds: count your drag attempts rather than your successes. A low hit rate is normal and not the measure - the failed attempts are what pull grips out of position for whatever comes next.",
   ],
   relatedSlugs: [
     "inside-position",

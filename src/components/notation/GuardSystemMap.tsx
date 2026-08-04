@@ -91,6 +91,29 @@ const EDGES: ReadonlyArray<readonly [string, string]> = [
 
 const byCode = new Map(FAMILIES.map((f) => [f.code, f]));
 
+/**
+ * The adjacency, derived from EDGES rather than restated in prose.
+ *
+ * The edges ARE the argument of this figure — a plate titled "the guard, as a
+ * system" whose relationships exist only in an aria-hidden drawing tells a
+ * screen-reader user five isolated definitions and no system at all. Deriving
+ * the text from the same array the lines are drawn from also means the key and
+ * the drawing cannot drift apart.
+ */
+function connectionsFor(code: string): string[] {
+  return EDGES.flatMap(([from, to]) => {
+    if (from === code) return [byCode.get(to)?.name ?? []].flat();
+    if (to === code) return [byCode.get(from)?.name ?? []].flat();
+    return [];
+  }).sort((a, b) => a.localeCompare(b));
+}
+
+/** "Butterfly guard, De la Riva and Half guard" */
+function listSentence(items: string[]): string {
+  if (items.length <= 1) return items[0] ?? "";
+  return `${items.slice(0, -1).join(", ")} and ${items[items.length - 1]}`;
+}
+
 const W = 660;
 const FIELD_H = 422;
 
@@ -183,11 +206,11 @@ export function GuardSystemMap() {
                   onFocus={() => setActiveCode(family.code)}
                   onBlur={() => setActiveCode(null)}
                   onClick={() => setActiveCode(live ? null : family.code)}
-                  className={`notation inline-flex min-h-[24px] items-center text-xs transition-colors duration-[140ms] ease-[var(--ease-control)] ${
+                  className={`notation inline-flex min-h-[24px] items-center gap-x-1.5 text-xs transition-colors duration-[140ms] ease-[var(--ease-control)] ${
                     live ? "text-signal" : "text-steel hover:text-chalk"
                   }`}
                 >
-                  <span aria-hidden="true">{family.code}</span>{" "}
+                  <span aria-hidden="true">{family.code}</span>
                   <span className="tracking-normal">{family.name}</span>
                 </button>
               </li>
@@ -203,13 +226,18 @@ export function GuardSystemMap() {
         >
           {active ? (
             <>
+              {/* This is a paragraph, not a flex container, so the explicit
+                  space is load-bearing. Do not remove it. */}
               <span className="text-chalk">{active.name}.</span>{" "}
-              {active.definition}
+              {active.definition}{" "}
+              <span className="text-chalk">
+                Connects to {listSentence(connectionsFor(active.code))}.
+              </span>
             </>
           ) : (
             <>
               Five families, one structure. Hover or tab through the key to read
-              how each relates to the others.
+              what each one is and which others it connects to.
             </>
           )}
         </p>

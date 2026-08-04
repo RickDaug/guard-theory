@@ -92,6 +92,50 @@ test.describe("keyboard and structure", () => {
 
     await keys.focus();
     await expect(page.getByText(/legs unlocked/i)).toBeVisible();
+
+    // The figure's argument is the relationships between positions. If those
+    // exist only as lines in an aria-hidden drawing, a screen-reader user gets
+    // five isolated definitions and no system — from a plate titled "the guard,
+    // as a system". The earlier version of this test asserted only that a
+    // definition appeared, and passed while the meaning was missing.
+    await expect(page.getByText(/connects to/i)).toBeVisible();
+    await expect(page.getByText(/connects to.*half guard/i)).toBeVisible();
+  });
+
+  test("key labels are not run together", async ({ page }) => {
+    await page.goto("/");
+
+    // The key buttons are flex containers, so a whitespace-only JSX child
+    // generates no flex item and silently vanishes — which rendered
+    // "01Closed guard" across every page and every breakpoint.
+    //
+    // The separation is visual, not textual: the code span is aria-hidden, so
+    // the accessible name is correctly just "Closed guard", and textContent is
+    // "01Closed guard" whether or not the layout is right. The only thing that
+    // actually distinguishes the two is the computed gap, so that is what is
+    // asserted.
+    const gaps = await page.locator("figcaption button").evaluateAll((nodes) =>
+      nodes.map((node) => {
+        const style = getComputedStyle(node);
+        return {
+          text: (node.textContent ?? "").slice(0, 24),
+          display: style.display,
+          columnGap: Number.parseFloat(style.columnGap) || 0,
+        };
+      }),
+    );
+
+    expect(gaps.length, "no key buttons found").toBeGreaterThan(0);
+
+    const collapsed = gaps.filter(
+      (g) => g.display.includes("flex") && g.columnGap < 2,
+    );
+    expect(
+      collapsed,
+      `key labels whose code and name would run together:\n${collapsed
+        .map((c) => c.text)
+        .join("\n")}`,
+    ).toEqual([]);
   });
 
   test("reduced motion is honoured", async ({ browser }) => {

@@ -62,8 +62,10 @@ export function ContactForm() {
           Message received
         </h2>
         <p className="mt-6 max-w-[34rem] text-base text-steel">
-          A person reads every message. If you sent a correction, you will hear
-          back whether or not we end up changing the piece.
+          Your message is stored. Until a mail provider is connected nobody is
+          notified automatically, so a reply may take a while - see the note
+          below. If you sent a correction it will be acted on whether or not we
+          end up changing the piece.
         </p>
       </div>
     );

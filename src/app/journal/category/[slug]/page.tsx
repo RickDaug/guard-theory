@@ -58,8 +58,8 @@ export default async function JournalCategoryPage({ params }: Params) {
               Nothing here yet
             </h2>
             <p className="mt-5 text-base text-steel">
-              Writing for this category is commissioned but not finished. We
-              would rather leave it empty than fill it to look busy.
+              Nothing has been written for this category yet. We would rather
+              leave it empty than fill it to look busy.
             </p>
             <Link
               href="/journal"

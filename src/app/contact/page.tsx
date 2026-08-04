@@ -21,9 +21,15 @@ export default function ContactPage() {
             <h1 className="display-condensed text-4xl text-chalk">Contact</h1>
 
             <div className="mt-10 flex max-w-[34rem] flex-col gap-6">
+              {/* Do not promise a reply here. Until a mail provider is
+                  connected, messages are stored and nobody is notified — see
+                  the note beside the form. Saying "a person reads every
+                  message" while that is true would be the exact kind of
+                  invented reassurance this site exists to avoid. */}
               <p className="text-lg text-steel">
-                A person reads every message. There is no ticket number and no
-                chatbot.
+                No ticket number, no chatbot, no automated reply. Read the note
+                under the form first — right now messages are stored rather than
+                delivered, and we would rather you knew that before writing one.
               </p>
 
               <p className="text-base text-steel">

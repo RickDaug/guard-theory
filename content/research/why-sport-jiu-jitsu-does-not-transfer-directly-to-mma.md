@@ -18,7 +18,7 @@ The commission forbade describing any fighter as exclusively BJJ-based and forba
 
 | # | Claim | Clause |
 | --- | --- | --- |
-| A1 | MMA gloves must weigh not less than 4 oz and not more than 8 oz. | NAC 467.430(7). **Not in the ABC document** — see §3. |
+| A1 | MMA gloves must weigh not less than 4 oz and not more than 8 oz. | NAC 467.427(7). **Not in the ABC document** — see §3. |
 | A2 | Other than the hands, no taping, covering or protective gear of any kind on the upper body; a soft neoprene sleeve is permitted only over knee and/or ankle. | ABC Unified Rules (Aug 2025), "Joint/Body Coverings" 10(a)–(b). |
 | A3 | Holding an opponent's gloves or shorts is a foul; a fighter may grab the opponent's *hand* provided the control is not by the glove material; holding one's own gloves or shorts is legal. | ABC foul 14 and 14(a). |
 | A4 | Trunks may not have exposed Velcro, pockets or zippers; the hem may not extend below the knee. Male contestants wear no upper-body clothing; female contestants wear a short-sleeved or sleeveless form-fitting rash guard and/or sports bra. | ABC "Cage/Ring Attire" 11(b), (d), (e), (f). |

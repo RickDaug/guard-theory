@@ -108,7 +108,7 @@ export const whySportJiuJitsuDoesNotTransferDirectlyToMma: DraftArticle = {
     },
     {
       title:
-        "Nevada Administrative Code chapter 467, Unarmed Combat: NAC 467.430(7) glove weights, NAC 467.7952 requirements for ring or fenced area, NAC 467.7954 duration",
+        "Nevada Administrative Code chapter 467, Unarmed Combat: NAC 467.427(7) glove weights, NAC 467.7952 requirements for ring or fenced area, NAC 467.7954 duration",
       publisher: "Nevada Legislature",
       url: "https://www.leg.state.nv.us/nac/NAC-467.html",
       accessed: "2026-08-03",

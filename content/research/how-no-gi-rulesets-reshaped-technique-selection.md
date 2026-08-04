@@ -41,7 +41,7 @@
 | D1 | World Championship qualifying rounds: 10 minutes, no points in the first 5. Finals, absolute finals and superfights: 20 minutes, first 10 with no positive points (negative points still count). | "TIME LIMITS" section |
 | D2 | Positive points: guard pass 3; knee on stomach 2; mount 2; back mount with hooks 3; takedown ending in guard or half guard 2; clean takedown ending past the guard 4; sweep 2; clean sweep past the guard 4. Positions must be held 3 seconds. | "POINTS (POSITIVE POINTS)" |
 | D3 | The "clean" 4-point variants require at least 75% of the opponent's back on the mat and no submission threat. | Same section |
-| D4 | Negative point for voluntarily going from standing to non-standing and remaining down 3+ seconds; for shooting and then pulling guard inside 3 seconds; for both knees on the mat more than 3 seconds while standing; for disengaging and backing away. Passivity: warned twice, then a minus; warned in the first half, penalised once the second half starts. | "PENALTIES (NEGATIVE POINTS)" |
+| D4 | Negative point for voluntarily going from standing to non-standing and remaining down 3+ seconds; for shooting and then pulling guard inside 3 seconds; for one or both knees on the mat more than 3 seconds while standing; for disengaging and backing away. Passivity: warned twice, then a minus; warned in the first half, penalised once the second half starts. | "PENALTIES (NEGATIVE POINTS)" |
 | D5 | Legal techniques include "Any Leg Lock or Ankle Lock", the twister and the can opener. Holding the T-shirt or shorts is prohibited. | "LEGAL TECHNIQUES" / "ILLEGAL TECHNIQUES" |
 | D6 | If no points are scored, the referees decide the winner on dominance. | "HOW YOU CAN WIN" |
 

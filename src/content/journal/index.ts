@@ -1,5 +1,11 @@
 import { CATEGORIES, isPublished, readingTimeMinutes } from "./types.ts";
 import type { Article, JournalCategorySlug } from "./types.ts";
+import { deLaRivaAndTheGuardThatTookHisName } from "./entries/de-la-riva-and-the-guard-that-took-his-name.ts";
+import { gripDecayAndTheHalfLifeOfANoGiGrip } from "./entries/grip-decay-and-the-half-life-of-a-no-gi-grip.ts";
+import { howToWashARashGuard } from "./entries/how-to-wash-a-rash-guard.ts";
+import { seatedGuardAndSupineGuard } from "./entries/seated-guard-and-supine-guard.ts";
+import { theDropoutNumberNobodyCanSource } from "./entries/the-dropout-number-nobody-can-source.ts";
+import { whatTheEarlyUfcTournamentsDemonstrated } from "./entries/what-the-early-ufc-tournaments-demonstrated.ts";
 import { drillingRehearsingAndPositionalSparring } from "./entries/drilling-rehearsing-and-positional-sparring.ts";
 import { guardRetentionAsASystem } from "./entries/guard-retention-as-a-system.ts";
 import { howABjjRashGuardShouldFit } from "./entries/how-a-bjj-rash-guard-should-fit.ts";
@@ -12,11 +18,17 @@ import { whySportJiuJitsuDoesNotTransferDirectlyToMma } from "./entries/why-spor
  * instead of silently dropping an article from the Journal and the sitemap.
  */
 export const ARTICLES: Article[] = [
+  deLaRivaAndTheGuardThatTookHisName,
   drillingRehearsingAndPositionalSparring,
+  gripDecayAndTheHalfLifeOfANoGiGrip,
   guardRetentionAsASystem,
   howABjjRashGuardShouldFit,
   howNoGiRulesetsReshapedTechniqueSelection,
+  howToWashARashGuard,
   maedaAndTheArrivalOfJudoInBrazil,
+  seatedGuardAndSupineGuard,
+  theDropoutNumberNobodyCanSource,
+  whatTheEarlyUfcTournamentsDemonstrated,
   whySportJiuJitsuDoesNotTransferDirectlyToMma,
 ];
 

@@ -105,11 +105,22 @@ unstyled screenshot. That class of false result is now impossible.
 downgrades Next to 9.3.3, which is not a fix. Revisit on the next Next.js
 patch release. Recorded here rather than silently ignored.
 
-**Content Security Policy is planned, not shipped.** The site is currently
-compatible with a strict one — fonts are self-hosted so `font-src 'self'`
-holds, and there are no third-party scripts. The blocker is the inline
-`application/ld+json` blocks, which need either a nonce or a hash. This should
-land before launch.
+**Content Security Policy ships enforcing, with one stated compromise.**
+Defined in `next.config.ts` and asserted in `tests/e2e/security.spec.ts`.
+`frame-ancestors`, `object-src`, `form-action`, `base-uri`, `font-src` and
+`connect-src` are all as strict as they go, and a test fails if any
+third-party origin ever appears in the policy — the site loads nothing it does
+not serve itself, verified by a test that watches every network request.
+
+The compromise is `script-src 'unsafe-inline'`. Next's App Router injects
+inline bootstrap and hydration scripts; removing it needs either a per-request
+nonce from middleware, which forces dynamic rendering and gives up the static
+prerendering the performance budget depends on, or build-time hashing of
+scripts Next generates. Structured data is unaffected either way: CSP applies
+to executable script, and `application/ld+json` is not executed.
+
+This is the one place the security posture is weaker than it looks, which is
+why it is commented in the config, stated here, and not quietly omitted.
 
 **No CI pipeline yet.** Every gate runs locally and passes. They need to run on
 push before this has more than one contributor.

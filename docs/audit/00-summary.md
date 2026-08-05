@@ -181,6 +181,67 @@ Nothing below is fixed. The first three need the owner.
 
 ---
 
+## Corrections to this summary
+
+Two claims in the first version of this document were wrong. They are corrected
+here rather than edited away, because a summary that quietly rewrites itself is
+worth less than one that shows where it was wrong.
+
+**AVIF.** The first performance run reported AVIF as 68 per cent *larger* than
+JPEG on every portrait, and this summary recorded it as a negative result worth
+keeping so that nobody re-tried it. That measurement compared AVIF at quality 75
+against WebP at quality 75, which is not a comparison across codecs — the
+quality scales are unrelated. Re-measured at matched SSIM, **AVIF is 39.1 per
+cent smaller, on every file, with equal or better fidelity on every file.** It
+is now enabled.
+
+The error is instructive. A confidently stated negative result is exactly the
+kind of finding nobody re-checks, and it would have sat in this document
+indefinitely, discouraging the correct decision.
+
+**Prefetch.** The first run reported that reading the Journal index to the
+bottom fired 189 requests and 1.2 MB. That does not reproduce; measured through
+the DevTools protocol it is 48,663 bytes. Prefetch remains disabled on list
+pages and the footer, which is defensible on its own terms, but it was not the
+problem it was described as.
+
+**Layout shift: the auditor was right, and it was never a font problem.**
+
+The audit reported a failing Core Web Vital from font swap, and four separate
+CLS numbers drove four rewrites of the font configuration. Each rewrite moved
+the number a little and none of them removed it, because none of them touched
+the cause.
+
+A real-browser measurement — 390 px, cold cache, slow-4G, 4× CPU, five runs per
+route, now `npm run cls` — puts the product page at **0.2047, reproducible ten
+runs out of ten**, with the home page at 0.0362 (the figure the auditor
+reported) and the article page at 0.0020.
+
+The cause is one shared component. `Breadcrumbs` set its trail in a wrapping
+flex list with `min-h-6` and a comment asserting that the reserved height stopped
+a font swap reflowing the page. Min-height is a floor, not a ceiling: when
+Martian Mono replaced the narrower fallback the trail stopped fitting, wrapped to
+a second line and pushed the entire product page down 24 px. **A wrap point
+depends on glyph width, so no amount of fallback-metric calibration can fix it** —
+which is exactly why four attempts at the fonts failed.
+
+The trail no longer wraps; it is one line that scrolls sideways, so its height
+does not depend on which font is loaded. Verified causally rather than by
+assertion: reverting only that component returns 0.2047, restoring it returns
+0.0000, each across five runs.
+
+Two process notes, because both nearly ended this the wrong way:
+
+- An earlier version of the measuring script reported 0.0000 for every route —
+  including with the defect present and with metric adjustment disabled
+  outright. Three zeroes in a row look identical to a clean site and to a dead
+  observer. **A draft of this section had already been written declaring the
+  site clean and the auditor wrong.** The script now forces a shift on a real
+  page first and refuses to run unless it sees it.
+- The font fallbacks are kept because they are correct and cost nothing, not
+  because they fixed anything measurable. The comments in `fonts.ts` claiming
+  otherwise were wrong and have been rewritten.
+
 ## Method
 
 Nine agents, one dimension each, no shared context, each with authority to

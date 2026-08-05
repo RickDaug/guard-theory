@@ -69,6 +69,23 @@ protecting, or make the case for changing the rule.
 - **Every export from a `"use server"` file must be an async function.** A
   constant exported from there is stripped and arrives `undefined` on the
   client, with no error until something reads a property off it.
+- **`npx playwright test` does not rebuild the app.** `webServer` runs
+  `next start`, which serves whatever is already in `.next`. Editing a component
+  and re-running the suite tests the *previous* build. Run `next build` first.
+  This invalidated a "verified by reintroducing the bug" check until it was
+  caught — the bug was reintroduced in source and never compiled.
+- **A guard that has only ever been green has not been tested.** Two here were
+  broken in ways that made them incapable of failing: `typography.spec.ts`
+  required a capitalised word of three or more letters, so it did not match
+  `ranking.It` — the exact production defect it was written for — and the CLS
+  script reported 0.0000 for every route because nothing was recording. Both now
+  prove themselves: the CLS script forces a shift and refuses to run unless it
+  sees it. Break a new guard on purpose and watch it fail before trusting a pass.
+- **Lighthouse CLS under simulated throttling is a model, not a measurement.**
+  Four rewrites of `fonts.ts` chased its numbers. Use `npm run cls` (real Chrome,
+  throttled, five runs) alongside it, and fix causes rather than metrics: the
+  real defect was a breadcrumb that *wrapped*, and no font calibration can move a
+  wrap point.
 - **Write control-character regexes with escape sequences**, not literal bytes.
   A class written as backslash-u-0000 through backslash-u-001F is fine; typing
   the actual bytes makes the source file read as binary to `grep` and `git

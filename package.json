@@ -12,7 +12,8 @@
     "typecheck": "tsc --noEmit",
     "screens": "playwright test --grep-invert nothing tests/screenshots",
     "e2e": "playwright test tests/e2e",
-    "lighthouse": "node scripts/lighthouse.mjs"
+    "lighthouse": "node scripts/lighthouse.mjs",
+    "cls": "node scripts/cls.mjs"
   },
   "dependencies": {
     "next": "16.2.12",

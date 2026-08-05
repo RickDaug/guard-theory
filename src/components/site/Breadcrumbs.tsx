@@ -28,15 +28,45 @@ export function Breadcrumbs({ trail }: { trail: Crumb[] }) {
   return (
     <>
       <nav aria-label="Breadcrumb">
-        {/* Height reserved so a font swap in this one line cannot reflow everything
-            below it. */}
-        <ol className="m-0 flex min-h-6 list-none flex-wrap items-center gap-x-3 gap-y-1 p-0">
+        {/**
+         * One line, always. The ancestors keep their full labels; the current
+         * page is the only thing allowed to shrink, and it ends in an ellipsis
+         * rather than at the edge of the screen.
+         *
+         * This used to wrap, with `min-h-6` reserving a single line and a
+         * comment claiming that stopped a font swap reflowing the page. It did
+         * not: min-height is a floor, not a ceiling, and the list still grew to
+         * two lines when Martian Mono replaced the narrower fallback and the
+         * trail stopped fitting. On the product page at 390px that pushed the
+         * entire layout down 24px — a measured 0.2047 CLS, a failing Core Web
+         * Vital, reproducible ten runs out of ten (`npm run cls`).
+         *
+         * A wrap point depends on glyph width, so it cannot be fixed by
+         * calibrating fallback metrics. Not wrapping is what makes the height
+         * independent of which font has loaded.
+         *
+         * The first fix let the row scroll instead, which measured identically
+         * and cut the label mid-word — "Theory 01 — Long sleeve rash g". An
+         * ellipsis reads as a decision; a hard cut reads as a broken page.
+         */}
+        <ol className="m-0 flex min-h-6 list-none flex-nowrap items-center gap-x-3 p-0">
           {full.map((crumb, index) => {
             const isCurrent = index === full.length - 1;
             return (
-              <li key={crumb.href} className="flex items-center gap-3">
+              <li
+                key={crumb.href}
+                className={`flex items-center gap-3 whitespace-nowrap ${
+                  isCurrent ? "min-w-0" : "shrink-0"
+                }`}
+              >
                 {isCurrent ? (
-                  <span className="notation text-2xs text-steel" aria-current="page">
+                  <span
+                    className="notation truncate text-2xs text-steel"
+                    aria-current="page"
+                    // The full label stays available to a pointer and to
+                    // assistive technology even when the visible text is cut.
+                    title={crumb.label}
+                  >
                     {crumb.label}
                   </span>
                 ) : (

@@ -48,13 +48,46 @@ for (const path of ROUTES) {
      * Legitimate exceptions are rare and enumerated rather than guessed at.
      */
     const fused = await page.evaluate(() => {
-      const ALLOWED = /(?:McG|MacD|DeLa|iPhone|JavaScript|JavaSc|YouTube)/;
+      /**
+       * Enumerated, never widened into a looser pattern. Each entry is a real
+       * name that genuinely has no space in it:
+       *   eMag    — from GracieMag, which brands itself as one word
+       *   :Maeda  — from "File:Maeda Mituyo.jpg", a Wikimedia filename quoted
+       *             exactly in a source line
+       *
+       * These are matched against the HIT, not the surrounding sentence, so an
+       * entry has to be written in the form the pattern actually captures:
+       * one leading character, then the capital and what follows.
+       */
+      const ALLOWED =
+        /(?:McG|MacD|DeLa|iPhone|JavaScript|JavaSc|YouTube|eMag|:Maeda)/;
       const out: string[] = [];
 
-      for (const el of Array.from(document.querySelectorAll("p, li, dd, h1, h2, h3"))) {
-        const text = el.textContent ?? "";
-        // A full stop or lower-case letter, then a capital, with nothing between.
-        const match = text.match(/[a-z.,;:!?][A-Z][a-z]{2,}/g);
+      for (const el of Array.from(
+        document.querySelectorAll<HTMLElement>("p, li, dd, h1, h2, h3"),
+      )) {
+        /**
+         * innerText, NOT textContent.
+         *
+         * textContent concatenates across nested block elements with no
+         * separator, so a card built as <li><h3>…submission</h3><p>The finish…
+         * reads as "submissionThe" and trips this check on ten pages where
+         * nothing is actually fused. innerText is the text as rendered, which
+         * is the only thing this file claims to test.
+         */
+        const text = el.innerText ?? "";
+        /**
+         * A full stop or lower-case letter, then a capital, with nothing
+         * between.
+         *
+         * The quantifier is `+`, not `{2,}`. With `{2,}` the capitalised word
+         * had to be at least three letters, so "This is not a ranking.It is
+         * not ordered by…" — the exact defect that shipped to production and
+         * the reason this file was written — did not match, because "It" is
+         * two letters. The guard was green against the bug it was created for.
+         * Verified by reintroducing it: `{2,}` passes, `+` fails.
+         */
+        const match = text.match(/[a-z.,;:!?][A-Z][a-z]+/g);
         if (!match) continue;
         for (const hit of match) {
           if (ALLOWED.test(hit)) continue;

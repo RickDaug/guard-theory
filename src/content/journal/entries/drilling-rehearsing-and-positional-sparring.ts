@@ -1,4 +1,4 @@
-import type { DraftArticle } from "../types.ts";
+import type { PublishedArticle } from "../types.ts";
 
 /**
  * A training-culture piece that had to be built almost entirely from adjacent
@@ -10,8 +10,10 @@ import type { DraftArticle } from "../types.ts";
  * academic dispute. Both sides are named in the body text. No medical, injury
  * or recovery claim appears anywhere in the piece.
  */
-export const drillingRehearsingAndPositionalSparring: DraftArticle = {
-  status: "draft",
+export const drillingRehearsingAndPositionalSparring: PublishedArticle = {
+  status: "published",
+  publishedAt: "2026-08-04",
+  authorId: "rick-r",
   slug: "drilling-rehearsing-and-positional-sparring",
   category: "training-culture",
   title: "Drilling, rehearsing, and what positional sparring changes",

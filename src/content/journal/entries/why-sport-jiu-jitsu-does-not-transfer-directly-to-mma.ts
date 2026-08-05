@@ -1,4 +1,4 @@
-import type { DraftArticle } from "../types.ts";
+import type { PublishedArticle } from "../types.ts";
 
 /**
  * Argued entirely from rule documents: the ABC Unified Rules of MMA as amended
@@ -11,8 +11,10 @@ import type { DraftArticle } from "../types.ts";
  * The one empirical citation is a published performance analysis, used for its
  * sample-level medians only.
  */
-export const whySportJiuJitsuDoesNotTransferDirectlyToMma: DraftArticle = {
-  status: "draft",
+export const whySportJiuJitsuDoesNotTransferDirectlyToMma: PublishedArticle = {
+  status: "published",
+  publishedAt: "2026-08-04",
+  authorId: "rick-r",
   slug: "why-sport-jiu-jitsu-does-not-transfer-directly-to-mma",
   category: "mma-and-jiu-jitsu",
   title: "Why sport jiu-jitsu does not transfer directly to MMA",

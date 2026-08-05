@@ -1,12 +1,14 @@
-import type { DraftArticle } from "../types.ts";
+import type { PublishedArticle } from "../types.ts";
 
 /**
  * Equipment writing with a commercial term in the title and no commercial ask
  * in the body. The test applied to every paragraph: does a reader who buys
  * nothing still leave with something they can use tonight?
  */
-export const howABjjRashGuardShouldFit: DraftArticle = {
-  status: "draft",
+export const howABjjRashGuardShouldFit: PublishedArticle = {
+  status: "published",
+  publishedAt: "2026-08-04",
+  authorId: "steven-p",
   slug: "how-a-bjj-rash-guard-should-fit",
   category: "equipment-and-apparel",
   title: "How a BJJ rash guard should fit",

@@ -1,4 +1,4 @@
-import type { DraftArticle } from "../types.ts";
+import type { PublishedArticle } from "../types.ts";
 
 /**
  * The house position on history: where the record is contested, the article
@@ -6,8 +6,10 @@ import type { DraftArticle } from "../types.ts";
  * Every disputed claim here carries at least two independent sources that
  * disagree with each other, and the disagreement is the point.
  */
-export const maedaAndTheArrivalOfJudoInBrazil: DraftArticle = {
-  status: "draft",
+export const maedaAndTheArrivalOfJudoInBrazil: PublishedArticle = {
+  status: "published",
+  publishedAt: "2026-08-04",
+  authorId: "rick-r",
   slug: "maeda-and-the-arrival-of-judo-in-brazil",
   category: "bjj-history",
   title: "Maeda, and the arrival of judo in Brazil",

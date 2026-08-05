@@ -88,7 +88,12 @@ test("indexable pages are indexable and the rest are not", async ({ page }) => {
   // A draft article renders, but must never be offered to a crawler: it has no
   // publication date, and indexing an undated piece as published is exactly
   // what the editorial policy rules out.
-  await page.goto("/journal/how-a-bjj-rash-guard-should-fit", {
+  //
+  // Uses a piece that is still a draft. When the flagships were published this
+  // assertion caught a real regression - the page returned robots: undefined,
+  // which removes the tag rather than inheriting the layout, so the article
+  // became indexable despite the site-wide opt-in being off.
+  await page.goto("/journal/how-to-wash-a-rash-guard", {
     waitUntil: "load",
   });
   const draftRobots =

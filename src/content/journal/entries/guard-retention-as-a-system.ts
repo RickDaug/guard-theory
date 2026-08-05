@@ -1,4 +1,4 @@
-import type { DraftArticle } from "../types.ts";
+import type { PublishedArticle } from "../types.ts";
 
 /**
  * Written to separate three things that normally arrive glued together: what
@@ -11,8 +11,10 @@ import type { DraftArticle } from "../types.ts";
  * Makes no claim that any of this improves anybody's guard. No such study
  * exists.
  */
-export const guardRetentionAsASystem: DraftArticle = {
-  status: "draft",
+export const guardRetentionAsASystem: PublishedArticle = {
+  status: "published",
+  publishedAt: "2026-08-04",
+  authorId: "steven-p",
   slug: "guard-retention-as-a-system",
   category: "guard-systems",
   title: "Guard retention as a system",

@@ -9,7 +9,8 @@ import {
   isPublished,
   readingTimeMinutes,
 } from "@/content/journal";
-import { absoluteUrl } from "@/lib/site";
+import { IS_INDEXABLE, absoluteUrl } from "@/lib/site";
+import { getAuthor } from "@/content/authors";
 
 type Params = { params: Promise<{ slug: string }> };
 
@@ -26,12 +27,18 @@ export async function generateMetadata({ params }: Params): Promise<Metadata> {
     title: article.title,
     description: article.standfirst,
     alternates: { canonical: `/journal/${article.slug}` },
-    // A draft is readable but is not offered to search. It has no publication
+    // Stated explicitly in BOTH directions, never left to inherit. Returning
+    // `robots: undefined` from a page does not fall back to the layout - it
+    // removes the tag, which silently made published articles indexable even
+    // with the site-wide opt-in switched off.
+    //
+    // A draft is readable but never offered to search: it has no publication
     // date, and indexing something undated as though it were published is the
     // exact dishonesty the editorial policy rules out.
-    robots: isPublished(article)
-      ? undefined
-      : { index: false, follow: true },
+    robots:
+      IS_INDEXABLE && isPublished(article)
+        ? { index: true, follow: true }
+        : { index: false, follow: true },
   };
 }
 
@@ -48,6 +55,7 @@ export default async function ArticlePage({ params }: Params) {
     .filter((a): a is NonNullable<typeof a> => Boolean(a));
 
   const published = isPublished(article);
+  const author = published ? getAuthor(article.authorId) : undefined;
 
   /**
    * Article structured data is emitted only for genuinely published pieces.
@@ -64,6 +72,15 @@ export default async function ArticlePage({ params }: Params) {
         datePublished: article.publishedAt,
         ...(article.updatedAt ? { dateModified: article.updatedAt } : {}),
         articleSection: category.name,
+        ...(author
+          ? {
+              author: {
+                "@type": "Person",
+                name: author.name,
+                description: author.bio,
+              },
+            }
+          : {}),
         publisher: { "@id": absoluteUrl("/#organization") },
         mainEntityOfPage: absoluteUrl(`/journal/${article.slug}`),
       }
@@ -124,6 +141,22 @@ export default async function ArticlePage({ params }: Params) {
                   {article.title}
                 </h1>
                 <p className="mt-7 text-lg text-slate">{article.standfirst}</p>
+
+                {published && author ? (
+                  <p className="mt-6 text-base text-slate">
+                    By <span className="text-ink">{author.name}</span>,{" "}
+                    {author.role.toLowerCase()} · Published{" "}
+                    <time dateTime={(article as { publishedAt: string }).publishedAt}>
+                      {new Date(
+                        (article as { publishedAt: string }).publishedAt,
+                      ).toLocaleDateString("en-GB", {
+                        day: "numeric",
+                        month: "long",
+                        year: "numeric",
+                      })}
+                    </time>
+                  </p>
+                ) : null}
 
                 {!published ? (
                   <p className="mt-8 border-l-2 border-signal-dim py-1 pl-6 text-base text-slate">
@@ -228,6 +261,11 @@ export default async function ArticlePage({ params }: Params) {
               ) : null}
 
               <footer className="mt-14 border-t border-slate/25 pt-8">
+                {author ? (
+                  <p className="mb-6 max-w-[34rem] text-sm text-slate">
+                    <span className="text-ink">{author.name}.</span> {author.bio}
+                  </p>
+                ) : null}
                 <p className="notation text-2xs text-slate">
                   <Link
                     href="/policies/editorial"

@@ -1,4 +1,4 @@
-import type { DraftArticle } from "../types.ts";
+import type { PublishedArticle } from "../types.ts";
 
 /**
  * Argued almost entirely from published rule books rather than from match
@@ -6,8 +6,10 @@ import type { DraftArticle } from "../types.ts";
  * competition results repeated second-hand are the easiest thing in grappling
  * writing to get wrong.
  */
-export const howNoGiRulesetsReshapedTechniqueSelection: DraftArticle = {
-  status: "draft",
+export const howNoGiRulesetsReshapedTechniqueSelection: PublishedArticle = {
+  status: "published",
+  publishedAt: "2026-08-04",
+  authorId: "steven-p",
   slug: "how-no-gi-rulesets-reshaped-technique-selection",
   category: "competition-analysis",
   title: "How no-gi rulesets reshaped technique selection",

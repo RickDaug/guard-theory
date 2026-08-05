@@ -60,8 +60,7 @@ export function SearchClient({ index }: { index: SearchDocument[] }) {
           </h2>
           <p className="mt-4 text-base text-steel">
             Search looks for every word you type, so fewer words usually finds
-            more. The Journal is not indexed yet — its articles are still in
-            draft.
+            more.
           </p>
           <Link
             href="/technique"

@@ -32,8 +32,8 @@ const FAQS = [
     a: "Because no garment has been made or photographed yet, and a render presented as a product photo would be a claim we cannot support. The drawings are production flats — the thing a factory is actually given. When photography exists it will sit alongside them.",
   },
   {
-    q: "Why is there no size chart?",
-    a: "Because nothing has been produced and measured. A chart taken from a pattern rather than from finished garments is the kind of thing people buy against and then return.",
+    q: "How do I know what size I am?",
+    a: "The size and fit guide has the full chart in inches and centimetres, plus what to check when you try one on. If a garment does not match those measurements, return postage is ours both ways.",
   },
   {
     q: "Will the rash guards be competition legal?",
@@ -45,7 +45,7 @@ const FAQS = [
   },
   {
     q: "Who writes the Journal?",
-    a: "Articles are finished but held in draft until they can carry a real named author with real credentials. Publishing under an invented byline would undermine the only thing that makes the writing worth reading.",
+    a: "Rick R and Steven P. Every article carries a byline, a publication date and the sources it was built from, because a piece nobody will put their name to is not worth reading.",
   },
   {
     q: "Do you take sponsored posts or affiliate commission?",

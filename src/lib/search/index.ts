@@ -1,6 +1,8 @@
 import { CATEGORIES as TECHNIQUE_CATEGORIES, ENTRIES } from "@/content/technique";
 import { PRODUCTS } from "@/content/products";
 import { POLICIES } from "@/content/policies";
+import { ARTICLES } from "@/content/journal";
+import { FIGURES } from "@/content/figures";
 
 /**
  * A flat index built at build time from the same registries the routes use.
@@ -11,7 +13,13 @@ import { POLICIES } from "@/content/policies";
  * When the corpus outgrows that, this is the one module to replace.
  */
 
-export type SearchKind = "Technique" | "Product" | "Policy" | "Category";
+export type SearchKind =
+  | "Article"
+  | "Figure"
+  | "Technique"
+  | "Product"
+  | "Policy"
+  | "Category";
 
 export type SearchDocument = {
   id: string;
@@ -37,6 +45,34 @@ function toDocument(
 
 export function buildSearchIndex(): SearchDocument[] {
   return [
+    // Articles and figures were both missing from this index while the page
+    // told the reader everything on the site was searchable. Searching
+    // "Maeda" returned nothing on a site with a profile and an article about
+    // him.
+    ...ARTICLES.map((article) =>
+      toDocument(
+        {
+          id: `article:${article.slug}`,
+          kind: "Article",
+          title: article.title,
+          summary: article.standfirst,
+          href: `/journal/${article.slug}`,
+        },
+        article.sections.map((section) => section.heading),
+      ),
+    ),
+    ...FIGURES.map((figure) =>
+      toDocument(
+        {
+          id: `figure:${figure.slug}`,
+          kind: "Figure",
+          title: figure.name,
+          summary: figure.standfirst,
+          href: `/figures/${figure.slug}`,
+        },
+        [figure.lifespan ?? "", figure.contribution],
+      ),
+    ),
     ...ENTRIES.map((entry) =>
       toDocument(
         {

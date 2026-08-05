@@ -120,11 +120,21 @@
     max-width: 100%;
   }
 
-  /* One focus treatment everywhere, in the accent, never removed. */
+  /* One focus treatment everywhere, never removed — but the accent has to
+     change with the ground. Citrine is 11.5:1 on ink and 1.31:1 on bone, so a
+     single hard-coded ring is invisible across every long-form page. The
+     contrast work originally covered text only; this is the same rule applied
+     to a non-text indicator (WCAG 2.2 SC 1.4.11). */
   :focus-visible {
-    outline: 2px solid var(--color-signal);
+    outline: 2px solid var(--focus-ring, var(--color-signal));
     outline-offset: 3px;
     border-radius: 1px;
+  }
+
+  /* The study register. signal-dim is 5.16:1 on bone. */
+  .bg-bone,
+  .bg-bone-raised {
+    --focus-ring: var(--color-signal-dim);
   }
 
   ::selection {

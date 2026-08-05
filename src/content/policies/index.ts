@@ -49,7 +49,7 @@ export const POLICIES: Policy[] = [
         id: "how-long",
         heading: "How long we keep it",
         paragraphs: [
-          "Waitlist details are kept until the First Edition has been released and you have been told, or until you ask us to delete them. Messages sent through the contact form are kept for twelve months and then deleted.",
+          "Waitlist details are kept until the First Edition has been released and you have been told, or until you ask us to delete them. Messages sent through the contact form are kept while we deal with them and for as long afterwards as we need to answer a follow-up. Ask us to delete either and we will.",
         ],
       },
       {
@@ -96,7 +96,7 @@ export const POLICIES: Policy[] = [
         heading: "The writing and drawings on this site",
         paragraphs: [
           "The articles, technique entries, diagrams and garment drawings are ours. Quote them with attribution and a link — that is what they are for. Do not republish them wholesale, and do not feed them into a product that reproduces them.",
-          "Photographs of people appear with their agreement and are credited. Historical images are used under public domain or Creative Commons terms, with the licence stated alongside each one.",
+          "Portraits in the Influential Figures index are used under public domain or Creative Commons licences, with the licence, the rights holder and a link to the source shown beside each image. Where no licence could be verified, no portrait is published.",
         ],
       },
       {

@@ -1,61 +1,41 @@
-import { appendFile, mkdir, readFile } from "node:fs/promises";
-import path from "node:path";
+import { NdjsonStore } from "@/lib/storage/ndjson-store";
 import type { StoreResult, WaitlistStore, WaitlistSignup } from "./types.ts";
 
 /**
- * Development fallback. Appends signups to a newline-delimited JSON file under
- * .data/, which is gitignored.
+ * Development and pre-launch fallback.
  *
- * This exists so that a form submitted during development is never silently
- * discarded — the brief forbids that, and it is the kind of thing that quietly
- * loses real signups if a provider is misconfigured in production.
+ * This used to carry its own copy of the filesystem logic, and its own copy of
+ * the bug: it wrote under `process.cwd()/.data`, which is read-only on a
+ * serverless runtime, so every signup in production failed and the catch block
+ * swallowed the error. Three separate audits proved it by driving the live
+ * action. Sharing NdjsonStore means that class of divergence cannot recur.
  *
- * It is NOT durable in any deployment sense: serverless filesystems are
- * ephemeral, so `isDurable` is false and the UI says so plainly.
+ * `isDurable` is false and the caller is expected to act on that. It is not
+ * storage; it is a floor that stops submissions failing silently until a real
+ * provider is connected — see docs/owner-decisions.md item 6.
  */
 
-const DATA_DIR = path.join(process.cwd(), ".data");
-const FILE = path.join(DATA_DIR, "waitlist.ndjson");
+type StoredSignup = WaitlistSignup & Record<string, unknown>;
 
 export class LocalFileWaitlistStore implements WaitlistStore {
-  readonly name = "local file (.data/waitlist.ndjson)";
+  readonly name = "local file (temp directory)";
   readonly isDurable = false;
 
+  private readonly store = new NdjsonStore<StoredSignup>("waitlist.ndjson");
+
   async add(signup: WaitlistSignup): Promise<StoreResult> {
-    try {
-      await mkdir(DATA_DIR, { recursive: true });
+    const alreadyOnList = await this.store.hasMatch("email", signup.email);
 
-      const alreadyOnList = await this.has(signup.email);
-      if (alreadyOnList) {
-        return { ok: true, alreadyOnList: true };
-      }
+    if (alreadyOnList) {
+      return { ok: true, alreadyOnList: true };
+    }
 
-      await appendFile(FILE, `${JSON.stringify(signup)}\n`, "utf8");
-      return { ok: true, alreadyOnList: false };
-    } catch {
-      // Deliberately swallows the underlying error rather than surfacing a
-      // filesystem path to the caller.
+    const written = await this.store.append(signup as StoredSignup);
+
+    if (!written) {
       return { ok: false, reason: "storage-unavailable" };
     }
-  }
 
-  private async has(email: string): Promise<boolean> {
-    try {
-      const contents = await readFile(FILE, "utf8");
-      const needle = email.toLowerCase();
-      return contents
-        .split("\n")
-        .filter(Boolean)
-        .some((line) => {
-          try {
-            const parsed = JSON.parse(line) as { email?: string };
-            return parsed.email?.toLowerCase() === needle;
-          } catch {
-            return false;
-          }
-        });
-    } catch {
-      return false;
-    }
+    return { ok: true, alreadyOnList: false };
   }
 }

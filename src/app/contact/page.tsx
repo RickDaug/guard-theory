@@ -21,7 +21,7 @@ export default function ContactPage() {
 
             <div className="mt-10 flex max-w-[34rem] flex-col gap-6">
               <p className="text-lg text-steel">
-                A person reads every message. No ticket number, no chatbot, no
+                A person reads every message. No ticket number, no chatbot and no
                 automated reply pretending to be one.
               </p>
 

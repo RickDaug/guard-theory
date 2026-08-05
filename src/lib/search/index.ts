@@ -3,6 +3,10 @@ import { PRODUCTS } from "@/content/products";
 import { POLICIES } from "@/content/policies";
 import { ARTICLES } from "@/content/journal";
 import { FIGURES } from "@/content/figures";
+import type { SearchDocument } from "./types.ts";
+
+export type { SearchDocument, SearchKind } from "./types.ts";
+export { searchDocuments } from "./types.ts";
 
 /**
  * A flat index built at build time from the same registries the routes use.
@@ -13,34 +17,11 @@ import { FIGURES } from "@/content/figures";
  * When the corpus outgrows that, this is the one module to replace.
  */
 
-export type SearchKind =
-  | "Article"
-  | "Figure"
-  | "Technique"
-  | "Product"
-  | "Policy"
-  | "Category";
-
-export type SearchDocument = {
-  id: string;
-  kind: SearchKind;
-  title: string;
-  summary: string;
-  href: string;
-  /** Lower-cased haystack. Precomputed so filtering does no work per keystroke. */
-  haystack: string;
-};
-
 function toDocument(
-  doc: Omit<SearchDocument, "haystack">,
+  doc: Omit<SearchDocument, "terms">,
   extraTerms: string[] = [],
 ): SearchDocument {
-  return {
-    ...doc,
-    haystack: [doc.title, doc.summary, doc.kind, ...extraTerms]
-      .join(" ")
-      .toLowerCase(),
-  };
+  return { ...doc, terms: extraTerms.filter(Boolean).join(" ") };
 }
 
 export function buildSearchIndex(): SearchDocument[] {
@@ -118,17 +99,3 @@ export function buildSearchIndex(): SearchDocument[] {
   ];
 }
 
-/**
- * All terms must appear somewhere in the document. Order-independent, so
- * "guard closed" finds the closed guard, and no fuzzy matching — a result you
- * did not ask for is worse than no result.
- */
-export function searchDocuments(
-  index: SearchDocument[],
-  query: string,
-): SearchDocument[] {
-  const terms = query.toLowerCase().split(/\s+/).filter(Boolean);
-  if (terms.length === 0) return [];
-
-  return index.filter((doc) => terms.every((term) => doc.haystack.includes(term)));
-}

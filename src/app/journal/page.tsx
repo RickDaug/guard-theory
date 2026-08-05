@@ -51,6 +51,7 @@ export default function JournalIndexPage() {
               return (
                 <li key={article.slug} className="bg-ink">
                   <Link
+                    prefetch={false}
                     href={`/journal/${article.slug}`}
                     className="group flex h-full flex-col p-8 no-underline transition-colors duration-[140ms] ease-[var(--ease-control)] hover:bg-ink-raised"
                   >
@@ -89,6 +90,7 @@ export default function JournalIndexPage() {
               return (
                 <li key={category.slug} className="bg-ink">
                   <Link
+                    prefetch={false}
                     href={`/journal/category/${category.slug}`}
                     className="group flex h-full flex-col p-7 no-underline transition-colors duration-[140ms] ease-[var(--ease-control)] hover:bg-ink-raised"
                   >

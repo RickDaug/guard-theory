@@ -58,6 +58,7 @@ export default function FiguresPage() {
           {FIGURES_ALPHABETICAL.map((figure) => (
             <li key={figure.slug} className="border border-steel-dim bg-ink">
               <Link
+                prefetch={false}
                 href={`/figures/${figure.slug}`}
                 className="group flex h-full flex-col no-underline transition-colors duration-[140ms] ease-[var(--ease-control)] hover:bg-ink-raised"
               >

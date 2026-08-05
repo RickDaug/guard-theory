@@ -73,6 +73,7 @@ export function SiteFooter() {
                   {column.links.map((link) => (
                     <li key={link.href}>
                       <Link
+                        prefetch={false}
                         href={link.href}
                         className="inline-flex min-h-[24px] items-center text-sm text-steel no-underline transition-colors duration-[140ms] ease-[var(--ease-control)] hover:text-chalk"
                       >

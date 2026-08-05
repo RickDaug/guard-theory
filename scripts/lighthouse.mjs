@@ -30,6 +30,12 @@ const TARGETS = [
   { name: "home", url: "/" },
   { name: "product", url: "/shop/theory-01-long-sleeve" },
   { name: "long-form", url: "/technique/no-gi-systems/inside-position" },
+  { name: "article", url: "/journal/maeda-and-the-arrival-of-judo-in-brazil" },
+  // Ten photographs, the only route with real imagery.
+  { name: "figures", url: "/figures" },
+  // Added because it was the one page under the gate and the gate could not
+  // see it: this list was chosen when the site had three page types.
+  { name: "search", url: "/search", skipSeo: true },
 ];
 
 /**
@@ -195,6 +201,9 @@ try {
     const row = [target.name.padEnd(9)];
 
     for (const [category, threshold] of Object.entries(THRESHOLDS)) {
+      // A route that is noindex by design cannot pass the SEO category, and
+      // failing it would be measuring the safeguard, not the page.
+      if (category === "seo" && target.skipSeo) continue;
       const runs = observed[category] ?? [0];
       const score = median(runs);
       scores[category] = score;

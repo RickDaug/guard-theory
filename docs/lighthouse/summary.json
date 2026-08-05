@@ -9,34 +9,181 @@
     {
       "name": "home",
       "url": "/",
-      "runs": 1,
+      "runs": 3,
       "scores": {
         "performance": 91,
+        "performance_runs": [
+          90,
+          91,
+          91
+        ],
         "accessibility": 100,
+        "accessibility_runs": [
+          100,
+          100,
+          100
+        ],
         "best-practices": 100,
-        "seo": 100
+        "best-practices_runs": [
+          100,
+          100,
+          100
+        ],
+        "seo": 100,
+        "seo_runs": [
+          100,
+          100,
+          100
+        ]
       }
     },
     {
       "name": "product",
       "url": "/shop/theory-01-long-sleeve",
-      "runs": 1,
+      "runs": 3,
       "scores": {
         "performance": 91,
+        "performance_runs": [
+          90,
+          91,
+          91
+        ],
         "accessibility": 100,
+        "accessibility_runs": [
+          100,
+          100,
+          100
+        ],
         "best-practices": 100,
-        "seo": 100
+        "best-practices_runs": [
+          100,
+          100,
+          100
+        ],
+        "seo": 100,
+        "seo_runs": [
+          100,
+          100,
+          100
+        ]
       }
     },
     {
       "name": "long-form",
       "url": "/technique/no-gi-systems/inside-position",
-      "runs": 1,
+      "runs": 3,
       "scores": {
-        "performance": 91,
+        "performance": 90,
+        "performance_runs": [
+          89,
+          91,
+          90
+        ],
         "accessibility": 100,
+        "accessibility_runs": [
+          100,
+          100,
+          100
+        ],
         "best-practices": 100,
-        "seo": 100
+        "best-practices_runs": [
+          100,
+          100,
+          100
+        ],
+        "seo": 100,
+        "seo_runs": [
+          100,
+          100,
+          100
+        ]
+      }
+    },
+    {
+      "name": "article",
+      "url": "/journal/maeda-and-the-arrival-of-judo-in-brazil",
+      "runs": 3,
+      "scores": {
+        "performance": 88,
+        "performance_runs": [
+          89,
+          88,
+          88
+        ],
+        "accessibility": 100,
+        "accessibility_runs": [
+          100,
+          100,
+          100
+        ],
+        "best-practices": 100,
+        "best-practices_runs": [
+          100,
+          100,
+          100
+        ],
+        "seo": 100,
+        "seo_runs": [
+          100,
+          100,
+          100
+        ]
+      }
+    },
+    {
+      "name": "figures",
+      "url": "/figures",
+      "runs": 3,
+      "scores": {
+        "performance": 90,
+        "performance_runs": [
+          89,
+          90,
+          91
+        ],
+        "accessibility": 100,
+        "accessibility_runs": [
+          100,
+          100,
+          100
+        ],
+        "best-practices": 100,
+        "best-practices_runs": [
+          100,
+          100,
+          100
+        ],
+        "seo": 100,
+        "seo_runs": [
+          100,
+          100,
+          100
+        ]
+      }
+    },
+    {
+      "name": "search",
+      "url": "/search",
+      "runs": 3,
+      "scores": {
+        "performance": 89,
+        "performance_runs": [
+          89,
+          93,
+          89
+        ],
+        "accessibility": 100,
+        "accessibility_runs": [
+          100,
+          100,
+          100
+        ],
+        "best-practices": 100,
+        "best-practices_runs": [
+          100,
+          100,
+          100
+        ]
       }
     }
   ]

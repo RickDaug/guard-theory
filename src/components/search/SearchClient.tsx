@@ -2,7 +2,9 @@
 
 import Link from "next/link";
 import { useId, useMemo, useState } from "react";
-import { searchDocuments, type SearchDocument } from "@/lib/search";
+// Deliberately NOT "@/lib/search" — that module imports every content
+// registry, and a client import of it drags all of them into the bundle.
+import { searchDocuments, type SearchDocument } from "@/lib/search/types";
 
 /**
  * Results update as you type and are announced politely rather than assertively,

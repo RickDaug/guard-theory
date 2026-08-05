@@ -35,6 +35,7 @@ export default function TechniqueIndexPage() {
             return (
               <li key={category.slug} className="bg-ink">
                 <Link
+                  prefetch={false}
                   href={`/technique/${category.slug}`}
                   className="group flex h-full flex-col p-8 no-underline transition-colors duration-[140ms] ease-[var(--ease-control)] hover:bg-ink-raised"
                 >

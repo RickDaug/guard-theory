@@ -43,7 +43,10 @@
      Fluid modular scale, ratio 1.25. Display sizes clamp between a mobile
      and a wide-desktop bound so nothing needs a breakpoint override.
      -------------------------------------------------------------------- */
-  --font-display: var(--font-archivo), "Arial Narrow", system-ui, sans-serif;
+  /* next/font emits its own metric-adjusted fallback inside this variable and
+     terminates the chain, so anything appended here is unreachable. The real
+     fallback is configured in fonts.ts. */
+  --font-display: var(--font-archivo);
   --font-body: var(--font-newsreader), Georgia, "Times New Roman", serif;
   --font-notation: var(--font-martian), ui-monospace, "SFMono-Regular", monospace;
 

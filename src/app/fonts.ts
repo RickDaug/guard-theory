@@ -36,6 +36,12 @@ export const archivo = Archivo({
   display: "swap",
   preload: true,
   variable: "--font-archivo",
+  // Headings render at wdth 66. Without this, next/font calibrates its
+  // metric-adjusted fallback against Archivo at wdth 100, the fallback sets
+  // far wider, and the h1 reflows from six lines to four when the real font
+  // arrives - a measured 0.0665 shift that Lighthouse reports as 0.000
+  // because its LCP simulation stops before the swap.
+  fallback: ["Arial Narrow", "Helvetica Neue Condensed", "Arial", "sans-serif"],
 });
 
 /**

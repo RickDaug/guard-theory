@@ -107,3 +107,62 @@ await writeFile(
   ].join("\n"),
   "utf8",
 );
+
+// --- Open Graph card -------------------------------------------------------
+//
+// Generated here and committed as a static PNG rather than rendered at request
+// time. A link preview that depends on a font fetch at build time is a link
+// preview that silently breaks; this one is a file.
+//
+// 1200x630 is the size every messaging app and social network crops from.
+
+const OG_W = 1200;
+const OG_H = 630;
+
+function ogSvg() {
+  const mark = geometry.paths
+    .map((p) => `<path d="${p.d}"/>`)
+    .join("");
+
+  return `<svg xmlns="http://www.w3.org/2000/svg" width="${OG_W}" height="${OG_H}" viewBox="0 0 ${OG_W} ${OG_H}">
+  <rect width="${OG_W}" height="${OG_H}" fill="${INK}"/>
+
+  <!-- plate field, echoing the drawings on the site -->
+  <rect x="56" y="56" width="${OG_W - 112}" height="${OG_H - 112}" fill="none" stroke="#3A444F" stroke-width="1.5"/>
+  <g stroke="#3A444F" stroke-width="1.5">
+    <line x1="76" y1="76" x2="96" y2="76"/><line x1="76" y1="66" x2="76" y2="86"/>
+    <line x1="${OG_W - 96}" y1="76" x2="${OG_W - 76}" y2="76"/><line x1="${OG_W - 76}" y1="66" x2="${OG_W - 76}" y2="86"/>
+    <line x1="76" y1="${OG_H - 76}" x2="96" y2="${OG_H - 76}"/><line x1="76" y1="${OG_H - 86}" x2="76" y2="${OG_H - 66}"/>
+    <line x1="${OG_W - 96}" y1="${OG_H - 76}" x2="${OG_W - 76}" y2="${OG_H - 76}"/><line x1="${OG_W - 76}" y1="${OG_H - 86}" x2="${OG_W - 76}" y2="${OG_H - 66}"/>
+  </g>
+
+  <!-- monogram -->
+  <g transform="translate(112, 132) scale(2.6)" fill="none" stroke="${CHALK}"
+     stroke-width="${geometry.strokeWidth}" stroke-linecap="butt">${mark}</g>
+
+  <text x="112" y="392" font-family="Arial Narrow, Arial, sans-serif" font-size="104"
+        font-weight="700" letter-spacing="2" fill="${CHALK}">GUARD THEORY</text>
+
+  <text x="116" y="452" font-family="Arial, sans-serif" font-size="34" fill="#8A95A1">
+    No-gi grappling apparel, and a technical study of the guard.
+  </text>
+
+  <line x1="112" y1="504" x2="248" y2="504" stroke="#E3C74B" stroke-width="4"/>
+
+  <text x="112" y="556" font-family="Consolas, monospace" font-size="26" letter-spacing="1" fill="#8A95A1">
+    POSITION BEFORE SUBMISSION. SYSTEMS BEFORE CHAOS.
+  </text>
+</svg>`;
+}
+
+await sharp(Buffer.from(ogSvg()))
+  .png({ compressionLevel: 9 })
+  .toFile(path.join(APP, "opengraph-image.png"));
+console.log("  src/app/opengraph-image.png  1200×630");
+
+await writeFile(
+  path.join(APP, "opengraph-image.alt.txt"),
+  "Guard Theory — no-gi grappling apparel, and a technical study of the guard.\n",
+  "utf8",
+);
+console.log("  src/app/opengraph-image.alt.txt");

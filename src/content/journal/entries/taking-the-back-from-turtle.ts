@@ -2,7 +2,7 @@ import type { PublishedArticle } from "../types.ts";
 
 /**
  * A transition piece rather than a submission piece. The organising evidence is
- * that three scoring tables, written independently, all put the chest before
+ * how three scoring tables, written independently, describe back control,
  * the legs in their definition of back control - and that the one place they
  * disagree, the body triangle, is a disagreement about the legs.
  *
@@ -17,7 +17,7 @@ export const takingTheBackFromTurtle: PublishedArticle = {
   category: "guard-systems",
   title: "Taking the back from turtle",
   standfirst:
-    "Three scoring tables define back control in three different ways, and all of them put the chest connection before the legs.",
+    "Three scoring tables define back control in three different ways, and what they disagree about tells you more than what they share.",
   sections: [
     {
       id: "turtle-is-not-a-guard",
@@ -35,8 +35,8 @@ export const takingTheBackFromTurtle: PublishedArticle = {
       paragraphs: [
         "The most useful evidence about back control is not a coaching argument. It is that three organisations wrote definitions of it independently, and the definitions share a structure.",
         "United World Wrestling's grappling rules award four points for back mount when a grappler controls the opponent from the back with their chest to the opponent's back and their heels between both of the opponent's thighs, or in a body triangle, with the legs positioned to trap up to one of the opponent's arms, held for three seconds. The IBJJF awards four points when an athlete takes control of the opponent's back placing their heels between the thighs without crossing their legs, in a position to trap up to one of the opponent's arms, without trapping the arm above the shoulder line, and remains there for three seconds. The ADCC rules give three points for back mount with hooks, accept both hooks or a body triangle, and specify that the hooks must not be over either shoulder.",
-        "Three tables, three point values, and one shared picture: attached at the chest, legs inside the thighs, at most one arm trapped, and nothing above the shoulder line. Where they differ is instructive. UWW and ADCC accept a body triangle for full points; the IBJJF gives only an advantage for it, and the same reduced score applies when the legs are crossed, when only one heel is in, or when both of the opponent's arms are trapped.",
-        "That disagreement is about the legs. Nobody disagrees about the chest. When independent committees writing for different sports converge on a clause and diverge on the ones around it, the converged clause is worth taking seriously.",
+        "Three tables and three point values. All three describe the legs, and all three cap how much of the opponent may be trapped. Only United World Wrestling states a chest requirement in the clause itself; the IBJJF and ADCC definitions describe the legs alone. Where they differ is instructive: UWW and ADCC accept a body triangle for full points; the IBJJF gives only an advantage for it, and the same reduced score applies when the legs are crossed, when only one heel is in, or when both of the opponent's arms are trapped.",
+        "The chest connection is a coaching commonplace rather than a rule most of these documents state, and it is worth being precise about that: only one of the three requires it. What all three do require is that the legs are in, and that is what the scoring turns on.",
       ],
     },
     {

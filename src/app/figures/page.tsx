@@ -48,8 +48,8 @@ export default function FiguresPage() {
             contested — which in jiu-jitsu is often — the entry says so.
           </p>
           <p className="mt-6 border-l-2 border-signal py-1 pl-6 text-base text-steel">
-            <span className="text-chalk">This is not a ranking.</span> It is not
-            ordered by anything except the alphabet, and nobody&rsquo;s absence
+            <span className="text-chalk">This is not a ranking.</span>{" "}
+            It is not ordered by anything except the alphabet, and nobody&rsquo;s absence
             from it is a verdict.
           </p>
         </header>

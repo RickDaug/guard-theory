@@ -102,6 +102,28 @@ const nextConfig: NextConfig = {
   async headers() {
     return [{ source: "/:path*", headers: securityHeaders }];
   },
+
+  /**
+   * One canonical host.
+   *
+   * Both the apex and www resolve to the same deployment, so without this the
+   * whole site is reachable at two addresses. The canonical tags already point
+   * at the apex, but a redirect is the stronger signal and stops the duplicate
+   * existing at all.
+   *
+   * Kept in code rather than in host configuration so it survives a move off
+   * Vercel and is visible in review.
+   */
+  async redirects() {
+    return [
+      {
+        source: "/:path*",
+        has: [{ type: "host", value: "www.guardtheory.net" }],
+        destination: "https://guardtheory.net/:path*",
+        permanent: true,
+      },
+    ];
+  },
 };
 
 export default nextConfig;

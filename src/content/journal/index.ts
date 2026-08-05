@@ -11,6 +11,12 @@ import { guardRetentionAsASystem } from "./entries/guard-retention-as-a-system.t
 import { howABjjRashGuardShouldFit } from "./entries/how-a-bjj-rash-guard-should-fit.ts";
 import { howNoGiRulesetsReshapedTechniqueSelection } from "./entries/how-no-gi-rulesets-reshaped-technique-selection.ts";
 import { maedaAndTheArrivalOfJudoInBrazil } from "./entries/maeda-and-the-arrival-of-judo-in-brazil.ts";
+import { takingTheBackFromTurtle } from "./entries/taking-the-back-from-turtle.ts";
+import { theArmbarFromClosedGuard } from "./entries/the-armbar-from-closed-guard.ts";
+import { theGuillotineFromTheFrontHeadlock } from "./entries/the-guillotine-from-the-front-headlock.ts";
+import { theKimuraAsAControlBeforeItIsAFinish } from "./entries/the-kimura-as-a-control-before-it-is-a-finish.ts";
+import { theRearNakedStrangleFromBackControl } from "./entries/the-rear-naked-strangle-from-back-control.ts";
+import { theTriangleAndTheAngle } from "./entries/the-triangle-and-the-angle.ts";
 import { whySportJiuJitsuDoesNotTransferDirectlyToMma } from "./entries/why-sport-jiu-jitsu-does-not-transfer-directly-to-mma.ts";
 
 /**
@@ -29,6 +35,12 @@ export const ARTICLES: Article[] = [
   seatedGuardAndSupineGuard,
   theDropoutNumberNobodyCanSource,
   whatTheEarlyUfcTournamentsDemonstrated,
+  takingTheBackFromTurtle,
+  theArmbarFromClosedGuard,
+  theGuillotineFromTheFrontHeadlock,
+  theKimuraAsAControlBeforeItIsAFinish,
+  theRearNakedStrangleFromBackControl,
+  theTriangleAndTheAngle,
   whySportJiuJitsuDoesNotTransferDirectlyToMma,
 ];
 

@@ -34,7 +34,7 @@ export const insidePosition: TechniqueEntry = {
     "Treating inside position as a position to hold rather than a contest to keep re-entering.",
   ],
   safetyNote:
-    "Hand-fighting for the inside puts fingers in the path of moving limbs. Fingers get caught, jammed and sprained here more than almost anywhere else in training, and finger injuries are slow to heal and easy to re-injure. Lead with the forearm rather than the fingertips, and tape known-vulnerable fingers before rounds rather than after they hurt.",
+    "Hand-fighting for the inside puts fingers in the path of moving limbs. Fingers end up between a moving limb and a body, loaded sideways at an angle they are not built to take. Lead with the forearm rather than the fingertips, and tape known-vulnerable fingers before rounds rather than after they hurt.",
   trainingProgression: [
     "Static: from a seated engagement, place both forearms inside with a partner offering no resistance, and simply notice what becomes reachable.",
     "Cooperative: partner takes inside position slowly; you practise recovering it once, then reset.",

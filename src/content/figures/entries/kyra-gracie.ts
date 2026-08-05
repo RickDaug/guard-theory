@@ -10,9 +10,9 @@ export const kyraGracie: Figure = {
     src: "/figures/kyra-gracie.jpg",
     alt: "Kyra Gracie kneeling on a blue mat in a pink gi and black belt, with her name lettered on the mat beside her.",
     credit:
-      "Uploaded to Wikimedia Commons by user Kimsaka under Wikimedia permission ticket 2008021310000886; no photographer is named on the file page.",
+      "Original uploaded to Wikimedia Commons by Veritas~commonswiki, 13 February 2008, under Wikimedia permission ticket 2008021310000886; cropped by Kimsaka, 2018. No photographer is named on either file page.",
     license: "CC BY-SA 3.0 (GFDL relicence)",
-    sourceUrl: "https://commons.wikimedia.org/wiki/File:Kyragracie1_(cropped).jpg",
+    sourceUrl: "https://commons.wikimedia.org/wiki/File:Kyragracie1.jpg",
   },
   body: [
     "Kyra Gracie was born on 29 May 1985 in Rio de Janeiro. Her grandfather was Robson Gracie, Carlos Gracie's second son, and she grew up in a house with three uncles who were black belts. BJJ Heroes describes her taking regular classes from about eleven and competing from yellow belt, with the family's support - and then, as she reached blue belt in her teens, the same family, uncles included, trying to talk her out of it on the grounds that it was too rough a sport for her. She trained anyway, under Alexandre Soca and later at Gracie Barra, and received her black belt from her uncle Carlos Gracie Junior at twenty-one.",
@@ -27,7 +27,7 @@ export const kyraGracie: Figure = {
     "The competition results are taken from BJJ Heroes, which lists them by year without linking to bracket records. No accessible official ADCC results archive was reachable on the date of writing. The IBJJF Hall of Fame listing is official and confirms her standing rather than the individual years.",
     "The account of the family discouraging her is reported by BJJ Heroes and is not attributed there to a named relative or a dated interview.",
     "No claim of a first is made. Women competed and won in Brazilian jiu-jitsu and at ADCC before her, and no source consulted supports describing her as the first at anything.",
-    "The Wikimedia Commons file page names no photographer, giving only \"self-made\" and a permission ticket reference. The credit line reflects exactly what the file page states.",
+    "Neither Commons file page names a photographer. The permission ticket sits on the 2008 original uploaded by Veritas~commonswiki, not on the 2018 crop, whose own Permission field is empty - so the credit points at the original.",
   ],
   sources: [
     {

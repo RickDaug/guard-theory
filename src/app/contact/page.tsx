@@ -1,12 +1,11 @@
 import type { Metadata } from "next";
-import Link from "next/link";
 import { Breadcrumbs } from "@/components/site/Breadcrumbs";
 import { ContactForm } from "@/components/contact/ContactForm";
 
 export const metadata: Metadata = {
   title: "Contact",
   description:
-    "Report a correction, tell us something on the site does not work, or ask about the First Edition.",
+    "Questions about the First Edition, sizing, an order, or something we published.",
   alternates: { canonical: "/contact" },
 };
 
@@ -21,53 +20,27 @@ export default function ContactPage() {
             <h1 className="display-condensed text-4xl text-chalk">Contact</h1>
 
             <div className="mt-10 flex max-w-[34rem] flex-col gap-6">
-              {/* Do not promise a reply here. Until a mail provider is
-                  connected, messages are stored and nobody is notified — see
-                  the note beside the form. Saying "a person reads every
-                  message" while that is true would be the exact kind of
-                  invented reassurance this site exists to avoid. */}
               <p className="text-lg text-steel">
-                No ticket number, no chatbot, no automated reply. Read the note
-                under the form first — right now messages are stored rather than
-                delivered, and we would rather you knew that before writing one.
+                A person reads every message. No ticket number, no chatbot, no
+                automated reply pretending to be one.
               </p>
 
               <p className="text-base text-steel">
-                If you are reporting a factual error, you do not need to be
-                polite about it — point at the claim and, if you have one, the
-                source that contradicts it. Corrections get made in the article
-                with a dated note. See the{" "}
-                <Link
-                  href="/policies/corrections"
-                  className="text-chalk underline decoration-steel-dim underline-offset-[5px] transition-colors duration-[140ms] ease-[var(--ease-control)] hover:decoration-signal"
-                >
-                  corrections policy
-                </Link>
-                .
+                Sizing questions get an answer with actual measurements rather
+                than a guess. Order problems get sorted rather than escalated.
               </p>
 
               <p className="text-base text-steel">
                 If something on this site does not work for you — a control you
-                cannot reach by keyboard, text you cannot read — that is a bug
-                and we would rather hear it than not.
+                cannot reach by keyboard, text you cannot read — that is a bug,
+                and we would rather hear about it than not.
               </p>
             </div>
-
-            <p className="notation mt-12 max-w-[34rem] text-2xs text-steel">
-              We do not have a published email address yet. When we do, it will
-              be here alongside this form.
-            </p>
           </div>
 
           <div className="lg:col-span-6 lg:col-start-7">
             <div className="border border-steel-dim p-7 sm:p-10">
               <ContactForm />
-
-              <p className="notation mt-10 border-t border-steel-dim pt-6 text-2xs text-steel">
-                Development note: no mail provider is connected yet, so messages
-                are written to a local file rather than delivered. Nothing is
-                discarded. See docs/owner-decisions.md.
-              </p>
             </div>
           </div>
         </div>

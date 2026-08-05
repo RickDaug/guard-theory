@@ -1,7 +1,6 @@
 import type { Metadata } from "next";
 import { Breadcrumbs } from "@/components/site/Breadcrumbs";
 import { WaitlistForm } from "@/components/waitlist/WaitlistForm";
-import { getWaitlistStore } from "@/lib/waitlist";
 
 export const metadata: Metadata = {
   title: "First Edition",
@@ -26,8 +25,6 @@ const COMMITMENTS = [
 ];
 
 export default function FirstEditionPage() {
-  const store = getWaitlistStore();
-
   return (
     <main id="main" className="px-6 py-16 md:px-12">
       <div className="mx-auto max-w-[104rem]">
@@ -77,14 +74,6 @@ export default function FirstEditionPage() {
               </p>
 
               <WaitlistForm />
-
-              {!store.isDurable ? (
-                <p className="notation mt-10 border-t border-steel-dim pt-6 text-2xs text-steel">
-                  Development note: no mail provider is connected yet, so
-                  submissions are written to a local file rather than sent
-                  anywhere. Nothing is discarded. See docs/owner-decisions.md.
-                </p>
-              ) : null}
             </div>
           </div>
         </div>

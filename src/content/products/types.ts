@@ -46,5 +46,3 @@ export const STATUS_LABEL: Record<ProductStatus, string> = {
   "coming-soon": "Not yet released",
 };
 
-export const PRICE_NOTE =
-  "No price is published yet. It will appear here when it is decided, and not before.";

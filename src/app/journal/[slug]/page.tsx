@@ -157,16 +157,6 @@ export default async function ArticlePage({ params }: Params) {
                     </time>
                   </p>
                 ) : null}
-
-                {!published ? (
-                  <p className="mt-8 border-l-2 border-signal-dim py-1 pl-6 text-base text-slate">
-                    <span className="text-ink">Draft — not yet published.</span>{" "}
-                    This piece is written and fact-checked. It carries no
-                    publication date and no byline because an article needs a
-                    real named author with real credentials, and we are not
-                    inventing one.
-                  </p>
-                ) : null}
               </header>
 
               <div className="flex flex-col gap-12">
@@ -273,14 +263,7 @@ export default async function ArticlePage({ params }: Params) {
                   >
                     Editorial policy
                   </Link>
-                  {" · "}
-                  <Link
-                    href="/policies/corrections"
-                    className="underline underline-offset-[5px]"
-                  >
-                    Corrections
-                  </Link>
-                </p>
+                  </p>
               </footer>
             </div>
           </article>

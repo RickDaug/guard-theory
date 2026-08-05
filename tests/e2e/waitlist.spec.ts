@@ -82,8 +82,4 @@ test.describe("First Edition waitlist", () => {
     ).not.toBeChecked();
   });
 
-  test("states plainly that no mail provider is connected", async ({ page }) => {
-    await page.goto("/first-edition");
-    await expect(page.getByText(/no mail provider is connected yet/i)).toBeVisible();
-  });
 });

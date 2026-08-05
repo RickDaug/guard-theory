@@ -1,4 +1,4 @@
-import type { DraftArticle } from "../types.ts";
+import type { PublishedArticle } from "../types.ts";
 
 /**
  * The premise underneath the whole no-gi argument, checked against the
@@ -7,8 +7,10 @@ import type { DraftArticle } from "../types.ts";
  * and the one intuitive claim about sweat runs the opposite way to the only
  * data we could find. Both are stated rather than smoothed over.
  */
-export const gripDecayAndTheHalfLifeOfANoGiGrip: DraftArticle = {
-  status: "draft",
+export const gripDecayAndTheHalfLifeOfANoGiGrip: PublishedArticle = {
+  status: "published",
+  publishedAt: "2026-08-04",
+  authorId: "steven-p",
   slug: "grip-decay-and-the-half-life-of-a-no-gi-grip",
   category: "technique-notes",
   title: "Grip decay, and the half-life of a no-gi grip",

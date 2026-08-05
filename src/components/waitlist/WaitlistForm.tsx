@@ -168,7 +168,7 @@ export function WaitlistForm() {
         label="Size you would expect to wear"
         optional
         placeholder="Medium"
-        hint="A rough answer helps us plan the first run. Real measurements are not published yet."
+        hint="A rough answer helps us plan the first run."
         error={state.errors.expectedSize}
       />
 

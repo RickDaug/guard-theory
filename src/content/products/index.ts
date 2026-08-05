@@ -13,4 +13,4 @@ export function getProduct(slug: string): Product | undefined {
 }
 
 export type { ConstructionPoint, Product, Specification } from "./types.ts";
-export { PRICE_NOTE, STATUS_LABEL } from "./types.ts";
+export { STATUS_LABEL } from "./types.ts";

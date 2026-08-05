@@ -8,6 +8,7 @@ import {
   isPublished,
   readingTimeMinutes,
 } from "@/content/journal";
+import { getAuthor } from "@/content/authors";
 
 export const metadata: Metadata = {
   title: "Journal",
@@ -16,8 +17,12 @@ export const metadata: Metadata = {
   alternates: { canonical: "/journal" },
 };
 
+function getJournalCategoryName(slug: string): string {
+  return CATEGORIES.find((c) => c.slug === slug)?.name ?? slug;
+}
+
 export default function JournalIndexPage() {
-  const drafts = ARTICLES.filter((article) => !isPublished(article));
+  const articles = [...ARTICLES].sort((a, b) => a.title.localeCompare(b.title));
 
   return (
     <main id="main" className="px-6 py-16 md:px-12">
@@ -28,31 +33,30 @@ export default function JournalIndexPage() {
           <h1 className="display-condensed text-4xl text-chalk">Journal</h1>
           <p className="mt-8 text-lg text-steel">
             Researched writing on jiu-jitsu. Every factual claim traces to a
-            source, contested history is named as contested, and nothing is
-            published under a byline that does not exist.
+            listed source, and where the historical record is contested the
+            piece says so rather than picking the tidier version.
           </p>
         </header>
 
-        {drafts.length > 0 ? (
-          <section aria-labelledby="drafts" className="mb-24">
-            <h2 id="drafts" className="display-condensed mb-4 text-2xl text-chalk">
-              Finished, awaiting a byline
-            </h2>
-            <p className="mb-10 max-w-[46rem] text-base text-steel">
-              These are written and fact-checked. They are held in draft because
-              an article needs a real named author with real credentials, and we
-              are not inventing one. Read them now — they carry no publication
-              date because they have not been published.
-            </p>
+        <section aria-labelledby="all" className="mb-24">
+          <h2 id="all" className="display-condensed mb-10 text-2xl text-chalk">
+            All articles
+          </h2>
 
-            <ul className="m-0 grid list-none gap-px bg-steel-dim p-0 lg:grid-cols-3">
-              {drafts.map((article) => (
+          <ul className="m-0 grid list-none gap-px bg-steel-dim p-0 lg:grid-cols-3">
+            {articles.map((article) => {
+              const author = isPublished(article)
+                ? getAuthor(article.authorId)
+                : undefined;
+              return (
                 <li key={article.slug} className="bg-ink">
                   <Link
                     href={`/journal/${article.slug}`}
                     className="group flex h-full flex-col p-8 no-underline transition-colors duration-[140ms] ease-[var(--ease-control)] hover:bg-ink-raised"
                   >
-                    <span className="notation text-2xs text-signal">Draft</span>
+                    <span className="notation text-2xs text-signal">
+                      {getJournalCategoryName(article.category)}
+                    </span>
                     <h3 className="display-condensed mt-5 text-xl text-chalk transition-colors duration-[140ms] ease-[var(--ease-control)] group-hover:text-signal">
                       {article.title}
                     </h3>
@@ -60,15 +64,16 @@ export default function JournalIndexPage() {
                       {article.standfirst}
                     </p>
                     <span className="notation mt-8 text-2xs text-steel">
-                      {readingTimeMinutes(article)} min · {article.sources.length}{" "}
-                      sources
+                      {author ? `${author.name} · ` : ""}
+                      {readingTimeMinutes(article)} min ·{" "}
+                      {article.sources.length} sources
                     </span>
                   </Link>
                 </li>
-              ))}
-            </ul>
-          </section>
-        ) : null}
+              );
+            })}
+          </ul>
+        </section>
 
         <section aria-labelledby="categories">
           <h2

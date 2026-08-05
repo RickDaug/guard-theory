@@ -1,4 +1,4 @@
-import type { DraftArticle } from "../types.ts";
+import type { PublishedArticle } from "../types.ts";
 
 /**
  * A systems argument rather than a preference. The two postures are treated as
@@ -6,8 +6,10 @@ import type { DraftArticle } from "../types.ts";
  * choice is priced by the ruleset as well as by the mechanics. Terminology is
  * defined in the piece and labelled as ours, because it is not standard.
  */
-export const seatedGuardAndSupineGuard: DraftArticle = {
-  status: "draft",
+export const seatedGuardAndSupineGuard: PublishedArticle = {
+  status: "published",
+  publishedAt: "2026-08-04",
+  authorId: "steven-p",
   slug: "seated-guard-and-supine-guard",
   category: "guard-systems",
   title: "Seated guard and supine guard are two different jobs",

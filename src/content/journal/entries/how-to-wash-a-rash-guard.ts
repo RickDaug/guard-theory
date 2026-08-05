@@ -1,4 +1,4 @@
-import type { DraftArticle } from "../types.ts";
+import type { PublishedArticle } from "../types.ts";
 
 /**
  * Equipment writing that refuses the rules-list format. Every published rule
@@ -6,8 +6,10 @@ import type { DraftArticle } from "../types.ts";
  * measured on this fabric, or a claim about a different fabric. The article
  * says which is which, and names the variables that have actually been tested.
  */
-export const howToWashARashGuard: DraftArticle = {
-  status: "draft",
+export const howToWashARashGuard: PublishedArticle = {
+  status: "published",
+  publishedAt: "2026-08-04",
+  authorId: "steven-p",
   slug: "how-to-wash-a-rash-guard",
   category: "equipment-and-apparel",
   title: "How to wash a rash guard",

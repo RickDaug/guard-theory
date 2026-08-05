@@ -1,4 +1,4 @@
-import type { DraftArticle } from "../types.ts";
+import type { PublishedArticle } from "../types.ts";
 
 /**
  * The most-repeated conclusion in the sport, examined as evidence rather than
@@ -6,8 +6,10 @@ import type { DraftArticle } from "../types.ts";
  * argument is about what a format can establish, and citing outcomes would
  * import exactly the sourcing problem the piece is describing.
  */
-export const whatTheEarlyUfcTournamentsDemonstrated: DraftArticle = {
-  status: "draft",
+export const whatTheEarlyUfcTournamentsDemonstrated: PublishedArticle = {
+  status: "published",
+  publishedAt: "2026-08-04",
+  authorId: "rick-r",
   slug: "what-the-early-ufc-tournaments-demonstrated",
   category: "mma-and-jiu-jitsu",
   title: "What the early UFC tournaments actually demonstrated",

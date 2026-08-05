@@ -1,4 +1,4 @@
-import type { DraftArticle } from "../types.ts";
+import type { PublishedArticle } from "../types.ts";
 
 /**
  * A contribution profile, not a ranking. The technical half is argued from the
@@ -6,8 +6,10 @@ import type { DraftArticle } from "../types.ts";
  * sources give it, which in this case means reporting that the two pages of
  * the main source disagree with each other about the year.
  */
-export const deLaRivaAndTheGuardThatTookHisName: DraftArticle = {
-  status: "draft",
+export const deLaRivaAndTheGuardThatTookHisName: PublishedArticle = {
+  status: "published",
+  publishedAt: "2026-08-04",
+  authorId: "rick-r",
   slug: "de-la-riva-and-the-guard-that-took-his-name",
   category: "influential-practitioners",
   title: "De la Riva, and the guard that took his name",

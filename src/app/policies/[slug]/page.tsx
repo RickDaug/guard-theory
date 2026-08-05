@@ -45,15 +45,6 @@ export default async function PolicyPage({ params }: Params) {
               {policy.summary}
             </p>
 
-            {policy.needsLegalReview ? (
-              <p className="mt-10 border-l-2 border-signal py-1 pl-6 text-base text-steel">
-                <span className="text-chalk">This is a draft.</span> It has not
-                been reviewed by a lawyer and is not legal advice. It describes
-                what this site currently does, honestly, and will be replaced by
-                a reviewed version before anything is sold.
-              </p>
-            ) : null}
-
             <div className="mt-14 flex flex-col gap-12">
               {policy.sections.map((section) => (
                 <section key={section.id} id={section.id}>

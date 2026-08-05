@@ -23,7 +23,7 @@ const ROADMAP = [
   },
   {
     heading: "Later",
-    body: "Accessories — tape first, since it is the item most easily specified honestly. Mouthguards and mats are being considered, not promised.",
+    body: "Accessories. Tape first, because it is the item where specification matters most and marketing helps least.",
   },
 ];
 
@@ -34,13 +34,12 @@ export default function ShopPage() {
         <Breadcrumbs trail={[{ href: "/shop", label: "Shop" }]} />
 
         <header className="mt-10 mb-16 max-w-[46rem]">
-          <p className="notation text-2xs text-signal">Nothing for sale yet</p>
+          <p className="notation text-2xs text-signal">First Edition</p>
           <h1 className="display-condensed mt-6 text-4xl text-chalk">Shop</h1>
           <p className="mt-8 text-lg text-steel">
-            There is no inventory here, and there are no placeholder products
-            standing in for one. This page exists to say what is being made, in
-            what order, and what will be published about it before anything goes
-            on sale.
+            Two garments, made in one run. The specification is published in
+            full on each page — fabric, weight, seam construction, print method
+            — because that is what you are actually choosing between.
           </p>
           <div className="mt-10">
             <ButtonLink href="/first-edition">

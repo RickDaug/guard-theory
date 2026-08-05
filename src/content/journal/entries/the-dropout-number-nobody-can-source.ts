@@ -1,4 +1,4 @@
-import type { DraftArticle } from "../types.ts";
+import type { PublishedArticle } from "../types.ts";
 
 /**
  * The house method applied to the sport's most-repeated statistic. Every figure
@@ -6,8 +6,10 @@ import type { DraftArticle } from "../types.ts";
  * failure mode of a piece like this is to launder the number while debunking
  * it. The article ends without an answer, which is the finding.
  */
-export const theDropoutNumberNobodyCanSource: DraftArticle = {
-  status: "draft",
+export const theDropoutNumberNobodyCanSource: PublishedArticle = {
+  status: "published",
+  publishedAt: "2026-08-04",
+  authorId: "rick-r",
   slug: "the-dropout-number-nobody-can-source",
   category: "training-culture",
   title: "The dropout number nobody can source",

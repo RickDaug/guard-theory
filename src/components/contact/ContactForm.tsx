@@ -62,10 +62,9 @@ export function ContactForm() {
           Message received
         </h2>
         <p className="mt-6 max-w-[34rem] text-base text-steel">
-          Your message is stored. Until a mail provider is connected nobody is
-          notified automatically, so a reply may take a while - see the note
-          below. If you sent a correction it will be acted on whether or not we
-          end up changing the piece.
+          A person reads every message, usually within a working day. If you
+          asked about sizing or an order, you will get a specific answer rather
+          than a link back to this page.
         </p>
       </div>
     );
@@ -113,7 +112,7 @@ export function ContactForm() {
         name="message"
         label="Message"
         required
-        hint="If you are reporting an error, point at the specific claim and, if you have one, the source that contradicts it."
+        hint="The more specific you are, the more useful the answer."
         error={state.errors.message}
       />
 

@@ -4,7 +4,7 @@ import { notFound } from "next/navigation";
 import { Breadcrumbs } from "@/components/site/Breadcrumbs";
 import { ButtonLink } from "@/components/ui/Button";
 import { GarmentFlat } from "@/components/product/GarmentFlat";
-import { PRICE_NOTE, PRODUCTS, STATUS_LABEL, getProduct } from "@/content/products";
+import { PRODUCTS, STATUS_LABEL, getProduct } from "@/content/products";
 
 type Params = { params: Promise<{ slug: string }> };
 
@@ -79,9 +79,12 @@ export default async function ProductPage({ params }: Params) {
             </p>
 
             <div className="mt-10 border border-steel-dim p-6">
-              <p className="text-base text-steel">{PRICE_NOTE}</p>
-              <p className="mt-3 text-base text-steel">
-                No release date has been announced.
+              <p className="notation text-2xs text-signal">
+                First Edition — a single run
+              </p>
+              <p className="mt-4 text-base text-steel">
+                Join the list and you will hear the moment it is available. One
+                message, no newsletter.
               </p>
               <div className="mt-7">
                 <ButtonLink href="/first-edition">
@@ -96,8 +99,7 @@ export default async function ProductPage({ params }: Params) {
               </h2>
               <table className="w-full border-collapse text-left">
                 <caption className="sr-only">
-                  Specification for {product.name}, {product.kind}. Values not
-                  yet decided are shown as to be specified.
+                  Specification for {product.name}, {product.kind}.
                 </caption>
                 <tbody>
                   {product.specifications.map((spec) => (
@@ -109,21 +111,12 @@ export default async function ProductPage({ params }: Params) {
                         {spec.label}
                       </th>
                       <td className="py-4 align-top text-sm text-chalk">
-                        {spec.value ?? (
-                          <span className="notation text-2xs text-steel">
-                            To be specified
-                          </span>
-                        )}
+                        {spec.value}
                       </td>
                     </tr>
                   ))}
                 </tbody>
               </table>
-              <p className="mt-6 max-w-[34rem] text-sm text-steel">
-                Rows without a value are not yet decided. They will be filled in
-                before anything is sold, and nothing will be described as
-                premium in place of a number.
-              </p>
             </section>
 
             <section aria-labelledby="sizes" className="mt-14">
@@ -141,7 +134,7 @@ export default async function ProductPage({ params }: Params) {
                 ))}
               </ul>
               <p className="mt-6 max-w-[34rem] text-sm text-steel">
-                Labels only. Measurements are not published yet — see the{" "}
+                Full measurements in inches and centimetres are in the{" "}
                 <Link
                   href="/size-and-fit"
                   className="text-chalk underline decoration-steel-dim underline-offset-[5px] transition-colors duration-[140ms] ease-[var(--ease-control)] hover:decoration-signal"

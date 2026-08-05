@@ -74,27 +74,6 @@ export default function AboutPage() {
                 </p>
               </div>
             </section>
-
-            <section aria-labelledby="not-yet" className="mt-16">
-              <h2 id="not-yet" className="display-condensed text-2xl text-chalk">
-                What we have not decided
-              </h2>
-              <div className="mt-6 flex max-w-[36rem] flex-col gap-6">
-                <p className="text-base text-steel">
-                  There is no founder story on this page. Not because there
-                  isn&rsquo;t one, but because writing a compelling origin
-                  narrative is the easiest thing on a site like this to
-                  embellish, and we would rather leave the space empty than fill
-                  it with something shaped for effect. It will appear when it can
-                  be written plainly.
-                </p>
-                <p className="text-base text-steel">
-                  Pricing, release dates and garment measurements are undecided.
-                  Every page that would carry one says so rather than showing a
-                  placeholder that looks like a commitment.
-                </p>
-              </div>
-            </section>
           </div>
 
           <aside className="lg:col-span-4 lg:col-start-9">
@@ -103,7 +82,6 @@ export default function AboutPage() {
               {[
                 { href: "/manifesto", label: "Manifesto" },
                 { href: "/policies/editorial", label: "Editorial policy" },
-                { href: "/policies/corrections", label: "Corrections" },
                 { href: "/policies/accessibility", label: "Accessibility" },
               ].map((item) => (
                 <li key={item.href}>

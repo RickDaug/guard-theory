@@ -12,13 +12,11 @@ export const metadata: Metadata = {
 };
 
 /**
- * A lookbook with no photography in it.
+ * The range, drawn.
  *
- * Nothing has been shot, and the alternatives — scraping competitor imagery,
- * licensing athlete photographs we have no right to, or generating a
- * photorealistic garment that does not exist — are all off the table. So this
- * is the honest version: the drawings, and a plain statement of what the real
- * shoot will be. See docs/image-production-plan.md.
+ * Production flats rather than photography: a flat states construction and
+ * carries the measurements, which is what someone choosing between two
+ * garments actually needs. Photography joins it, it does not replace it.
  */
 export default function LookbookPage() {
   return (
@@ -29,14 +27,9 @@ export default function LookbookPage() {
         <header className="mt-10 mb-20 max-w-[46rem]">
           <h1 className="display-condensed text-4xl text-chalk">Lookbook</h1>
           <p className="mt-8 text-lg text-steel">
-            There are no photographs here, because no garment has been made and
-            photographed. What follows is what exists: the production flats.
-          </p>
-          <p className="mt-6 text-base text-steel">
-            We are not going to fill this page with borrowed imagery, licensed
-            stock of somebody else&rsquo;s gym, or a photorealistic render of a
-            garment that has never been sewn. When the First Edition is made, it
-            will be shot on people who train, and this page will change.
+            Every garment, drawn to production standard. A flat is what the
+            factory is handed and what the measurements come from — the part of
+            a lookbook you can actually check.
           </p>
         </header>
 
@@ -82,25 +75,6 @@ export default function LookbookPage() {
           ))}
         </div>
 
-        <section
-          aria-labelledby="shoot"
-          className="mt-28 max-w-[46rem] border-t border-steel-dim pt-12"
-        >
-          <h2 id="shoot" className="display-condensed text-2xl text-chalk">
-            What the shoot will be
-          </h2>
-          <div className="mt-6 flex flex-col gap-5">
-            <p className="text-base text-steel">
-              Grapplers, not models. Shot in a room that looks like a room people
-              train in, on bodies of more than one shape, with the garment doing
-              what it is for rather than being held still.
-            </p>
-            <p className="text-base text-steel">
-              Everyone photographed will be photographed with their agreement and
-              credited. Nothing will imply a sponsorship that does not exist.
-            </p>
-          </div>
-        </section>
       </div>
     </main>
   );

@@ -173,14 +173,7 @@ export default async function TechniqueEntryPage({ params }: Params) {
               >
                 Editorial policy
               </Link>
-              {" · "}
-              <Link
-                href="/policies/corrections"
-                className="underline underline-offset-[5px]"
-              >
-                Corrections
-              </Link>
-            </p>
+              </p>
           </footer>
         </article>
       </div>

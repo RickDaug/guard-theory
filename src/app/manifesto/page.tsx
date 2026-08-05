@@ -19,12 +19,8 @@ const CLAUSES = [
     body: "A scramble looks like chaos from the outside and like a decision tree from the inside. Every grappler who seems unhurried is running something they have run before. Naming those structures is not academic; it is the difference between improving and merely training.",
   },
   {
-    heading: "Say the number",
-    body: "Fabric weight is a number. Composition is a list. Seam construction has a name. A brand that reaches for premium, performance and engineered is usually reaching past something it would rather not state. We will publish the specification and let it argue for itself.",
-  },
-  {
-    heading: "Draw it before you photograph it",
-    body: "A production flat says how a garment is built. A photograph says how it looked on one day under one light. We start with the drawing, and we will not show you a render dressed up as a product that does not exist yet.",
+    heading: "The drawing is the truth",
+    body: "A production flat says how a garment is built. A photograph says how it looked on one day, under one light, on one body. We publish the drawing alongside the photograph, because the drawing is the part you can measure.",
   },
   {
     heading: "Earn the citation",

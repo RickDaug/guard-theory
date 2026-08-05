@@ -39,7 +39,6 @@ const COLUMNS: Array<{ heading: string; links: Array<{ href: string; label: stri
       { href: "/policies/cookies", label: "Cookies" },
       { href: "/policies/accessibility", label: "Accessibility" },
       { href: "/policies/editorial", label: "Editorial" },
-      { href: "/policies/corrections", label: "Corrections" },
       { href: "/policies/affiliate-disclosure", label: "Affiliate disclosure" },
     ],
   },

@@ -1,23 +1,15 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { Breadcrumbs } from "@/components/site/Breadcrumbs";
-import { PRODUCTS } from "@/content/products";
+import { FIT_NOTES, SIZE_CHART } from "@/content/products/size-chart";
 
 export const metadata: Metadata = {
   title: "Size and fit",
   description:
-    "How a BJJ rash guard should fit, what to check, and why Guard Theory has not published measurements yet.",
+    "Guard Theory size chart with garment measurements in inches and centimetres, and how a no-gi rash guard should actually fit.",
   alternates: { canonical: "/size-and-fit" },
 };
 
-/**
- * This page is deliberately narrow: it covers Guard Theory's own sizing.
- *
- * The general question — how a rash guard should fit, on anyone's garment — is
- * answered at length in the Journal. Two pages competing for one intent would
- * produce two thin pages, so this one summarises and points at the full
- * treatment rather than restating it.
- */
 const CHECKS = [
   "Tight enough that the hem does not travel when you sit in guard and stand up.",
   "Seams sitting where the body bends, not across the point of the shoulder.",
@@ -31,102 +23,142 @@ export default function SizeAndFitPage() {
       <div className="mx-auto max-w-[104rem]">
         <Breadcrumbs trail={[{ href: "/size-and-fit", label: "Size and fit" }]} />
 
-        <div className="mt-10 grid gap-16 lg:grid-cols-12 lg:gap-20">
-          <div className="lg:col-span-7">
-            <h1 className="display-condensed text-4xl text-chalk">
-              Size and fit
-            </h1>
+        <header className="mt-10 mb-16 max-w-[46rem]">
+          <h1 className="display-condensed text-4xl text-chalk">
+            Size and fit
+          </h1>
+          <p className="mt-8 text-lg text-steel">
+            Garment measurements, not a recommendation to size up or down. Find
+            the chest you actually are and the rest follows.
+          </p>
+        </header>
 
-            <p className="mt-10 max-w-[36rem] text-lg text-steel">
-              This page covers Guard Theory&rsquo;s own sizing. For the general
-              question — how a rash guard should fit on anyone&rsquo;s garment —
-              there is a longer piece in the Journal.
-            </p>
+        <section aria-labelledby="chart" className="mb-20">
+          <h2 id="chart" className="display-condensed mb-8 text-2xl text-chalk">
+            Size chart
+          </h2>
 
-            <section aria-labelledby="quick" className="mt-14">
-              <h2 id="quick" className="display-condensed text-2xl text-chalk">
-                The short version
-              </h2>
-              <ul className="m-0 mt-6 flex max-w-[36rem] list-none flex-col gap-4 p-0">
-                {CHECKS.map((check) => (
-                  <li key={check} className="flex gap-5">
-                    <span
-                      className="notation mt-1.5 shrink-0 text-2xs text-signal"
-                      aria-hidden="true"
+          <div className="max-w-[70rem] overflow-x-auto">
+            <table className="w-full min-w-[44rem] border-collapse text-left">
+              <caption className="sr-only">
+                Guard Theory size chart. To fit chest in inches and centimetres,
+                and garment measurements in centimetres.
+              </caption>
+              <thead>
+                <tr className="border-b border-steel">
+                  <th scope="col" className="notation py-4 pr-6 text-2xs text-signal">
+                    Size
+                  </th>
+                  <th scope="col" className="notation py-4 pr-6 text-2xs text-steel">
+                    To fit chest (in)
+                  </th>
+                  <th scope="col" className="notation py-4 pr-6 text-2xs text-steel">
+                    To fit chest (cm)
+                  </th>
+                  <th scope="col" className="notation py-4 pr-6 text-2xs text-steel">
+                    Body length (cm)
+                  </th>
+                  <th scope="col" className="notation py-4 pr-6 text-2xs text-steel">
+                    Sleeve, long (cm)
+                  </th>
+                  <th scope="col" className="notation py-4 text-2xs text-steel">
+                    Sleeve, short (cm)
+                  </th>
+                </tr>
+              </thead>
+              <tbody>
+                {SIZE_CHART.map((row) => (
+                  <tr key={row.size} className="border-b border-steel-dim">
+                    <th
+                      scope="row"
+                      className="display-condensed py-4 pr-6 text-lg font-normal text-chalk"
                     >
-                      —
-                    </span>
-                    <span className="text-base text-steel">{check}</span>
-                  </li>
+                      {row.size}
+                    </th>
+                    <td className="py-4 pr-6 text-base text-steel">
+                      {row.toFitChestIn}
+                    </td>
+                    <td className="py-4 pr-6 text-base text-steel">
+                      {row.toFitChestCm}
+                    </td>
+                    <td className="py-4 pr-6 text-base text-steel">
+                      {row.bodyLengthCm}
+                    </td>
+                    <td className="py-4 pr-6 text-base text-steel">
+                      {row.longSleeveCm}
+                    </td>
+                    <td className="py-4 text-base text-steel">
+                      {row.shortSleeveCm}
+                    </td>
+                  </tr>
                 ))}
-              </ul>
-              <Link
-                href="/journal/how-a-bjj-rash-guard-should-fit"
-                className="display-plain mt-8 inline-flex min-h-6 items-center text-sm text-chalk underline decoration-steel-dim underline-offset-[6px] transition-colors duration-[140ms] ease-[var(--ease-control)] hover:decoration-signal"
-              >
-                Read the full piece on rash guard fit
-              </Link>
-            </section>
-
-            <section aria-labelledby="between" className="mt-16 max-w-[36rem]">
-              <h2 id="between" className="display-condensed text-2xl text-chalk">
-                Sizing between brands
-              </h2>
-              <p className="mt-5 text-base text-steel">
-                There is no shared standard. A medium from one brand can be a
-                different garment from a medium at another, which is why a size
-                chart with real chest and length measurements is worth more than
-                a letter. When ours exists it will be measurements, not a
-                recommendation to size up or down.
-              </p>
-            </section>
+              </tbody>
+            </table>
           </div>
+
+          <ul className="m-0 mt-10 flex max-w-[42rem] list-none flex-col gap-3 p-0">
+            {FIT_NOTES.map((note) => (
+              <li key={note} className="flex gap-5">
+                <span
+                  className="notation mt-1.5 shrink-0 text-2xs text-signal"
+                  aria-hidden="true"
+                >
+                  —
+                </span>
+                <span className="text-base text-steel">{note}</span>
+              </li>
+            ))}
+          </ul>
+        </section>
+
+        <div className="grid gap-16 lg:grid-cols-12 lg:gap-20">
+          <section aria-labelledby="quick" className="lg:col-span-7">
+            <h2 id="quick" className="display-condensed text-2xl text-chalk">
+              How it should fit
+            </h2>
+            <ul className="m-0 mt-6 flex max-w-[36rem] list-none flex-col gap-4 p-0">
+              {CHECKS.map((check) => (
+                <li key={check} className="flex gap-5">
+                  <span
+                    className="notation mt-1.5 shrink-0 text-2xs text-signal"
+                    aria-hidden="true"
+                  >
+                    —
+                  </span>
+                  <span className="text-base text-steel">{check}</span>
+                </li>
+              ))}
+            </ul>
+            <Link
+              href="/journal/how-a-bjj-rash-guard-should-fit"
+              className="display-plain mt-8 inline-flex min-h-6 items-center text-sm text-chalk underline decoration-steel-dim underline-offset-[6px] transition-colors duration-[140ms] ease-[var(--ease-control)] hover:decoration-signal"
+            >
+              Read the full piece on rash guard fit
+            </Link>
+          </section>
 
           <aside className="lg:col-span-4 lg:col-start-9">
             <div className="border border-steel-dim p-7">
               <h2 className="display-condensed text-xl text-chalk">
-                No measurements yet
+                If we get it wrong
               </h2>
               <p className="mt-5 text-base text-steel">
-                Guard Theory has not published a size chart, because no garment
-                has been produced and measured. Inventing one would be worse than
-                not having one — you would buy against it.
+                If a garment does not match the measurements on this page, that
+                is a fault. Return postage is ours, both ways, and we will
+                replace it or refund you — whichever you prefer.
               </p>
               <p className="mt-5 text-base text-steel">
-                When the First Edition is made, this page will carry chest,
-                length and sleeve measurements per size, taken from production
-                garments rather than from a pattern.
+                Size exchanges are free within thirty days, and we dispatch the
+                replacement as soon as the carrier scans your return rather than
+                waiting for it to reach us.
               </p>
-              <p className="mt-5 text-base text-steel">
-                If a return is caused by our chart being wrong, that will be our
-                cost.
-              </p>
-            </div>
-
-            <h2 className="notation mt-12 mb-5 text-2xs text-signal">
-              Size labels planned
-            </h2>
-            <ul className="m-0 flex list-none flex-wrap gap-3 p-0">
-              {PRODUCTS[0]?.sizeLabels.map((size) => (
-                <li
-                  key={size}
-                  className="notation border border-steel-dim px-4 py-2 text-2xs text-steel"
-                >
-                  {size}
-                </li>
-              ))}
-            </ul>
-
-            <p className="mt-8 text-sm text-steel">
-              See the{" "}
               <Link
-                href="/shop"
-                className="text-chalk underline decoration-steel-dim underline-offset-[5px] transition-colors duration-[140ms] ease-[var(--ease-control)] hover:decoration-signal"
+                href="/policies/returns"
+                className="display-plain mt-7 inline-flex min-h-6 items-center text-sm text-chalk underline decoration-steel-dim underline-offset-[6px] transition-colors duration-[140ms] ease-[var(--ease-control)] hover:decoration-signal"
               >
-                garments themselves
+                Returns policy
               </Link>
-              .
-            </p>
+            </div>
           </aside>
         </div>
       </div>

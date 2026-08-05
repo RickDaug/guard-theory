@@ -10,6 +10,7 @@ import {
   readingTimeMinutes,
 } from "@/content/journal";
 import { IS_INDEXABLE, absoluteUrl } from "@/lib/site";
+import { pageMetadata } from "@/lib/metadata";
 import { getAuthor } from "@/content/authors";
 
 type Params = { params: Promise<{ slug: string }> };
@@ -23,10 +24,18 @@ export async function generateMetadata({ params }: Params): Promise<Metadata> {
   const article = getArticle(slug);
   if (!article) return {};
 
+  const author = isPublished(article) ? getAuthor(article.authorId) : undefined;
+
   return {
-    title: article.title,
-    description: article.standfirst,
-    alternates: { canonical: `/journal/${article.slug}` },
+    ...pageMetadata({
+      title: article.title,
+      description: article.standfirst,
+      path: `/journal/${article.slug}`,
+      type: "article",
+      publishedTime: isPublished(article) ? article.publishedAt : undefined,
+      authors: author ? [author.name] : undefined,
+      indexable: isPublished(article),
+    }),
     // Stated explicitly in BOTH directions, never left to inherit. Returning
     // `robots: undefined` from a page does not fall back to the layout - it
     // removes the tag, which silently made published articles indexable even
@@ -132,7 +141,7 @@ export default async function ArticlePage({ params }: Params) {
 
           {/* The study register: a sheet of paper laid on the dark ground. */}
           <article className="lg:col-span-8 lg:col-start-5">
-            <div className="bg-bone px-7 py-14 sm:px-16 sm:py-20">
+            <div className="bg-bone px-7 py-14 sm:px-16 sm:py-20 [&_p]:max-w-[38rem] [&_li]:max-w-[38rem]">
               <header className="pb-10">
                 <p className="notation text-2xs text-signal-dim">
                   {category.name} · {readingTimeMinutes(article)} min read

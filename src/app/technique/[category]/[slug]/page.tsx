@@ -4,6 +4,7 @@ import { notFound } from "next/navigation";
 import { Breadcrumbs } from "@/components/site/Breadcrumbs";
 import { ENTRIES, getCategory, getEntry } from "@/content/technique";
 import { COACH_DISCLAIMER } from "@/content/technique/types";
+import { pageMetadata } from "@/lib/metadata";
 
 type Params = { params: Promise<{ category: string; slug: string }> };
 
@@ -19,11 +20,12 @@ export async function generateMetadata({ params }: Params): Promise<Metadata> {
   const entry = getEntry(slug);
   if (!entry) return {};
 
-  return {
+  return pageMetadata({
     title: entry.title,
     description: entry.summary,
-    alternates: { canonical: `/technique/${entry.category}/${entry.slug}` },
-  };
+    path: `/technique/${entry.category}/${entry.slug}`,
+    type: "article",
+  });
 }
 
 /**
@@ -68,9 +70,13 @@ function OrderedNotes({ items }: { items: string[] }) {
 }
 
 export default async function TechniqueEntryPage({ params }: Params) {
-  const { slug } = await params;
+  const { category: categorySlug, slug } = await params;
   const entry = getEntry(slug);
   if (!entry) notFound();
+
+  // The category segment is part of the address, not decoration. Without this
+  // check any string returned 200 and every entry had unlimited URLs.
+  if (entry.category !== categorySlug) notFound();
 
   const category = getCategory(entry.category);
   if (!category) notFound();
@@ -94,7 +100,7 @@ export default async function TechniqueEntryPage({ params }: Params) {
         />
 
         {/* The study register: a sheet of paper laid on the dark ground. */}
-        <article className="mx-auto mt-10 max-w-[52rem] bg-bone px-7 py-14 sm:px-16 sm:py-20">
+        <article className="mx-auto mt-10 max-w-[52rem] bg-bone px-7 py-14 sm:px-16 sm:py-20 [&_p]:max-w-[38rem] [&_li]:max-w-[38rem]">
           <header className="pb-10">
             <p className="notation text-2xs text-signal-dim">
               {category.name} · {entry.difficulty} · {entry.relevance}

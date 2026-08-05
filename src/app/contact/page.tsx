@@ -1,13 +1,13 @@
 import type { Metadata } from "next";
+import { pageMetadata } from "@/lib/metadata";
 import { Breadcrumbs } from "@/components/site/Breadcrumbs";
 import { ContactForm } from "@/components/contact/ContactForm";
 
-export const metadata: Metadata = {
+export const metadata: Metadata = pageMetadata({
   title: "Contact",
-  description:
-    "Questions about the First Edition, sizing, an order, or something we published.",
-  alternates: { canonical: "/contact" },
-};
+  description: "Questions about the First Edition, sizing, an order, or something we published.",
+  path: "/contact",
+});
 
 export default function ContactPage() {
   return (

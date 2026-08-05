@@ -5,6 +5,7 @@ import { Breadcrumbs } from "@/components/site/Breadcrumbs";
 import { ButtonLink } from "@/components/ui/Button";
 import { GarmentFlat } from "@/components/product/GarmentFlat";
 import { PRODUCTS, STATUS_LABEL, getProduct } from "@/content/products";
+import { pageMetadata } from "@/lib/metadata";
 
 type Params = { params: Promise<{ slug: string }> };
 
@@ -17,11 +18,11 @@ export async function generateMetadata({ params }: Params): Promise<Metadata> {
   const product = getProduct(slug);
   if (!product) return {};
 
-  return {
+  return pageMetadata({
     title: `${product.name} — ${product.kind}`,
     description: product.summary,
-    alternates: { canonical: `/shop/${product.slug}` },
-  };
+    path: `/shop/${product.slug}`,
+  });
 }
 
 /**

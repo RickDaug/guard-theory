@@ -1,15 +1,15 @@
 import type { Metadata } from "next";
+import { pageMetadata } from "@/lib/metadata";
 import Link from "next/link";
 import { Breadcrumbs } from "@/components/site/Breadcrumbs";
 import { GarmentFlat } from "@/components/product/GarmentFlat";
 import { PRODUCTS } from "@/content/products";
 
-export const metadata: Metadata = {
+export const metadata: Metadata = pageMetadata({
   title: "Lookbook",
-  description:
-    "The First Edition as drawn: production flats for each garment, and what the photography will be when it exists.",
-  alternates: { canonical: "/lookbook" },
-};
+  description: "The First Edition as drawn: production flats for each garment, and what the photography will be when it exists.",
+  path: "/lookbook",
+});
 
 /**
  * The range, drawn.

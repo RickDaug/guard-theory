@@ -93,10 +93,25 @@ function ErrorSummary({ state }: { state: WaitlistFormState }) {
 
 export function WaitlistForm() {
   const [state, formAction, pending] = useActionState(joinWaitlist, INITIAL_STATE);
+  const successRef = useRef<HTMLDivElement>(null);
+
+  // Move focus to the confirmation once it exists. Without this the form
+  // unmounts, focus falls to <body>, and a screen-reader user is told nothing
+  // at all — the live region and its content appear in the same commit, which
+  // several readers do not announce.
+  useEffect(() => {
+    if (state.status === "success") successRef.current?.focus();
+  }, [state.status]);
 
   if (state.status === "success") {
     return (
-      <div role="status" className="border border-steel-dim p-8">
+      <div
+        ref={successRef}
+        tabIndex={-1}
+        role="status"
+        aria-live="polite"
+        className="border border-steel-dim p-8"
+      >
         <p className="notation text-2xs text-signal">First Edition</p>
         <h2 className="display-condensed mt-5 text-2xl text-chalk">
           {state.alreadyOnList ? "Already on the list" : "You're on the list"}

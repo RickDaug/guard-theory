@@ -1,14 +1,14 @@
 import type { Metadata } from "next";
+import { pageMetadata } from "@/lib/metadata";
 import Link from "next/link";
 import { Breadcrumbs } from "@/components/site/Breadcrumbs";
 import { FIT_NOTES, SIZE_CHART } from "@/content/products/size-chart";
 
-export const metadata: Metadata = {
+export const metadata: Metadata = pageMetadata({
   title: "Size and fit",
-  description:
-    "Guard Theory size chart with garment measurements in inches and centimetres, and how a no-gi rash guard should actually fit.",
-  alternates: { canonical: "/size-and-fit" },
-};
+  description: "Guard Theory size chart with garment measurements in inches and centimetres, and how a no-gi rash guard should actually fit.",
+  path: "/size-and-fit",
+});
 
 const CHECKS = [
   "Tight enough that the hem does not travel when you sit in guard and stand up.",

@@ -53,10 +53,23 @@ export function ContactForm() {
     sendMessage,
     CONTACT_INITIAL_STATE,
   );
+  const successRef = useRef<HTMLDivElement>(null);
+
+  // Same reason as the waitlist: mount, then focus, so the confirmation is
+  // both announced and reachable.
+  useEffect(() => {
+    if (state.status === "success") successRef.current?.focus();
+  }, [state.status]);
 
   if (state.status === "success") {
     return (
-      <div role="status" className="border border-steel-dim p-8">
+      <div
+        ref={successRef}
+        tabIndex={-1}
+        role="status"
+        aria-live="polite"
+        className="border border-steel-dim p-8"
+      >
         <p className="notation text-2xs text-signal">Received</p>
         <h2 className="display-condensed mt-5 text-2xl text-chalk">
           Message received

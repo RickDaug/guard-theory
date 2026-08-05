@@ -1,13 +1,13 @@
 import type { Metadata } from "next";
+import { pageMetadata } from "@/lib/metadata";
 import { Breadcrumbs } from "@/components/site/Breadcrumbs";
 import { ButtonLink } from "@/components/ui/Button";
 
-export const metadata: Metadata = {
+export const metadata: Metadata = pageMetadata({
   title: "Manifesto",
-  description:
-    "Great grappling is not random. What Guard Theory believes about jiu-jitsu, and what that commits us to.",
-  alternates: { canonical: "/manifesto" },
-};
+  description: "Great grappling is not random. What Guard Theory believes about jiu-jitsu, and what that commits us to.",
+  path: "/manifesto",
+});
 
 const CLAUSES = [
   {

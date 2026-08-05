@@ -1,13 +1,13 @@
 import type { Metadata } from "next";
+import { pageMetadata } from "@/lib/metadata";
 import { Breadcrumbs } from "@/components/site/Breadcrumbs";
 import { WaitlistForm } from "@/components/waitlist/WaitlistForm";
 
-export const metadata: Metadata = {
+export const metadata: Metadata = pageMetadata({
   title: "First Edition",
-  description:
-    "The first Guard Theory release: no-gi rash guards built to a stated standard. Release date to be announced. Join the list for first access.",
-  alternates: { canonical: "/first-edition" },
-};
+  description: "The first Guard Theory release: no-gi rash guards built to a stated standard. Release date to be announced. Join the list for first access.",
+  path: "/first-edition",
+});
 
 const COMMITMENTS = [
   {
@@ -57,7 +57,7 @@ export default function FirstEditionPage() {
               ))}
             </ul>
 
-            <p className="notation mt-14 max-w-[36rem] text-2xs text-steel">
+            <p className="mt-14 max-w-[36rem] text-base text-steel">
               No countdown, no stock counter, no discount wheel. When we know the
               date, so will you.
             </p>
@@ -69,8 +69,8 @@ export default function FirstEditionPage() {
                 Join the list
               </h2>
               <p className="mt-4 mb-10 max-w-[34rem] text-base text-steel">
-                Two fields are required. Everything else helps us plan the run
-                and is genuinely optional.
+                Name, email and your consent to be emailed. Everything else helps
+                us plan the run and is genuinely optional.
               </p>
 
               <WaitlistForm />

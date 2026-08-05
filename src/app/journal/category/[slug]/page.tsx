@@ -9,6 +9,7 @@ import {
   isPublished,
   readingTimeMinutes,
 } from "@/content/journal";
+import { pageMetadata } from "@/lib/metadata";
 
 type Params = { params: Promise<{ slug: string }> };
 
@@ -21,11 +22,11 @@ export async function generateMetadata({ params }: Params): Promise<Metadata> {
   const category = getJournalCategory(slug);
   if (!category) return {};
 
-  return {
+  return pageMetadata({
     title: category.name,
     description: category.summary,
-    alternates: { canonical: `/journal/category/${category.slug}` },
-  };
+    path: `/journal/category/${category.slug}`,
+  });
 }
 
 export default async function JournalCategoryPage({ params }: Params) {

@@ -3,6 +3,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { Breadcrumbs } from "@/components/site/Breadcrumbs";
 import { CATEGORIES, entriesInCategory, getCategory } from "@/content/technique";
+import { pageMetadata } from "@/lib/metadata";
 
 type Params = { params: Promise<{ category: string }> };
 
@@ -15,11 +16,11 @@ export async function generateMetadata({ params }: Params): Promise<Metadata> {
   const category = getCategory(slug);
   if (!category) return {};
 
-  return {
+  return pageMetadata({
     title: category.name,
     description: category.summary,
-    alternates: { canonical: `/technique/${category.slug}` },
-  };
+    path: `/technique/${category.slug}`,
+  });
 }
 
 export default async function TechniqueCategoryPage({ params }: Params) {

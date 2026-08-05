@@ -122,6 +122,14 @@ const nextConfig: NextConfig = {
         destination: "https://guardtheory.net/:path*",
         permanent: true,
       },
+      {
+        // The deployment host answers for the whole site. Without this it is a
+        // second complete copy the moment indexing is switched on.
+        source: "/:path*",
+        has: [{ type: "host", value: "guard-theory.vercel.app" }],
+        destination: "https://guardtheory.net/:path*",
+        permanent: true,
+      },
     ];
   },
 };

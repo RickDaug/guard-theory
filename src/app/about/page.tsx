@@ -1,13 +1,13 @@
 import type { Metadata } from "next";
+import { pageMetadata } from "@/lib/metadata";
 import Link from "next/link";
 import { Breadcrumbs } from "@/components/site/Breadcrumbs";
 
-export const metadata: Metadata = {
+export const metadata: Metadata = pageMetadata({
   title: "About",
-  description:
-    "What Guard Theory is, what it makes, how it works, and what it has not decided yet.",
-  alternates: { canonical: "/about" },
-};
+  description: "What Guard Theory is, what it makes, how it works, and what it has not decided yet.",
+  path: "/about",
+});
 
 export default function AboutPage() {
   return (

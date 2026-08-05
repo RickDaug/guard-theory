@@ -3,6 +3,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { Breadcrumbs } from "@/components/site/Breadcrumbs";
 import { POLICIES, getPolicy } from "@/content/policies";
+import { pageMetadata } from "@/lib/metadata";
 
 type Params = { params: Promise<{ slug: string }> };
 
@@ -15,11 +16,11 @@ export async function generateMetadata({ params }: Params): Promise<Metadata> {
   const policy = getPolicy(slug);
   if (!policy) return {};
 
-  return {
+  return pageMetadata({
     title: policy.title,
     description: policy.summary,
-    alternates: { canonical: `/policies/${policy.slug}` },
-  };
+    path: `/policies/${policy.slug}`,
+  });
 }
 
 export default async function PolicyPage({ params }: Params) {

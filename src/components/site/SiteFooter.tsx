@@ -65,7 +65,7 @@ export function SiteFooter() {
               <nav key={column.heading} aria-labelledby={`footer-${column.heading}`}>
                 <h2
                   id={`footer-${column.heading}`}
-                  className="notation mb-5 text-2xs text-signal"
+                  className="display-plain mb-5 text-sm text-steel"
                 >
                   {column.heading}
                 </h2>
@@ -86,7 +86,7 @@ export function SiteFooter() {
           </div>
         </div>
 
-        <p className="notation mt-16 text-2xs text-steel">
+        <p className="mt-16 max-w-[38rem] text-sm text-steel">
           Guard Theory is an independent brand. Nothing published here replaces
           instruction from a qualified coach.
         </p>

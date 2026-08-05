@@ -1,5 +1,14 @@
+import type { Metadata } from "next";
 import Link from "next/link";
+import { pageMetadata } from "@/lib/metadata";
+import { SITE_DESCRIPTION, SITE_NAME } from "@/lib/site";
 import { GuardSystemMap } from "@/components/notation/GuardSystemMap";
+
+export const metadata: Metadata = pageMetadata({
+  title: `${SITE_NAME} — No-gi grappling apparel`,
+  description: SITE_DESCRIPTION,
+  path: "/",
+});
 
 export default function HomePage() {
   return (
@@ -38,7 +47,7 @@ export default function HomePage() {
                 </Link>
               </div>
 
-              <p className="notation mt-14 text-2xs text-steel">
+              <p className="mt-14 text-base text-steel">
                 First Edition — release date to be announced
               </p>
             </div>

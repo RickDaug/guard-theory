@@ -4,7 +4,8 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { Breadcrumbs } from "@/components/site/Breadcrumbs";
 import { FIGURES, FIGURES_ALPHABETICAL, getFigure } from "@/content/figures";
-import { IS_INDEXABLE, absoluteUrl } from "@/lib/site";
+import { absoluteUrl } from "@/lib/site";
+import { pageMetadata } from "@/lib/metadata";
 
 type Params = { params: Promise<{ slug: string }> };
 
@@ -17,14 +18,12 @@ export async function generateMetadata({ params }: Params): Promise<Metadata> {
   const figure = getFigure(slug);
   if (!figure) return {};
 
-  return {
+  return pageMetadata({
     title: figure.name,
     description: figure.standfirst,
-    alternates: { canonical: `/figures/${figure.slug}` },
-    robots: IS_INDEXABLE
-      ? { index: true, follow: true }
-      : { index: false, follow: true },
-  };
+    path: `/figures/${figure.slug}`,
+    type: "article",
+  });
 }
 
 export default async function FigurePage({ params }: Params) {
@@ -88,7 +87,7 @@ export default async function FigurePage({ params }: Params) {
               </figure>
             ) : (
               <div className="flex aspect-4/5 items-center justify-center border border-steel-dim p-8">
-                <p className="notation max-w-[18rem] text-center text-2xs text-steel">
+                <p className="max-w-[18rem] text-center text-sm text-steel">
                   No portrait. We could not find an image of {figure.name} whose
                   licence we were able to verify, and we do not publish
                   photographs we have no right to use.
@@ -99,7 +98,7 @@ export default async function FigurePage({ params }: Params) {
 
           {/* The study register: a sheet of paper on the dark ground. */}
           <article className="lg:col-span-8">
-            <div className="bg-bone px-7 py-14 sm:px-16 sm:py-20">
+            <div className="bg-bone px-7 py-14 sm:px-16 sm:py-20 [&_p]:max-w-[38rem] [&_li]:max-w-[38rem]">
               <header className="pb-10">
                 {figure.lifespan ? (
                   <p className="notation text-2xs text-signal-dim">

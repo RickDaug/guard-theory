@@ -1,16 +1,16 @@
 import type { Metadata } from "next";
+import { pageMetadata } from "@/lib/metadata";
 import Image from "next/image";
 import Link from "next/link";
 import { Breadcrumbs } from "@/components/site/Breadcrumbs";
 import { FIGURES_ALPHABETICAL } from "@/content/figures";
 import { absoluteUrl } from "@/lib/site";
 
-export const metadata: Metadata = {
+export const metadata: Metadata = pageMetadata({
   title: "Influential figures",
-  description:
-    "People whose work changed jiu-jitsu, in alphabetical order, with sources. An index of contributions, not a ranking.",
-  alternates: { canonical: "/figures" },
-};
+  description: "People whose work changed jiu-jitsu, in alphabetical order, with sources. An index of contributions, not a ranking.",
+  path: "/figures",
+});
 
 /**
  * Not a ranking, and that is enforced in the markup rather than only asserted:
@@ -72,7 +72,7 @@ export default function FiguresPage() {
                     />
                   ) : (
                     <div className="flex h-full items-center justify-center">
-                      <span className="notation max-w-[16rem] text-center text-2xs text-steel">
+                      <span className="max-w-[16rem] text-center text-sm text-steel">
                         No portrait with a licence we can verify
                       </span>
                     </div>

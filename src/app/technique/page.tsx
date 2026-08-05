@@ -1,14 +1,15 @@
 import type { Metadata } from "next";
+import { pageMetadata } from "@/lib/metadata";
 import Link from "next/link";
 import { Breadcrumbs } from "@/components/site/Breadcrumbs";
 import { CATEGORIES, entriesInCategory } from "@/content/technique";
 import { COACH_DISCLAIMER } from "@/content/technique/types";
 
-export const metadata: Metadata = {
+export const metadata: Metadata = pageMetadata({
   title: "Technique Library",
-  description:
-    "A concepts library for no-gi grappling, organised by the twelve areas of the game. Mechanics, common errors and safety notes for each.",
-};
+  description: "A concepts library for no-gi grappling, organised by the twelve areas of the game. Mechanics, common errors and safety notes for each.",
+  path: "/technique",
+});
 
 export default function TechniqueIndexPage() {
   return (

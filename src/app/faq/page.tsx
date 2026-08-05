@@ -1,14 +1,14 @@
 import type { Metadata } from "next";
+import { pageMetadata } from "@/lib/metadata";
 import Link from "next/link";
 import { Breadcrumbs } from "@/components/site/Breadcrumbs";
 import { absoluteUrl } from "@/lib/site";
 
-export const metadata: Metadata = {
+export const metadata: Metadata = pageMetadata({
   title: "FAQ",
-  description:
-    "Straight answers about the First Edition, sizing, the Journal and what Guard Theory has not decided yet.",
-  alternates: { canonical: "/faq" },
-};
+  description: "Straight answers about the First Edition, sizing, the Journal and what Guard Theory has not decided yet.",
+  path: "/faq",
+});
 
 const FAQS = [
   {

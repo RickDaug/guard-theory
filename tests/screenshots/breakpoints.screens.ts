@@ -27,6 +27,8 @@ const ROUTES = [
   { name: "product", path: "/shop/theory-01-long-sleeve" },
   { name: "journal", path: "/journal" },
   { name: "article", path: "/journal/how-a-bjj-rash-guard-should-fit" },
+  { name: "figures", path: "/figures" },
+  { name: "figure", path: "/figures/oswaldo-fadda" },
 ] as const;
 
 const OUT = path.join("docs", "screenshots");

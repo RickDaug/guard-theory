@@ -6,6 +6,7 @@ import {
   CATEGORIES as JOURNAL_CATEGORIES,
   publishedArticles,
 } from "@/content/journal";
+import { FIGURES } from "@/content/figures";
 import { absoluteUrl } from "@/lib/site";
 
 /**
@@ -53,6 +54,7 @@ export default function sitemap(): MetadataRoute.Sitemap {
     ...publishedArticles().map((article) => ({
       url: absoluteUrl(`/journal/${article.slug}`),
     })),
+    ...FIGURES.map((figure) => ({ url: absoluteUrl(`/figures/${figure.slug}`) })),
     ...POLICIES.map((policy) => ({ url: absoluteUrl(`/policies/${policy.slug}`) })),
   ];
 }

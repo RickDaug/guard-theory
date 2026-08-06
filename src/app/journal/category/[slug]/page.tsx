@@ -10,6 +10,13 @@ import {
   readingTimeMinutes,
 } from "@/content/journal";
 import { pageMetadata } from "@/lib/metadata";
+import {
+  isJournalCategoryIndexable,
+  journalCategoryCount,
+} from "@/content/category-gate";
+import { CrossLinks } from "@/components/content/CrossLinks";
+import { SiblingCategories } from "@/components/content/SiblingCategories";
+import { crossLinksForMany } from "@/content/crosslinks";
 
 type Params = { params: Promise<{ slug: string }> };
 
@@ -26,6 +33,8 @@ export async function generateMetadata({ params }: Params): Promise<Metadata> {
     title: category.name,
     description: category.summary,
     path: `/journal/category/${category.slug}`,
+    // The three-entry gate. See src/content/category-gate.ts.
+    indexable: isJournalCategoryIndexable(category.slug),
   });
 }
 
@@ -35,6 +44,19 @@ export default async function JournalCategoryPage({ params }: Params) {
   if (!category) notFound();
 
   const articles = articlesInCategory(category.slug);
+
+  // What the Library and the Figures index hold on the same subjects.
+  const crossLinks = crossLinksForMany(
+    "journal",
+    articles.map((article) => article.slug),
+  );
+
+  const siblings = CATEGORIES.filter((c) => c.slug !== category.slug).map((c) => ({
+    slug: c.slug,
+    name: c.name,
+    href: `/journal/category/${c.slug}`,
+    count: journalCategoryCount(c.slug),
+  }));
 
   return (
     <main id="main" className="px-6 py-16 md:px-12">
@@ -70,7 +92,16 @@ export default async function JournalCategoryPage({ params }: Params) {
             </Link>
           </div>
         ) : (
-          <ul className="m-0 grid list-none gap-px bg-steel-dim p-0 lg:grid-cols-2">
+          <ul
+            className={`m-0 grid list-none gap-px bg-steel-dim p-0 ${
+              // Two columns only when there is something to put in both.
+              // The gap-px-over-a-tinted-background trick draws its rules by
+              // letting the parent show through, so a lone entry in a
+              // two-column grid leaves a filled empty cell that reads as a
+              // card that failed to load.
+              articles.length > 1 ? "lg:grid-cols-2" : ""
+            }`}
+          >
             {articles.map((article) => (
               <li key={article.slug} className="bg-ink">
                 <Link
@@ -95,6 +126,17 @@ export default async function JournalCategoryPage({ params }: Params) {
             ))}
           </ul>
         )}
+
+        <CrossLinks
+          links={crossLinks}
+          heading="Reading connected to this category"
+        />
+
+        <SiblingCategories
+          categories={siblings}
+          heading="The rest of the Journal"
+          unit="article"
+        />
       </div>
     </main>
   );

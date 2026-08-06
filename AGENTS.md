@@ -74,6 +74,16 @@ protecting, or make the case for changing the rule.
   and re-running the suite tests the *previous* build. Run `next build` first.
   This invalidated a "verified by reintroducing the bug" check until it was
   caught — the bug was reintroduced in source and never compiled.
+- **A word space must be written, never drawn.** A flex `gap` separates two
+  boxes on screen while the text stays fused — "Closed Guard1 entry" to an
+  accessible-name computation, to a copied line, and anywhere the stylesheet has
+  not arrived. Put `{" "}` between the elements. This has shipped three times,
+  in three components; `tests/e2e/typography.spec.ts` now checks for it, scoped
+  to row-direction flex inside a single phrase because broader versions flagged
+  every nav bar and every stacked card on the site.
+- **`text-steel-dim` is a hairline colour at 2.4:1 and is never text.** The
+  token comment in `globals.css` says so; using it for a label failed axe on 11
+  nodes.
 - **A guard that has only ever been green has not been tested.** Two here were
   broken in ways that made them incapable of failing: `typography.spec.ts`
   required a capitalised word of three or more letters, so it did not match

@@ -18,12 +18,84 @@ import {
   crossLinksFor,
   findDanglingCrossLinks,
 } from "../../src/content/crosslinks.ts";
+import {
+  CATEGORY_ENTRY_MINIMUM,
+  indexableJournalCategorySlugs,
+  indexableTechniqueCategorySlugs,
+  journalCategoryCount,
+  techniqueCategoryCount,
+} from "../../src/content/category-gate.ts";
 
 /**
  * Content integrity. These are the failures that would otherwise reach a page
  * as a broken link, an empty category or a missing safety note — cheap to
  * catch here, embarrassing to catch in production.
  */
+
+describe("the three-entry gate on category pages", () => {
+  it("holds the bar at the documented three", () => {
+    // Pinned to the literal, not to the constant.
+    //
+    // The first version of the test below compared the gate's output against a
+    // count computed with CATEGORY_ENTRY_MINIMUM — the same constant the gate
+    // uses. Both moved together, so lowering the bar to 1 reopened all
+    // seventeen thin pages and the suite stayed green. Verified by doing it.
+    //
+    // The number is a documented editorial policy (docs/seo-strategy.md §5,
+    // docs/editorial-calendar.md §2), so changing it should require changing
+    // the documents and this line, deliberately.
+    assert.equal(CATEGORY_ENTRY_MINIMUM, 3);
+  });
+
+  it("keeps thin categories out of the sitemap", () => {
+    const leaked = [
+      ...indexableJournalCategorySlugs().filter(
+        (slug) => journalCategoryCount(slug) < 3,
+      ),
+      ...indexableTechniqueCategorySlugs().filter(
+        (slug) => techniqueCategoryCount(slug) < 3,
+      ),
+    ];
+    assert.deepEqual(
+      leaked,
+      [],
+      `categories under the three-entry bar are indexable: ${leaked.join(", ")}`,
+    );
+  });
+
+  it("admits a category the moment it has three entries", () => {
+    // Guards against a gate that is accidentally always closed — which would
+    // pass the test above while quietly deindexing the whole site.
+    const admitted = [
+      ...indexableJournalCategorySlugs(),
+      ...indexableTechniqueCategorySlugs(),
+    ];
+    const expected = [
+      ...JOURNAL_CATEGORIES.filter((c) => journalCategoryCount(c.slug) >= 3).map(
+        (c) => c.slug,
+      ),
+      ...CATEGORIES.filter((c) => techniqueCategoryCount(c.slug) >= 3).map(
+        (c) => c.slug,
+      ),
+    ];
+    assert.deepEqual(admitted, expected);
+    assert.ok(
+      admitted.length > 0,
+      "no category clears the gate — the gate is stuck shut, not the content thin",
+    );
+  });
+
+  it("counts published articles only", () => {
+    // Three drafts would otherwise open a category page whose three targets
+    // are all themselves noindex.
+    for (const category of JOURNAL_CATEGORIES) {
+      const published = ARTICLES.filter(
+        (a) => a.category === category.slug && isPublished(a),
+      ).length;
+      assert.equal(journalCategoryCount(category.slug), published);
+    }
+  });
+});
 
 describe("cross-section links", () => {
   it("point at documents that exist", () => {

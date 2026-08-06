@@ -24,7 +24,8 @@ const GROUND = {
     rule: "border-slate/25",
     heading: "text-chalk",
     title: "text-chalk decoration-steel-dim hover:decoration-signal",
-    label: "text-steel-dim",
+    // steel-dim is a hairline colour (2.4:1), never text - see globals.css.
+    label: "text-steel",
     summary: "text-steel",
   },
   bone: {

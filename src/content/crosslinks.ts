@@ -310,6 +310,33 @@ export function crossLinksFor(
 }
 
 /**
+ * The union of everything linked to any of these documents, deduplicated.
+ *
+ * Used by category pages, which stand for several entries at once. A target
+ * reached from two different entries in the same category is one row, not two.
+ */
+export function crossLinksForMany(
+  collection: Collection,
+  slugs: string[],
+): ResolvedCrossLink[] {
+  const byKey = new Map<string, ResolvedCrossLink>();
+
+  for (const slug of slugs) {
+    for (const link of crossLinksFor(collection, slug)) {
+      const key = `${link.collection}:${link.slug}`;
+      if (!byKey.has(key)) byKey.set(key, link);
+    }
+  }
+
+  const order: Collection[] = ["technique", "journal", "figure"];
+  return [...byKey.values()].sort(
+    (x, y) =>
+      order.indexOf(x.collection) - order.indexOf(y.collection) ||
+      x.title.localeCompare(y.title),
+  );
+}
+
+/**
  * Edges pointing at documents that do not exist. Asserted empty in the unit
  * tests, so renaming a slug breaks the build rather than the page.
  */

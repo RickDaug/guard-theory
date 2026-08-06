@@ -171,8 +171,21 @@ Nothing below is fixed. The first three need the owner.
 4. **Right of publicity** on five living subjects whose portraits sit on a site
    that sells apparel. Copyright licences do not convey publicity rights, and
    Brazil's STJ Súmula 403 presumes damages without proof of harm.
-5. **Fifteen category pages of 53–76 words** are in the sitemap, against the
-   project's own thin-content rule.
+5. ~~**Fifteen category pages of 53–76 words** are in the sitemap, against the
+   project's own thin-content rule.~~ **Fixed, and it was worse than reported.**
+   The rule is an entry count, not a word count — `seo-strategy.md` §5 says ship
+   a category page "only when it has its introduction plus at least three
+   entries" — and by that measure **seventeen of twenty** were in violation, not
+   fifteen. The gate is now implemented in `src/content/category-gate.ts`,
+   computed from the live registries so it releases itself when a third entry is
+   published, and used by both the robots meta and the sitemap so the two cannot
+   disagree. The sitemap drops from 20 category URLs to the 2 that qualify.
+
+   The pages were also made worth reading rather than only de-indexed: each now
+   carries the reading connected to its entries and the rest of its collection
+   with honest counts. No prose was written to inflate them — padding a page to
+   clear a word count inverts the rule, since the entry count is what a reader
+   came for.
 6. ~~**Zero internal links between the Journal, the Technique Library and the
    Figures index.** Three sealed rooms.~~ **Fixed.** 30 cross-section links in
    `src/content/crosslinks.ts`, declared once and rendered from both ends, plus

@@ -1,11 +1,12 @@
 import type { MetadataRoute } from "next";
-import { CATEGORIES as TECHNIQUE_CATEGORIES, ENTRIES } from "@/content/technique";
+import { ENTRIES } from "@/content/technique";
+import {
+  indexableJournalCategorySlugs,
+  indexableTechniqueCategorySlugs,
+} from "@/content/category-gate";
 import { PRODUCTS } from "@/content/products";
 import { POLICIES } from "@/content/policies";
-import {
-  CATEGORIES as JOURNAL_CATEGORIES,
-  publishedArticles,
-} from "@/content/journal";
+import { publishedArticles } from "@/content/journal";
 import { FIGURES } from "@/content/figures";
 import { absoluteUrl } from "@/lib/site";
 
@@ -39,14 +40,19 @@ export default function sitemap(): MetadataRoute.Sitemap {
   return [
     ...staticRoutes.map((path) => ({ url: absoluteUrl(path) })),
     ...PRODUCTS.map((product) => ({ url: absoluteUrl(`/shop/${product.slug}`) })),
-    ...TECHNIQUE_CATEGORIES.map((category) => ({
-      url: absoluteUrl(`/technique/${category.slug}`),
+    // Category pages enter the sitemap only once they clear the three-entry
+    // gate, and they are computed from the same predicate that sets their
+    // robots meta — a page cannot be noindex and offered to a crawler at the
+    // same time. Seventeen of twenty were previously listed while holding one
+    // or two entries.
+    ...indexableTechniqueCategorySlugs().map((slug) => ({
+      url: absoluteUrl(`/technique/${slug}`),
     })),
     ...ENTRIES.map((entry) => ({
       url: absoluteUrl(`/technique/${entry.category}/${entry.slug}`),
     })),
-    ...JOURNAL_CATEGORIES.map((category) => ({
-      url: absoluteUrl(`/journal/category/${category.slug}`),
+    ...indexableJournalCategorySlugs().map((slug) => ({
+      url: absoluteUrl(`/journal/category/${slug}`),
     })),
     // Only published articles. Drafts render and are readable, but they carry
     // no publication date, so offering them to crawlers as though they were

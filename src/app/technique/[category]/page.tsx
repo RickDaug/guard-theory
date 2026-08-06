@@ -4,6 +4,13 @@ import { notFound } from "next/navigation";
 import { Breadcrumbs } from "@/components/site/Breadcrumbs";
 import { CATEGORIES, entriesInCategory, getCategory } from "@/content/technique";
 import { pageMetadata } from "@/lib/metadata";
+import {
+  isTechniqueCategoryIndexable,
+  techniqueCategoryCount,
+} from "@/content/category-gate";
+import { CrossLinks } from "@/components/content/CrossLinks";
+import { SiblingCategories } from "@/components/content/SiblingCategories";
+import { crossLinksForMany } from "@/content/crosslinks";
 
 type Params = { params: Promise<{ category: string }> };
 
@@ -20,6 +27,8 @@ export async function generateMetadata({ params }: Params): Promise<Metadata> {
     title: category.name,
     description: category.summary,
     path: `/technique/${category.slug}`,
+    // The three-entry gate. See src/content/category-gate.ts.
+    indexable: isTechniqueCategoryIndexable(category.slug),
   });
 }
 
@@ -29,6 +38,20 @@ export default async function TechniqueCategoryPage({ params }: Params) {
   if (!category) notFound();
 
   const entries = entriesInCategory(category.slug);
+
+  // What the Journal and the Figures index say about the entries in this
+  // area, gathered from the same declarations the entry pages use.
+  const crossLinks = crossLinksForMany(
+    "technique",
+    entries.map((entry) => entry.slug),
+  );
+
+  const siblings = CATEGORIES.filter((c) => c.slug !== category.slug).map((c) => ({
+    slug: c.slug,
+    name: c.name,
+    href: `/technique/${c.slug}`,
+    count: techniqueCategoryCount(c.slug),
+  }));
 
   return (
     <main id="main" className="px-6 py-16 md:px-12">
@@ -64,7 +87,16 @@ export default async function TechniqueCategoryPage({ params }: Params) {
             </Link>
           </div>
         ) : (
-          <ul className="m-0 grid list-none gap-px bg-steel-dim p-0 lg:grid-cols-2">
+          <ul
+            className={`m-0 grid list-none gap-px bg-steel-dim p-0 ${
+              // Two columns only when there is something to put in both.
+              // The gap-px-over-a-tinted-background trick draws its rules by
+              // letting the parent show through, so a lone entry in a
+              // two-column grid leaves a filled empty cell that reads as a
+              // card that failed to load.
+              entries.length > 1 ? "lg:grid-cols-2" : ""
+            }`}
+          >
             {entries.map((entry) => (
               <li key={entry.slug} className="bg-ink">
                 <Link
@@ -83,6 +115,17 @@ export default async function TechniqueCategoryPage({ params }: Params) {
             ))}
           </ul>
         )}
+
+        <CrossLinks
+          links={crossLinks}
+          heading="Reading connected to this area"
+        />
+
+        <SiblingCategories
+          categories={siblings}
+          heading="The rest of the library"
+          unit="entry"
+        />
       </div>
     </main>
   );

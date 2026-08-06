@@ -1,4 +1,7 @@
 import { expect, test } from "@playwright/test";
+import { ARTICLES, isPublished } from "../../src/content/journal/index.ts";
+import { CATEGORIES as TECHNIQUE_CATEGORIES } from "../../src/content/technique/index.ts";
+import { isTechniqueCategoryIndexable } from "../../src/content/category-gate.ts";
 
 /**
  * Every indexable page needs a unique title and description, a canonical, and
@@ -6,7 +9,12 @@ import { expect, test } from "@playwright/test";
  * rather than against the source that is supposed to produce it.
  */
 
-const INDEXABLE = [
+/**
+ * Routes sampled for unique titles and descriptions. Named for what it is: some
+ * of these are now noindex under the three-entry gate, which does not change
+ * whether their titles must be unique.
+ */
+const SAMPLED = [
   "/",
   "/shop",
   "/shop/theory-01-long-sleeve",
@@ -38,7 +46,7 @@ test("titles and descriptions are unique across the site", async ({ page }) => {
   const titles = new Map<string, string>();
   const descriptions = new Map<string, string>();
 
-  for (const path of INDEXABLE) {
+  for (const path of SAMPLED) {
     await page.goto(path, { waitUntil: "load" });
 
     const title = await page.title();
@@ -75,33 +83,88 @@ test("titles and descriptions are unique across the site", async ({ page }) => {
 test("indexable pages are indexable and the rest are not", async ({ page }) => {
   test.setTimeout(120_000);
 
-  for (const path of NOINDEX) {
+  async function robotsFor(path: string): Promise<string> {
     await page.goto(path, { waitUntil: "load" });
-    const robots =
+    return (
       (await page
         .locator('meta[name="robots"]')
         .first()
-        .getAttribute("content")) ?? "";
-    expect(robots, `${path} should be noindex`).toContain("noindex");
+        .getAttribute("content")) ?? ""
+    );
   }
 
-  // A draft article renders, but must never be offered to a crawler: it has no
-  // publication date, and indexing an undated piece as published is exactly
-  // what the editorial policy rules out.
-  //
-  // Uses a piece that is still a draft. When the flagships were published this
-  // assertion caught a real regression - the page returned robots: undefined,
-  // which removes the tag rather than inheriting the layout, so the article
-  // became indexable despite the site-wide opt-in being off.
-  await page.goto("/journal/how-to-wash-a-rash-guard", {
-    waitUntil: "load",
-  });
-  const draftRobots =
-    (await page
-      .locator('meta[name="robots"]')
-      .first()
-      .getAttribute("content")) ?? "";
-  expect(draftRobots).toContain("noindex");
+  /**
+   * Whether THIS build has site-wide indexing switched on, read from the build
+   * rather than assumed.
+   *
+   * The previous version of this test hard-coded a slug it called "a piece that
+   * is still a draft" and asserted it was noindex. That article was published
+   * afterwards, and the assertion survived only because Playwright builds
+   * without indexing enabled — which made the entire site noindex and the check
+   * unfailable. The audit predicted it would go red the day the flag was
+   * flipped, and it did, on the first production-configured run.
+   *
+   * So nothing here is hard-coded to one configuration. The site is now live
+   * with indexing ON, and this test has to be true of that build and of a
+   * preview build alike.
+   */
+  const siteIndexable = (await robotsFor("/")).includes("index, follow");
+
+  for (const path of NOINDEX) {
+    expect(await robotsFor(path), `${path} must always be noindex`).toContain(
+      "noindex",
+    );
+  }
+
+  /**
+   * A draft renders and is readable, but must never be offered to a crawler: it
+   * carries no publication date, and indexing an undated piece as published is
+   * exactly what the editorial policy rules out. Driven off the registry, so
+   * publishing a draft cannot leave a stale assertion behind.
+   *
+   * This caught a real regression once: a page returned `robots: undefined`,
+   * which REMOVES the tag rather than inheriting the layout, so the article
+   * became indexable while the site-wide opt-in was still off.
+   */
+  const drafts = ARTICLES.filter((article) => !isPublished(article));
+  for (const article of drafts) {
+    expect(
+      await robotsFor(`/journal/${article.slug}`),
+      `draft ${article.slug} must be noindex`,
+    ).toContain("noindex");
+  }
+
+  // Published articles follow the site-wide switch. Asserting this in the
+  // indexing-on configuration is the only thing that proves the switch reaches
+  // an article at all.
+  const published = ARTICLES.filter(isPublished).slice(0, 3);
+  for (const article of published) {
+    const robots = await robotsFor(`/journal/${article.slug}`);
+    if (siteIndexable) {
+      expect(robots, `published ${article.slug} should be indexable`).toContain(
+        "index, follow",
+      );
+    } else {
+      expect(
+        robots,
+        `${article.slug} must be noindex while the site-wide opt-in is off`,
+      ).toContain("noindex");
+    }
+  }
+
+  /**
+   * The three-entry gate holds regardless of the site-wide switch: a category
+   * under the bar is noindex even in production, and one over it follows the
+   * switch. See src/content/category-gate.ts.
+   */
+  for (const category of TECHNIQUE_CATEGORIES) {
+    const robots = await robotsFor(`/technique/${category.slug}`);
+    if (isTechniqueCategoryIndexable(category.slug) && siteIndexable) {
+      expect(robots, `${category.slug} clears the gate`).toContain("index, follow");
+    } else {
+      expect(robots, `${category.slug} is under the gate`).toContain("noindex");
+    }
+  }
 });
 
 test("structured data parses and claims nothing untrue", async ({ page }) => {

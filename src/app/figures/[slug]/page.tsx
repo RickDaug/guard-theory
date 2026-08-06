@@ -3,6 +3,8 @@ import Image from "next/image";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { Breadcrumbs } from "@/components/site/Breadcrumbs";
+import { CrossLinks } from "@/components/content/CrossLinks";
+import { crossLinksFor } from "@/content/crosslinks";
 import { FIGURES, FIGURES_ALPHABETICAL, getFigure } from "@/content/figures";
 import { absoluteUrl } from "@/lib/site";
 import { pageMetadata } from "@/lib/metadata";
@@ -32,6 +34,9 @@ export default async function FigurePage({ params }: Params) {
   if (!figure) notFound();
 
   const others = FIGURES_ALPHABETICAL.filter((f) => f.slug !== figure.slug);
+
+  // Where this person's recorded work is written about elsewhere on the site.
+  const crossLinks = crossLinksFor("figure", figure.slug);
 
   /**
    * Person, with no award, ranking or rating properties. The index makes no
@@ -175,6 +180,8 @@ export default async function FigurePage({ params }: Params) {
                   ))}
                 </ol>
               </section>
+
+              <CrossLinks links={crossLinks} ground="bone" />
 
               <footer className="mt-14 border-t border-slate/25 pt-8">
                 <p className="notation text-2xs text-slate">

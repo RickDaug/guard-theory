@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { SectionCrossNav } from "@/components/content/SectionCrossNav";
 import { pageMetadata } from "@/lib/metadata";
 import Link from "next/link";
 import { Breadcrumbs } from "@/components/site/Breadcrumbs";
@@ -53,6 +54,7 @@ export default function TechniqueIndexPage() {
             );
           })}
         </ul>
+        <SectionCrossNav current="technique" />
       </div>
     </main>
   );

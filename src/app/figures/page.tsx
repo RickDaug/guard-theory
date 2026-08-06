@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { SectionCrossNav } from "@/components/content/SectionCrossNav";
 import { pageMetadata } from "@/lib/metadata";
 import Image from "next/image";
 import Link from "next/link";
@@ -100,6 +101,8 @@ export default function FiguresPage() {
             </li>
           ))}
         </ul>
+
+        <SectionCrossNav current="figure" />
       </div>
 
       <script

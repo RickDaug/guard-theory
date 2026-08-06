@@ -173,8 +173,15 @@ Nothing below is fixed. The first three need the owner.
    Brazil's STJ Súmula 403 presumes damages without proof of harm.
 5. **Fifteen category pages of 53–76 words** are in the sitemap, against the
    project's own thin-content rule.
-6. **Zero internal links between the Journal, the Technique Library and the
-   Figures index.** Three sealed rooms.
+6. ~~**Zero internal links between the Journal, the Technique Library and the
+   Figures index.** Three sealed rooms.~~ **Fixed.** 30 cross-section links in
+   `src/content/crosslinks.ts`, declared once and rendered from both ends, plus
+   index-level navigation between the three sections. 33 of 40 documents now
+   have a route into another section. The seven that do not are the two apparel
+   articles, the two training-culture articles and three technique entries with
+   no connection traceable to text in either document — every edge carries a
+   `basis` that must be, and links that could not clear it were cut rather than
+   guessed at.
 7. **Returns commitments are operationally expensive**: free two-way exchange
    postage, replacement dispatched before the return arrives, worldwide, on a
    debut product.

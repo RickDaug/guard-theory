@@ -2,6 +2,8 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { Breadcrumbs } from "@/components/site/Breadcrumbs";
+import { CrossLinks } from "@/components/content/CrossLinks";
+import { crossLinksFor } from "@/content/crosslinks";
 import {
   ARTICLES,
   getArticle,
@@ -62,6 +64,10 @@ export default async function ArticlePage({ params }: Params) {
   const related = article.relatedSlugs
     .map((s) => getArticle(s))
     .filter((a): a is NonNullable<typeof a> => Boolean(a));
+
+  // Other Journal pieces are "Related reading" above; this is the route out of
+  // the Journal entirely, into the Library and the Figures index.
+  const crossLinks = crossLinksFor("journal", article.slug);
 
   const published = isPublished(article);
   const author = published ? getAuthor(article.authorId) : undefined;
@@ -258,6 +264,8 @@ export default async function ArticlePage({ params }: Params) {
                   </ul>
                 </section>
               ) : null}
+
+              <CrossLinks links={crossLinks} ground="bone" />
 
               <footer className="mt-14 border-t border-slate/25 pt-8">
                 {author ? (

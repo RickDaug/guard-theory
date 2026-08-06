@@ -2,6 +2,8 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { Breadcrumbs } from "@/components/site/Breadcrumbs";
+import { CrossLinks } from "@/components/content/CrossLinks";
+import { crossLinksFor } from "@/content/crosslinks";
 import { ENTRIES, getCategory, getEntry } from "@/content/technique";
 import { COACH_DISCLAIMER } from "@/content/technique/types";
 import { pageMetadata } from "@/lib/metadata";
@@ -85,6 +87,10 @@ export default async function TechniqueEntryPage({ params }: Params) {
     .map((s) => getEntry(s))
     .filter((e): e is NonNullable<typeof e> => Boolean(e));
 
+  // The route out of the Library: the arguments in the Journal, and the people
+  // whose recorded work the entry describes.
+  const crossLinks = crossLinksFor("technique", entry.slug);
+
   return (
     <main id="main" className="px-6 py-16 md:px-12">
       <div className="mx-auto max-w-[104rem]">
@@ -154,7 +160,7 @@ export default async function TechniqueEntryPage({ params }: Params) {
           </Part>
 
           {related.length > 0 ? (
-            <Part title="Related">
+            <Part title="Related entries">
               <ul className="m-0 flex list-none flex-col gap-3 p-0">
                 {related.map((item) => (
                   <li key={item.slug}>
@@ -170,7 +176,9 @@ export default async function TechniqueEntryPage({ params }: Params) {
             </Part>
           ) : null}
 
-          <footer className="border-t border-slate/25 pt-8">
+          <CrossLinks links={crossLinks} ground="bone" />
+
+          <footer className="mt-14 border-t border-slate/25 pt-8">
             <p className="text-sm text-slate">{COACH_DISCLAIMER}</p>
             <p className="notation mt-6 text-2xs text-slate">
               <Link

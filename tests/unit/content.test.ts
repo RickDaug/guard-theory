@@ -13,12 +13,86 @@ import {
   isPublished,
   publishedArticles,
 } from "../../src/content/journal/index.ts";
+import {
+  CROSS_LINKS,
+  crossLinksFor,
+  findDanglingCrossLinks,
+} from "../../src/content/crosslinks.ts";
 
 /**
  * Content integrity. These are the failures that would otherwise reach a page
  * as a broken link, an empty category or a missing safety note — cheap to
  * catch here, embarrassing to catch in production.
  */
+
+describe("cross-section links", () => {
+  it("point at documents that exist", () => {
+    const dangling = findDanglingCrossLinks();
+    assert.deepEqual(
+      dangling,
+      [],
+      `cross-links point at missing documents: ${dangling
+        .map((d) => `${d.ref.collection}/${d.ref.slug}`)
+        .join(", ")}`,
+    );
+  });
+
+  it("never join two documents in the same collection", () => {
+    // Same-collection relationships belong in that collection's own
+    // relatedSlugs. A link declared in both places renders twice.
+    const sameCollection = CROSS_LINKS.filter(
+      (link) => link.a.collection === link.b.collection,
+    );
+    assert.deepEqual(
+      sameCollection.map((l) => `${l.a.slug} <-> ${l.b.slug}`),
+      [],
+      "cross-links must connect different collections",
+    );
+  });
+
+  it("carry a basis for every link", () => {
+    // A link asserts that two documents are related. If that cannot be stated
+    // in a sentence, it is a guess and does not belong on the site.
+    const unjustified = CROSS_LINKS.filter((link) => link.basis.trim().length < 20);
+    assert.deepEqual(
+      unjustified.map((l) => `${l.a.slug} <-> ${l.b.slug}`),
+      [],
+      "every cross-link needs a basis traceable to one of the two documents",
+    );
+  });
+
+  it("are declared once and resolve from both ends", () => {
+    for (const link of CROSS_LINKS) {
+      const fromA = crossLinksFor(link.a.collection, link.a.slug);
+      const fromB = crossLinksFor(link.b.collection, link.b.slug);
+
+      assert.ok(
+        fromA.some((l) => l.collection === link.b.collection && l.slug === link.b.slug),
+        `${link.a.slug} does not resolve its link to ${link.b.slug}`,
+      );
+      assert.ok(
+        fromB.some((l) => l.collection === link.a.collection && l.slug === link.a.slug),
+        `${link.b.slug} does not resolve its link back to ${link.a.slug}`,
+      );
+    }
+  });
+
+  it("leave no duplicate edges", () => {
+    const seen = new Set<string>();
+    const duplicates: string[] = [];
+    for (const link of CROSS_LINKS) {
+      const key = [
+        `${link.a.collection}/${link.a.slug}`,
+        `${link.b.collection}/${link.b.slug}`,
+      ]
+        .sort()
+        .join(" <-> ");
+      if (seen.has(key)) duplicates.push(key);
+      seen.add(key);
+    }
+    assert.deepEqual(duplicates, [], "the same pair is declared more than once");
+  });
+});
 
 describe("technique library integrity", () => {
   it("has no dangling or self-referential related links", () => {

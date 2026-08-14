@@ -39,8 +39,12 @@ const TARGETS = [
 ];
 
 /**
- * The brief's targets are performance ≥90, the rest ≥95, and they are met on
- * representative hardware — 90 to 94 for performance across the three pages.
+ * The brief's targets are performance ≥90, the rest ≥95. On representative
+ * hardware the site runs 89 to 91 for performance: five of the six routes clear
+ * 90 and `figures` sits one point under, reproducibly. Every route's LCP is
+ * font-bound under simulated throttling — 3.5 to 3.8 seconds modelled against a
+ * real element render delay of 134ms — so that point lives in `fonts.ts`, and
+ * `docs/visual-identity.md` records why chasing it there is a known trap.
  *
  * A GitHub runner is two shared cores, and Lighthouse then applies its own 4×
  * CPU throttle on top. The same commit measures 88 to 90 there. Median of

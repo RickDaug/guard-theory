@@ -113,6 +113,21 @@ one on `next start` appears to work and does nothing.
 
 ## Deploying
 
+The live site is `guardtheory.net`, on Vercel — project `guard-theory` in the
+`chesstrophies-projects` team. **Pushing to `main` deploys to production.**
+
+That was not true until 2026-08-13. The Vercel project had no Git connection, so
+every deployment was a manual `vercel --prod` and a push to `main` changed
+nothing live: a whole rebrand sat merged, with CI green, while the domain kept
+serving the previous build for as long as nobody thought to look. The connection
+now exists, and the useful habit survives it — **after a deploy, check the thing
+you changed is actually being served**, rather than trusting the deployment log:
+
+```
+CSS=$(curl -s -L https://guardtheory.net/ | grep -o '/_next/static/[^"]*\.css' | head -1)
+curl -s "https://guardtheory.net$CSS" | grep -o '#1b1725'   # a token you just changed
+```
+
 `npm run build` produces a standard Next.js output; any host that runs Next 16
 will serve it. Before the first production deploy:
 

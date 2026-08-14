@@ -219,10 +219,24 @@ Not asserted — enforced:
   without and the one the text table says nothing about. The same test refuses to
   let `signal` be listed as a text colour at all.
 - 21 routes pass axe with zero WCAG 2.2 A/AA violations.
-- Lighthouse on the production build: performance 90–94, accessibility 100,
-  best practices 100, SEO 100 across home, a product page and a long-form page.
+- Lighthouse on the production build: accessibility 100, best practices 100 and
+  SEO 100 on all six audited routes. Performance is 89–91, against a threshold of
+  90 — `figures` sits one point under, reproducibly. Measured against a
+  same-session baseline the new identity costs about a point: the mark is a
+  faithful trace rather than three geometric primitives, so it is 5.7kB of path
+  data instead of 300 bytes, and the icon set it needs is larger than the one it
+  replaced. Every route's LCP is font-bound under simulated throttling — 3.5–3.8s
+  modelled against a real element render delay of 134ms — so that last point is
+  bought back in `fonts.ts` or not at all, and this project has already spent
+  four rewrites there learning not to chase the model.
+- Layout stability is measured in a real browser rather than modelled:
+  `npm run cls` reports 0.0022–0.0362 across four routes, all "good". That
+  instrument caught a 0.1787 failure on the product page during this work, and
+  `npm run cls:why` named the element responsible.
 - Screenshots at four breakpoints are committed to `docs/screenshots/` and
-  regenerated from a production build, not the dev server.
+  regenerated from a production build, not the dev server. They are not only for
+  looking at: every mobile capture is 390px wide, so a page that renders wider
+  than that is a horizontal overflow, visible in a file listing. One was.
 
 ## What was cut
 

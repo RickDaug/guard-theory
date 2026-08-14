@@ -80,19 +80,50 @@ await mkdir(TMP, { recursive: true });
  *  in 6,320, which is finer than any raster this ever becomes. */
 function toSourceSpace(d, band) {
   const s = band.scale;
+
+  // potrace writes `C 1207.000 40.973, 1196.275 41.419, 1180.000 42.835` — the
+  // separators are three eighths of the file, and the trailing zeros another
+  // slice. Re-emitting the same numbers in the minimal legal form takes the mark
+  // from 6.4kB to 4.0kB without moving a single point, which matters because
+  // this data is inlined into every page.
+  const tokens = d.match(/[MLCZ]|-?\d+(?:\.\d+)?/g) ?? [];
+  const out = [];
   let i = 0;
-  const out = d.replace(/-?\d+(?:\.\d+)?/g, (n) => {
-    const v = Number(n);
-    const mapped = i++ % 2 === 0 ? band.left + v / s : band.top + v / s;
-    return String(Number(mapped.toFixed(1)));
-  });
-  // potrace leaves subpaths implicitly closed; make that explicit so the data
-  // is correct under any renderer and any fill-rule.
+  let axis = 0;
+  const map = (v) =>
+    Number((axis++ % 2 === 0 ? band.left + v / s : band.top + v / s).toFixed(1));
+
+  // A command letter stands until another one appears: `C a b c d e f g h i j
+  // k l` is two curves, not one curve and a syntax error. potrace uses that
+  // form, and a tokeniser that assumes one letter per operand set desynchronises
+  // on the first repeat and writes numbers where commands should be. It did.
+  let cmd = null;
+  while (i < tokens.length) {
+    if (/[MLCZ]/.test(tokens[i])) cmd = tokens[i++];
+    if (cmd === "Z") {
+      out.push("Z");
+      continue;
+    }
+    if (cmd === null) throw new Error("path data begins with an operand");
+    const count = cmd === "C" ? 6 : 2;
+    const nums = [];
+    for (let k = 0; k < count; k += 1) {
+      if (i >= tokens.length) throw new Error(`truncated ${cmd} in path data`);
+      nums.push(map(Number(tokens[i++])));
+    }
+    out.push(cmd + nums.join(" "));
+    // An implicit repeat of M continues as L, per the SVG path grammar.
+    if (cmd === "M") cmd = "L";
+  }
+
+  // potrace leaves subpaths implicitly closed; make that explicit so the data is
+  // correct under any renderer and any fill-rule.
   return out
-    .split(/(?=M )/)
-    .filter((p) => p.trim())
-    .map((p) => `${p.trim()} Z`)
-    .join(" ");
+    .join("")
+    .split(/(?=M)/)
+    .filter(Boolean)
+    .map((p) => (p.endsWith("Z") ? p : `${p}Z`))
+    .join("");
 }
 
 const traced = {};
@@ -149,7 +180,7 @@ function bbox(d) {
  * happens to order them differently still produces a correct file.
  */
 const markParts = traced.mark
-  .split(/(?=M )/)
+  .split(/(?=M)/)
   .filter((p) => p.trim())
   .map((d) => ({ d: d.trim(), box: bbox(d) }));
 

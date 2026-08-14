@@ -13,8 +13,8 @@
       "scores": {
         "performance": 91,
         "performance_runs": [
-          92,
-          93,
+          95,
+          91,
           91,
           91,
           91
@@ -50,13 +50,13 @@
       "url": "/shop/theory-01-long-sleeve",
       "runs": 5,
       "scores": {
-        "performance": 89,
+        "performance": 90,
         "performance_runs": [
-          89,
           90,
-          89,
-          89,
-          89
+          90,
+          90,
+          90,
+          90
         ],
         "accessibility": 100,
         "accessibility_runs": [
@@ -93,8 +93,8 @@
         "performance_runs": [
           90,
           90,
-          90,
           89,
+          91,
           90
         ],
         "accessibility": 100,
@@ -131,7 +131,7 @@
         "performance": 90,
         "performance_runs": [
           90,
-          90,
+          89,
           90,
           90,
           90
@@ -169,7 +169,7 @@
       "scores": {
         "performance": 89,
         "performance_runs": [
-          89,
+          92,
           89,
           89,
           89,

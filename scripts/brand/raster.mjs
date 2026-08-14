@@ -88,15 +88,65 @@ const RING_WEIGHT = 1.4;
 const CLEARANCE = 28; // the gap between the GT and the ring in the artwork, in source units
 
 /**
- * Round every coordinate to a whole unit.
+ * Simplify a path for icon use, where nothing above a fifth of a pixel is
+ * visible anyway.
  *
- * icon.svg is fetched on every page load, and the mark is 633 units wide, so a
- * tenth of a unit is a six-thousandth of the drawing — at the 16 to 64 pixels a
- * browser renders a tab icon at, that is a fortieth of a pixel. Keeping the
- * decimals there costs bytes on the critical path to describe a difference no
- * screen can show. Everything above icon size keeps the full precision.
+ * icon.svg is fetched on every page load, and the traced GT is 92 cubic
+ * segments across a 633-unit box. Two things are pure weight at 16 to 64 pixels:
+ *
+ *   1. Coordinate decimals. A tenth of a unit is a six-thousandth of the mark —
+ *      at 64px, a fortieth of a pixel.
+ *   2. Curves that are not curved. The GT is an angular letterform, and the
+ *      tracer describes even its straight edges as cubics. Any segment whose
+ *      control points sit within FLATNESS of the straight line between its ends
+ *      is drawn identically by a line, and a line is a third of the characters.
+ *
+ * Everything at 48px and above keeps the full traced precision; this is only for
+ * the browser icons. The result is checked by eye against
+ * public/brand/gt-16-magnified.png like every other small-size decision.
  */
-const coarse = (d) => d.replace(/-?\d+(?:\.\d+)?/g, (n) => String(Math.round(Number(n))));
+const FLATNESS = 2; // source units — 0.2px at 64px, 0.05px at 16px
+
+function simplifyForIcon(d) {
+  const tokens = d.match(/[MLCZ]|-?\d+(?:\.\d+)?/g) ?? [];
+  const out = [];
+  let i = 0;
+  let cx = 0;
+  let cy = 0;
+  const r = (v) => Math.round(v);
+
+  /** Distance from a point to the infinite line through a and b. */
+  const offLine = (px, py, ax, ay, bx, by) => {
+    const dx = bx - ax;
+    const dy = by - ay;
+    const len = Math.hypot(dx, dy);
+    if (len === 0) return Math.hypot(px - ax, py - ay);
+    return Math.abs(dy * (px - ax) - dx * (py - ay)) / len;
+  };
+
+  while (i < tokens.length) {
+    const cmd = tokens[i++];
+    if (cmd === "Z") {
+      out.push("Z");
+    } else if (cmd === "M" || cmd === "L") {
+      const x = Number(tokens[i++]);
+      const y = Number(tokens[i++]);
+      out.push(`${cmd}${r(x)} ${r(y)}`);
+      cx = x;
+      cy = y;
+    } else if (cmd === "C") {
+      const [x1, y1, x2, y2, x, y] = [0, 0, 0, 0, 0, 0].map(() => Number(tokens[i++]));
+      const flat =
+        offLine(x1, y1, cx, cy, x, y) < FLATNESS && offLine(x2, y2, cx, cy, x, y) < FLATNESS;
+      out.push(
+        flat ? `L${r(x)} ${r(y)}` : `C${r(x1)} ${r(y1)} ${r(x2)} ${r(y2)} ${r(x)} ${r(y)}`,
+      );
+      cx = x;
+      cy = y;
+    }
+  }
+  return out.join("");
+}
 
 function iconSvg(fill, ground, px = 512) {
   const { x, y, side } = squareViewBox(0.04);
@@ -108,7 +158,7 @@ function iconSvg(fill, ground, px = 512) {
   const r = (v) => Math.round(v);
   return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="${r(x)} ${r(y)} ${r(side)} ${r(side)}" width="${px}" height="${px}">
   <title>Guard Theory</title>
-  <defs><path id="gt" d="${coarse(gtPath.d)}"/></defs>
+  <defs><path id="gt" d="${simplifyForIcon(gtPath.d)}"/></defs>
   <rect x="${r(x)}" y="${r(y)}" width="${r(side)}" height="${r(side)}" fill="${ground}"/>
   <circle cx="${r(ring.cx)}" cy="${r(ring.cy)}" r="${r(rMid)}" fill="none" stroke="${fill}" stroke-width="${r(w)}"/>
   <use href="#gt" fill="none" stroke="${ground}" stroke-width="${r(CLEARANCE * RING_WEIGHT)}" stroke-linejoin="round"/>

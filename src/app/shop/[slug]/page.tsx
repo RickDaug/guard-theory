@@ -53,7 +53,14 @@ export default async function ProductPage({ params }: Params) {
         <div className="mt-10 grid gap-16 lg:grid-cols-12 lg:gap-20">
           {/* Sticky on wide screens so the drawing stays with you while you
               read the specification beside it. */}
-          <div className="lg:col-span-7 lg:sticky lg:top-8 lg:self-start">
+          {/* min-w-0 is load-bearing. A grid item's min-width is `auto`, which
+              resolves to its min-content width, and the truncating caption below
+              is `whitespace-nowrap` — so without this the track grows to the
+              full untruncated string and the caption never truncates at all. It
+              pushed the page 3px past the viewport at 390px, which the committed
+              mobile screenshot caught: every other one is 390 wide and this one
+              was 393. */}
+          <div className="min-w-0 lg:col-span-7 lg:sticky lg:top-8 lg:self-start">
             {/**
              * One line, always — the same rule, and the same reason, as the
              * breadcrumb. At 390px this label fits on one line in the metric

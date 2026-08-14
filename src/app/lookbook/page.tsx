@@ -41,7 +41,7 @@ export default function LookbookPage() {
               className="grid gap-12 lg:grid-cols-12 lg:gap-16"
             >
               <div className="lg:col-span-7">
-                <p className="notation mb-8 text-2xs text-signal">
+                <p className="notation mb-8 text-2xs text-orchid">
                   Plate {String(index + 1).padStart(2, "0")} — {product.kind}
                 </p>
                 <GarmentFlat
@@ -66,7 +66,7 @@ export default function LookbookPage() {
                 </p>
                 <Link
                   href={`/shop/${product.slug}`}
-                  className="display-plain mt-8 inline-flex min-h-6 items-center text-sm text-chalk underline decoration-steel-dim underline-offset-[6px] transition-colors duration-[140ms] ease-[var(--ease-control)] hover:decoration-signal"
+                  className="display-plain mt-8 inline-flex min-h-6 items-center text-sm text-chalk underline decoration-steel-dim underline-offset-[6px] transition-colors duration-[140ms] ease-[var(--ease-control)] hover:decoration-signal-lift"
                 >
                   Full specification
                 </Link>

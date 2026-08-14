@@ -145,7 +145,7 @@ export function GuardSystemMap() {
                 y1={a.y}
                 x2={b.x}
                 y2={b.y}
-                stroke={live ? "var(--color-signal)" : "var(--color-steel-dim)"}
+                stroke={live ? "var(--color-signal-lift)" : "var(--color-steel-dim)"}
                 className="transition-[stroke] duration-[140ms] ease-[var(--ease-control)]"
               />
             );
@@ -169,7 +169,7 @@ export function GuardSystemMap() {
                 cy={family.y}
                 r={26}
                 fill="var(--color-ink)"
-                stroke={live ? "var(--color-signal)" : "var(--color-steel)"}
+                stroke={live ? "var(--color-signal-lift)" : "var(--color-steel)"}
                 strokeWidth={live ? 3 : 1.5}
                 className="transition-[stroke,stroke-width] duration-[140ms] ease-[var(--ease-control)]"
               />
@@ -179,7 +179,7 @@ export function GuardSystemMap() {
                 textAnchor="middle"
                 dominantBaseline="central"
                 className="notation text-[21px] sm:text-[15px] lg:text-[12px]"
-                fill={live ? "var(--color-signal)" : "var(--color-steel)"}
+                fill={live ? "var(--color-signal-lift)" : "var(--color-steel)"}
               >
                 {family.code}
               </text>
@@ -206,7 +206,7 @@ export function GuardSystemMap() {
                   onBlur={() => setActiveCode(null)}
                   onClick={() => setActiveCode(live ? null : family.code)}
                   className={`notation inline-flex min-h-[24px] items-center gap-x-1.5 text-xs transition-colors duration-[140ms] ease-[var(--ease-control)] ${
-                    live ? "text-signal" : "text-steel hover:text-chalk"
+                    live ? "text-signal-lift" : "text-steel hover:text-chalk"
                   }`}
                 >
                   <span aria-hidden="true">{family.code}</span>

@@ -34,7 +34,7 @@ export default function ShopPage() {
         <Breadcrumbs trail={[{ href: "/shop", label: "Shop" }]} />
 
         <header className="mt-10 mb-16 max-w-[46rem]">
-          <p className="notation text-2xs text-signal">First Edition</p>
+          <p className="notation text-2xs text-orchid">First Edition</p>
           <h1 className="display-condensed mt-6 text-4xl text-chalk">Shop</h1>
           <p className="mt-8 text-lg text-steel">
             Two garments, made in one run. The specification is published in
@@ -66,7 +66,7 @@ export default function ShopPage() {
                   <span className="notation text-2xs text-steel">
                     {STATUS_LABEL[product.status]}
                   </span>
-                  <h3 className="display-condensed mt-5 text-xl text-chalk transition-colors duration-[140ms] ease-[var(--ease-control)] group-hover:text-signal">
+                  <h3 className="display-condensed mt-5 text-xl text-chalk transition-colors duration-[140ms] ease-[var(--ease-control)] group-hover:text-signal-lift">
                     {product.name} — {product.kind}
                   </h3>
                   <p className="mt-4 max-w-[34rem] text-sm text-steel">

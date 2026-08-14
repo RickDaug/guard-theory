@@ -83,11 +83,11 @@ export default function FiguresPage() {
 
                 <div className="flex grow flex-col p-7">
                   {figure.lifespan ? (
-                    <span className="notation text-2xs text-signal">
+                    <span className="notation text-2xs text-orchid">
                       {figure.lifespan}
                     </span>
                   ) : null}
-                  <h2 className="display-condensed mt-4 text-xl text-chalk transition-colors duration-[140ms] ease-[var(--ease-control)] group-hover:text-signal">
+                  <h2 className="display-condensed mt-4 text-xl text-chalk transition-colors duration-[140ms] ease-[var(--ease-control)] group-hover:text-signal-lift">
                     {figure.name}
                   </h2>
                   <p className="mt-4 grow text-sm text-steel">

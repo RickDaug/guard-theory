@@ -41,7 +41,7 @@ export function SearchClient({ index }: { index: SearchDocument[] }) {
           autoComplete="off"
           aria-describedby={statusId}
           placeholder="guard retention, rash guard, privacy…"
-          className="w-full border border-steel-dim bg-graphite px-4 py-3 text-base text-chalk placeholder:text-steel transition-colors duration-[140ms] ease-[var(--ease-control)] focus:border-signal"
+          className="w-full border border-steel-dim bg-graphite px-4 py-3 text-base text-chalk placeholder:text-steel transition-colors duration-[140ms] ease-[var(--ease-control)] focus:border-signal-lift"
         />
       </div>
 
@@ -66,7 +66,7 @@ export function SearchClient({ index }: { index: SearchDocument[] }) {
           </p>
           <Link
             href="/technique"
-            className="display-plain mt-6 inline-flex min-h-6 items-center text-sm text-chalk underline decoration-steel-dim underline-offset-[6px] transition-colors duration-[140ms] ease-[var(--ease-control)] hover:decoration-signal"
+            className="display-plain mt-6 inline-flex min-h-6 items-center text-sm text-chalk underline decoration-steel-dim underline-offset-[6px] transition-colors duration-[140ms] ease-[var(--ease-control)] hover:decoration-signal-lift"
           >
             Browse the Technique Library instead
           </Link>
@@ -84,7 +84,7 @@ export function SearchClient({ index }: { index: SearchDocument[] }) {
                 <span className="notation text-2xs text-steel">
                   {result.kind}
                 </span>
-                <span className="display-condensed mt-4 text-lg text-chalk transition-colors duration-[140ms] ease-[var(--ease-control)] group-hover:text-signal">
+                <span className="display-condensed mt-4 text-lg text-chalk transition-colors duration-[140ms] ease-[var(--ease-control)] group-hover:text-signal-lift">
                   {result.title}
                 </span>
                 <span className="mt-3 text-sm text-steel">{result.summary}</span>

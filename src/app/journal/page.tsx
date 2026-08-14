@@ -56,10 +56,10 @@ export default function JournalIndexPage() {
                     href={`/journal/${article.slug}`}
                     className="group flex h-full flex-col p-8 no-underline transition-colors duration-[140ms] ease-[var(--ease-control)] hover:bg-ink-raised"
                   >
-                    <span className="notation text-2xs text-signal">
+                    <span className="notation text-2xs text-orchid">
                       {getJournalCategoryName(article.category)}
                     </span>
-                    <h3 className="display-condensed mt-5 text-xl text-chalk transition-colors duration-[140ms] ease-[var(--ease-control)] group-hover:text-signal">
+                    <h3 className="display-condensed mt-5 text-xl text-chalk transition-colors duration-[140ms] ease-[var(--ease-control)] group-hover:text-signal-lift">
                       {article.title}
                     </h3>
                     <p className="mt-4 grow text-sm text-steel">
@@ -95,7 +95,7 @@ export default function JournalIndexPage() {
                     href={`/journal/category/${category.slug}`}
                     className="group flex h-full flex-col p-7 no-underline transition-colors duration-[140ms] ease-[var(--ease-control)] hover:bg-ink-raised"
                   >
-                    <h3 className="display-condensed text-lg text-chalk transition-colors duration-[140ms] ease-[var(--ease-control)] group-hover:text-signal">
+                    <h3 className="display-condensed text-lg text-chalk transition-colors duration-[140ms] ease-[var(--ease-control)] group-hover:text-signal-lift">
                       {category.name}
                     </h3>
                     <p className="mt-3 grow text-sm text-steel">

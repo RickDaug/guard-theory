@@ -70,7 +70,7 @@ function ErrorSummary({ state }: { state: WaitlistFormState }) {
       ref={ref}
       tabIndex={-1}
       role="alert"
-      className="border border-signal p-6"
+      className="border border-signal-lift p-6"
     >
       <p className="display-plain text-base text-chalk">{state.message}</p>
       {listed.length > 0 ? (
@@ -79,7 +79,7 @@ function ErrorSummary({ state }: { state: WaitlistFormState }) {
             <li key={field.key}>
               <a
                 href={`#${field.id}`}
-                className="text-sm text-signal underline underline-offset-[5px]"
+                className="text-sm text-signal-lift underline underline-offset-[5px]"
               >
                 {state.errors[field.key]}
               </a>
@@ -112,7 +112,7 @@ export function WaitlistForm() {
         aria-live="polite"
         className="border border-steel-dim p-8"
       >
-        <p className="notation text-2xs text-signal">First Edition</p>
+        <p className="notation text-2xs text-orchid">First Edition</p>
         <h2 className="display-condensed mt-5 text-2xl text-chalk">
           {state.alreadyOnList ? "Already on the list" : "You're on the list"}
         </h2>

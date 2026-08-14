@@ -28,7 +28,7 @@ function ErrorSummary({ state }: { state: ContactFormState }) {
   const listed = FIELD_ORDER.filter((field) => state.errors[field.key]);
 
   return (
-    <div ref={ref} tabIndex={-1} role="alert" className="border border-signal p-6">
+    <div ref={ref} tabIndex={-1} role="alert" className="border border-signal-lift p-6">
       <p className="display-plain text-base text-chalk">{state.message}</p>
       {listed.length > 0 ? (
         <ul className="m-0 mt-4 flex list-none flex-col gap-2 p-0">
@@ -36,7 +36,7 @@ function ErrorSummary({ state }: { state: ContactFormState }) {
             <li key={field.key}>
               <a
                 href={`#${field.id}`}
-                className="text-sm text-signal underline underline-offset-[5px]"
+                className="text-sm text-signal-lift underline underline-offset-[5px]"
               >
                 {state.errors[field.key]}
               </a>
@@ -70,7 +70,7 @@ export function ContactForm() {
         aria-live="polite"
         className="border border-steel-dim p-8"
       >
-        <p className="notation text-2xs text-signal">Received</p>
+        <p className="notation text-2xs text-orchid">Received</p>
         <h2 className="display-condensed mt-5 text-2xl text-chalk">
           Message received
         </h2>

@@ -58,14 +58,14 @@ export default function AboutPage() {
                   copy. The{" "}
                   <Link
                     href="/technique"
-                    className="text-chalk underline decoration-steel-dim underline-offset-[5px] transition-colors duration-[140ms] ease-[var(--ease-control)] hover:decoration-signal"
+                    className="text-chalk underline decoration-steel-dim underline-offset-[5px] transition-colors duration-[140ms] ease-[var(--ease-control)] hover:decoration-signal-lift"
                   >
                     Technique Library
                   </Link>{" "}
                   and the{" "}
                   <Link
                     href="/journal"
-                    className="text-chalk underline decoration-steel-dim underline-offset-[5px] transition-colors duration-[140ms] ease-[var(--ease-control)] hover:decoration-signal"
+                    className="text-chalk underline decoration-steel-dim underline-offset-[5px] transition-colors duration-[140ms] ease-[var(--ease-control)] hover:decoration-signal-lift"
                   >
                     Journal
                   </Link>{" "}
@@ -77,7 +77,7 @@ export default function AboutPage() {
           </div>
 
           <aside className="lg:col-span-4 lg:col-start-9">
-            <h2 className="notation mb-6 text-2xs text-signal">Read next</h2>
+            <h2 className="notation mb-6 text-2xs text-orchid">Read next</h2>
             <ul className="m-0 flex list-none flex-col gap-4 p-0">
               {[
                 { href: "/manifesto", label: "Manifesto" },

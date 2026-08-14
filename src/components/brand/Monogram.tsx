@@ -1,7 +1,68 @@
-import geometry from "@/lib/brand/monogram.json";
+import logo from "@/lib/brand/logo.json";
+
+/**
+ * GT — the Guard Theory mark.
+ *
+ * A ring with the GT driven through it: the G's bowl opens into the T's
+ * crossbar, and the pair crosses the ring on both sides, cutting it into two
+ * arcs. The ring is not a frame around the letters — the letters break it, which
+ * is the point.
+ *
+ * The geometry is the supplied artwork, traced once into
+ * `src/lib/brand/logo.json`. Nothing here redraws it. That file is also what the
+ * favicon, the app icons, the Open Graph card and the exported SVGs are built
+ * from, so the tab, the home screen and the link preview cannot drift apart from
+ * what the header shows.
+ *
+ * The mark is filled rather than stroked, so it scales without a stroke-width to
+ * keep in step, and it takes `currentColor` so it inherits the ground it is on.
+ *
+ * Below about 32px the ring's stroke is under a pixel and the mark reads as
+ * haze. That case is not this component's — it is handled in the icon pipeline,
+ * which redraws the ring heavier for the browser icons. See the note at the top
+ * of `scripts/brand/raster.mjs`.
+ */
+
+const [, , VB_W, VB_H] = logo.mark.viewBox.split(" ").map(Number);
+const ASPECT = VB_W / VB_H;
+
+const MARK_ID = "gt-mark";
+
+/**
+ * The mark's geometry, once per document.
+ *
+ * A faithful trace of this artwork is 6.4kB of path data. The header and the
+ * footer both show the mark, and `/design-system` shows it nine times, so
+ * writing the paths at each site put 12.8kB of duplicate coordinates into every
+ * page — and 90kB into that one. This renders them once and every `Monogram`
+ * references them.
+ *
+ * Not `display:none`: a definition inside a `display:none` subtree does not
+ * render through `<use>` in every engine. Zero-sized and clipped is the form
+ * that is safe everywhere.
+ *
+ * Mounted in the root layout, above the header.
+ */
+export function MonogramDefs() {
+  return (
+    <svg
+      aria-hidden
+      focusable="false"
+      style={{ position: "absolute", width: 0, height: 0, overflow: "hidden" }}
+    >
+      <defs>
+        <g id={MARK_ID}>
+          {logo.mark.paths.map((path) => (
+            <path key={path.id} d={path.d} />
+          ))}
+        </g>
+      </defs>
+    </svg>
+  );
+}
 
 type MonogramProps = {
-  /** Rendered size in px. The mark is drawn on a 64×64 grid and scales from it. */
+  /** Rendered height in px. Width follows from the mark's own proportions. */
   size?: number;
   /**
    * Decorative marks are hidden from assistive tech. Give a title only when the
@@ -11,43 +72,59 @@ type MonogramProps = {
   className?: string;
 };
 
-/**
- * GT — the Guard Theory monogram.
- *
- * One stroke does the work of both letters: the horizontal bar begins inside
- * the G's counter, exits through its aperture, and on the far side becomes the
- * crossbar of the T. It is simultaneously the spur that makes the ring a G and
- * the head that makes the descender a T. Remove it and both letters collapse.
- *
- * That is the brand thesis drawn rather than illustrated — an open ring held in
- * place by a single straight brace. It is not a picture of two people
- * grappling, and it is not a triangle.
- *
- * Three primitives only, so the mark survives 16px, a woven neck label and
- * single-colour embroidery without a separate simplified drawing. Butt caps
- * keep every terminal square and machine-cuttable.
- *
- * Geometry lives in monogram.json so this component, the exported SVG asset and
- * the rasteriser all draw the same mark.
- */
 export function Monogram({ size = 64, title, className }: MonogramProps) {
   return (
     <svg
-      width={size}
+      width={Math.round(size * ASPECT)}
       height={size}
-      viewBox={geometry.viewBox}
-      fill="none"
-      stroke="currentColor"
-      strokeWidth={geometry.strokeWidth}
-      strokeLinecap="butt"
+      viewBox={logo.mark.viewBox}
+      fill="currentColor"
       className={className}
       role={title ? "img" : undefined}
       aria-hidden={title ? undefined : true}
     >
       {title ? <title>{title}</title> : null}
-      {geometry.paths.map((path) => (
-        <path key={path.id} d={path.d} />
-      ))}
+      {/* The referenced paths carry no fill of their own, so they inherit
+          currentColor through the use element exactly as an inline copy would. */}
+      <use href={`#${MARK_ID}`} />
+    </svg>
+  );
+}
+
+const [, , WM_W, WM_H] = logo.wordmark.viewBox.split(" ").map(Number);
+const WM_ASPECT = WM_W / WM_H;
+
+type WordmarkProps = {
+  /** Rendered height in px. */
+  size?: number;
+  title?: string;
+  className?: string;
+};
+
+/**
+ * GUARD THEORY, as drawn in the artwork rather than set in Archivo.
+ *
+ * This is the logotype, and it is used where the logo appears *as a logo* — the
+ * exported lockups, the Open Graph card. The site's own headings and the
+ * wordmark beside the mark in the header are Archivo, which is the brand's
+ * typeface. Drawing a logotype once and setting everything else in the typeface
+ * is the normal division; using the drawn letters for interface text would mean
+ * shipping ten kilobytes of path data to render two words that a font already
+ * renders, on every page.
+ */
+export function Wordmark({ size = 32, title, className }: WordmarkProps) {
+  return (
+    <svg
+      width={Math.round(size * WM_ASPECT)}
+      height={size}
+      viewBox={logo.wordmark.viewBox}
+      fill="currentColor"
+      className={className}
+      role={title ? "img" : undefined}
+      aria-hidden={title ? undefined : true}
+    >
+      {title ? <title>{title}</title> : null}
+      <path d={logo.wordmark.d} />
     </svg>
   );
 }

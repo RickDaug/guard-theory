@@ -50,7 +50,7 @@ to solve a problem the site does not have.
 src/
   app/            routes only — every file here is a page, layout or route handler
   components/
-    brand/        monogram
+    brand/        the mark, the wordmark and the tagline, traced from the artwork
     notation/     Plate, GuardSystemMap — the drawing system
     product/      GarmentFlat
     site/         header, footer, breadcrumbs, utility page shell
@@ -151,5 +151,5 @@ npm run test:unit      content integrity, contrast, editorial voice
 npm run e2e            Playwright critical flows
 npm run screens        four-breakpoint capture into docs/screenshots
 npm run lighthouse     production build + audit, fails below threshold
-npm run brand:build    regenerate the monogram assets from geometry
+npm run brand:build    regenerate every brand asset from src/lib/brand/logo.json
 ```

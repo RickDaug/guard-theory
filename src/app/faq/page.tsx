@@ -105,7 +105,7 @@ export default function FaqPage() {
           Something not answered here?{" "}
           <Link
             href="/contact"
-            className="text-chalk underline decoration-steel-dim underline-offset-[5px] transition-colors duration-[140ms] ease-[var(--ease-control)] hover:decoration-signal"
+            className="text-chalk underline decoration-steel-dim underline-offset-[5px] transition-colors duration-[140ms] ease-[var(--ease-control)] hover:decoration-signal-lift"
           >
             Ask us
           </Link>

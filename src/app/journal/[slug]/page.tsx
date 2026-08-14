@@ -130,7 +130,7 @@ export default async function ArticlePage({ params }: Params) {
             aria-label="Contents"
             className="lg:col-span-3 lg:sticky lg:top-8 lg:self-start"
           >
-            <p className="notation mb-5 text-2xs text-signal">Contents</p>
+            <p className="notation mb-5 text-2xs text-orchid">Contents</p>
             <ol className="m-0 flex list-none flex-col gap-3 p-0">
               {article.sections.map((section) => (
                 <li key={section.id}>

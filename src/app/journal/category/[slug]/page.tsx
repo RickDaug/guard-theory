@@ -86,7 +86,7 @@ export default async function JournalCategoryPage({ params }: Params) {
             </p>
             <Link
               href="/journal"
-              className="display-plain mt-8 inline-flex min-h-6 items-center text-sm text-chalk underline decoration-steel-dim underline-offset-[6px] transition-colors duration-[140ms] ease-[var(--ease-control)] hover:decoration-signal"
+              className="display-plain mt-8 inline-flex min-h-6 items-center text-sm text-chalk underline decoration-steel-dim underline-offset-[6px] transition-colors duration-[140ms] ease-[var(--ease-control)] hover:decoration-signal-lift"
             >
               Back to the Journal
             </Link>
@@ -108,10 +108,10 @@ export default async function JournalCategoryPage({ params }: Params) {
                   href={`/journal/${article.slug}`}
                   className="group flex h-full flex-col p-8 no-underline transition-colors duration-[140ms] ease-[var(--ease-control)] hover:bg-ink-raised"
                 >
-                  <span className="notation text-2xs text-signal">
+                  <span className="notation text-2xs text-orchid">
                     {isPublished(article) ? "Published" : "Draft"}
                   </span>
-                  <h2 className="display-condensed mt-5 text-xl text-chalk transition-colors duration-[140ms] ease-[var(--ease-control)] group-hover:text-signal">
+                  <h2 className="display-condensed mt-5 text-xl text-chalk transition-colors duration-[140ms] ease-[var(--ease-control)] group-hover:text-signal-lift">
                     {article.title}
                   </h2>
                   <p className="mt-4 grow text-sm text-steel">

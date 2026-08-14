@@ -1,7 +1,0 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" width="64" height="64"
-     fill="none" stroke="#F4F3EF" stroke-width="8" stroke-linecap="butt">
-  <title>Guard Theory</title>
-  <path d="M 37.72 36.5 A 17 17 0 1 1 37.72 19.5"/>
-  <path d="M 20 28 H 60"/>
-  <path d="M 52 28 V 56"/>
-</svg>

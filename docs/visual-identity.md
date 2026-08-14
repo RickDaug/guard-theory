@@ -36,29 +36,50 @@ ground is **being a genuine reference**.
 
 ## The three decisions
 
-### 1. The monogram is one shared stroke
+### 1. The mark is a ring the letters break
 
-A horizontal bar begins inside the G's counter, exits through its aperture, and
-on the far side becomes the crossbar of the T. It is simultaneously the spur
-that makes the ring a G and the head that makes the descender a T. Remove it
-and both letters collapse.
+A ring, with the GT driven through it on a rising diagonal. The G's bowl opens
+directly into the T's crossbar, and the pair crosses the ring on both sides,
+cutting it into two arcs with a clearance gap at each crossing. The ring is not
+a frame around the letters. The letters break it.
 
-**Why this and not something else.** The brief ruled out the two obvious moves:
-an illustration of two people grappling, and a triangle. Both are literal, and
-both have been done. The shared stroke is the brand thesis drawn rather than
-depicted — an open ring held in place by a single straight brace, which is what
-guard retention is. It argues instead of illustrating.
+**Where it comes from.** The mark is the owner's artwork, supplied as a raster
+and adopted as the identity. It is not a house drawing and this document does
+not claim otherwise. What follows is how it was brought into the system.
 
-**Why it survives.** Three primitives — ring, bar, descender. No detail to lose.
-The geometry is snapped so that at a 16px render every stroke edge lands on a
-whole pixel, verified by eye against `public/brand/gt-16-magnified.png` rather
-than assumed. It works in single-colour embroidery, on a woven neck label,
-reversed on dark, and as a circular avatar.
+**How it got here.** The supplied file is 1254px of compressed raster: soft at a
+browser tab, soft in a header at 2×, one fixed colour, and welded to its
+wordmark. Shipping that as the site's logo would have meant a blurry favicon and
+no way to letter the mark separately from the type. So it was traced once, into
+`src/lib/brand/logo.json`, and that file is now the only place the geometry
+lives — the header, the browser tab, the app icons, the Open Graph card and the
+exported SVGs are all generated from it. They cannot drift apart, because there
+is nothing for them to drift from.
 
-**Where it could fail.** At very small sizes the ring's aperture and the bar can
-read as a single horizontal mass on a low-resolution screen. If that turns out
-to matter in the wild, the fix is widening the aperture by a few degrees, not
-redrawing.
+The trace is not a rough approximation. It is faithful to within 0.65% of inked
+area against the source — a one-pixel edge sliver, which is the floor when
+comparing two rasterisations at all — and the ring is round to a fitted residual
+of 0.54 source pixels, a fifth of one percent of its radius. Both numbers were
+measured rather than assumed; `scripts/brand/trace.mjs` records how.
+
+**Where it fails, and what is done about it.** The ring's stroke is 5.3% of its
+diameter. At 16px that is two thirds of a pixel: the ring stops being a circle
+and becomes a grey haze around the letters, and the whole mark reads as a smudge.
+This is a real limitation of the artwork and it cannot be fixed by export
+settings.
+
+So below 48px the browser icons redraw the ring as a true circle at 1.4× its
+weight, with the GT's clearance cut back out of it. That factor was chosen by
+rendering 1.0, 1.4, 1.7 and 2.0 at 16, 20, 24 and 32px and looking at them on
+the real pixel grid: 1.0 is illegible, 1.7 and above crowd the letters and stop
+looking like the logo, 1.4 survives 16px and is indistinguishable from the mark
+at 32px. `public/brand/gt-16-magnified.png` is that render magnified, so the
+call can be re-checked rather than taken on trust.
+
+**What was cut.** A glyph-only small variant — the GT with no ring. It is the
+obvious fallback and it is worse: the GT is 633×343, so filling a square tile by
+its width leaves it a thin band across the middle, and at 16px it reads as less
+than the heavier-ringed mark does.
 
 ### 2. Product imagery is drawn, not photographed
 
@@ -86,36 +107,64 @@ the plate and its revision.
 **When photography arrives it sits alongside, not instead.** The flat is the part
 that says how the thing is built.
 
-### 3. Citrine, not red
+### 3. A violet ramp, and one blue that is never a word
 
-Ground: `ink` #0A0F14 — black pulled toward the blue of a competition mat, so
-drawn line work sits on something with a temperature rather than on neutral
-black.
+Five colours are given by the brand and used exactly as given:
 
-Accent: `signal` #E3C74B, used only for live state — focus rings, the active
-node in a diagram, the single action a page wants. Never decoration.
+| | | |
+|---|---|---|
+| `ink` | #1B1725 | the ground |
+| `steel-dim` | #534B62 | the structural violet — rules, borders, plate hairlines |
+| `steel` | #A499B3 | secondary text |
+| `orchid` | #D0BCD5 | the annotation layer |
+| `signal` | #226CE0 | live state |
+
+Everything else in the palette is derived from those five by mixing in
+linear-light sRGB, either between two of them or toward white, so nothing drifts
+off the ramp. The mix fractions were **solved against the contrast requirement**
+rather than chosen by eye, and each swatch on `/design-system` states its own
+derivation. `chalk` is `orchid → white` at 89%, and it is 89% because that is
+where a label sitting on the blue fill clears 4.5:1 — the colour is the answer to
+a constraint, not a preference.
 
 **Why not red.** Vetoed by the owner, and the veto costs nothing: red is what
 every combat-sports brand reaches for, and the category cannot use colour on
 product anyway.
 
-**Why not the obvious alternatives.** AI-generated design currently clusters
-around three palettes: warm cream with a high-contrast serif and terracotta;
-near-black with a single acid-green or vermilion accent; and broadsheet
-hairlines with zero border radius. All three are defensible for some brief and
-none of them is a choice. Citrine is rare in a category built on red, black and
-navy.
+**Why the blue is never a word.** #226CE0 sits in a luminance dead zone. Against
+`ink` it is 3.6:1 — enough for a non-text indicator under WCAG 2.2 SC 1.4.11 and
+not enough for text. Against the study ground it is 4.1:1, which is also not
+enough. There is no ground on this site where it can carry body copy.
 
-**What it means.** It is the colour of annotation ink on a technical plate — a
-pencil note on a blueprint, a highlighter on a spec sheet. One point of warmth
-in a cold, controlled system, which is the brand personality in a single value.
-11.4:1 against ink.
+Rather than lighten it and quietly stop using the brand's colour, it is used for
+exactly what its luminance is good for: **fills and indicators**. The primary
+button, a rule under a heading, an active node in a diagram, a block on the Open
+Graph card. Each ground then gets the one tint of it that can carry a word —
+`signal-lift` #6F94E9 on dark, `signal-dim` #2161C9 on paper — for links, hovers,
+focus rings and form errors. Three tokens, one rule each, all three asserted in
+`tests/unit/contrast.test.ts`.
+
+That constraint turned out to be the useful part of the design. It forces the
+blue to stay scarce, which is what makes it read as live rather than as
+decoration.
+
+**What carries the warmth instead.** `orchid` is the annotation layer — the
+notation labels, the plate identifiers, the callout numbers, the small technical
+type that appears on every page. It is the lavender of a pencil note on a
+technical plate, and because the annotation layer is everywhere and quiet, the
+violet is what the site actually feels like rather than something applied to it.
+9.9:1 against ink.
+
+**Two grounds, one family.** `bone` #EFE9F0 is `orchid` at paper weight. The
+study pages read as a sheet of faintly violet paper laid on the brand ground,
+which is the same argument the previous palette made, made in one hue instead of
+two.
 
 ---
 
 ## The system
 
-**Two grounds.** `ink` carries brand and commerce. `bone` #E6E3DA carries study.
+**Two grounds.** `ink` carries brand and commerce. `bone` #EFE9F0 carries study.
 Long-form pages render as a bone sheet laid on the ink ground rather than
 switching the whole page — the metaphor is a page of paper on a desk, and it
 means the header and footer never fight the register.
@@ -128,6 +177,16 @@ sizes and 17px body text are different drawings rather than one outline scaled.
 Martian Mono appears **only** inside notation and specification tables, where
 monospacing encodes something true. It is never used as a decorative section
 label, which is the crutch the brief specifically warns about.
+
+**The logotype is drawn; everything else is set.** "GUARD THEORY" as drawn in the
+artwork is a fixed asset, used where the logo appears *as a logo* — the exported
+lockups, the Open Graph card, anything a manufacturer or a marketplace is handed.
+The wordmark beside the mark in the header is Archivo, because that is the
+brand's typeface and because rendering the drawn letters there would mean
+shipping ten kilobytes of path data on every page to say two words a font already
+says. Drawing a logotype once and setting the interface in the typeface is the
+normal division, and keeping it means the two never have to agree about size,
+weight or optical spacing.
 
 **Guard Theory Notation is the signature.** A ring for a position, a line for a
 transition, a numbered callout keyed to a legend, a title block naming the
@@ -153,9 +212,12 @@ faster.
 Not asserted — enforced:
 
 - Colour contrast is **computed on `/design-system`** and asserted in
-  `tests/unit/contrast.test.ts`. It has already caught two real failures:
-  `steel` at 3.75:1 while carrying body copy, and `signal-dim` at 3.45:1 on
-  bone.
+  `tests/unit/contrast.test.ts`, for text *and* for the indicators that are not
+  text — the focus ring, a control border, a filled block against its ground.
+  Adding the second table is what caught the brand blue failing 3:1 as a focus
+  ring on a form control, which is the one indicator a keyboard user cannot do
+  without and the one the text table says nothing about. The same test refuses to
+  let `signal` be listed as a text colour at all.
 - 21 routes pass axe with zero WCAG 2.2 A/AA violations.
 - Lighthouse on the production build: performance 90–94, accessibility 100,
   best practices 100, SEO 100 across home, a product page and a long-form page.

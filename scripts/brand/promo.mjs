@@ -5,11 +5,11 @@
  *
  * WHY IT RENDERS THROUGH THE RUNNING SITE
  *
- * The identity lives in two things a normal SVG export cannot reach: the
- * monogram geometry in src/lib/brand/monogram.json, and the variable-font width
- * axes in globals.css — the wordmark is Archivo at wdth 125, headings at 66,
- * notation at 87.5. Rasterising an SVG through sharp would need those fonts
- * installed system-wide and would still lose the axis settings.
+ * The identity lives in two things a normal SVG export cannot reach: the mark
+ * geometry in src/lib/brand/logo.json, and the variable-font width axes in
+ * globals.css — the wordmark is Archivo at wdth 125, headings at 66, notation at
+ * 87.5. Rasterising an SVG through sharp would need those fonts installed
+ * system-wide and would still lose the axis settings.
  *
  * So this navigates a real browser to the real site, where next/font has already
  * loaded the real faces and the real stylesheet, then replaces the document body
@@ -27,21 +27,23 @@ const ROOT = process.cwd();
 const OUT = path.join(ROOT, "brand-exports");
 const BASE = "http://127.0.0.1:3100";
 
-const geometry = JSON.parse(
-  await readFile(path.join(ROOT, "src", "lib", "brand", "monogram.json"), "utf8"),
+const logo = JSON.parse(
+  await readFile(path.join(ROOT, "src", "lib", "brand", "logo.json"), "utf8"),
 );
 
 /**
- * The mark, from the single source of truth. `-10.5 -10 83 83` is the same
- * padded box the app icon uses: the drawn mark sits tight in its 64-unit grid,
- * which suits inline use where surrounding layout provides the spacing, but
- * artwork needs the breathing room baked in.
+ * The mark, from the single source of truth, in a square tile centred on the
+ * ring rather than on the bounding box — the T overhangs to the right, so a
+ * box-centred tile sits the mark visibly left of centre. Artwork needs the
+ * breathing room baked in, which inline use gets from surrounding layout.
  */
-function monogram(size, stroke) {
-  const paths = geometry.paths.map((p) => `<path d="${p.d}"/>`).join("");
-  return `<svg viewBox="-10.5 -10 83 83" width="${size}" height="${size}"
-    fill="none" stroke="${stroke}" stroke-width="${geometry.strokeWidth}"
-    stroke-linecap="butt" role="img" aria-label="Guard Theory">${paths}</svg>`;
+function monogram(size, fill) {
+  const { ring, paths } = logo.mark;
+  const half = ring.rOuter * 1.12;
+  const d = paths.map((p) => `<path d="${p.d}"/>`).join("");
+  return `<svg viewBox="${ring.cx - half} ${ring.cy - half} ${half * 2} ${half * 2}"
+    width="${size}" height="${size}" fill="${fill}"
+    role="img" aria-label="Guard Theory">${d}</svg>`;
 }
 
 /**
@@ -52,7 +54,7 @@ function monogram(size, stroke) {
  * a specification plate rather than as a generic countdown graphic.
  */
 function ticks(inset, length, colour) {
-  const corner = (x, y, hx, hy) => `
+  const corner = (x, y) => `
     <div style="position:absolute;${y}:${inset}px;${x}:${inset}px;
       width:${length}px;height:1px;background:${colour}"></div>
     <div style="position:absolute;${y}:${inset}px;${x}:${inset}px;
@@ -76,7 +78,7 @@ function artwork({ w, h, mark, pad, wordmarkSize, headlineSize, gap, offsetY }) 
   const INK = "var(--color-ink)";
   const CHALK = "var(--color-chalk)";
   const STEEL = "var(--color-steel)";
-  const SIGNAL = "var(--color-signal)";
+  const SIGNAL = "var(--color-signal-lift)";
   const RULE = "var(--color-steel-dim)";
 
   return `

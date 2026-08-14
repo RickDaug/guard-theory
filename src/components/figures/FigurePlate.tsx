@@ -124,7 +124,7 @@ export function FigurePlate({
           cy={CENTRE_Y}
           r={54}
           fill="var(--color-ink)"
-          stroke="var(--color-signal)"
+          stroke="var(--color-signal-lift)"
           strokeWidth={3}
         />
         <text
@@ -133,7 +133,7 @@ export function FigurePlate({
           textAnchor="middle"
           dominantBaseline="central"
           className="wordmark text-[40px] sm:text-[30px] lg:text-[26px]"
-          fill="var(--color-signal)"
+          fill="var(--color-signal-lift)"
         >
           {initials(name)}
         </text>
@@ -167,13 +167,13 @@ export function FigurePlate({
       <figcaption className="mt-8 flex flex-col gap-4">
         {lineage.from.length > 0 ? (
           <p className="text-base text-steel">
-            <span className="notation text-2xs text-signal">Learned from</span>{" "}
+            <span className="notation text-2xs text-orchid">Learned from</span>{" "}
             <span className="text-chalk">{lineage.from.join(" · ")}</span>
           </p>
         ) : null}
         {lineage.to.length > 0 ? (
           <p className="text-base text-steel">
-            <span className="notation text-2xs text-signal">Transmitted to</span>{" "}
+            <span className="notation text-2xs text-orchid">Transmitted to</span>{" "}
             <span className="text-chalk">{lineage.to.join(" · ")}</span>
           </p>
         ) : null}

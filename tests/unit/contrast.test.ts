@@ -1,6 +1,10 @@
 import assert from "node:assert/strict";
 import { describe, it } from "node:test";
-import { PALETTE, TEXT_ON_GROUND } from "../../src/lib/brand/palette.ts";
+import {
+  NON_TEXT_ON_GROUND,
+  PALETTE,
+  TEXT_ON_GROUND,
+} from "../../src/lib/brand/palette.ts";
 import {
   contrastRatio,
   formatRatio,
@@ -15,8 +19,8 @@ describe("contrast maths", () => {
   });
 
   it("is symmetric", () => {
-    const a = contrastRatio("#0A0F14", "#E3C74B");
-    const b = contrastRatio("#E3C74B", "#0A0F14");
+    const a = contrastRatio("#1B1725", "#D0BCD5");
+    const b = contrastRatio("#D0BCD5", "#1B1725");
     assert.equal(a.toFixed(4), b.toFixed(4));
   });
 
@@ -58,6 +62,31 @@ describe("brand palette meets WCAG 2.2 AA", () => {
         `${token} is declared a hairline but is listed as text`,
       );
     }
+  });
+
+  // WCAG 2.2 SC 1.4.11. The text table says nothing about a focus ring or a
+  // control border, and the ring is the one indicator on this site that a
+  // keyboard user cannot do without.
+  for (const pair of NON_TEXT_ON_GROUND) {
+    it(`${pair.fgToken} on ${pair.bgToken} clears 3:1 as ${pair.role}`, () => {
+      const ratio = contrastRatio(pair.fg, pair.bg);
+      assert.ok(
+        ratio >= 3,
+        `${pair.fgToken} on ${pair.bgToken} is ${formatRatio(ratio)}, below the 3:1 required of a non-text indicator`,
+      );
+    });
+  }
+
+  // signal is declared a surface precisely because it cannot be a word. If a
+  // future change lightens it into text range that is fine, but it must be a
+  // deliberate change to this test rather than a silent one.
+  it("keeps the brand blue out of the text pairings", () => {
+    const asText = TEXT_ON_GROUND.filter((p) => p.fgToken === "signal");
+    assert.equal(
+      asText.length,
+      0,
+      "signal is a fill and an indicator; use signal-lift on dark and signal-dim on paper",
+    );
   });
 
   it("declares a usage for every palette entry", () => {

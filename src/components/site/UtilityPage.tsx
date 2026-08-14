@@ -32,7 +32,7 @@ export function UtilityPage({
       <div className="mx-auto max-w-[104rem]">
         <p
           className={`notation text-2xs ${
-            tone === "alert" ? "text-signal" : "text-steel"
+            tone === "alert" ? "text-signal-lift" : "text-steel"
           }`}
         >
           {eyebrow}
@@ -50,7 +50,7 @@ export function UtilityPage({
             {secondary ? (
               <Link
                 href={secondary.href}
-                className="display-plain text-sm text-chalk underline decoration-steel-dim underline-offset-[6px] transition-colors duration-[140ms] ease-[var(--ease-control)] hover:decoration-signal"
+                className="display-plain text-sm text-chalk underline decoration-steel-dim underline-offset-[6px] transition-colors duration-[140ms] ease-[var(--ease-control)] hover:decoration-signal-lift"
               >
                 {secondary.label}
               </Link>

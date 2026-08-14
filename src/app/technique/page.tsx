@@ -40,7 +40,7 @@ export default function TechniqueIndexPage() {
                   href={`/technique/${category.slug}`}
                   className="group flex h-full flex-col p-8 no-underline transition-colors duration-[140ms] ease-[var(--ease-control)] hover:bg-ink-raised"
                 >
-                  <h2 className="display-condensed text-xl text-chalk transition-colors duration-[140ms] ease-[var(--ease-control)] group-hover:text-signal">
+                  <h2 className="display-condensed text-xl text-chalk transition-colors duration-[140ms] ease-[var(--ease-control)] group-hover:text-signal-lift">
                     {category.name}
                   </h2>
                   <p className="mt-4 text-sm text-steel">{category.summary}</p>

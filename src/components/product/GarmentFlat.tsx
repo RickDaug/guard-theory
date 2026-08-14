@@ -131,7 +131,7 @@ export function GarmentFlat({
           if (!geometry) return null;
 
           const live = activeCode === point.code;
-          const stroke = live ? "var(--color-signal)" : "var(--color-steel)";
+          const stroke = live ? "var(--color-signal-lift)" : "var(--color-steel)";
           const end = leaderEnd(geometry.from, geometry.ring, RING_R);
 
           return (
@@ -152,7 +152,7 @@ export function GarmentFlat({
                 y1={geometry.from[1]}
                 x2={end[0]}
                 y2={end[1]}
-                stroke={live ? "var(--color-signal)" : "var(--color-steel-dim)"}
+                stroke={live ? "var(--color-signal-lift)" : "var(--color-steel-dim)"}
                 strokeWidth={1.25}
                 className="transition-[stroke] duration-[140ms] ease-[var(--ease-control)]"
               />
@@ -160,7 +160,7 @@ export function GarmentFlat({
                 cx={geometry.from[0]}
                 cy={geometry.from[1]}
                 r={2.5}
-                fill={live ? "var(--color-signal)" : "var(--color-steel-dim)"}
+                fill={live ? "var(--color-signal-lift)" : "var(--color-steel-dim)"}
                 className="transition-[fill] duration-[140ms] ease-[var(--ease-control)]"
               />
               <circle
@@ -203,7 +203,7 @@ export function GarmentFlat({
                   onBlur={() => setActiveCode(null)}
                   onClick={() => setActiveCode(live ? null : point.code)}
                   className={`notation inline-flex min-h-[24px] items-center gap-x-1.5 text-xs transition-colors duration-[140ms] ease-[var(--ease-control)] ${
-                    live ? "text-signal" : "text-steel hover:text-chalk"
+                    live ? "text-signal-lift" : "text-steel hover:text-chalk"
                   }`}
                 >
                   <span aria-hidden="true">{point.code}</span>

@@ -54,7 +54,23 @@ export default async function ProductPage({ params }: Params) {
           {/* Sticky on wide screens so the drawing stays with you while you
               read the specification beside it. */}
           <div className="lg:col-span-7 lg:sticky lg:top-8 lg:self-start">
-            <p className="notation mb-8 text-2xs text-signal">
+            {/**
+             * One line, always — the same rule, and the same reason, as the
+             * breadcrumb. At 390px this label fits on one line in the metric
+             * fallback and needs two in Martian Mono, so when the font landed
+             * it grew 16px and pushed the plate and everything under it down:
+             * a measured 0.1787 CLS, identical across five runs of
+             * `npm run cls`, against 0.0000 for the same page without it.
+             *
+             * A wrap point depends on glyph width, so no fallback calibration
+             * can move it. Not wrapping is what makes the height independent of
+             * which font has arrived. Nothing is lost when it truncates: the
+             * plate's own title block, directly beneath, names the same garment.
+             */}
+            <p
+              className="notation mb-8 truncate text-2xs text-orchid"
+              title={`Fig. 02 — ${product.name}, ${product.kind.toLowerCase()}, front`}
+            >
               Fig. 02 — {product.name}, {product.kind.toLowerCase()}, front
             </p>
             <GarmentFlat
@@ -80,7 +96,7 @@ export default async function ProductPage({ params }: Params) {
             </p>
 
             <div className="mt-10 border border-steel-dim p-6">
-              <p className="notation text-2xs text-signal">
+              <p className="notation text-2xs text-orchid">
                 First Edition — a single run
               </p>
               <p className="mt-4 text-base text-steel">
@@ -138,7 +154,7 @@ export default async function ProductPage({ params }: Params) {
                 Full measurements in inches and centimetres are in the{" "}
                 <Link
                   href="/size-and-fit"
-                  className="text-chalk underline decoration-steel-dim underline-offset-[5px] transition-colors duration-[140ms] ease-[var(--ease-control)] hover:decoration-signal"
+                  className="text-chalk underline decoration-steel-dim underline-offset-[5px] transition-colors duration-[140ms] ease-[var(--ease-control)] hover:decoration-signal-lift"
                 >
                   size and fit guide
                 </Link>
@@ -159,7 +175,7 @@ export default async function ProductPage({ params }: Params) {
                     <li key={item.slug}>
                       <Link
                         href={`/shop/${item.slug}`}
-                        className="text-base text-chalk underline decoration-steel-dim underline-offset-[5px] transition-colors duration-[140ms] ease-[var(--ease-control)] hover:decoration-signal"
+                        className="text-base text-chalk underline decoration-steel-dim underline-offset-[5px] transition-colors duration-[140ms] ease-[var(--ease-control)] hover:decoration-signal-lift"
                       >
                         {item.name} — {item.kind}
                       </Link>

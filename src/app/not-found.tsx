@@ -10,7 +10,7 @@ export default function NotFound() {
   return (
     <main id="main" className="px-6 py-24 md:px-12">
       <div className="mx-auto max-w-[104rem]">
-        <p className="notation text-2xs text-signal">Error 404</p>
+        <p className="notation text-2xs text-signal-lift">Error 404</p>
         <h1 className="display-condensed mt-6 text-4xl text-chalk">
           This page
           <br />
@@ -26,13 +26,13 @@ export default function NotFound() {
           <ButtonLink href="/">Go to the home page</ButtonLink>
           <Link
             href="/technique"
-            className="display-plain text-sm text-chalk underline decoration-steel-dim underline-offset-[6px] transition-colors duration-[140ms] ease-[var(--ease-control)] hover:decoration-signal"
+            className="display-plain text-sm text-chalk underline decoration-steel-dim underline-offset-[6px] transition-colors duration-[140ms] ease-[var(--ease-control)] hover:decoration-signal-lift"
           >
             Browse the Technique Library
           </Link>
           <Link
             href="/journal"
-            className="display-plain text-sm text-chalk underline decoration-steel-dim underline-offset-[6px] transition-colors duration-[140ms] ease-[var(--ease-control)] hover:decoration-signal"
+            className="display-plain text-sm text-chalk underline decoration-steel-dim underline-offset-[6px] transition-colors duration-[140ms] ease-[var(--ease-control)] hover:decoration-signal-lift"
           >
             Read the Journal
           </Link>

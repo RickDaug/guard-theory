@@ -8,36 +8,53 @@
 
 @theme {
   /* --- Colour ------------------------------------------------------------
-     Two grounds, one accent.
+     Two grounds, one violet ramp, one blue.
 
-     INK is the brand ground: black pulled toward the blue of a competition
-     mat rather than a neutral black, so drawn line work sits on something
-     with a temperature.
+     Five colours are given by the brand — #1B1725, #534B62, #A499B3, #D0BCD5
+     and #226CE0. Everything else here is derived from them by mixing in
+     linear-light sRGB, either between two of the five or toward white, so no
+     token drifts off the ramp. The mix fractions were solved against the
+     contrast requirement rather than picked by eye; every ratio quoted below
+     is recomputed on /design-system and asserted in tests/unit/contrast.test.ts.
 
-     BONE is the study ground: uncoated technical paper, cool and low-chroma,
-     for long-form reading in the Journal and Technique Library.
+     INK is the brand ground: not a neutral black but a deep aubergine, so
+     drawn line work sits on something with a temperature.
 
-     SIGNAL is the only saturated colour on the site and it is reserved for
-     live state — focus, active notation nodes, the current step. It is a
-     citrine: the colour of annotation ink on a technical plate. Warm against
-     a cold system, and deliberately not the red every combat-sports brand
-     reaches for. 11.4:1 against ink.
+     BONE is the study ground: the same violet at paper weight, for long-form
+     reading in the Journal and Technique Library.
+
+     ORCHID is the annotation layer on ink — the lavender of a pencil note on
+     a technical plate. It carries the notation labels, the plate identifiers
+     and the callout numbers, and it is not decoration. 9.9:1 against ink.
+
+     SIGNAL is live state, and only live state. #226CE0 sits in a luminance
+     dead zone — too dark to be text on ink, too light to be text on paper —
+     so it is the FILL and the INDICATOR, and each ground gets the one tint of
+     it that can carry a word: signal-lift on dark, signal-dim on paper.
      -------------------------------------------------------------------- */
-  --color-ink: #0a0f14;
-  --color-ink-raised: #101820;
-  --color-graphite: #151c24;
-  /* steel is a TEXT colour and must clear 4.5:1 on ink at any size — it reads
-     6.2:1. steel-dim is for rules, borders and hairlines ONLY; at 2.4:1 it must
-     never carry text. */
-  --color-steel: #8a95a1;
-  --color-steel-dim: #3a444f;
-  /* slate is secondary TEXT on the study ground — 5.0:1 on bone. */
-  --color-slate: #5a5f63;
-  --color-bone: #e6e3da;
-  --color-bone-raised: #edeae2;
-  --color-chalk: #f4f3ef;
-  --color-signal: #e3c74b;
-  --color-signal-dim: #6b5c1b;
+  --color-ink: #1b1725;
+  --color-ink-raised: #282332;
+  --color-graphite: #2e2939;
+  /* steel is a TEXT colour and must clear 4.5:1 on every dark surface — it
+     reads 6.5:1 on ink and 5.2:1 on graphite, the lightest of the three.
+     steel-dim is for rules, borders and hairlines ONLY; at 2.1:1 on ink it
+     must never carry text there. */
+  --color-steel: #a499b3;
+  --color-steel-dim: #534b62;
+  /* slate is secondary TEXT on the study ground — 7.8:1 on bone. */
+  --color-slate: #4b4359;
+  /* orchid is the annotation layer on ink — 9.9:1. */
+  --color-orchid: #d0bcd5;
+  --color-bone: #efe9f0;
+  --color-bone-raised: #f6f2f7;
+  --color-chalk: #faf9fb;
+  /* signal is a fill and an indicator, never a word: 3.6:1 on ink clears the
+     3:1 that WCAG 2.2 SC 1.4.11 asks of a non-text indicator and nothing more.
+     signal-lift carries live text and the focus ring on every dark surface
+     (4.8:1 on graphite, the worst case). signal-dim does both jobs on paper. */
+  --color-signal: #226ce0;
+  --color-signal-lift: #6f94e9;
+  --color-signal-dim: #2161c9;
 
   /* --- Type --------------------------------------------------------------
      Fluid modular scale, ratio 1.25. Display sizes clamp between a mobile
@@ -124,17 +141,17 @@
   }
 
   /* One focus treatment everywhere, never removed — but the accent has to
-     change with the ground. Citrine is 11.5:1 on ink and 1.31:1 on bone, so a
-     single hard-coded ring is invisible across every long-form page. The
-     contrast work originally covered text only; this is the same rule applied
-     to a non-text indicator (WCAG 2.2 SC 1.4.11). */
+     change with the ground. The brand blue itself is 3.6:1 on ink and 4.1:1 on
+     bone, so a single hard-coded ring would be marginal on one ground and
+     failing on the other. The contrast work originally covered text only; this
+     is the same rule applied to a non-text indicator (WCAG 2.2 SC 1.4.11). */
   :focus-visible {
-    outline: 2px solid var(--focus-ring, var(--color-signal));
+    outline: 2px solid var(--focus-ring, var(--color-signal-lift));
     outline-offset: 3px;
     border-radius: 1px;
   }
 
-  /* The study register. signal-dim is 5.16:1 on bone. */
+  /* The study register. signal-dim is 4.9:1 on bone. */
   .bg-bone,
   .bg-bone-raised {
     --focus-ring: var(--color-signal-dim);
@@ -142,7 +159,7 @@
 
   ::selection {
     background-color: var(--color-signal);
-    color: var(--color-ink);
+    color: var(--color-chalk);
   }
 }
 
@@ -213,7 +230,7 @@
   z-index: 100;
   transform: translateY(-250%);
   background-color: var(--color-signal);
-  color: var(--color-ink);
+  color: var(--color-chalk);
   padding: 0.75rem 1.25rem;
   font-family: var(--font-display);
   font-weight: 700;

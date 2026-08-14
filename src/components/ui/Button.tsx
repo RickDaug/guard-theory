@@ -22,11 +22,14 @@ const BASE =
   "display-plain inline-flex min-h-6 items-center justify-center gap-2 text-sm no-underline transition-[background-color,border-color,color,opacity] duration-[140ms] ease-[var(--ease-control)] disabled:cursor-not-allowed disabled:opacity-45";
 
 const INTENT: Record<Intent, string> = {
-  signal: "bg-signal px-7 py-3.5 text-ink hover:opacity-85",
+  // chalk, not ink: the brand blue is a mid-luminance colour, so a dark label
+  // on it reads 3.6:1 and a near-white one reads 4.7:1. chalk's value was set
+  // by this pairing.
+  signal: "bg-signal px-7 py-3.5 text-chalk hover:opacity-85",
   outline:
-    "border border-steel-dim px-7 py-3.5 text-chalk hover:border-signal hover:text-signal",
+    "border border-steel-dim px-7 py-3.5 text-chalk hover:border-signal-lift hover:text-signal-lift",
   quiet:
-    "text-chalk underline decoration-steel-dim underline-offset-[6px] hover:decoration-signal",
+    "text-chalk underline decoration-steel-dim underline-offset-[6px] hover:decoration-signal-lift",
 };
 
 type ButtonProps = {

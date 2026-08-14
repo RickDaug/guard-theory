@@ -1,4 +1,5 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
+import { MonogramDefs } from "@/components/brand/Monogram";
 import { SiteHeader } from "@/components/site/SiteHeader";
 import { SiteFooter } from "@/components/site/SiteFooter";
 import { SiteStructuredData } from "@/components/site/SiteStructuredData";
@@ -39,6 +40,17 @@ export const metadata: Metadata = {
   },
 };
 
+/**
+ * The brand ground, handed to the browser chrome. Without it a mobile browser
+ * paints its address bar white above a near-black page and the site starts one
+ * scroll behind itself. The value is `ink`; it is written literally because this
+ * is metadata rather than CSS and cannot read a custom property.
+ */
+export const viewport: Viewport = {
+  themeColor: "#1B1725",
+  colorScheme: "dark",
+};
+
 export default function RootLayout({
   children,
 }: Readonly<{
@@ -50,6 +62,7 @@ export default function RootLayout({
         <a href="#main" className="skip-link">
           Skip to content
         </a>
+        <MonogramDefs />
         <SiteHeader />
         {children}
         <SiteFooter />

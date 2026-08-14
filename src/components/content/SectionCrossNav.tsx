@@ -59,7 +59,7 @@ export function SectionCrossNav({ current }: { current: Collection }) {
                 href={section.href}
                 className="group flex h-full flex-col p-7 no-underline transition-colors duration-[140ms] ease-[var(--ease-control)] hover:bg-ink-raised"
               >
-                <h3 className="display-condensed text-lg text-chalk transition-colors duration-[140ms] ease-[var(--ease-control)] group-hover:text-signal">
+                <h3 className="display-condensed text-lg text-chalk transition-colors duration-[140ms] ease-[var(--ease-control)] group-hover:text-signal-lift">
                   {section.name}
                 </h3>
                 <p className="mt-3 grow text-sm text-steel">

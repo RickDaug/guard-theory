@@ -65,7 +65,7 @@ export default async function PolicyPage({ params }: Params) {
           </article>
 
           <aside className="lg:col-span-4 lg:col-start-9">
-            <h2 className="notation mb-6 text-2xs text-signal">Other policies</h2>
+            <h2 className="notation mb-6 text-2xs text-orchid">Other policies</h2>
             <ul className="m-0 flex list-none flex-col gap-3 p-0">
               {others.map((item) => (
                 <li key={item.slug}>

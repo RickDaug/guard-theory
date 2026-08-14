@@ -32,7 +32,7 @@ export default function FirstEditionPage() {
 
         <div className="mt-10 grid gap-16 lg:grid-cols-12 lg:gap-20">
           <div className="lg:col-span-6">
-            <p className="notation text-2xs text-signal">
+            <p className="notation text-2xs text-orchid">
               Release date to be announced
             </p>
 

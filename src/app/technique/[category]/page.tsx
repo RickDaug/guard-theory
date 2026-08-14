@@ -81,7 +81,7 @@ export default async function TechniqueCategoryPage({ params }: Params) {
             </p>
             <Link
               href="/technique"
-              className="display-plain mt-8 inline-flex min-h-6 items-center text-sm text-chalk underline decoration-steel-dim underline-offset-[6px] transition-colors duration-[140ms] ease-[var(--ease-control)] hover:decoration-signal"
+              className="display-plain mt-8 inline-flex min-h-6 items-center text-sm text-chalk underline decoration-steel-dim underline-offset-[6px] transition-colors duration-[140ms] ease-[var(--ease-control)] hover:decoration-signal-lift"
             >
               Back to the Technique Library
             </Link>
@@ -106,7 +106,7 @@ export default async function TechniqueCategoryPage({ params }: Params) {
                   <span className="notation text-2xs text-steel">
                     {entry.difficulty} · {entry.relevance}
                   </span>
-                  <h2 className="display-condensed mt-5 text-xl text-chalk transition-colors duration-[140ms] ease-[var(--ease-control)] group-hover:text-signal">
+                  <h2 className="display-condensed mt-5 text-xl text-chalk transition-colors duration-[140ms] ease-[var(--ease-control)] group-hover:text-signal-lift">
                     {entry.title}
                   </h2>
                   <p className="mt-4 text-sm text-steel">{entry.summary}</p>

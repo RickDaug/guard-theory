@@ -35,13 +35,13 @@ export default function HomePage() {
               <div className="mt-12 flex flex-wrap items-center gap-x-8 gap-y-4">
                 <Link
                   href="/first-edition"
-                  className="display-plain bg-signal px-7 py-3.5 text-sm text-ink no-underline transition-opacity duration-[140ms] ease-[var(--ease-control)] hover:opacity-85"
+                  className="display-plain bg-signal px-7 py-3.5 text-sm text-chalk no-underline transition-opacity duration-[140ms] ease-[var(--ease-control)] hover:opacity-85"
                 >
                   Join the First Edition list
                 </Link>
                 <Link
                   href="/journal"
-                  className="display-plain inline-flex min-h-6 items-center text-sm text-chalk underline decoration-steel-dim underline-offset-[6px] transition-colors duration-[140ms] ease-[var(--ease-control)] hover:decoration-signal"
+                  className="display-plain inline-flex min-h-6 items-center text-sm text-chalk underline decoration-steel-dim underline-offset-[6px] transition-colors duration-[140ms] ease-[var(--ease-control)] hover:decoration-signal-lift"
                 >
                   Read the Journal
                 </Link>
@@ -53,7 +53,7 @@ export default function HomePage() {
             </div>
 
             <div className="lg:col-span-7">
-              <p className="notation mb-8 text-2xs text-signal">
+              <p className="notation mb-8 text-2xs text-orchid">
                 Fig. 01 — The guard, as a system
               </p>
               <GuardSystemMap />

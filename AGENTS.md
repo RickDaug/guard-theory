@@ -54,9 +54,19 @@ protecting, or make the case for changing the rule.
   on small text controls is accessibility, not styling — do not remove it.
 - Reduced motion is handled globally in `globals.css`. Do not re-implement it
   per component.
-- Signal citrine is for live state only. If you are using it decoratively, stop.
-- Run `npm run brand:build` after changing `src/lib/brand/monogram.json` — the
-  SVG, the favicon and the rasters are all generated from it.
+- `signal` is live state only, and it is a **fill**, never a word — it is 3.6:1
+  on ink. Use `signal-lift` on dark and `signal-dim` on paper when live state has
+  to carry text. If you are using any of the three decoratively, stop.
+- `orchid` is the annotation layer on ink: notation labels, plate identifiers,
+  callout numbers. Not headings, not body copy, not decoration.
+- Every colour outside the five given by the brand is derived by a stated mix,
+  recorded in `src/lib/brand/palette.ts`. Change one by changing its mix, not by
+  typing a new hex.
+- Run `npm run brand:build` after changing `src/lib/brand/logo.json` — the SVGs,
+  the favicon, the .ico, the app icons and the Open Graph card are all generated
+  from it. To regenerate `logo.json` itself from the supplied artwork, see
+  `scripts/brand/trace.mjs`; it needs potrace, which is deliberately not a
+  dependency.
 
 ## Gotchas that have already cost time
 
@@ -81,9 +91,15 @@ protecting, or make the case for changing the rule.
   in three components; `tests/e2e/typography.spec.ts` now checks for it, scoped
   to row-direction flex inside a single phrase because broader versions flagged
   every nav bar and every stacked card on the site.
-- **`text-steel-dim` is a hairline colour at 2.4:1 and is never text.** The
-  token comment in `globals.css` says so; using it for a label failed axe on 11
-  nodes.
+- **`text-steel-dim` is a hairline colour and is never text on ink.** It is
+  2.1:1 there; using it for a label failed axe on 11 nodes. On the study ground
+  it happens to be readable, which is exactly the trap — `slate` is the token for
+  that job.
+- **A text colour that clears on `ink` can still fail on `graphite`.** The three
+  dark surfaces are not interchangeable: graphite is the lightest, it is where
+  the form controls are, and it is what every dark-ground pairing in
+  `TEXT_ON_GROUND` is tested against as well as ink. The first solve for
+  `signal-lift` passed on ink at 4.7:1 and failed on graphite at 3.5:1.
 - **A guard that has only ever been green has not been tested.** Two here were
   broken in ways that made them incapable of failing: `typography.spec.ts`
   required a capitalised word of three or more letters, so it did not match
@@ -96,6 +112,32 @@ protecting, or make the case for changing the rule.
   throttled, five runs) alongside it, and fix causes rather than metrics: the
   real defect was a breadcrumb that *wrapped*, and no font calibration can move a
   wrap point.
+- **Lighthouse's performance score on this machine has an 11-point spread.**
+  One sweep recorded `figures` at 89, 92, 89 and `product` at 90, 81, 90 across
+  three runs of the same build. A two-point move between runs says nothing. Read
+  the per-run array in `docs/lighthouse/summary.json`, not the median, before
+  concluding anything — and use `npm run cls` for layout, which is stable to four
+  decimal places run over run.
+- **Any `notation` label long enough to be near a wrap point is a latent CLS
+  bug.** Martian Mono is wider than its metric fallback, so a line that fits in
+  the fallback can need two in the real face; that is +16px of page, and
+  everything under it moves. It has now happened twice — the breadcrumb, and the
+  figure caption on the product page (0.1787, five runs out of five). Both are
+  fixed the same way: `truncate`, so the height cannot depend on which font has
+  arrived, plus a `title` so nothing is lost. `npm run cls:why <route>` measures
+  every box on both sides of the swap and names the one that grew.
+- **Adding bytes to the critical path can *create* a CLS failure without
+  changing any layout.** The figure-caption reflow above was always in the
+  markup; it did not score because the font used to land before first paint, and
+  a few kB of new icon requests pushed it after. A page that passes is not
+  necessarily a page with nothing to fix.
+- **Kill a stale dev server with the PowerShell tool, not a hard-coded
+  `pwsh.exe` path.** `/c/Program Files/PowerShell/7/pwsh.exe` does not exist on
+  this machine, so `... || true`-style cleanup lines fail silently, `next start`
+  then cannot bind, and the *previous* build keeps answering on 3100. Two
+  measurements were taken against a build that did not contain the change being
+  measured. Always confirm the fix is in the served HTML before trusting a
+  number.
 - **Write control-character regexes with escape sequences**, not literal bytes.
   A class written as backslash-u-0000 through backslash-u-001F is fine; typing
   the actual bytes makes the source file read as binary to `grep` and `git

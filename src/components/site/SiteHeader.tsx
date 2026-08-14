@@ -39,7 +39,7 @@ export function SiteHeader() {
             <li className="hidden sm:block">
               <Link
                 href="/first-edition"
-                className="display-plain border border-steel-dim px-4 py-2 text-sm text-chalk no-underline transition-colors duration-[140ms] ease-[var(--ease-control)] hover:border-signal hover:text-signal"
+                className="display-plain border border-steel-dim px-4 py-2 text-sm text-chalk no-underline transition-colors duration-[140ms] ease-[var(--ease-control)] hover:border-signal-lift hover:text-signal-lift"
               >
                 Join the list
               </Link>

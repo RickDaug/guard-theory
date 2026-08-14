@@ -34,7 +34,7 @@ npm run test:unit      # content integrity, colour contrast, editorial voice
 npm run e2e            # Playwright: waitlist, a11y, links, metadata, console, security
 npm run screens        # capture four breakpoints into docs/screenshots
 npm run lighthouse     # production build + audit; exits non-zero below threshold
-npm run brand:build    # regenerate monogram assets from geometry
+npm run brand:build    # regenerate every brand asset from src/lib/brand/logo.json
 ```
 
 `npx playwright test` runs the e2e specs and the screenshot capture together.

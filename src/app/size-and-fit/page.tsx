@@ -46,7 +46,7 @@ export default function SizeAndFitPage() {
               </caption>
               <thead>
                 <tr className="border-b border-steel">
-                  <th scope="col" className="notation py-4 pr-6 text-2xs text-signal">
+                  <th scope="col" className="notation py-4 pr-6 text-2xs text-orchid">
                     Size
                   </th>
                   <th scope="col" className="notation py-4 pr-6 text-2xs text-steel">
@@ -100,7 +100,7 @@ export default function SizeAndFitPage() {
             {FIT_NOTES.map((note) => (
               <li key={note} className="flex gap-5">
                 <span
-                  className="notation mt-1.5 shrink-0 text-2xs text-signal"
+                  className="notation mt-1.5 shrink-0 text-2xs text-orchid"
                   aria-hidden="true"
                 >
                   —
@@ -120,7 +120,7 @@ export default function SizeAndFitPage() {
               {CHECKS.map((check) => (
                 <li key={check} className="flex gap-5">
                   <span
-                    className="notation mt-1.5 shrink-0 text-2xs text-signal"
+                    className="notation mt-1.5 shrink-0 text-2xs text-orchid"
                     aria-hidden="true"
                   >
                     —
@@ -131,7 +131,7 @@ export default function SizeAndFitPage() {
             </ul>
             <Link
               href="/journal/how-a-bjj-rash-guard-should-fit"
-              className="display-plain mt-8 inline-flex min-h-6 items-center text-sm text-chalk underline decoration-steel-dim underline-offset-[6px] transition-colors duration-[140ms] ease-[var(--ease-control)] hover:decoration-signal"
+              className="display-plain mt-8 inline-flex min-h-6 items-center text-sm text-chalk underline decoration-steel-dim underline-offset-[6px] transition-colors duration-[140ms] ease-[var(--ease-control)] hover:decoration-signal-lift"
             >
               Read the full piece on rash guard fit
             </Link>
@@ -154,7 +154,7 @@ export default function SizeAndFitPage() {
               </p>
               <Link
                 href="/policies/returns"
-                className="display-plain mt-7 inline-flex min-h-6 items-center text-sm text-chalk underline decoration-steel-dim underline-offset-[6px] transition-colors duration-[140ms] ease-[var(--ease-control)] hover:decoration-signal"
+                className="display-plain mt-7 inline-flex min-h-6 items-center text-sm text-chalk underline decoration-steel-dim underline-offset-[6px] transition-colors duration-[140ms] ease-[var(--ease-control)] hover:decoration-signal-lift"
               >
                 Returns policy
               </Link>

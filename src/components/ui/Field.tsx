@@ -57,7 +57,7 @@ export function FieldShell({
       })}
 
       {error ? (
-        <p id={errorId} className="notation text-xs text-signal">
+        <p id={errorId} className="notation text-xs text-signal-lift">
           {error}
         </p>
       ) : null}
@@ -66,7 +66,7 @@ export function FieldShell({
 }
 
 const CONTROL =
-  "w-full border bg-graphite px-4 py-3 text-base text-chalk placeholder:text-steel transition-colors duration-[140ms] ease-[var(--ease-control)] focus:border-signal";
+  "w-full border bg-graphite px-4 py-3 text-base text-chalk placeholder:text-steel transition-colors duration-[140ms] ease-[var(--ease-control)] focus:border-signal-lift";
 
 type TextFieldProps = {
   id: string;
@@ -92,7 +92,7 @@ export function TextField({
           {...a11y}
           {...rest}
           className={`${CONTROL} ${
-            error ? "border-signal" : "border-steel-dim"
+            error ? "border-signal-lift" : "border-steel-dim"
           } ${className}`}
         />
       )}
@@ -126,7 +126,7 @@ export function TextAreaField({
           {...rest}
           rows={rows}
           className={`${CONTROL} resize-y ${
-            error ? "border-signal" : "border-steel-dim"
+            error ? "border-signal-lift" : "border-steel-dim"
           } ${className}`}
         />
       )}
@@ -160,7 +160,7 @@ export function SelectField({
           {...a11y}
           {...rest}
           className={`${CONTROL} ${
-            error ? "border-signal" : "border-steel-dim"
+            error ? "border-signal-lift" : "border-steel-dim"
           } ${className}`}
         >
           {children}
@@ -205,7 +205,7 @@ export function CheckboxField({
         </label>
       </div>
       {error ? (
-        <p id={errorId} className="notation text-xs text-signal">
+        <p id={errorId} className="notation text-xs text-signal-lift">
           {error}
         </p>
       ) : null}

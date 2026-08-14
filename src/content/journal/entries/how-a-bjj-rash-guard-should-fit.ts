@@ -13,7 +13,7 @@ export const howABjjRashGuardShouldFit: PublishedArticle = {
   category: "equipment-and-apparel",
   title: "How a BJJ rash guard should fit",
   standfirst:
-    "What the garment has to do while you are being gripped, dragged and sat on, the one fit rule anybody actually wrote down, and five checks you can run in a changing room.",
+    "What the garment has to do while you are gripped, dragged and sat on, the one fit rule anybody wrote down, and five checks you can run in a changing room.",
   sections: [
     {
       id: "the-job-the-garment-has",

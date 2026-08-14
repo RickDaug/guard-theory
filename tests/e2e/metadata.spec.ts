@@ -209,3 +209,86 @@ test("structured data parses and claims nothing untrue", async ({ page }) => {
   expect(itemList).toContain("ItemListOrderAscending");
   expect(itemList).not.toMatch(/"(ratingValue|position)"/);
 });
+
+/**
+ * A link preview is either right the first time somebody pastes the URL or it
+ * is wrong in public, in somebody else's timeline, cached.
+ *
+ * This test exists because the site shipped with `twitter:card =
+ * summary_large_image` on every page and an `og:image` on exactly one of them.
+ * Next's `opengraph-image` file convention reached `/` and no nested route, so
+ * the front page shared with a card and every article and product page — the
+ * pages anybody would actually share — asked each platform for a large image
+ * card and then handed it nothing. Nothing in the suite looked, because a
+ * missing tag is not an error anywhere: the page renders, the build passes, the
+ * card is just blank.
+ *
+ * So this asserts the tag exists AND that what it points at is really there,
+ * really an image, and really the size the tags claim. A URL in a meta tag is a
+ * promise to a crawler, and an unfetched promise is what produced the bug.
+ */
+test("every page shares with a card that actually resolves", async ({ page, request }) => {
+  test.setTimeout(120_000);
+
+  const seen = new Map<string, number>();
+
+  for (const path of SAMPLED) {
+    await page.goto(path, { waitUntil: "load" });
+
+    const image = await page
+      .locator('meta[property="og:image"]')
+      .first()
+      .getAttribute("content");
+    const twitterImage = await page
+      .locator('meta[name="twitter:image"]')
+      .first()
+      .getAttribute("content");
+    const card = await page
+      .locator('meta[name="twitter:card"]')
+      .first()
+      .getAttribute("content");
+
+    expect(image, `${path} has no og:image — it would share as a bare link`).toBeTruthy();
+    expect(
+      twitterImage,
+      `${path} declares twitter:card "${card}" and supplies no twitter:image`,
+    ).toBeTruthy();
+    // Crawlers do not resolve relative URLs, so the tag has to carry an
+    // absolute one. Its ORIGIN is the deployment's own, which under test is
+    // whatever NEXT_PUBLIC_SITE_URL was at build time and not the port this
+    // server happens to be on — so the origin is what we assert, and the path
+    // is what we fetch.
+    expect(image, `${path} og:image must be absolute`).toMatch(/^https?:\/\//);
+    const imagePath = new URL(image!).pathname;
+
+    // Fetch it once per distinct URL rather than once per route.
+    if (!seen.has(imagePath)) {
+      const response = await request.get(imagePath);
+      expect(response.status(), `${imagePath} is referenced but does not resolve`).toBe(200);
+      expect(
+        response.headers()["content-type"],
+        `${imagePath} is not served as an image`,
+      ).toContain("image/");
+      seen.set(imagePath, (await response.body()).byteLength);
+    }
+    expect(seen.get(imagePath), `${imagePath} is empty`).toBeGreaterThan(1000);
+
+    // The dimensions are a claim made to the platform doing the cropping.
+    const width = await page
+      .locator('meta[property="og:image:width"]')
+      .first()
+      .getAttribute("content");
+    const height = await page
+      .locator('meta[property="og:image:height"]')
+      .first()
+      .getAttribute("content");
+    expect(width, `${path} does not state og:image:width`).toBe("1200");
+    expect(height, `${path} does not state og:image:height`).toBe("630");
+
+    const alt = await page
+      .locator('meta[property="og:image:alt"]')
+      .first()
+      .getAttribute("content");
+    expect(alt?.length ?? 0, `${path} has no og:image:alt`).toBeGreaterThan(20);
+  }
+});

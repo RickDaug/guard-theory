@@ -430,15 +430,13 @@ function ogSvg() {
 await sharp(Buffer.from(ogSvg()), { density: 144 })
   .resize(OG_W, OG_H)
   .png({ compressionLevel: 9 })
-  .toFile(path.join(APP, "opengraph-image.png"));
-console.log(`  src/app/opengraph-image.png  ${OG_W}x${OG_H}`);
+  .toFile(path.join(ROOT, "public", "og-card.png"));
+console.log(`  public/og-card.png  ${OG_W}x${OG_H}`);
 
-await writeFile(
-  path.join(APP, "opengraph-image.alt.txt"),
-  "The Guard Theory mark and wordmark on the brand ground, over the line: no-gi grappling apparel, and a technical study of the guard.\n",
-  "utf8",
-);
-console.log("  src/app/opengraph-image.alt.txt");
+// No alt-text sidecar: that file only existed to feed Next's
+// `opengraph-image` file convention, and the convention is gone. The alt now
+// lives beside the image declaration in src/lib/metadata.ts, which is the only
+// place that declares the card and the only place that needs to describe it.
 
 // --- what these files are ----------------------------------------------------
 

@@ -6,7 +6,7 @@ import { absoluteUrl } from "@/lib/site";
 
 export const metadata: Metadata = pageMetadata({
   title: "FAQ",
-  description: "Straight answers about the First Edition, sizing, the Journal and what Guard Theory has not decided yet.",
+  description: "Straight answers about the First Edition, sizing, returns and how the Journal is written.",
   path: "/faq",
 });
 
@@ -87,8 +87,8 @@ export default function FaqPage() {
             Frequently asked
           </h1>
           <p className="mt-8 text-lg text-steel">
-            Short answers. Where the honest answer is that something is
-            undecided, that is the answer.
+            Short answers, and the reasoning behind them where the reasoning is
+            the useful part.
           </p>
         </header>
 

@@ -7,7 +7,7 @@ import { PRODUCTS } from "@/content/products";
 
 export const metadata: Metadata = pageMetadata({
   title: "Lookbook",
-  description: "The First Edition as drawn: production flats for each garment, and what the photography will be when it exists.",
+  description: "The First Edition as drawn: a production flat for each garment, to the standard the factory is handed and the measurements come from.",
   path: "/lookbook",
 });
 

@@ -48,10 +48,25 @@ until this and stock data are both real.
 
 ## 5. First Edition release date
 
-Currently rendered as "release date to be announced" everywhere, which is
-truthful and stays that way until a date exists.
+**Decided 2026-08: the site does not discuss the date at all.**
 
-**Needed:** a real date, or a decision to keep it open.
+It used to render "release date to be announced" everywhere, plus a page that
+said there was no date, that we would not invent one, and that when we knew it
+so would you. All true, and the owner's judgement is that saying it repeatedly
+reads as a brand that is not ready — which costs more than the candour is worth.
+
+There is still no date and nothing claims there is one. The pages now say what
+the First Edition *is* and that the list is told first. The FAQ answers the
+question directly — "we announce a date when it is fixed, and we do not move a
+date once it is announced" — without narrating the absence.
+
+Removed at the same time, for the same reason: "one release, then a pause", "a
+single run", "a small run", and the waitlist field asking what size you would
+expect to wear, which was explained as helping us plan the run. A brand
+surveying the public on what to produce is telling them it has not decided.
+
+**Needed:** a real date. When one exists, it goes on the page — nowhere else
+needs changing, because nothing is currently phrased around its absence.
 
 ## 6. Mail provider
 

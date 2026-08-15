@@ -33,14 +33,12 @@ const EMAIL = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 const MAX_EMAIL = 254;
 const MAX_NAME = 80;
-const MAX_SIZE = 24;
 
 export type ParsedSignup = {
   email: string;
   firstName: string;
   trainingExperience?: TrainingExperience;
   sleevePreference?: SleevePreference;
-  expectedSize?: string;
   productInterest: ProductInterest[];
   consent: true;
 };
@@ -54,7 +52,7 @@ function readString(data: FormData, key: string): string {
   return typeof raw === "string" ? raw.trim() : "";
 }
 
-/** Strips control characters that have no business in a name or size label. */
+/** Strips control characters that have no business in a name. */
 function sanitise(value: string): string {
   return value.replace(/[\u0000-\u001F\u007F]/g, "");
 }
@@ -64,7 +62,6 @@ export function parseSignup(data: FormData): ParseResult {
 
   const email = sanitise(readString(data, "email"));
   const firstName = sanitise(readString(data, "firstName"));
-  const expectedSizeRaw = sanitise(readString(data, "expectedSize"));
   const sleeveRaw = readString(data, "sleevePreference");
   const experienceRaw = readString(data, "trainingExperience");
   const interestRaw = data
@@ -86,9 +83,6 @@ export function parseSignup(data: FormData): ParseResult {
     errors.firstName = "Enter a shorter first name — 80 characters at most.";
   }
 
-  if (expectedSizeRaw.length > MAX_SIZE) {
-    errors.expectedSize = "Enter a shorter size — 24 characters at most.";
-  }
 
   const sleevePreference = SLEEVE.includes(sleeveRaw as SleevePreference)
     ? (sleeveRaw as SleevePreference)
@@ -118,7 +112,6 @@ export function parseSignup(data: FormData): ParseResult {
       firstName,
       trainingExperience,
       sleevePreference,
-      expectedSize: expectedSizeRaw || undefined,
       productInterest,
       consent: true,
     },

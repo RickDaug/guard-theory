@@ -8,10 +8,10 @@ import type { ConstructionPoint } from "@/content/products/types";
  * The technical flat.
  *
  * Guard Theory's product imagery is drawn rather than photographed. That is a
- * design decision, not a placeholder: no garment has been made or shot yet, so
- * a render dressed up as a product photograph would be a claim we cannot
- * support. A production flat is what a factory is actually given, it is honest
- * about being a drawing, and it states construction instead of implying quality.
+ * design decision, not a placeholder, and the copy states it as a standard
+ * rather than as an apology: a production flat is what a factory is actually
+ * given, it states construction instead of implying quality, and it says how the
+ * garment is built — which is the part a photograph cannot show.
  *
  * When real photography exists it will sit alongside this, not replace it —
  * the flat is the part that says how the garment is built.

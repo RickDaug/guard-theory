@@ -25,7 +25,7 @@ export default function EmailConfirmedPage() {
         That address is confirmed and you are on the First Edition list.
       </p>
       <p className="text-base text-steel">
-        You will hear from us once, when the First Edition has a release date.
+        You will hear from us once, when the First Edition opens.
         There is no newsletter and no drip sequence, and every message carries a
         one-click unsubscribe.
       </p>

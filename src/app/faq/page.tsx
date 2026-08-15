@@ -13,11 +13,11 @@ export const metadata: Metadata = pageMetadata({
 const FAQS = [
   {
     q: "When is the First Edition released?",
-    a: "There is no date. We are not holding one back — it genuinely has not been set, and we would rather say that than post a date we would then move.",
+    a: "The list is told first, and told once. We announce a date when it is fixed, and we do not move a date once it is announced.",
   },
   {
     q: "What will it cost?",
-    a: "Undecided. The price will appear on the product page when it is decided, and not before.",
+    a: "The price is published on the product page. There is no introductory price that quietly becomes the real one, and no discount wheel.",
   },
   {
     q: "Can I pre-order?",
@@ -25,11 +25,11 @@ const FAQS = [
   },
   {
     q: "How often will you email me?",
-    a: "Once, when the First Edition has a release date. There is no newsletter and no drip sequence. Every message carries a one-click unsubscribe.",
+    a: "Once, when the First Edition opens. There is no newsletter and no drip sequence. Every message carries a one-click unsubscribe.",
   },
   {
     q: "Why are there drawings instead of photographs?",
-    a: "Because no garment has been made or photographed yet, and a render presented as a product photo would be a claim we cannot support. The drawings are production flats — the thing a factory is actually given. When photography exists it will sit alongside them.",
+    a: "Because a production flat states how a garment is built and a photograph only shows how it looks. These are the drawings a factory is given — seam construction, sleeve geometry, hem. Photography sits alongside them, never instead of them.",
   },
   {
     q: "How do I know what size I am?",
@@ -37,7 +37,7 @@ const FAQS = [
   },
   {
     q: "Will the rash guards be competition legal?",
-    a: "That is the design constraint we started from rather than one we will work around. Specific ruleset compliance will be stated on the product page once the garments are made, not promised in advance.",
+    a: "That is the design constraint we started from rather than one we work around. Specific ruleset compliance is stated on the product page, not promised in advance.",
   },
   {
     q: "Is the Technique Library a substitute for classes?",

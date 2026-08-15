@@ -18,8 +18,14 @@ import {
  * The one conversion point on the site.
  *
  * Nothing here manufactures urgency: no countdown, no invented stock figure, no
- * "twelve people are viewing this". The reason to join is that the release date
- * is genuinely unknown and this is the only way to hear about it.
+ * "twelve people are viewing this". The reason to join is that the list is told
+ * first, and this is the only way to be on it.
+ *
+ * It also does not ask the reader what to make. There was a "size you would
+ * expect to wear" field here, explained as helping us plan the run; the owner's
+ * call, and the right one, is that a brand surveying the public on what to
+ * produce is telling them it has not decided — the form collects preferences a
+ * customer benefits from stating, and nothing that reads as market research.
  *
  * On error the summary takes focus and links to the offending fields, which is
  * the behaviour a screen-reader user needs and a sighted user benefits from.
@@ -50,7 +56,6 @@ const INTEREST = [
 const FIELD_ORDER: Array<{ key: string; id: string }> = [
   { key: "firstName", id: "wl-first-name" },
   { key: "email", id: "wl-email" },
-  { key: "expectedSize", id: "wl-size" },
   { key: "consent", id: "wl-consent" },
 ];
 
@@ -118,8 +123,8 @@ export function WaitlistForm() {
         </h2>
         <p className="mt-6 max-w-[34rem] text-base text-steel">
           {state.alreadyOnList
-            ? "This address was already registered, so nothing has changed. You will hear from us once, when the First Edition has a release date."
-            : "You will hear from us once, when the First Edition has a release date. No newsletter, no drip sequence. Every message includes a one-click unsubscribe."}
+            ? "This address was already registered, so nothing has changed. You will hear from us once, when the First Edition opens."
+            : "You will hear from us once, when the First Edition opens. No newsletter, no drip sequence. Every message includes a one-click unsubscribe."}
         </p>
       </div>
     );
@@ -176,16 +181,6 @@ export function WaitlistForm() {
           </option>
         ))}
       </SelectField>
-
-      <TextField
-        id="wl-size"
-        name="expectedSize"
-        label="Size you would expect to wear"
-        optional
-        placeholder="Medium"
-        hint="A rough answer helps us plan the first run."
-        error={state.errors.expectedSize}
-      />
 
       <fieldset className="m-0 border-0 p-0">
         <legend className="display-plain mb-4 text-sm text-chalk">

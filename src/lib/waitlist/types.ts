@@ -20,7 +20,6 @@ export type WaitlistSignup = {
   firstName: string;
   trainingExperience?: TrainingExperience;
   sleevePreference?: SleevePreference;
-  expectedSize?: string;
   productInterest: ProductInterest[];
   /** Must be true. Never defaulted, never pre-checked in the UI. */
   consent: true;

@@ -7,7 +7,7 @@ import { PRODUCTS, STATUS_LABEL } from "@/content/products";
 
 export const metadata: Metadata = pageMetadata({
   title: "Shop",
-  description: "What Guard Theory is making, in what order, and why. Nothing is for sale yet — the First Edition has no release date announced.",
+  description: "What Guard Theory makes, and the published specification behind each garment — fabric, weight, seam construction and print method.",
   path: "/shop",
 });
 
@@ -37,7 +37,7 @@ export default function ShopPage() {
           <p className="notation text-2xs text-orchid">First Edition</p>
           <h1 className="display-condensed mt-6 text-4xl text-chalk">Shop</h1>
           <p className="mt-8 text-lg text-steel">
-            Two garments, made in one run. The specification is published in
+            Two garments. The specification is published in
             full on each page — fabric, weight, seam construction, print method
             — because that is what you are actually choosing between.
           </p>

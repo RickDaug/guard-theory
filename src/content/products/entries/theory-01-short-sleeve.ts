@@ -8,7 +8,7 @@ export const theory01ShortSleeve: Product = {
   summary:
     "The short sleeve cut of the First Edition. Same construction as the long sleeve, drawn as a production flat.",
   description:
-    "The short sleeve is the same garment with the sleeve terminated above the elbow. It exists because sleeve length is a genuine preference rather than a tier — neither version is the better one, and the waitlist asks which you would want so the first run can be split sensibly. Construction is shared with the long sleeve, so anything stated on that page applies here.",
+    "The short sleeve is the same garment with the sleeve terminated above the elbow. It exists because sleeve length is a genuine preference rather than a tier — neither version is the better one. Construction is shared with the long sleeve, so anything stated on that page applies here.",
   constructionPoints: [
     {
       code: "01",

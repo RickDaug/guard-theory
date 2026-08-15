@@ -5,7 +5,7 @@
  * customer can actually check against a rash guard they already own. "To fit
  * chest" is the body measurement the size is cut for.
  *
- * These are the specification the first run is made to. Production tolerance
+ * These are the specification the garments are made to. Production tolerance
  * is ±1cm; anything outside that is a fault and covered by the returns policy.
  */
 

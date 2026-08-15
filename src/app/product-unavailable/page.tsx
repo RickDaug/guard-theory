@@ -29,11 +29,11 @@ export default function ProductUnavailablePage() {
       secondary={{ href: "/shop", label: "See what else is being made" }}
     >
       <p className="text-lg text-steel">
-        This garment was made in a single run and that run is gone.
+        This garment is not currently available.
       </p>
       <p className="text-base text-steel">
-        We are not going to quietly restock it and call it a new release. If it
-        is made again, it will say so, and the list is how you will hear.
+        We do not quietly restock and call it a new release. When it returns, the
+        page will say so, and the list hears first.
       </p>
     </UtilityPage>
   );

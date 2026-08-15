@@ -24,7 +24,7 @@ export default function FormSuccessPage() {
       </p>
       <p className="text-base text-steel">
         If you were joining the First Edition list, you will hear from us once,
-        when there is a release date.
+        when it opens.
       </p>
     </UtilityPage>
   );

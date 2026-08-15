@@ -43,6 +43,6 @@ export type Product = {
 };
 
 export const STATUS_LABEL: Record<ProductStatus, string> = {
-  "coming-soon": "Not yet released",
+  "coming-soon": "Coming soon",
 };
 

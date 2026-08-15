@@ -6,9 +6,9 @@ export const theory01LongSleeve: Product = {
   kind: "Long sleeve rash guard",
   status: "coming-soon",
   summary:
-    "The First Edition long sleeve, drawn as a technical flat because no garment has been photographed yet and a rendering pretending otherwise would be a lie.",
+    "The First Edition long sleeve, drawn as a production flat. The drawing states how the garment is built, which is the part a photograph cannot show you.",
   description:
-    "Theory 01 is the first garment Guard Theory is making. It is a long sleeve no-gi rash guard designed inside the constraints of competition rulesets rather than around them, which is why it is drawn plainly and described in construction terms rather than adjectives. What you see below is the production flat. When the garment has been made and photographed, photography will be added — it will not replace this drawing, because the drawing is what states how the thing is built.",
+    "Theory 01 is a long sleeve no-gi rash guard designed inside the constraints of competition rulesets rather than around them, which is why it is drawn plainly and described in construction terms rather than adjectives. What you see below is the production flat — the drawing a factory is given. Photography sits alongside it and never in place of it, because the drawing is what states how the thing is built.",
   constructionPoints: [
     {
       code: "01",

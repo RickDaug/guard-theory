@@ -5,18 +5,24 @@ import { WaitlistForm } from "@/components/waitlist/WaitlistForm";
 
 export const metadata: Metadata = pageMetadata({
   title: "First Edition",
-  description: "The first Guard Theory release: no-gi rash guards built to a stated standard. Release date to be announced. Join the list for first access.",
+  description: "The First Edition: no-gi rash guards built to a published standard, designed inside competition rulesets. Join the list for first access.",
   path: "/first-edition",
 });
 
+/**
+ * These are commitments about how the garment is made and described. They are
+ * deliberately not commitments about scarcity, scheduling or supply — a brand
+ * that leads with how little it is making, and how unsure it is when, is
+ * telling a reader it is not ready. The standard is the story.
+ */
 const COMMITMENTS = [
   {
-    heading: "One release, then a pause",
-    body: "The First Edition is a single run. We would rather make one garment properly than four adequately, and we will say when it is gone rather than quietly restocking.",
+    heading: "Made properly, or not made",
+    body: "We would rather make one garment properly than four adequately. What ships carries the specification it was designed to, and we say so on the page rather than implying it.",
   },
   {
     heading: "Specifications published, not implied",
-    body: "Fabric weight, composition, seam construction and print method will be stated on the product page. Nothing will be described as premium in place of a number.",
+    body: "Fabric weight, composition, seam construction and print method are stated on the product page. Nothing is described as premium in place of a number.",
   },
   {
     heading: "Competition-legal by default",
@@ -33,7 +39,7 @@ export default function FirstEditionPage() {
         <div className="mt-10 grid gap-16 lg:grid-cols-12 lg:gap-20">
           <div className="lg:col-span-6">
             <p className="notation text-2xs text-orchid">
-              Release date to be announced
+              First access
             </p>
 
             <h1 className="display-condensed mt-6 text-4xl text-chalk">
@@ -41,9 +47,9 @@ export default function FirstEditionPage() {
             </h1>
 
             <p className="mt-8 max-w-[36rem] text-lg text-steel">
-              The first Guard Theory release is a small run of no-gi rash guards.
-              There is no date yet, and we are not going to invent one. Join the
-              list and you will hear once, when there is something real to say.
+              No-gi rash guards built to a published standard and designed inside
+              competition rulesets rather than around them. The list gets it
+              first.
             </p>
 
             <ul className="m-0 mt-14 flex list-none flex-col gap-10 p-0">
@@ -58,8 +64,8 @@ export default function FirstEditionPage() {
             </ul>
 
             <p className="mt-14 max-w-[36rem] text-base text-steel">
-              No countdown, no stock counter, no discount wheel. When we know the
-              date, so will you.
+              No countdown, no stock counter, no discount wheel. One message when
+              it opens, and nothing else.
             </p>
           </div>
 
@@ -69,8 +75,8 @@ export default function FirstEditionPage() {
                 Join the list
               </h2>
               <p className="mt-4 mb-10 max-w-[34rem] text-base text-steel">
-                Name, email and your consent to be emailed. Everything else helps
-                us plan the run and is genuinely optional.
+                Name, email and your consent to be emailed. Everything else is
+                optional.
               </p>
 
               <WaitlistForm />

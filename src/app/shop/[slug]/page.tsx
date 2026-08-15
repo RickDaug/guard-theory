@@ -104,7 +104,7 @@ export default async function ProductPage({ params }: Params) {
 
             <div className="mt-10 border border-steel-dim p-6">
               <p className="notation text-2xs text-orchid">
-                First Edition — a single run
+                First Edition
               </p>
               <p className="mt-4 text-base text-steel">
                 Join the list and you will hear the moment it is available. One

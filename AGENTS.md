@@ -20,12 +20,26 @@ assuming a value exists.
 **Never invent a fact to fill a gap.**
 
 This site has no prices, no stock, no release date, no garment measurements, no
-founder story and no author byline — because none of those exist yet. Every
-page that would carry one says so plainly. That is not a temporary state to be
-tidied away; it is the brand's argument about itself, and the first invented
-placeholder undoes it.
+founder story and no author byline — because none of those exist yet. Nothing
+may invent one. That is not a temporary state to be tidied away; it is the
+brand's argument about itself, and the first invented placeholder undoes it.
 
 If you cannot source something, cut it rather than softening it.
+
+**But absence is not a subject.** This rule used to be read as an instruction to
+*narrate* every gap, and the site filled up with it: "one release, then a
+pause", "a small run", "there is no date yet and we are not going to invent
+one", "when we know the date, so will you", and a form asking the reader what
+size to make so we could plan production. Each sentence was true. Together they
+read as a brand apologising for not being ready, and the owner's call — 2026-08
+— is that this costs more credibility than the honesty buys.
+
+So the standard is: **do not claim what is not true, and do not dwell on it
+either.** A page with no price says nothing about price; it does not explain
+that the price is undecided. The product flats are presented as the standard
+they are — a drawing states how a garment is built, which a photograph cannot —
+rather than as a stand-in for photography that does not exist yet. Cutting a
+sentence is always available; inventing one never is.
 
 ## Non-negotiables, and how they are enforced
 

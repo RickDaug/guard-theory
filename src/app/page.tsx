@@ -48,7 +48,7 @@ export default function HomePage() {
               </div>
 
               <p className="mt-14 text-base text-steel">
-                First Edition — release date to be announced
+                First Edition — join the list for first access
               </p>
             </div>
 

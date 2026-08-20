@@ -99,8 +99,21 @@ export type TechniqueEntry = {
   slug: string;
   category: CategorySlug;
   title: string;
-  /** One sentence, used in listings and meta descriptions. */
+  /** One sentence, used in listings and on the page. */
   summary: string;
+  /**
+   * The search-and-share description, when the summary is too long to be one.
+   *
+   * A snippet is cut around 155-160 characters and a social card often shows
+   * about 125, so a summary written to read well on the page gets an ellipsis
+   * through it. These are two jobs, not one: the summary introduces the piece to
+   * someone already reading it, and this introduces it to someone deciding
+   * whether to. Neither should be compromised to serve the other.
+   *
+   * Optional. Omit it when the summary is already short enough — the effective
+   * length is asserted either way in tests/unit/content.test.ts.
+   */
+  metaDescription?: string;
   difficulty: Difficulty;
   relevance: Relevance;
   /** The situation this addresses, and what is going wrong in it. */

@@ -6,6 +6,8 @@ export const gettingHipsUnderneath: TechniqueEntry = {
   title: "Getting the hips back underneath",
   summary:
     "Guard is recovered by moving your hips back under the opponent's centre of mass, and most retention failures are the moment your hips stopped travelling and your legs started reaching.",
+  metaDescription:
+    "Guard is recovered by moving your hips back under the opponent's centre of mass. Most failures are the moment the hips stop and the legs start reaching.",
   difficulty: "Intermediate",
   relevance: "Gi and no-gi",
   positionAndProblem:

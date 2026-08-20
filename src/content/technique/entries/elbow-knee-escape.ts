@@ -6,6 +6,8 @@ export const elbowKneeEscape: TechniqueEntry = {
   title: "The elbow-knee escape from mount",
   summary:
     "The escape that trades an elbow against the opponent's knee for enough space to bring your own knee through, and the reason it fails is almost always sequence rather than strength.",
+  metaDescription:
+    "Trading an elbow against the opponent's knee for enough space to bring your own knee through. It fails on sequence far more often than on strength.",
   difficulty: "Foundational",
   relevance: "Gi and no-gi",
   positionAndProblem:

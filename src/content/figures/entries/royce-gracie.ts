@@ -6,6 +6,8 @@ export const royceGracie: Figure = {
   lifespan: "born 1966",
   standfirst:
     "On one night in Denver in 1993 he won three fights in a total of under five minutes of mat time, in front of a paying audience and a camera, and the argument about whether grappling mattered was over.",
+  metaDescription:
+    "On one night in Denver in 1993 he won three fights in under five minutes of mat time, and the argument about whether grappling mattered was over.",
   image: {
     src: "/figures/royce-gracie.jpg",
     alt: "Wet plate collodion portrait of Royce Gracie standing in a white gi against a black background, hands folded at his belt.",

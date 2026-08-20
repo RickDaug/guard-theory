@@ -15,6 +15,8 @@ export const howToWashARashGuard: PublishedArticle = {
   title: "How to wash a rash guard",
   standfirst:
     "Most laundry advice for stretch knitwear is confident, unsourced and about a different fabric. Here is what has actually been measured, what the care label is really telling you, and what we could not find evidence for.",
+  metaDescription:
+    "Most laundry advice for stretch knitwear is confident, unsourced and about a different fabric. What has actually been measured, and what has not.",
   sections: [
     {
       id: "two-materials-one-garment",

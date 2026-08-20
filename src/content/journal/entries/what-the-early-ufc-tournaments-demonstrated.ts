@@ -15,6 +15,8 @@ export const whatTheEarlyUfcTournamentsDemonstrated: PublishedArticle = {
   title: "What the early UFC tournaments actually demonstrated",
   standfirst:
     "The events are cited as proof that grappling beats striking. Read the format the way you would read any other experiment and the claim they support is much narrower, and more durable, than the one they are used for.",
+  metaDescription:
+    "Cited as proof that grappling beats striking. Read the format as an experiment and the claim it supports is narrower, and more durable, than the one made.",
   sections: [
     {
       id: "the-claim-as-usually-stated",

@@ -6,6 +6,8 @@ export const butterflyHookAsLever: TechniqueEntry = {
   title: "The butterfly hook as a lever",
   summary:
     "A butterfly hook only produces a sweep when it is loaded with the opponent's weight first, which is why the position rewards connection and posture rather than a fast kick of the leg.",
+  metaDescription:
+    "A butterfly hook only sweeps once it is loaded with the opponent's weight, which is why the position rewards connection rather than a fast kick of the leg.",
   difficulty: "Foundational",
   relevance: "Gi and no-gi",
   positionAndProblem:

@@ -15,6 +15,8 @@ export const howNoGiRulesetsReshapedTechniqueSelection: PublishedArticle = {
   title: "How no-gi rulesets reshaped technique selection",
   standfirst:
     "Read the IBJJF and ADCC rule books side by side and they stop looking like safety regulations and start looking like two different price lists for the same actions.",
+  metaDescription:
+    "Read the IBJJF and ADCC rule books side by side and they stop looking like safety regulations and start looking like two price lists for the same actions.",
   sections: [
     {
       id: "a-ruleset-is-a-price-list",

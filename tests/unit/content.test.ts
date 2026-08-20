@@ -13,6 +13,7 @@ import {
   isPublished,
   publishedArticles,
 } from "../../src/content/journal/index.ts";
+import { FIGURES } from "../../src/content/figures/index.ts";
 import {
   CROSS_LINKS,
   crossLinksFor,
@@ -401,6 +402,74 @@ describe("editorial voice", () => {
           `${entry.slug} contains a banned construction matching ${pattern}`,
         );
       }
+    }
+  });
+});
+
+/**
+ * What search and social actually show.
+ *
+ * A snippet is cut around 155-160 characters and a card often shows about 125,
+ * so a standfirst written to read well *on the page* gets an ellipsis through it
+ * everywhere else. The fix was not to shorten the standfirsts — they are doing
+ * their own job well — but to let an entry carry a separate `metaDescription`
+ * for the other one.
+ *
+ * This asserts the outcome rather than the field: an entry passes if its
+ * effective description is short enough, however it gets there. 29 of 40 needed
+ * the second field; the rest were already fine and do not have one.
+ *
+ * Without this the site drifts straight back. Nothing else notices: an
+ * over-long description is not an error, not a build failure and not a ranking
+ * penalty — it is simply a sentence the reader never sees the end of.
+ */
+describe("meta descriptions fit what search and social display", () => {
+  const LIMIT = 160;
+
+  const SUBJECTS: Array<{ kind: string; slug: string; effective: string; onPage: string }> = [
+    ...ARTICLES.map((a) => ({
+      kind: "journal",
+      slug: a.slug,
+      effective: a.metaDescription ?? a.standfirst,
+      onPage: a.standfirst,
+    })),
+    ...ENTRIES.map((e) => ({
+      kind: "technique",
+      slug: e.slug,
+      effective: e.metaDescription ?? e.summary,
+      onPage: e.summary,
+    })),
+    ...FIGURES.map((f) => ({
+      kind: "figures",
+      slug: f.slug,
+      effective: f.metaDescription ?? f.standfirst,
+      onPage: f.standfirst,
+    })),
+  ];
+
+  for (const subject of SUBJECTS) {
+    it(`${subject.kind}/${subject.slug} has a description search can show whole`, () => {
+      assert.ok(
+        subject.effective.length <= LIMIT,
+        `${subject.kind}/${subject.slug} is ${subject.effective.length} characters, ` +
+          `over the ${LIMIT} a snippet shows. Give it a metaDescription rather than ` +
+          `cutting the standfirst, which has a different job.`,
+      );
+      assert.ok(
+        subject.effective.length > 40,
+        `${subject.kind}/${subject.slug} has a description too short to say anything`,
+      );
+    });
+  }
+
+  it("does not carry a metaDescription that is longer than what it replaces", () => {
+    for (const subject of SUBJECTS) {
+      if (subject.effective === subject.onPage) continue;
+      assert.ok(
+        subject.effective.length < subject.onPage.length,
+        `${subject.kind}/${subject.slug} has a metaDescription no shorter than its ` +
+          `standfirst — if it is not shortening anything, delete it`,
+      );
     }
   });
 });

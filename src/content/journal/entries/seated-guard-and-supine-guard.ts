@@ -15,6 +15,8 @@ export const seatedGuardAndSupineGuard: PublishedArticle = {
   title: "Seated guard and supine guard are two different jobs",
   standfirst:
     "Sitting up and lying back are usually taught as preferences. Treat them as two different control problems with different failure modes and the choice between them stops being a matter of taste.",
+  metaDescription:
+    "Sitting up and lying back are taught as preferences. Treat them as two control problems with different failure modes and the choice stops being taste.",
   sections: [
     {
       id: "the-rule-book-does-not-care-how-you-sit",

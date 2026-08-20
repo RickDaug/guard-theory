@@ -24,7 +24,7 @@ export async function generateMetadata({ params }: Params): Promise<Metadata> {
 
   return pageMetadata({
     title: entry.title,
-    description: entry.summary,
+    description: entry.metaDescription ?? entry.summary,
     path: `/technique/${entry.category}/${entry.slug}`,
     type: "article",
   });

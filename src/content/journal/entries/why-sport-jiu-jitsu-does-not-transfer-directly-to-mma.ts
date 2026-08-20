@@ -20,6 +20,8 @@ export const whySportJiuJitsuDoesNotTransferDirectlyToMma: PublishedArticle = {
   title: "Why sport jiu-jitsu does not transfer directly to MMA",
   standfirst:
     "Not a question about who would beat whom. A question about which constraints changed between the two activities, and what each change does to the value of a position.",
+  metaDescription:
+    "Not a question about who would beat whom, but about which constraints changed between the two activities, and what that does to the value of a position.",
   sections: [
     {
       id: "the-question-worth-asking",

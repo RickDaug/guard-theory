@@ -18,6 +18,8 @@ export const theGuillotineFromTheFrontHeadlock: PublishedArticle = {
   title: "The guillotine from the front headlock",
   standfirst:
     "Arm in or arm out changes what the technique is, and the finish comes from the hips in both cases, which is why pulling harder with the arms is the standard way to lose it.",
+  metaDescription:
+    "Arm in or arm out changes what the technique is, and the finish comes from the hips either way - which is why pulling harder loses it.",
   sections: [
     {
       id: "the-front-headlock-is-a-position-not-an-attack",

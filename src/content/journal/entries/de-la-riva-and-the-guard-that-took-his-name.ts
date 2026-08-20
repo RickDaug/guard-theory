@@ -15,6 +15,8 @@ export const deLaRivaAndTheGuardThatTookHisName: PublishedArticle = {
   title: "De la Riva, and the guard that took his name",
   standfirst:
     "A hook behind one leg solved a specific problem in a specific room in Rio in the early 1980s, and the widely repeated account of when it happened does not agree with itself.",
+  metaDescription:
+    "A hook behind one leg solved a specific problem in a Rio academy in the early 1980s. The widely repeated account of when does not agree with itself.",
   sections: [
     {
       id: "the-problem-in-the-room",

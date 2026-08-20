@@ -78,8 +78,21 @@ type ArticleBase = {
   slug: string;
   category: JournalCategorySlug;
   title: string;
-  /** One sentence. Used in listings, meta description and Open Graph. */
+  /** One sentence. Used in listings and on the page. */
   standfirst: string;
+  /**
+   * The search-and-share description, when the standfirst is too long to be one.
+   *
+   * A snippet is cut around 155-160 characters and a social card often shows
+   * about 125, so a standfirst written to read well on the page gets an ellipsis
+   * through it. These are two jobs, not one: the standfirst introduces the piece to
+   * someone already reading it, and this introduces it to someone deciding
+   * whether to. Neither should be compromised to serve the other.
+   *
+   * Optional. Omit it when the standfirst is already short enough — the effective
+   * length is asserted either way in tests/unit/content.test.ts.
+   */
+  metaDescription?: string;
   sections: Section[];
   sources: Source[];
   relatedSlugs: string[];

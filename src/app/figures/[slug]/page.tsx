@@ -22,7 +22,7 @@ export async function generateMetadata({ params }: Params): Promise<Metadata> {
 
   return pageMetadata({
     title: figure.name,
-    description: figure.standfirst,
+    description: figure.metaDescription ?? figure.standfirst,
     path: `/figures/${figure.slug}`,
     type: "article",
   });
@@ -47,7 +47,7 @@ export default async function FigurePage({ params }: Params) {
     "@type": "Person",
     "@id": absoluteUrl(`/figures/${figure.slug}#person`),
     name: figure.name,
-    description: figure.standfirst,
+    description: figure.metaDescription ?? figure.standfirst,
     ...(figure.image ? { image: absoluteUrl(figure.image.src) } : {}),
   };
 

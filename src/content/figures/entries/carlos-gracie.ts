@@ -6,6 +6,8 @@ export const carlosGracie: Figure = {
   lifespan: "1902-1994",
   standfirst:
     "He turned a few years of instruction in an Amazon theatre into an institution, and the machinery he built - an academy, a family, and a standing public challenge - is why one household's version of the art is the one that travelled.",
+  metaDescription:
+    "He turned a few years of instruction into an institution: an academy, a family and a standing public challenge. That is why his version travelled.",
   image: {
     src: "/figures/carlos-gracie.jpg",
     alt: "Black and white profile photograph of Carlos Gracie in a shirt and striped tie, catalogued in 1951.",

@@ -11,6 +11,8 @@ export const mitsuyoMaeda: Figure = {
   lifespan: "1878-1941",
   standfirst:
     "The Kodokan judoka whose club in Belem is the point where every Brazilian jiu-jitsu lineage claims to begin, and the point at which the documentation stops agreeing with itself.",
+  metaDescription:
+    "The Kodokan judoka whose club in Belem is where every Brazilian jiu-jitsu lineage claims to begin, and where the documentation stops agreeing with itself.",
   image: {
     src: "/figures/mitsuyo-maeda.jpg",
     alt: "Studio portrait of Mitsuyo Maeda, bare-chested with arms folded, taken while he held the rank of fourth dan.",

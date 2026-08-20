@@ -12,6 +12,8 @@ export const oswaldoFadda: Figure = {
   lifespan: "1921-2005",
   standfirst:
     "He taught in the Rio suburbs rather than the wealthy south zone, and in 1951 his students beat the Gracie academy in public - which is why the sport has an argument about lineage at all.",
+  metaDescription:
+    "He taught in the Rio suburbs rather than the wealthy south zone, and in 1951 his students beat the Gracie academy in public.",
   body: [
     "Oswaldo Baptista Fadda was born on 15 January 1921 in Bento Ribeiro, a suburb on the northern edge of Rio de Janeiro. He started training in 1937, while serving in the Brazilian marines, under Luis Franca, and received his instructor grade from Franca in 1942. GracieMag and BJJ Heroes agree on that outline and on what he did with it: demonstrations in public squares, on beaches, outside churches, in circus tents and in favelas, and from January 1950 an academy of his own in the neighbourhood he had grown up in.",
     "That geography is the whole point. Jiu-jitsu in Rio in the 1940s and 1950s was a south-zone activity with an upper-class clientele, and a school in the suburbs was treated as a curiosity rather than a rival. Robert Drysdale, who filmed at Fadda's academy while researching a documentary on the period, describes him as one of the first to teach in the suburbs, to teach disabled students, and to make gis himself to give to children who could not buy one. None of that is a technical contribution. All of it changed who was in the room.",

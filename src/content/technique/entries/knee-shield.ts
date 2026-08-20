@@ -6,6 +6,8 @@ export const kneeShield: TechniqueEntry = {
   title: "The knee shield",
   summary:
     "A shin placed across the opponent's torso turns half guard from a position you are defending into one that holds distance, and the whole thing depends on where the shin sits and where the far leg is.",
+  metaDescription:
+    "A shin across the opponent's torso turns half guard from a position you defend into one that holds distance. Where the shin sits decides whether it works.",
   difficulty: "Intermediate",
   relevance: "Gi and no-gi",
   positionAndProblem:

@@ -6,6 +6,8 @@ export const closedGuardPostureBattle: TechniqueEntry = {
   title: "The posture battle in closed guard",
   summary:
     "Almost everything available from closed guard depends on whether the top player's spine is still stacked over their hips, which makes posture the position's real contest.",
+  metaDescription:
+    "Almost everything available from closed guard depends on whether the top player's spine is still stacked over their hips. Posture is the real contest.",
   difficulty: "Foundational",
   relevance: "Gi and no-gi",
   positionAndProblem:

@@ -6,6 +6,8 @@ export const ricksonGracie: Figure = {
   lifespan: "born 1958",
   standfirst:
     "He took the family's claim to Japan in the mid-1990s and won there, and he is also the clearest case in the sport of a reputation that grew faster than the record behind it.",
+  metaDescription:
+    "He took the family's claim to Japan in the mid-1990s and won there, and is the clearest case in the sport of a reputation outgrowing its record.",
   image: {
     src: "/figures/rickson-gracie.jpg",
     alt: "Rickson Gracie photographed at an outdoor event in 2008, wearing a dark cap and black shirt.",

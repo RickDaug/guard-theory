@@ -16,6 +16,8 @@ export const gripDecayAndTheHalfLifeOfANoGiGrip: PublishedArticle = {
   title: "Grip decay, and the half-life of a no-gi grip",
   standfirst:
     "A sleeve grip is a latch you can leave holding while you think. A wrist is a loan against your forearm, and almost everything published about grip in grappling measured the latch.",
+  metaDescription:
+    "A sleeve grip is a latch you can leave holding while you think. A wrist is a loan against your forearm - and the published research measured the latch.",
   sections: [
     {
       id: "a-latch-and-a-loan",

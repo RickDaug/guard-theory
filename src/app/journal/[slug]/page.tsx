@@ -31,7 +31,7 @@ export async function generateMetadata({ params }: Params): Promise<Metadata> {
   return {
     ...pageMetadata({
       title: article.title,
-      description: article.standfirst,
+      description: article.metaDescription ?? article.standfirst,
       path: `/journal/${article.slug}`,
       type: "article",
       publishedTime: isPublished(article) ? article.publishedAt : undefined,
@@ -83,7 +83,7 @@ export default async function ArticlePage({ params }: Params) {
         "@type": "Article",
         "@id": absoluteUrl(`/journal/${article.slug}#article`),
         headline: article.title,
-        description: article.standfirst,
+        description: article.metaDescription ?? article.standfirst,
         datePublished: article.publishedAt,
         ...(article.updatedAt ? { dateModified: article.updatedAt } : {}),
         articleSection: category.name,

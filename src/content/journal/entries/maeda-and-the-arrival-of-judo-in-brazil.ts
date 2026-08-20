@@ -15,6 +15,8 @@ export const maedaAndTheArrivalOfJudoInBrazil: PublishedArticle = {
   title: "Maeda, and the arrival of judo in Brazil",
   standfirst:
     "Almost every confident sentence written about Mitsuyo Maeda is contradicted by another confident sentence, and the disagreements are more instructive than any tidy version of the story.",
+  metaDescription:
+    "Almost every confident sentence written about Mitsuyo Maeda is contradicted by another, and the disagreements are more instructive than any tidy version.",
   sections: [
     {
       id: "what-is-actually-agreed",

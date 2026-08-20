@@ -6,6 +6,8 @@ export const kyraGracie: Figure = {
   lifespan: "born 1985",
   standfirst:
     "She competed at the top of women's jiu-jitsu against the stated wishes of the family whose name is on the art, at a point when the women's divisions were small enough that visibility and survival were the same problem.",
+  metaDescription:
+    "She competed at the top of women's jiu-jitsu against her own family's stated wishes, when the divisions were small enough that visibility was survival.",
   image: {
     src: "/figures/kyra-gracie.jpg",
     alt: "Kyra Gracie kneeling on a blue mat in a pink gi and black belt, with her name lettered on the mat beside her.",

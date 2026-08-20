@@ -6,6 +6,8 @@ export const marceloGarcia: Figure = {
   lifespan: "born 1983",
   standfirst:
     "He won at the top of no-gi grappling with a deliberately small set of positions, and then taught that set in public, which changed what a competitive game is expected to look like.",
+  metaDescription:
+    "He won at the top of no-gi with a deliberately small set of positions, then taught that set in public, changing what a competitive game looks like.",
   image: {
     src: "/figures/marcelo-garcia.jpg",
     alt: "Marcelo Garcia photographed in a white gi at a crowded championship venue, smiling towards the camera.",

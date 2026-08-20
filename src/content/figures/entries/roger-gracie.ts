@@ -6,6 +6,8 @@ export const rogerGracie: Figure = {
   lifespan: "born 1981",
   standfirst:
     "He won at the highest level of the gi ruleset with the mount and the cross choke, the two things every beginner is taught in the first month, and made the case that the basics were never the problem.",
+  metaDescription:
+    "He won at the highest level with the mount and the cross choke, the first things any beginner is taught, and showed the basics were never the problem.",
   image: {
     src: "/figures/roger-gracie.jpg",
     alt: "Roger Gracie standing barefoot on the mats in a blue gi and black belt during a class at a gym in Woking, England.",

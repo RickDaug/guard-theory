@@ -6,6 +6,8 @@ export const connectionInOpenGuard: TechniqueEntry = {
   title: "Connection in open guard",
   summary:
     "Open guard works when the legs and hands are attached to the opponent in a way that transmits their movement back to you, and it collapses the moment that attachment becomes a series of separate pushes.",
+  metaDescription:
+    "Open guard works when legs and hands transmit the opponent's movement back to you, and collapses when that attachment becomes a series of separate pushes.",
   difficulty: "Foundational",
   relevance: "No-gi first",
   positionAndProblem:

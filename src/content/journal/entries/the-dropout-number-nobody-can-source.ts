@@ -15,6 +15,8 @@ export const theDropoutNumberNobodyCanSource: PublishedArticle = {
   title: "The dropout number nobody can source",
   standfirst:
     "Ninety per cent of white belts quit, or seventy, or seventy-five, or ninety-five, depending on which page you landed on, and following each version back to its origin is more instructive than any of them.",
+  metaDescription:
+    "Ninety per cent of white belts quit - or seventy, or seventy-five, depending on the page. Following each number back to its origin is the instructive part.",
   sections: [
     {
       id: "five-numbers-one-claim",

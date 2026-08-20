@@ -6,6 +6,8 @@ export const framesVersusBlocks: TechniqueEntry = {
   title: "Frames versus blocks",
   summary:
     "A frame holds distance with aligned bone and costs almost nothing to maintain; a block holds distance with muscle and is on a timer, and confusing the two is why defence gets exhausting.",
+  metaDescription:
+    "A frame holds distance with aligned bone and costs almost nothing; a block uses muscle and is on a timer. Confusing them is why defence gets exhausting.",
   difficulty: "Foundational",
   relevance: "Gi and no-gi",
   positionAndProblem:

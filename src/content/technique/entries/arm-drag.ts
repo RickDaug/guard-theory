@@ -6,6 +6,8 @@ export const armDrag: TechniqueEntry = {
   title: "The arm drag",
   summary:
     "Pulling an opponent's arm across their own centreline removes the limb that was defending one side of their body, which is why the same motion works standing, seated and from the guard.",
+  metaDescription:
+    "Pulling an arm across the opponent's centreline removes the limb defending that side, which is why the motion works standing, seated and from the guard.",
   difficulty: "Intermediate",
   relevance: "No-gi first",
   positionAndProblem:

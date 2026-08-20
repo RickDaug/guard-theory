@@ -16,6 +16,8 @@ export const theRearNakedStrangleFromBackControl: PublishedArticle = {
   title: "The rear naked strangle from back control",
   standfirst:
     "A strangle and a neck crank are separated by a small change in what the second hand is doing, which is why four rule books bothered to write the difference down.",
+  metaDescription:
+    "A strangle and a neck crank are separated by what the second hand is doing, which is why four rule books bothered to write the difference down.",
   sections: [
     {
       id: "the-position-is-the-technique",

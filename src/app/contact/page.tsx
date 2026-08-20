@@ -5,7 +5,8 @@ import { ContactForm } from "@/components/contact/ContactForm";
 
 export const metadata: Metadata = pageMetadata({
   title: "Contact",
-  description: "Questions about the First Edition, sizing, an order, or something we published.",
+  description:
+    "Questions about the First Edition, sizing, an order or something we published. A person reads every message and answers it specifically.",
   path: "/contact",
 });
 

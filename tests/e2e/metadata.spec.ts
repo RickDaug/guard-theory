@@ -292,3 +292,55 @@ test("every page shares with a card that actually resolves", async ({ page, requ
     expect(alt?.length ?? 0, `${path} has no og:image:alt`).toBeGreaterThan(20);
   }
 });
+
+/**
+ * The unit test asserts description length on the content types. It cannot see
+ * the index and static pages — /, /about, /faq, /contact, /manifesto and the
+ * section indexes set their description inline in the page file — and those are
+ * exactly where the thin ones were: /journal/category/guard-systems at 40
+ * characters, /contact at 79, the home page at 88.
+ *
+ * This checks the rendered output instead, so every route is covered by one of
+ * the two regardless of where its description comes from.
+ *
+ * Entities are decoded before measuring. React writes an apostrophe as &#x27;,
+ * six characters for one, and measuring the raw attribute reports a sentence
+ * ten characters longer than the one a crawler reads — which is how a passing
+ * route gets flagged and a real one hides.
+ */
+test("every page's description is the length search can use", async ({ page }) => {
+  test.setTimeout(120_000);
+
+  const FLOOR = 110;
+  const LIMIT = 160;
+  const decode = (v: string) =>
+    v
+      .replace(/&#x27;|&#39;/g, "'")
+      .replace(/&quot;/g, '"')
+      .replace(/&lt;/g, "<")
+      .replace(/&gt;/g, ">")
+      .replace(/&nbsp;/g, " ")
+      .replace(/&amp;/g, "&");
+
+  for (const path of SAMPLED) {
+    await page.goto(path, { waitUntil: "load" });
+
+    const raw =
+      (await page
+        .locator('meta[name="description"]')
+        .first()
+        .getAttribute("content")) ?? "";
+    const description = decode(raw);
+
+    expect(
+      description.length,
+      `${path} has a ${description.length}-character description, over the ${LIMIT} ` +
+        `a search snippet shows`,
+    ).toBeLessThanOrEqual(LIMIT);
+    expect(
+      description.length,
+      `${path} has a ${description.length}-character description, under the ${FLOOR} ` +
+        `it takes to describe a page — Google will rewrite it into something we did not write`,
+    ).toBeGreaterThanOrEqual(FLOOR);
+  }
+});

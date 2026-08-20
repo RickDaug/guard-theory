@@ -17,42 +17,58 @@ export const CATEGORIES = [
     slug: "bjj-history",
     name: "BJJ History",
     summary: "How the art arrived where it is, and who moved it.",
+    metaDescription:
+      "How jiu-jitsu arrived where it is and who moved it, traced to sources - including where the documented record and the popular version stop agreeing.",
   },
   {
     slug: "influential-practitioners",
     name: "Influential Practitioners",
     summary: "People whose work changed what the rest of us do on the mat.",
+    metaDescription:
+      "People whose work changed what the rest of us do on the mat, written from the record rather than the legend, with the contested parts marked as contested.",
   },
   {
     slug: "mma-and-jiu-jitsu",
     name: "MMA and Jiu-Jitsu",
     summary: "What happens to grappling when strikes, gloves and a cage are added.",
+    metaDescription:
+      "What happens to grappling when strikes, gloves and a cage are added - which constraints change, and what each change does to the value of a position.",
   },
   {
     slug: "guard-systems",
     name: "Guard Systems",
     summary: "The structures underneath the positions.",
+    metaDescription:
+      "The structures underneath the positions: retention as a system, seated guard against supine guard, and taking the back from turtle.",
   },
   {
     slug: "technique-notes",
     name: "Technique notes",
     summary:
       "Shorter pieces on single mechanics. The Technique Library is the reference; these are the arguments.",
+    metaDescription:
+      "Shorter pieces on single mechanics: grip decay, the armbar, the guillotine, the kimura, the triangle. The Technique Library is the reference; these argue.",
   },
   {
     slug: "training-culture",
     name: "Training Culture",
     summary: "How rooms work, and what that does to the people in them.",
+    metaDescription:
+      "How rooms work and what that does to the people in them - what positional sparring actually changes, and the dropout number nobody can source.",
   },
   {
     slug: "equipment-and-apparel",
     name: "Equipment and Apparel",
     summary: "What the gear does, what it does not do, and how to choose.",
+    metaDescription:
+      "What the gear does, what it does not do, and how to choose: how a rash guard should fit, and what the laundry advice for stretch knitwear leaves out.",
   },
   {
     slug: "competition-analysis",
     name: "Competition Analysis",
     summary: "What rulesets reward, and how that shapes technique selection.",
+    metaDescription:
+      "What rulesets reward and how that shapes technique selection, read from the IBJJF and ADCC rule books rather than from what the sport says about itself.",
   },
 ] as const;
 

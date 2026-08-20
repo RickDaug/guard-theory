@@ -6,7 +6,8 @@ import { absoluteUrl } from "@/lib/site";
 
 export const metadata: Metadata = pageMetadata({
   title: "FAQ",
-  description: "Straight answers about the First Edition, sizing, returns and how the Journal is written.",
+  description:
+    "Straight answers on the First Edition, sizing and returns, why the product pages carry drawings rather than photographs, and how the Journal is written.",
   path: "/faq",
 });
 

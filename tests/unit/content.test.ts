@@ -15,6 +15,7 @@ import {
 } from "../../src/content/journal/index.ts";
 import { FIGURES } from "../../src/content/figures/index.ts";
 import { POLICIES } from "../../src/content/policies/index.ts";
+import { PRODUCTS } from "../../src/content/products/index.ts";
 import {
   CROSS_LINKS,
   crossLinksFor,
@@ -464,6 +465,28 @@ describe("meta descriptions fit what search and social display", () => {
       slug: p.slug,
       effective: p.metaDescription ?? p.summary,
       onPage: p.summary,
+    })),
+    ...PRODUCTS.map((p) => ({
+      kind: "products",
+      slug: p.slug,
+      effective: p.metaDescription ?? p.summary,
+      onPage: p.summary,
+    })),
+    // Categories carry a required metaDescription rather than an optional one:
+    // the set is small and fixed, every one needed a longer description than
+    // its on-page line, and making it required is what stops the next category
+    // being added with a 40-character one.
+    ...JOURNAL_CATEGORIES.map((c) => ({
+      kind: "journal-category",
+      slug: c.slug,
+      effective: c.metaDescription,
+      onPage: c.summary,
+    })),
+    ...CATEGORIES.map((c) => ({
+      kind: "technique-category",
+      slug: c.slug,
+      effective: c.metaDescription,
+      onPage: c.summary,
     })),
   ];
 

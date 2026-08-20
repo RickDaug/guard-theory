@@ -31,7 +31,7 @@ export async function generateMetadata({ params }: Params): Promise<Metadata> {
 
   return pageMetadata({
     title: category.name,
-    description: category.summary,
+    description: category.metaDescription,
     path: `/journal/category/${category.slug}`,
     // The three-entry gate. See src/content/category-gate.ts.
     indexable: isJournalCategoryIndexable(category.slug),

@@ -1,12 +1,13 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { pageMetadata } from "@/lib/metadata";
-import { SITE_DESCRIPTION, SITE_NAME } from "@/lib/site";
+import { SITE_NAME } from "@/lib/site";
 import { GuardSystemMap } from "@/components/notation/GuardSystemMap";
 
 export const metadata: Metadata = pageMetadata({
   title: `${SITE_NAME} — No-gi grappling apparel`,
-  description: SITE_DESCRIPTION,
+  description:
+    "No-gi grappling apparel and a technical study of the guard. Garments designed inside competition rulesets, and the reasoning published alongside them.",
   path: "/",
 });
 

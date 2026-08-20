@@ -20,7 +20,7 @@ export async function generateMetadata({ params }: Params): Promise<Metadata> {
 
   return pageMetadata({
     title: `${product.name} — ${product.kind}`,
-    description: product.summary,
+    description: product.metaDescription ?? product.summary,
     path: `/shop/${product.slug}`,
   });
 }

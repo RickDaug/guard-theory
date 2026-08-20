@@ -5,7 +5,8 @@ import { ButtonLink } from "@/components/ui/Button";
 
 export const metadata: Metadata = pageMetadata({
   title: "Manifesto",
-  description: "Great grappling is not random. What Guard Theory believes about jiu-jitsu, and what that commits us to.",
+  description:
+    "Great grappling is not random. What Guard Theory believes about jiu-jitsu, and what believing it commits us to in the writing and in the garments.",
   path: "/manifesto",
 });
 

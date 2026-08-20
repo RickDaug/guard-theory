@@ -19,72 +19,96 @@ export const CATEGORIES = [
     name: "Closed Guard",
     summary:
       "The guard held by a leg lock around the torso, where connection is structural rather than grip-dependent.",
+    metaDescription:
+      "The guard held by a leg lock around the torso, where connection is structural rather than grip-dependent, and where posture is the position's real contest.",
   },
   {
     slug: "open-guard",
     name: "Open Guard",
     summary:
       "Guards where the legs are unlocked and control is rebuilt continuously from grips, frames and angle.",
+    metaDescription:
+      "Guards where the legs are unlocked and control is rebuilt continuously from grips, frames and angle, and collapses when connection becomes separate pushes.",
   },
   {
     slug: "half-guard",
     name: "Half Guard",
     summary:
       "One leg trapped. Simultaneously a guard to attack from and the last station before the guard is passed.",
+    metaDescription:
+      "One leg trapped: at once a guard to attack from and the last station before the guard is passed. Where the shin sits decides which of the two it is.",
   },
   {
     slug: "butterfly-guard",
     name: "Butterfly Guard",
     summary:
       "Seated guard built on hooks inside the thighs, where the legs carry weight rather than merely holding position.",
+    metaDescription:
+      "Seated guard built on hooks inside the thighs, where the legs carry weight rather than hold position, and the hook only sweeps once it is loaded.",
   },
   {
     slug: "guard-retention",
     name: "Guard Retention",
     summary:
       "The work of keeping legs between you and the opponent while they try to remove them.",
+    metaDescription:
+      "The work of keeping legs between you and the opponent while they try to remove them, and why most failures are the hips stopping before the legs reach.",
   },
   {
     slug: "escapes",
     name: "Escapes",
     summary:
       "Getting out of positions where the opponent has already established control.",
+    metaDescription:
+      "Getting out of positions where the opponent has already established control, where the reason an escape fails is almost always sequence rather than strength.",
   },
   {
     slug: "passing",
     name: "Passing",
     summary:
       "Removing the legs as an obstacle and establishing control past them.",
+    metaDescription:
+      "Removing the legs as an obstacle and establishing control past them, and why the upper body usually decides whether the leg work does anything at all.",
   },
   {
     slug: "back-control",
     name: "Back Control",
     summary:
       "Attacking and maintaining the position behind the opponent, and the mechanics that keep you there.",
+    metaDescription:
+      "Attacking and maintaining the position behind the opponent - the seat belt, the hooks, and the mechanics that decide whether you stay there.",
   },
   {
     slug: "submissions",
     name: "Submissions",
     summary:
       "Finishing mechanics, the structures that make them work, and the control that precedes them.",
+    metaDescription:
+      "Finishing mechanics, the structures that make them work, and the control that precedes them - including what separates a blood choke from an air choke.",
   },
   {
     slug: "defensive-concepts",
     name: "Defensive Concepts",
     summary:
       "Frames, posture and the principles that keep bad positions survivable.",
+    metaDescription:
+      "Frames, posture and the principles that keep bad positions survivable, starting with the difference between a frame that costs nothing and a block on a timer.",
   },
   {
     slug: "wrestling-for-bjj",
     name: "Wrestling for BJJ",
     summary:
       "Takedowns, ties and scrambles adapted to a ruleset where being on top is not the only goal.",
+    metaDescription:
+      "Takedowns, ties and scrambles adapted to a ruleset where being on top is not the only goal, and where the arm drag works standing, seated and from guard.",
   },
   {
     slug: "no-gi-systems",
     name: "No-Gi Systems",
     summary:
       "How technique selection changes when there is no cloth to grip.",
+    metaDescription:
+      "How technique selection changes when there is no cloth to grip, and why inside position does the work that a sleeve grip does in the gi.",
   },
 ] as const;
 

@@ -5,7 +5,8 @@ import { Breadcrumbs } from "@/components/site/Breadcrumbs";
 
 export const metadata: Metadata = pageMetadata({
   title: "About",
-  description: "What Guard Theory is, what it makes, and the standard it holds both the apparel and the writing to.",
+  description:
+    "What Guard Theory is and what it makes: apparel with published specifications, and writing with sourced claims. The standard is the same for both.",
   path: "/about",
 });
 

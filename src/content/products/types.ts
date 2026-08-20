@@ -35,6 +35,12 @@ export type Product = {
   kind: string;
   status: ProductStatus;
   summary: string;
+  /**
+   * The search-and-share description, when the summary is the wrong length for
+   * one. The summary is a card line on /shop and /lookbook; this is what a
+   * search result shows. Optional, and asserted in tests/unit/content.test.ts.
+   */
+  metaDescription?: string;
   description: string;
   constructionPoints: ConstructionPoint[];
   specifications: Specification[];

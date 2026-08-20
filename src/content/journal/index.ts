@@ -10,6 +10,8 @@ import { drillingRehearsingAndPositionalSparring } from "./entries/drilling-rehe
 import { guardRetentionAsASystem } from "./entries/guard-retention-as-a-system.ts";
 import { howABjjRashGuardShouldFit } from "./entries/how-a-bjj-rash-guard-should-fit.ts";
 import { howNoGiRulesetsReshapedTechniqueSelection } from "./entries/how-no-gi-rulesets-reshaped-technique-selection.ts";
+import { ibjjfNoGiUniformRulesReadCarefully } from "./entries/ibjjf-no-gi-uniform-rules-read-carefully.ts";
+import { longSleeveOrShortSleeve } from "./entries/long-sleeve-or-short-sleeve.ts";
 import { maedaAndTheArrivalOfJudoInBrazil } from "./entries/maeda-and-the-arrival-of-judo-in-brazil.ts";
 import { takingTheBackFromTurtle } from "./entries/taking-the-back-from-turtle.ts";
 import { theArmbarFromClosedGuard } from "./entries/the-armbar-from-closed-guard.ts";
@@ -30,6 +32,8 @@ export const ARTICLES: Article[] = [
   guardRetentionAsASystem,
   howABjjRashGuardShouldFit,
   howNoGiRulesetsReshapedTechniqueSelection,
+  ibjjfNoGiUniformRulesReadCarefully,
+  longSleeveOrShortSleeve,
   howToWashARashGuard,
   maedaAndTheArrivalOfJudoInBrazil,
   seatedGuardAndSupineGuard,

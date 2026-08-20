@@ -344,3 +344,54 @@ test("every page's description is the length search can use", async ({ page }) =
     ).toBeGreaterThanOrEqual(FLOOR);
   }
 });
+
+/**
+ * The date a reader sees must be the date the crawler is given.
+ *
+ * `/policies/editorial` promises exactly this: "An article carries the date it
+ * was genuinely published, and that is the date shown to you and to search
+ * engines alike." It was not true. A date-only ISO string parses as UTC
+ * midnight, and formatting it in the server's local zone renders the previous
+ * day anywhere west of Greenwich — so every article displayed a date one day
+ * earlier than the one in its own `dateTime` attribute and its structured data.
+ *
+ * Nothing caught it because both dates were internally consistent: the stored
+ * value was right, the machine-readable attribute was right, and only the
+ * rendered text was wrong. It is the kind of defect that is invisible until you
+ * compare the two things nobody thinks to compare.
+ */
+test("the published date shown matches the date published", async ({ page }) => {
+  test.setTimeout(120_000);
+
+  const published = ARTICLES.filter(isPublished);
+  expect(published.length, "no published articles to check").toBeGreaterThan(0);
+
+  const MONTHS = [
+    "January", "February", "March", "April", "May", "June",
+    "July", "August", "September", "October", "November", "December",
+  ];
+
+  for (const article of published.slice(0, 6)) {
+    await page.goto(`/journal/${article.slug}`, { waitUntil: "load" });
+
+    const time = page.locator("time[dateTime], time[datetime]").first();
+    const attribute =
+      (await time.getAttribute("datetime")) ?? (await time.getAttribute("dateTime"));
+    const shown = ((await time.textContent()) ?? "").trim();
+
+    expect(attribute, `${article.slug} renders no machine-readable date`).toBe(
+      article.publishedAt,
+    );
+
+    // Build the expected human date from the stored string directly, with no
+    // Date parsing — parsing is what caused the bug.
+    const [year, month, day] = article.publishedAt.split("-");
+    const expected = `${Number(day)} ${MONTHS[Number(month) - 1]} ${year}`;
+
+    expect(
+      shown,
+      `${article.slug} shows "${shown}" but its publishedAt is ${article.publishedAt} — ` +
+        `the date a reader sees and the date a crawler is given must be the same`,
+    ).toBe(expected);
+  }
+});

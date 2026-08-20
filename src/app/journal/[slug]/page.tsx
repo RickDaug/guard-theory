@@ -165,6 +165,16 @@ export default async function ArticlePage({ params }: Params) {
                       {new Date(
                         (article as { publishedAt: string }).publishedAt,
                       ).toLocaleDateString("en-GB", {
+                        // A date-only ISO string parses as UTC midnight, and
+                        // formatting it in the server's local zone renders the
+                        // day before west of Greenwich. Every article on the
+                        // site was showing a date one day earlier than the one
+                        // in its own dateTime attribute — the human-readable
+                        // date and the machine-readable date disagreeing, on a
+                        // site whose editorial policy promises they are the
+                        // same. Format in UTC, the zone the string was written
+                        // in.
+                        timeZone: "UTC",
                         day: "numeric",
                         month: "long",
                         year: "numeric",

@@ -19,6 +19,18 @@ export type Policy = {
   slug: string;
   title: string;
   summary: string;
+  /**
+   * The search-and-share description, when the summary is too short to be one.
+   *
+   * These summaries are deliberately curt — "This site sets no cookies of its
+   * own." is the right sentence to print under the heading, and a 37-character
+   * meta description is not a sentence a search result can use. Two jobs again:
+   * the summary states the position, this one tells somebody scanning results
+   * what the page will actually answer.
+   *
+   * Optional; the effective length is asserted in tests/unit/content.test.ts.
+   */
+  metaDescription?: string;
   sections: PolicySection[];
 };
 
@@ -27,6 +39,8 @@ export const POLICIES: Policy[] = [
     slug: "privacy",
     title: "Privacy",
     summary: "What we collect, why, how long we keep it, and how to get it deleted.",
+    metaDescription:
+      "First name and email if you join the list, kept until the First Edition is released or until you ask us to delete it. No analytics, no tracking scripts.",
     sections: [
       {
         id: "what-we-collect",
@@ -74,6 +88,8 @@ export const POLICIES: Policy[] = [
     slug: "terms",
     title: "Terms",
     summary: "The terms on which this site and our products are provided.",
+    metaDescription:
+      "The terms covering orders, pricing and use of the writing and drawings on this site. Technique writing is descriptive and does not replace a qualified coach.",
     sections: [
       {
         id: "scope",
@@ -119,6 +135,8 @@ export const POLICIES: Policy[] = [
     slug: "shipping",
     title: "Shipping",
     summary: "Where we ship, what it costs, and how long it takes.",
+    metaDescription:
+      "Dispatched within two business days, shipped worldwide. Three to five business days domestically, seven to fourteen international. A lost parcel is ours.",
     sections: [
       {
         id: "dispatch",
@@ -164,6 +182,8 @@ export const POLICIES: Policy[] = [
     slug: "returns",
     title: "Returns",
     summary: "Thirty days, and we cover the cost when the fault is ours.",
+    metaDescription:
+      "Thirty days, no reason required, refunded within five business days of the return arriving. Free size exchanges, and we pay both ways when the fault is ours.",
     sections: [
       {
         id: "window",
@@ -208,6 +228,8 @@ export const POLICIES: Policy[] = [
     slug: "cookies",
     title: "Cookies",
     summary: "This site sets no cookies of its own.",
+    metaDescription:
+      "This site sets no cookies of its own: no analytics, no advertising pixel, no consent banner. A payment provider sets strictly necessary ones at checkout.",
     sections: [
       {
         id: "what-we-set",
@@ -230,6 +252,8 @@ export const POLICIES: Policy[] = [
     slug: "accessibility",
     title: "Accessibility",
     summary: "What we target, what we test, and what we know is imperfect.",
+    metaDescription:
+      "WCAG 2.2 Level AA across the site, with colour contrast measured by a test that fails the build. Keyboard reachable throughout, and what we know is imperfect.",
     sections: [
       {
         id: "target",
@@ -260,6 +284,8 @@ export const POLICIES: Policy[] = [
     slug: "editorial",
     title: "Editorial policy",
     summary: "How the Journal and Technique Library are researched, checked and dated.",
+    metaDescription:
+      "How claims are sourced, what we will not print, and why nothing is backdated. Where an article touches something we sell, the article says so.",
     sections: [
       {
         id: "sourcing",
@@ -298,6 +324,8 @@ export const POLICIES: Policy[] = [
     slug: "affiliate-disclosure",
     title: "Affiliate disclosure",
     summary: "We have no affiliate relationships.",
+    metaDescription:
+      "No affiliate links, no sponsored posts, no paid placements and no commission arrangements. Nothing here is written because somebody paid for it to be.",
     sections: [
       {
         id: "current",

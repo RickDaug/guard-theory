@@ -14,6 +14,7 @@ import {
   publishedArticles,
 } from "../../src/content/journal/index.ts";
 import { FIGURES } from "../../src/content/figures/index.ts";
+import { POLICIES } from "../../src/content/policies/index.ts";
 import {
   CROSS_LINKS,
   crossLinksFor,
@@ -426,6 +427,19 @@ describe("editorial voice", () => {
 describe("meta descriptions fit what search and social display", () => {
   const LIMIT = 160;
 
+  /**
+   * A floor as well as a ceiling. "We have no affiliate relationships." is the
+   * right sentence to print on the page and a useless search result: at 35
+   * characters it uses a fifth of the space and tells a searcher nothing about
+   * what the page answers, so Google rewrites it into something we did not
+   * write. Too short is a failure mode in its own right, not a safe default.
+   *
+   * 110 is below every description on the site and above every one that was
+   * too thin to be one, which is what makes it a guard rather than a
+   * formality.
+   */
+  const FLOOR = 110;
+
   const SUBJECTS: Array<{ kind: string; slug: string; effective: string; onPage: string }> = [
     ...ARTICLES.map((a) => ({
       kind: "journal",
@@ -445,6 +459,12 @@ describe("meta descriptions fit what search and social display", () => {
       effective: f.metaDescription ?? f.standfirst,
       onPage: f.standfirst,
     })),
+    ...POLICIES.map((p) => ({
+      kind: "policies",
+      slug: p.slug,
+      effective: p.metaDescription ?? p.summary,
+      onPage: p.summary,
+    })),
   ];
 
   for (const subject of SUBJECTS) {
@@ -456,19 +476,34 @@ describe("meta descriptions fit what search and social display", () => {
           `cutting the standfirst, which has a different job.`,
       );
       assert.ok(
-        subject.effective.length > 40,
-        `${subject.kind}/${subject.slug} has a description too short to say anything`,
+        subject.effective.length >= FLOOR,
+        `${subject.kind}/${subject.slug} is ${subject.effective.length} characters, ` +
+          `under the ${FLOOR} it takes to describe a page in a search result. ` +
+          `Give it a metaDescription rather than padding the line on the page.`,
       );
     });
   }
 
-  it("does not carry a metaDescription that is longer than what it replaces", () => {
+  /**
+   * A second field has to be doing something. It fails either way: identical to
+   * the copy on the page, or the same length, means it is a duplicate to keep in
+   * sync for no benefit. It may be shorter (the long standfirsts) or longer (the
+   * curt policy summaries) — it may not be the same.
+   */
+  it("does not carry a metaDescription that changes nothing", () => {
     for (const subject of SUBJECTS) {
       if (subject.effective === subject.onPage) continue;
-      assert.ok(
-        subject.effective.length < subject.onPage.length,
-        `${subject.kind}/${subject.slug} has a metaDescription no shorter than its ` +
-          `standfirst — if it is not shortening anything, delete it`,
+      assert.notEqual(
+        subject.effective.trim(),
+        subject.onPage.trim(),
+        `${subject.kind}/${subject.slug} has a metaDescription identical to the ` +
+          `copy on the page — delete it`,
+      );
+      assert.notEqual(
+        subject.effective.length,
+        subject.onPage.length,
+        `${subject.kind}/${subject.slug} has a metaDescription the same length as ` +
+          `the copy on the page — if it is not changing anything, delete it`,
       );
     }
   });

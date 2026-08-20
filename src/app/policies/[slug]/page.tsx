@@ -18,7 +18,7 @@ export async function generateMetadata({ params }: Params): Promise<Metadata> {
 
   return pageMetadata({
     title: policy.title,
-    description: policy.summary,
+    description: policy.metaDescription ?? policy.summary,
     path: `/policies/${policy.slug}`,
   });
 }

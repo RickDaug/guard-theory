@@ -20,6 +20,8 @@ const ROUTES = [
   "/contact",
   "/search",
   "/lookbook",
+  "/cart",
+  "/order/confirmed",
 ];
 
 for (const path of ROUTES) {

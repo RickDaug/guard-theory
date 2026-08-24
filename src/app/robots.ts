@@ -30,6 +30,12 @@ export default function robots(): MetadataRoute.Robots {
           "/form-success",
           "/form-error",
           "/email-confirmed",
+        // Commerce routes. Per-reader or single-use; nothing a crawler should
+        // hold on to, and /checkout has a side effect.
+        "/cart",
+        "/checkout",
+        "/order",
+        "/api",
         ],
       },
     ],

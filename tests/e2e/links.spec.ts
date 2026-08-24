@@ -69,6 +69,10 @@ test("every internal link resolves", async ({ page, request, baseURL }) => {
     "/form-success",
     "/form-error",
     "/product-unavailable",
+    // Reachable only once there is something in the cart, so the crawl never
+    // sees them. They still have to answer.
+    "/cart",
+    "/order/confirmed",
     "/sitemap.xml",
     "/robots.txt",
   ]) {

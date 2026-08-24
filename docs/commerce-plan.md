@@ -78,9 +78,19 @@ the signed link needs JS either way. Moving the cart to a signed cookie would bu
 a genuinely no-JS checkout at the cost of the cookie claim in §12. That is a real
 choice and it is yours; the plan assumes `localStorage` unless you say otherwise.
 
-Per the AGENTS.md rule that a guard which has only ever been green has not been
-tested, Phase 2 **proves this before building on it**: send the blocked form
-first, watch Chrome refuse it, then confirm the link navigates.
+**Verified 2026-08-23, before any checkout code was written.** A throwaway probe
+served a form and a link from `127.0.0.1:3100`, both redirecting to
+`localhost:3100` — same machine, genuinely different origin as far as CSP is
+concerned, since form-action matches scheme, host and port.
+
+| Route | Final URL | Reached destination |
+|---|---|---|
+| form POST → 303 | stayed on `127.0.0.1:3100/csp-probe` | **no** |
+| link GET → 303 | `localhost:3100/csp-probe/landed` | **yes** |
+
+Chrome refused the redirect that followed the form and allowed the one that
+followed the link, exactly as predicted. The probe was deleted once it had
+answered.
 
 Two corollaries, stated rather than assumed: `ui_mode: "embedded_page"` and
 `ui_mode: "elements"` are both disqualified — each requires Stripe.js on our

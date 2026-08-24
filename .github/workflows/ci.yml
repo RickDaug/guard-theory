@@ -64,6 +64,15 @@ jobs:
       - name: Apply migrations
         run: npm run db:migrate
 
+      # Products, then prices and stock. The fixture script invents figures, so
+      # it refuses to run against anything but a loopback database — see
+      # scripts/db/seed-e2e-fixtures.mjs. Without it the checkout suite has no
+      # purchasable product to exercise.
+      - name: Seed products and test fixtures
+        run: |
+          npm run db:seed
+          npm run db:seed-e2e
+
       - name: Build
         run: npm run build
 

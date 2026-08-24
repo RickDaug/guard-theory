@@ -11,7 +11,10 @@
     "cls:why": "node scripts/cls-explain.mjs",
     "db:backup": "node scripts/db/backup.mjs",
     "db:import-ndjson": "node scripts/db/migrate-ndjson.mjs",
+    "db:local": "node scripts/db/local-postgres.mjs",
     "db:migrate": "node scripts/db/migrate.mjs",
+    "db:seed": "node scripts/db/seed-products.mjs",
+    "db:seed-e2e": "node scripts/db/seed-e2e-fixtures.mjs",
     "db:status": "node scripts/db/migrate.mjs --status",
     "dev": "next dev",
     "e2e": "playwright test tests/e2e",
@@ -26,10 +29,13 @@
     "next": "16.2.12",
     "pg": "^8.23.0",
     "react": "19.2.4",
-    "react-dom": "19.2.4"
+    "react-dom": "19.2.4",
+    "stripe": "^22.5.0"
   },
   "devDependencies": {
     "@axe-core/playwright": "^4.12.1",
+    "@electric-sql/pglite": "^0.5.7",
+    "@electric-sql/pglite-socket": "^0.2.10",
     "@playwright/test": "^1.62.1",
     "@tailwindcss/postcss": "^4",
     "@types/node": "^20",

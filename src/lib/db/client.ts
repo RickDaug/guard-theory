@@ -58,7 +58,10 @@ function getPool(): Pool {
     // holding several here would multiply connections by instance count for no
     // gain on a store this size.
     max: Number(process.env.DATABASE_POOL_MAX ?? 1),
-    idleTimeoutMillis: 10_000,
+    // Zero disables the idle timeout entirely. Only useful against a local
+    // single-connection server; against Neon the default stands, because the
+    // pooler is what connections are supposed to be handed back to.
+    idleTimeoutMillis: Number(process.env.DATABASE_POOL_IDLE_MS ?? 10_000),
     connectionTimeoutMillis: 10_000,
     // Neon and Vercel Postgres require TLS. A local Postgres in CI does not
     // offer it, and `sslmode=disable` in the URL is how that is said.

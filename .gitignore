@@ -57,3 +57,6 @@ next-env.d.ts
 /docs/lighthouse/*.html
 
 .vercel
+
+# Stray scratch files from ad-hoc HTML experiments.
+*.tmp.html

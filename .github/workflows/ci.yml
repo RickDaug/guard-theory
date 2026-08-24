@@ -66,24 +66,29 @@ jobs:
       - name: Lint
         run: npm run lint --  --max-warnings 0
 
-      # Migrations run BEFORE the unit tests, not after.
+      # ORDER MATTERS HERE, and both orderings have already been got wrong.
       #
-      # tests/unit/fulfil.test.ts is an integration test: it drives order
-      # creation against a real Postgres, and it deliberately does not skip
-      # when DATABASE_URL is set — a test of idempotency that silently skips is
-      # the guard that has only ever been green. With the schema not yet
-      # applied its setup fails and every case in it is cancelled, which is
-      # exactly what this ordering caused on the first CI run.
+      #   migrate  — tests/unit/fulfil.test.ts is an integration test that
+      #              drives order creation against a real Postgres and
+      #              deliberately refuses to skip when DATABASE_URL is set. Run
+      #              before the schema exists, its setup fails and all seven
+      #              cases are CANCELLED, which reports as "fail 0" and exits 1.
+      #
+      #   seed     — products, then the invented prices the checkout suite needs.
+      #              seed-e2e refuses to run against a database that already
+      #              holds orders, which is the guard working: those are made-up
+      #              figures and they belong nowhere near real ones. So it has
+      #              to run BEFORE the unit tests, which leave test orders behind.
+      #
+      #   unit     — last of the three, for the reason above.
       - name: Apply migrations
         run: npm run db:migrate
 
-      - name: Unit tests
-        run: npm run test:unit
+      - name: Seed products and test fixtures
+        run: |
+          npm run db:seed
+          npm run db:seed-e2e
 
-      # Products, then prices and stock. The fixture script invents figures, so
-      # it refuses to run against anything but a loopback database — see
-      # scripts/db/seed-e2e-fixtures.mjs. Without it the checkout suite has no
-      # purchasable product to exercise.
       # Derived rather than stored, so there is no hash in the repository that
       # could ever be mistaken for the real one.
       - name: Generate a portal password hash for the run
@@ -97,10 +102,9 @@ jobs:
           ')
           echo "PORTAL_PASSWORD_HASH=$HASH" >> "$GITHUB_ENV"
 
-      - name: Seed products and test fixtures
-        run: |
-          npm run db:seed
-          npm run db:seed-e2e
+      - name: Unit tests
+        run: npm run test:unit
+
 
       - name: Build
         run: npm run build

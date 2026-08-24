@@ -67,9 +67,10 @@ export default async function CrewHome() {
         ) : null}
 
         <p className="mt-12 text-base text-steel">
-          Orders appear here once the order screens are built. Nothing is lost in the
-          meantime — a paid order is written to the database by the Stripe webhook whether
-          or not there is a screen showing it.
+          <Link href={portalUrl("/orders")} className="text-signal-lift">
+            Orders
+          </Link>{" "}
+          is where the work is. This screen only answers what needs doing.
         </p>
       </div>
     </main>

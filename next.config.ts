@@ -140,6 +140,32 @@ const nextConfig: NextConfig = {
   },
 
   /**
+   * The Crew Portal's optional non-obvious URL.
+   *
+   * The pages live at /crew. Setting PORTAL_PATH serves them from somewhere
+   * else instead, and src/proxy.ts then makes /crew itself return 404, so
+   * there is only ever one door.
+   *
+   * This matters because the repository is public: a path written in the
+   * source is a path anyone can read. It is still not the security — the
+   * password is — but it keeps the door out of opportunistic scans.
+   *
+   * Read at build time, so changing it needs a redeploy rather than a restart.
+   */
+  async rewrites() {
+    const custom = (process.env.PORTAL_PATH ?? "").trim().replace(/^\/+|\/+$/g, "");
+
+    if (!custom || custom === "crew") {
+      return [];
+    }
+
+    return [
+      { source: `/${custom}`, destination: "/crew" },
+      { source: `/${custom}/:path*`, destination: "/crew/:path*" },
+    ];
+  },
+
+  /**
    * One canonical host.
    *
    * Both the apex and www resolve to the same deployment, so without this the

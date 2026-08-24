@@ -6,6 +6,10 @@ import {
   markEventProcessed,
   releaseEvent,
 } from "@/lib/orders/fulfil";
+import { getOrder, getOrderItems, toEmailShape } from "@/lib/orders/manage";
+import { syncRefundFromCharge } from "@/lib/orders/refund";
+import { sendEmail } from "@/lib/mail";
+import { orderConfirmation } from "@/lib/mail/templates";
 
 /**
  * Stripe's webhook.
@@ -43,6 +47,9 @@ const HANDLED = new Set<string>([
   // delayed method is enabled in the dashboard a completed-only integration
   // starts fulfilling unpaid orders.
   "checkout.session.async_payment_succeeded",
+  // So a refund issued in the Stripe dashboard rather than the portal still
+  // shows up on the order. Without it the two records drift silently.
+  "charge.refunded",
 ]);
 
 export async function POST(request: Request): Promise<Response> {
@@ -101,6 +108,21 @@ export async function POST(request: Request): Promise<Response> {
   }
 
   try {
+    if (event.type === "charge.refunded") {
+      const charge = event.data.object as Stripe.Charge;
+      const paymentIntent =
+        typeof charge.payment_intent === "string"
+          ? charge.payment_intent
+          : charge.payment_intent?.id;
+
+      if (paymentIntent) {
+        await syncRefundFromCharge(paymentIntent, charge.amount_refunded);
+      }
+
+      await markEventProcessed(event.id);
+      return new Response("ok", { status: 200 });
+    }
+
     const session = event.data.object as Stripe.Checkout.Session;
     const result = await fulfilCheckoutSession(session);
 
@@ -109,6 +131,22 @@ export async function POST(request: Request): Promise<Response> {
         `[guard-theory] order ${result.orderNumber} created from ${session.id}` +
           (result.oversold ? " (FLAGGED: oversold)" : ""),
       );
+
+      // The confirmation is sent AFTER the order is written and outside its
+      // transaction. sendEmail never throws — a mail outage must not turn a
+      // paid order into a 500 that Stripe then retries against an order that
+      // already exists. A failure is logged, recorded in email_log, and
+      // resendable from the portal.
+      const order = await getOrder(result.orderId);
+
+      if (order) {
+        const items = await getOrderItems(order.id);
+        await sendEmail(
+          "order-confirmation",
+          orderConfirmation(toEmailShape(order, items)),
+          order.id,
+        );
+      }
     }
 
     await markEventProcessed(event.id);

@@ -43,6 +43,10 @@ jobs:
       # rather than skipped. The hash is generated below from this value; the
       # value itself is a fixture and unlocks nothing that exists.
       PORTAL_TEST_PASSWORD: ci-only-portal-password-not-a-secret
+      # Enough for fulfilCheckoutSession to record an order's mode. No Stripe
+      # call is made with it — the integration tests build their own session
+      # fixtures rather than talking to Stripe.
+      STRIPE_SECRET_KEY: sk_test_ciFixtureNoNetworkCallsAreMadeWithThis
 
     steps:
       - uses: actions/checkout@v4

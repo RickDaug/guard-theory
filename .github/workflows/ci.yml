@@ -39,6 +39,10 @@ jobs:
       # TLS. Neon does, and the same code reads that from its URL instead.
       DATABASE_URL: postgresql://guardtheory:guardtheory@localhost:5432/guardtheory_test?sslmode=disable
       DATABASE_URL_UNPOOLED: postgresql://guardtheory:guardtheory@localhost:5432/guardtheory_test?sslmode=disable
+      # A throwaway portal password, so the sign-in path is actually exercised
+      # rather than skipped. The hash is generated below from this value; the
+      # value itself is a fixture and unlocks nothing that exists.
+      PORTAL_TEST_PASSWORD: ci-only-portal-password-not-a-secret
 
     steps:
       - uses: actions/checkout@v4
@@ -68,6 +72,19 @@ jobs:
       # it refuses to run against anything but a loopback database — see
       # scripts/db/seed-e2e-fixtures.mjs. Without it the checkout suite has no
       # purchasable product to exercise.
+      # Derived rather than stored, so there is no hash in the repository that
+      # could ever be mistaken for the real one.
+      - name: Generate a portal password hash for the run
+        run: |
+          HASH=$(node -e '
+            const { pathToFileURL } = require("node:url");
+            (async () => {
+              const { hashPassword } = await import(pathToFileURL("src/lib/portal/auth.ts").href);
+              process.stdout.write(await hashPassword(process.env.PORTAL_TEST_PASSWORD));
+            })();
+          ')
+          echo "PORTAL_PASSWORD_HASH=$HASH" >> "$GITHUB_ENV"
+
       - name: Seed products and test fixtures
         run: |
           npm run db:seed

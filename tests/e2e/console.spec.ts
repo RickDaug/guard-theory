@@ -41,9 +41,24 @@ for (const path of ROUTES) {
     });
 
     page.on("requestfailed", (request) => {
-      problems.push(
-        `request failed: ${request.url()} (${request.failure()?.errorText})`,
-      );
+      const reason = request.failure()?.errorText ?? "";
+
+      // An aborted request is not a failed one.
+      //
+      // Next prefetches the links in the header, and a prefetch of a
+      // dynamically-rendered route that is still in flight when the page
+      // navigates away is cancelled by the browser — net::ERR_ABORTED. That is
+      // the browser doing the right thing, and counting it made this test fail
+      // roughly one run in two on whichever dynamic route happened to lose the
+      // race, with the failure landing on a different path each time.
+      //
+      // Narrowed rather than weakened: every other failure reason, including a
+      // connection refused, a DNS failure or a blocked request, still counts.
+      if (reason === "net::ERR_ABORTED") {
+        return;
+      }
+
+      problems.push(`request failed: ${request.url()} (${reason})`);
     });
 
     page.on("response", (response) => {

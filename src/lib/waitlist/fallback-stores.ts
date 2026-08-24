@@ -1,0 +1,107 @@
+import type { StoreResult, WaitlistStore, WaitlistSignup } from "./types.ts";
+
+/**
+ * What happens when there is no database.
+ *
+ * There are two honest answers and they are not the same answer, so there are
+ * two stores.
+ *
+ * In development, running the site without a database should not mean the
+ * waitlist form is untestable. An in-memory store keeps the flow working for
+ * the length of the process and says loudly that it is not storage.
+ *
+ * In production, there is no honest fallback at all. Accepting a signup into a
+ * variable that dies with the instance is precisely the "form that discards
+ * input" the page specifications forbid, and it is worse than an error because
+ * the reader is told it worked. So production without DATABASE_URL reports the
+ * failure to the reader and to the logs, and stores nothing.
+ */
+
+/**
+ * Whether an ephemeral store is allowed to stand in for a real one.
+ *
+ * `next start` sets NODE_ENV=production, so the Playwright suite looks exactly
+ * like production to this code and would otherwise be unrunnable without a
+ * database. This is the opt-in that lets it run.
+ *
+ * It is also exactly the kind of escape hatch that gets switched on "just for
+ * now" somewhere real, so it is nailed shut twice:
+ *
+ *   1. Vercel always sets VERCEL=1, and that alone is a refusal.
+ *   2. The site must be serving from localhost.
+ *
+ * The second test is the one that matters, because the first only knows about
+ * one host. If this ever moves to a VPS, to Cloudflare, or anywhere else, a
+ * VERCEL-only check would quietly stop protecting anything — and a real
+ * deployment always has a real NEXT_PUBLIC_SITE_URL, whoever is hosting it.
+ *
+ * CI does not use this path at all. It runs a real Postgres service container,
+ * so the code under test there is the code that ships.
+ */
+export function ephemeralStoreAllowed(env: NodeJS.ProcessEnv = process.env): boolean {
+  if (env.VERCEL) {
+    return false;
+  }
+
+  if (env.NODE_ENV !== "production") {
+    return true;
+  }
+
+  if (env.GUARD_THEORY_ALLOW_EPHEMERAL_STORE !== "1") {
+    return false;
+  }
+
+  // A production build being served from anywhere but a loopback address is a
+  // deployment, whatever the flag says.
+  const site = env.NEXT_PUBLIC_SITE_URL?.trim();
+
+  if (!site) {
+    // No configured origin means the localhost fallback in src/lib/site.ts,
+    // which is the test harness and the dev server.
+    return true;
+  }
+
+  try {
+    const { hostname } = new URL(site);
+    return hostname === "localhost" || hostname === "127.0.0.1" || hostname === "[::1]";
+  } catch {
+    return false;
+  }
+}
+
+export class MemoryWaitlistStore implements WaitlistStore {
+  readonly name = "in-memory (development only)";
+  readonly isDurable = false;
+
+  private readonly emails = new Set<string>();
+  private warned = false;
+
+  async add(signup: WaitlistSignup): Promise<StoreResult> {
+    if (!this.warned) {
+      this.warned = true;
+      console.warn(
+        "[guard-theory] DATABASE_URL is not set: waitlist signups are being kept " +
+          "in memory and will be lost when this process exits. Development only.",
+      );
+    }
+
+    const email = signup.email.toLowerCase();
+    const alreadyOnList = this.emails.has(email);
+    this.emails.add(email);
+
+    return { ok: true, alreadyOnList };
+  }
+}
+
+export class UnavailableWaitlistStore implements WaitlistStore {
+  readonly name = "unavailable (no DATABASE_URL)";
+  readonly isDurable = false;
+
+  async add(_signup: WaitlistSignup): Promise<StoreResult> {
+    console.error(
+      "[guard-theory] DATABASE_URL is not set in production. A waitlist signup " +
+        "was refused rather than accepted and dropped. Set it and redeploy.",
+    );
+    return { ok: false, reason: "storage-unavailable" };
+  }
+}

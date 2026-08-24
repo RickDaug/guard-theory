@@ -2,24 +2,13 @@
 
 import { headers } from "next/headers";
 import { checkRateLimit } from "@/lib/rate-limit";
-import { NdjsonStore } from "@/lib/storage/ndjson-store";
+import { getContactStore } from "@/lib/contact/store";
 import {
   TOPIC_VALUES,
   type ContactFieldErrors,
   type ContactFormState,
   type ContactTopic,
 } from "@/lib/contact/form-state";
-
-type StoredMessage = {
-  name: string;
-  email: string;
-  topic: ContactTopic;
-  message: string;
-  receivedAt: string;
-  [key: string]: unknown;
-};
-
-const store = new NdjsonStore<StoredMessage>("contact.ndjson");
 
 const EMAIL = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 const MAX_MESSAGE = 4000;
@@ -100,9 +89,9 @@ export async function sendMessage(
     };
   }
 
-  const stored = await store.append({
+  const stored = await getContactStore().save({
     name,
-    email: email.toLowerCase(),
+    email,
     topic,
     message,
     receivedAt: new Date().toISOString(),

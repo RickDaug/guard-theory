@@ -38,6 +38,7 @@ const ROUTES = [
   // on it.
   "/technique/back-control",
   "/journal/category/bjj-history",
+  "/cart",
 ];
 
 for (const path of ROUTES) {

@@ -45,10 +45,21 @@ next-env.d.ts
 /playwright-report/
 /blob-report/
 
-# Local waitlist store (no mail provider connected yet)
+# The pre-database waitlist store. Retired in favour of Postgres; the file is
+# kept locally because it is the only surviving copy of the 54 records it holds
+# until scripts/db/migrate-ndjson.mjs has been run. Do not delete it before then.
 /.data/
+
+# Database backups. These contain real personal data and never enter git.
+/backups/
+
+# Local PGlite data directories — see scripts/db/local-postgres.mjs
+/.pgdata*/
 
 # Lighthouse HTML reports are large; summary.json is committed
 /docs/lighthouse/*.html
 
 .vercel
+
+# Stray scratch files from ad-hoc HTML experiments.
+*.tmp.html

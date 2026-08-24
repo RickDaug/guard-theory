@@ -27,6 +27,11 @@ export default defineConfig({
 
   webServer: {
     command: "npx next start --port 3100",
+    // `next start` reports NODE_ENV=production, so without this the suite looks
+    // like the real deployment to the store chooser and every write is refused.
+    // It cannot take effect on Vercel — see ephemeralStoreAllowed(). When
+    // DATABASE_URL is set, as it is in CI, Postgres wins and this is ignored.
+    env: { GUARD_THEORY_ALLOW_EPHEMERAL_STORE: "1" },
     url: "http://127.0.0.1:3100",
     // Never reuse. A server started before the last build keeps serving the
     // previous build's asset hashes, so CSS chunks 404 or 500 and the run

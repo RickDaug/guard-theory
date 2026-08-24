@@ -66,11 +66,19 @@ jobs:
       - name: Lint
         run: npm run lint --  --max-warnings 0
 
-      - name: Unit tests
-        run: npm run test:unit
-
+      # Migrations run BEFORE the unit tests, not after.
+      #
+      # tests/unit/fulfil.test.ts is an integration test: it drives order
+      # creation against a real Postgres, and it deliberately does not skip
+      # when DATABASE_URL is set — a test of idempotency that silently skips is
+      # the guard that has only ever been green. With the schema not yet
+      # applied its setup fails and every case in it is cancelled, which is
+      # exactly what this ordering caused on the first CI run.
       - name: Apply migrations
         run: npm run db:migrate
+
+      - name: Unit tests
+        run: npm run test:unit
 
       # Products, then prices and stock. The fixture script invents figures, so
       # it refuses to run against anything but a loopback database — see

@@ -13,7 +13,14 @@ import { expect, test } from "@playwright/test";
 
 test.describe("portal access", () => {
   test("a signed-out visitor is redirected to sign in, never refused", async ({ request }) => {
-    for (const path of ["/crew", "/crew/products", "/crew/categories"]) {
+    for (const path of [
+      "/crew",
+      "/crew/products",
+      "/crew/categories",
+      "/crew/orders",
+      "/crew/list",
+      "/crew/learn",
+    ]) {
       const response = await request.get(path, { maxRedirects: 0 });
 
       expect(
@@ -114,8 +121,37 @@ test.describe("portal access", () => {
     expect(cookie!.httpOnly, "the session cookie must be httpOnly").toBe(true);
     expect(cookie!.sameSite).toBe("Lax");
 
-    // And the pages behind the door now open.
-    await page.goto("/crew/products", { waitUntil: "load" });
-    await expect(page.getByRole("heading", { level: 1, name: /products/i })).toBeVisible();
+    // And every page behind the door now opens, with exactly one h1 each —
+    // which is what accessibility.spec.ts asserts for the public site and what
+    // these would otherwise escape.
+    for (const [path, heading] of [
+      ["/crew/products", /products/i],
+      ["/crew/categories", /categories/i],
+      ["/crew/orders", /orders/i],
+      ["/crew/list", /first edition/i],
+      ["/crew/learn", /learn/i],
+    ] as const) {
+      await page.goto(path, { waitUntil: "load" });
+      await expect(page.getByRole("heading", { level: 1, name: heading })).toBeVisible();
+      expect(await page.locator("h1").count(), `${path} has more than one h1`).toBe(1);
+    }
+
+    // The list export is a real file, not a page.
+    //
+    // Fetched from inside the page rather than with page.request, which does
+    // not carry the browser context's session cookie here and so follows the
+    // redirect to the sign-in screen and returns HTML.
+    const csv = await page.evaluate(async () => {
+      const response = await fetch("/crew/list/export");
+      return {
+        status: response.status,
+        type: response.headers.get("content-type") ?? "",
+        body: (await response.text()).slice(0, 200),
+      };
+    });
+
+    expect(csv.status).toBe(200);
+    expect(csv.type, "the export must be a file, not the sign-in page").toContain("text/csv");
+    expect(csv.body).toContain("email");
   });
 });

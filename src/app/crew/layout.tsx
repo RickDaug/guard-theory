@@ -26,6 +26,8 @@ const NAV = [
   { href: "/orders", label: "Orders" },
   { href: "/products", label: "Products" },
   { href: "/categories", label: "Categories" },
+  { href: "/list", label: "First Edition" },
+  { href: "/learn", label: "Learn" },
 ];
 
 function ModeBanner() {

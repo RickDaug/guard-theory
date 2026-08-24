@@ -24,3 +24,26 @@ export async function requirePortalPage(next?: string): Promise<void> {
   const target = next ? `?next=${encodeURIComponent(next)}` : "";
   redirect(`${portalUrl("/sign-in")}${target}`);
 }
+
+/**
+ * The guard a portal ROUTE HANDLER uses.
+ *
+ * Returns a redirect Response when there is no session, rather than throwing.
+ * `requireSession()` throws, and an uncaught throw in a route handler is a bare
+ * 500 — which is both useless to the reader and a failure in
+ * `console.spec.ts`, which counts any response of 400 or above.
+ *
+ * Returns null when the caller may proceed.
+ */
+export async function requirePortalRoute(): Promise<Response | null> {
+  const session = await getSession();
+
+  if (session) {
+    return null;
+  }
+
+  return new Response(null, {
+    status: 303,
+    headers: { Location: portalUrl("/sign-in"), "Cache-Control": "no-store" },
+  });
+}

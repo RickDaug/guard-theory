@@ -68,7 +68,22 @@ export async function signIn(
   }
 
   await sweepExpiredSessions();
-  await createSession();
+
+  try {
+    await createSession();
+  } catch (error) {
+    // The password was right; the database was not reachable. Saying so beats
+    // Next's "a server error occurred", which looks identical to a wrong
+    // password and sends the owner looking in the wrong place.
+    console.error(
+      "[guard-theory] could not create a portal session:",
+      error instanceof Error ? error.message : error,
+    );
+    return {
+      status: "error",
+      message: "The password was right, but we could not start a session. Try again in a moment.",
+    };
+  }
 
   const next = formData.get("next");
   const target =

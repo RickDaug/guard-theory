@@ -14,10 +14,12 @@ import { formatMoney } from "@/lib/money";
 import { Button } from "@/components/ui/Button";
 import {
   AdvanceControl,
+  LabelControl,
   RefundControl,
   ResendControl,
   TrackingControl,
 } from "./OrderControls";
+import { isShippoConfigured } from "@/lib/shipping/shippo";
 
 export const dynamic = "force-dynamic";
 
@@ -182,7 +184,14 @@ export default async function OrderPage({ params }: { params: Promise<{ id: stri
 
           <div className="flex flex-col gap-10">
             {order.status === "new" || order.status === "in_process" ? (
-              <TrackingControl id={order.id} trackingNumber={order.tracking_number} />
+              <>
+                <LabelControl
+                  id={order.id}
+                  labelUrl={order.label_url}
+                  configured={isShippoConfigured()}
+                />
+                <TrackingControl id={order.id} trackingNumber={order.tracking_number} />
+              </>
             ) : order.tracking_number ? (
               <p className="text-base text-steel">
                 {`Tracking: ${order.tracking_number}${

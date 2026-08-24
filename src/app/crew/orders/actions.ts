@@ -14,6 +14,7 @@ import {
   orderShipped,
 } from "@/lib/mail/templates";
 import { portalUrl } from "@/lib/portal/routes";
+import { buyUspsLabel, isShippoConfigured, refreshLabelUrl } from "@/lib/shipping/shippo";
 import type { PortalFormState } from "@/lib/portal/form-state";
 
 /** Every action authorises itself. A proxy matcher is not a boundary for these. */
@@ -218,4 +219,120 @@ export async function runReconcile(
     status: "success",
     message: `Checked ${report.scanned} recent payment${report.scanned === 1 ? "" : "s"}. Nothing was missing.`,
   };
+}
+
+
+/**
+ * Buys a USPS label and attaches its tracking to the order.
+ *
+ * The transaction id is what gets stored, not the label URL: Shippo's
+ * `label_url` is a pre-signed link with an undocumented expiry, so treating it
+ * as permanent is a bug that only shows up weeks later. `labelLink` below
+ * re-fetches a fresh one when someone actually wants to print.
+ */
+export async function buyLabel(
+  _previous: PortalFormState,
+  formData: FormData,
+): Promise<PortalFormState> {
+  await requireSession();
+
+  const id = text(formData, "id");
+
+  if (!id) {
+    return { status: "error", message: "That order could not be identified." };
+  }
+
+  if (!isShippoConfigured()) {
+    return {
+      status: "error",
+      message: "Shippo is not connected yet, so no label can be bought. Paste a tracking number instead.",
+    };
+  }
+
+  const order = await getOrder(id);
+
+  if (!order) {
+    return { status: "error", message: "That order no longer exists." };
+  }
+
+  if (order.tracking_number) {
+    // Buying a second label for the same parcel is real money and two barcodes
+    // on one box. Refuse rather than let a double-click cost postage.
+    return {
+      status: "error",
+      message: "This order already has a tracking number. Clear it first if the label was wrong.",
+    };
+  }
+
+  let label;
+
+  try {
+    label = await buyUspsLabel(
+      {
+        name: order.ship_name,
+        street1: order.ship_line1,
+        street2: order.ship_line2,
+        city: order.ship_city,
+        state: order.ship_state,
+        zip: order.ship_postal,
+        country: order.ship_country,
+        phone: order.phone,
+        email: order.email,
+      },
+      order.id,
+    );
+  } catch (error) {
+    console.error(
+      "[guard-theory] label purchase failed:",
+      error instanceof Error ? error.message : error,
+    );
+    return {
+      status: "error",
+      message:
+        error instanceof Error
+          ? error.message
+          : "The label could not be bought. Nothing has been charged.",
+    };
+  }
+
+  await query(
+    `update "order"
+        set tracking_number = $2, tracking_carrier = $3, tracking_url = $4,
+            label_url = $5, shippo_transaction_id = $6
+      where id = $1`,
+    [
+      order.id,
+      label.trackingNumber,
+      label.carrier,
+      label.trackingUrl,
+      label.labelUrl,
+      label.transactionId,
+    ],
+  );
+
+  revalidateOrders(order.id);
+
+  return {
+    status: "success",
+    message: `Label bought, ${label.amount} ${label.currency}. Print it, then mark this shipped.`,
+  };
+}
+
+/** A freshly-signed link to the label PDF, because the stored one expires. */
+export async function labelLink(formData: FormData): Promise<void> {
+  await requireSession();
+
+  const id = text(formData, "id");
+  const order = id ? await getOrder(id) : undefined;
+
+  if (!order?.shippo_transaction_id) {
+    return;
+  }
+
+  const fresh = await refreshLabelUrl(order.shippo_transaction_id);
+
+  if (fresh && fresh !== order.label_url) {
+    await query(`update "order" set label_url = $2 where id = $1`, [order.id, fresh]);
+    revalidateOrders(order.id);
+  }
 }

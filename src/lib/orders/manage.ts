@@ -63,6 +63,7 @@ export type OrderRow = {
   tracking_number: string | null;
   tracking_url: string | null;
   label_url: string | null;
+  shippo_transaction_id: string | null;
   placed_at: Date;
   shipped_at: Date | null;
 };

@@ -30,8 +30,14 @@ export default async function CrewHome() {
       products = rows[0]?.total ?? 0;
       live = rows[0]?.live ?? 0;
       unpriced = rows[0]?.unpriced ?? 0;
-    } catch {
-      // The tiles below simply read zero. The page is still useful.
+    } catch (error) {
+      // The tiles read zero and the page still renders. A dashboard that 500s
+      // because one count failed is a portal you cannot sign into to find out
+      // what is wrong.
+      console.error(
+        "[guard-theory] could not read the dashboard counts:",
+        error instanceof Error ? error.message : error,
+      );
     }
   }
 

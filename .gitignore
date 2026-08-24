@@ -53,6 +53,9 @@ next-env.d.ts
 # Database backups. These contain real personal data and never enter git.
 /backups/
 
+# Local PGlite data directories — see scripts/db/local-postgres.mjs
+/.pgdata*/
+
 # Lighthouse HTML reports are large; summary.json is committed
 /docs/lighthouse/*.html
 

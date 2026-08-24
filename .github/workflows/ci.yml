@@ -15,6 +15,31 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 20
 
+    # A real Postgres, so the waitlist and contact paths under test are the same
+    # ones production runs. A mock here would mean the only thing proven is that
+    # the mock works. `pg` talks to this container and to Neon's pooler through
+    # one code path, which is why that driver was chosen.
+    services:
+      postgres:
+        image: postgres:17-alpine
+        env:
+          POSTGRES_USER: guardtheory
+          POSTGRES_PASSWORD: guardtheory
+          POSTGRES_DB: guardtheory_test
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+    env:
+      # sslmode=disable is what tells the client this local container offers no
+      # TLS. Neon does, and the same code reads that from its URL instead.
+      DATABASE_URL: postgresql://guardtheory:guardtheory@localhost:5432/guardtheory_test?sslmode=disable
+      DATABASE_URL_UNPOOLED: postgresql://guardtheory:guardtheory@localhost:5432/guardtheory_test?sslmode=disable
+
     steps:
       - uses: actions/checkout@v4
 
@@ -35,6 +60,9 @@ jobs:
 
       - name: Unit tests
         run: npm run test:unit
+
+      - name: Apply migrations
+        run: npm run db:migrate
 
       - name: Build
         run: npm run build

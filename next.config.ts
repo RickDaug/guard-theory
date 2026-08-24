@@ -105,6 +105,34 @@ const nextConfig: NextConfig = {
     // fidelity on every file. An earlier measurement compared q75 to q75,
     // which is not a comparison across codecs, and concluded the opposite.
     formats: ["image/avif", "image/webp"],
+
+    // Product photography uploaded through the Crew Portal lives in object
+    // storage, and this is the list of hosts the optimizer is allowed to fetch
+    // from. An unlisted host returns 400 rather than being fetched.
+    //
+    // NOTE, because it reads like a hole in the CSP and is not one: the browser
+    // never requests these hosts. `next/image` fetches the original server-side
+    // and serves the optimized result from `/_next/image` on our own origin, so
+    // `img-src 'self' data:` stays exactly as strict as it looks, and the
+    // "no third-party request" test in tests/e2e/security.spec.ts stays green.
+    //
+    // That guarantee only holds through `next/image`. A raw <img src="https://…">
+    // pointing at the blob host would be a real third-party request and would
+    // fail both the CSP and that test — which is the point of the guard in
+    // tests/unit/images.test.ts.
+    //
+    // The hostname is pinned rather than wildcarded: `remotePatterns` treats an
+    // omitted pathname as `**`, which Next's own documentation warns against.
+    remotePatterns: process.env.NEXT_PUBLIC_BLOB_HOSTNAME
+      ? [
+          {
+            protocol: "https" as const,
+            hostname: process.env.NEXT_PUBLIC_BLOB_HOSTNAME,
+            port: "",
+            pathname: "/**",
+          },
+        ]
+      : [],
   },
 
   async headers() {

@@ -174,9 +174,12 @@ code that ships. Locally, `npx playwright test` works without a database: the
 harness sets `GUARD_THEORY_ALLOW_EPHEMERAL_STORE=1`, which permits an in-memory
 store for the length of the process.
 
-**That flag cannot take effect on Vercel.** Vercel always sets `VERCEL=1`, and
-`ephemeralStoreAllowed()` refuses on that alone, whatever else is set —
-`tests/unit/storage.test.ts` asserts it. It is an escape hatch for the test
-harness, nailed shut where it would matter.
+**That flag cannot take effect on a deployment.** `ephemeralStoreAllowed()`
+refuses twice over: Vercel always sets `VERCEL=1`, and separately the site must
+be serving from a loopback address. The second check is the one that matters,
+because the first only knows about one host — if this ever moves to a VPS, to
+Cloudflare, or anywhere else, a `VERCEL`-only test would quietly stop protecting
+anything, and a real deployment always has a real `NEXT_PUBLIC_SITE_URL`
+whoever is hosting it. `tests/unit/storage.test.ts` asserts both.
 
 Set `DATABASE_URL` locally and the real Postgres path is exercised instead.

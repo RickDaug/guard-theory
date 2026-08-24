@@ -122,6 +122,35 @@ describe("no form discards input", () => {
       ephemeralStoreAllowed({ NODE_ENV: "production" } as unknown as NodeJS.ProcessEnv),
       false,
     );
+
+    // And the part that survives leaving Vercel. A VERCEL-only check would
+    // stop protecting anything the day this moves to a VPS or to Cloudflare,
+    // so a real origin is refused on its own account.
+    for (const site of [
+      "https://guardtheory.net",
+      "https://guard-theory.fly.dev",
+      "http://203.0.113.10",
+    ]) {
+      assert.equal(
+        ephemeralStoreAllowed({
+          NODE_ENV: "production",
+          GUARD_THEORY_ALLOW_EPHEMERAL_STORE: "1",
+          NEXT_PUBLIC_SITE_URL: site,
+        } as unknown as NodeJS.ProcessEnv),
+        false,
+        `${site} is a deployment, whatever the flag says`,
+      );
+    }
+
+    assert.equal(
+      ephemeralStoreAllowed({
+        NODE_ENV: "production",
+        GUARD_THEORY_ALLOW_EPHEMERAL_STORE: "1",
+        NEXT_PUBLIC_SITE_URL: "http://127.0.0.1:3100",
+      } as unknown as NodeJS.ProcessEnv),
+      true,
+      "the Playwright origin must still be allowed",
+    );
   });
 
   it("the retired NDJSON store is gone, not merely unused", async () => {

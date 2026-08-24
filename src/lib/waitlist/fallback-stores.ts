@@ -22,19 +22,51 @@ import type { StoreResult, WaitlistStore, WaitlistSignup } from "./types.ts";
  *
  * `next start` sets NODE_ENV=production, so the Playwright suite looks exactly
  * like production to this code and would otherwise be unrunnable without a
- * database. This is the opt-in that lets it run — and it is the kind of escape
- * hatch that gets switched on "temporarily" in production, so it is nailed shut
- * in the one place that matters: Vercel always sets VERCEL=1, so on the real
- * deployment the flag cannot take effect no matter who sets it.
+ * database. This is the opt-in that lets it run.
  *
- * CI does not use this path. It runs a real Postgres service container, so the
- * code under test there is the code that ships.
+ * It is also exactly the kind of escape hatch that gets switched on "just for
+ * now" somewhere real, so it is nailed shut twice:
+ *
+ *   1. Vercel always sets VERCEL=1, and that alone is a refusal.
+ *   2. The site must be serving from localhost.
+ *
+ * The second test is the one that matters, because the first only knows about
+ * one host. If this ever moves to a VPS, to Cloudflare, or anywhere else, a
+ * VERCEL-only check would quietly stop protecting anything — and a real
+ * deployment always has a real NEXT_PUBLIC_SITE_URL, whoever is hosting it.
+ *
+ * CI does not use this path at all. It runs a real Postgres service container,
+ * so the code under test there is the code that ships.
  */
 export function ephemeralStoreAllowed(env: NodeJS.ProcessEnv = process.env): boolean {
   if (env.VERCEL) {
     return false;
   }
-  return env.NODE_ENV !== "production" || env.GUARD_THEORY_ALLOW_EPHEMERAL_STORE === "1";
+
+  if (env.NODE_ENV !== "production") {
+    return true;
+  }
+
+  if (env.GUARD_THEORY_ALLOW_EPHEMERAL_STORE !== "1") {
+    return false;
+  }
+
+  // A production build being served from anywhere but a loopback address is a
+  // deployment, whatever the flag says.
+  const site = env.NEXT_PUBLIC_SITE_URL?.trim();
+
+  if (!site) {
+    // No configured origin means the localhost fallback in src/lib/site.ts,
+    // which is the test harness and the dev server.
+    return true;
+  }
+
+  try {
+    const { hostname } = new URL(site);
+    return hostname === "localhost" || hostname === "127.0.0.1" || hostname === "[::1]";
+  } catch {
+    return false;
+  }
 }
 
 export class MemoryWaitlistStore implements WaitlistStore {

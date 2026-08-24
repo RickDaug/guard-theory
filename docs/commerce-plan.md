@@ -28,23 +28,64 @@ redirect that originated in a **form submission**, and Chrome checks those
 against `form-action`. The idiomatic Next pattern is precisely the pattern
 `form-action 'self'` blocks.
 
-**So the action returns the URL and the client navigates:**
+This is not a theory about Chrome. MDN carries the warning explicitly, pointing
+at the still-open spec debate:
 
+> Whether `form-action` should block redirects after a form submission is
+> debated and browser implementations of this aspect are inconsistent (e.g.
+> Firefox 57 doesn't block the redirects whereas Chrome 63 does).
+
+So Stripe's own documented quickstart — `<form method="POST">` → 303 →
+`checkout.stripe.com` — **fails silently in most of your traffic** under this
+CSP. It is disqualified.
+
+**Instead: a plain link to our own route handler, which 303s onward.**
+
+```tsx
+<a href={`/checkout/start?c=${signedCart}`}>Checkout</a>
+```
 ```ts
-const url = await createCheckoutSession();  // server action, returns a string
-window.location.assign(url);                // script-initiated top-level navigation
+// app/checkout/start/route.ts
+export async function GET(req: NextRequest) {
+  const cart = await verifySignedCart(req.nextUrl.searchParams.get("c"));
+  const session = await stripe().checkout.sessions.create({ /* §8 */ });
+  return Response.redirect(session.url!, 303);
+}
 ```
 
-No CSP directive governs a script-initiated top-level navigation — `navigate-to`
-was dropped from the spec and shipped in no browser. `next.config.ts` and
-`security.spec.ts` are both untouched.
+**Link navigations and the redirects that follow them are not governed by
+`form-action`.** No shipped directive covers them — `navigate-to` was dropped
+from CSP3 and never implemented. `next.config.ts` and `security.spec.ts` are
+both untouched.
 
-The cost is that checkout requires JavaScript. That is already true of
-add-to-cart and of the cart itself, so no working no-JS path is lost.
+Three conditions on it, because this puts a side effect behind a GET:
+
+- **HMAC-sign the cart payload** in the query string, so the endpoint cannot be
+  used to mint arbitrary sessions.
+- **A plain `<a>`, not `next/link`.** Route handlers are not RSC-prefetched, but
+  a plain anchor removes the question. Browser and antivirus link pre-fetching
+  can still mint orphan sessions; they expire in 24 hours and are harmless, just
+  noisy.
+- `Cache-Control: no-store` on the 303.
+
+A `fetch()` + `location.assign()` variant works too and is worth adding as a
+progressive enhancement, but the link is the primary because it is ordinary HTTP
+and degrades better.
+
+**On no-JS:** the link approach is the one that *could* work without JavaScript —
+but only if the cart lives server-side. Ours is in `localStorage`, so building
+the signed link needs JS either way. Moving the cart to a signed cookie would buy
+a genuinely no-JS checkout at the cost of the cookie claim in §12. That is a real
+choice and it is yours; the plan assumes `localStorage` unless you say otherwise.
 
 Per the AGENTS.md rule that a guard which has only ever been green has not been
-tested, Phase 2 **proves this before building on it**: try the blocked form
-first, watch Chrome refuse it, then confirm the navigation works.
+tested, Phase 2 **proves this before building on it**: send the blocked form
+first, watch Chrome refuse it, then confirm the link navigates.
+
+Two corollaries, stated rather than assumed: `ui_mode: "embedded_page"` and
+`ui_mode: "elements"` are both disqualified — each requires Stripe.js on our
+origin, and Elements adds `frame-src https://js.stripe.com`. `ui_mode` stays at
+its default `hosted_page`.
 
 ### 0.2 Product images need no CSP change either
 
@@ -396,7 +437,10 @@ is not in doubt.
 
 ### The portal shows its Stripe mode
 `order.stripe_mode` is stored per order, derived server-side from the key prefix
-(`sk_test_` / `sk_live_`) rather than from an env flag someone can mis-set. Test
+(`sk_test_`/`sk_live_`, or `rk_` for a restricted key) rather than from an env
+flag someone can mis-set, and cross-checked against `livemode` from a cheap
+`balance.retrieve()` in the portal health check. A malformed key resolves to
+`unknown` and shows a loud banner rather than silently showing none. Test
 mode shows a persistent banner, and revenue totals exclude test orders. You
 cannot mistake a test order for money, and you cannot go live without noticing
 the banner disappear.
@@ -434,20 +478,45 @@ line_items: cart.map((line) => ({
     product_data: {
       name: `${line.productName} — ${line.productKind}`,
       description: `Size ${line.sizeLabel}`,
-      tax_code: "txcd_30021000",          // Athletic Activity Clothing
+      tax_code: "txcd_30070014",          // Martial Arts Attire — see below
     },
   },
 }))
 ```
 
-**The tax code matters.** `txcd_30021000` is *Athletic Activity Clothing* —
-"worn while participating in recreational or sporting activities, and which are
-not typical for everyday usage". A rashguard is that; it is not
-`txcd_30011000` *Clothing & Footwear*, which is apparel "made for general use".
-The distinction is invisible in California, which taxes clothing, and becomes
-real the moment there is nexus in a state that exempts general clothing but
-carves out athletic wear. Getting it right costs nothing now and is expensive to
-correct retroactively.
+### The tax code — for your tax advisor, not for me
+
+Stripe's tax-code documentation carries an instruction I am going to follow
+rather than route around: *"Treat `txcd_` identifiers as opaque, exact strings.
+Never construct, guess, or infer a code… Don't make the legal tax classification
+for the user."*
+
+Three codes are plausible for a no-gi rashguard, quoted exactly:
+
+| Code | Stripe's definition |
+|---|---|
+| `txcd_30011000` **Clothing & Footwear** | "Apparel and footwear for people made for general use." |
+| `txcd_30021000` **Athletic Activity Clothing** | "Clothing, footwear, and accessories worn on a person's body while participating in recreational or sporting activities, and which are not typical for everyday usage. **Please select a more granular product tax category where appropriate.**" |
+| `txcd_30070014` **Martial Arts Attire** | "Clothing apparel/uniforms that are **specific to the training and competition of various martial arts**." |
+
+By Stripe's own wording `txcd_30070014` is the most specific match, and the
+Athletic Activity entry explicitly tells you to prefer the granular code. The
+plan therefore uses it — but **as a default you confirm, not a determination I
+made.**
+
+**Why it does not bite yet, and when it will.** California taxes clothing at the
+full rate, so all three behave identically today. The distinction becomes real
+money the day you register in a state with a clothing exemption — New York
+exempts items under $110 from state tax, and New Jersey, Pennsylvania,
+Minnesota, Massachusetts, Vermont and Rhode Island have exemptions too. In
+several of those, athletic and protective wear is carved *back into*
+taxability while everyday clothing stays exempt.
+
+It is set per line item via `price_data.product_data.tax_code`, so changing it
+per SKU is an edit, not a migration.
+
+The shipping rate carries its own code, `txcd_92010001` (**Shipping**). Leave it
+taxable rather than marking it nontaxable — Stripe recommends this explicitly.
 
 ### The session
 
@@ -529,6 +598,31 @@ Events handled:
 
 Idempotency, atomic stock and the oversell rule are in §7.
 
+### Four Stripe gotchas that would each cost a day
+
+1. **Pin the webhook endpoint's API version to the SDK's.** `stripe-node@22.5.0`
+   pins `2026-07-29.dahlia`, and on current versions **the shipping address lives
+   at `collected_information.shipping_details`, not top-level
+   `session.shipping_details`.** Every older tutorial uses the old path. Mismatch
+   the versions and you read `undefined` for the exact field Shippo needs — and
+   it fails at label time, not at checkout.
+2. **Instantiate the client lazily.** Since v17 the SDK **throws on a missing key
+   at construction**, so a module-scope `new Stripe(process.env.…!)` fails during
+   `next build` — and CI currently runs `next build` with no secrets at all.
+   `const stripe = () => (_stripe ??= new Stripe(key))`. This is the same shape
+   as the `NEXT_PUBLIC_*`-inlined-at-build-time gotcha already in AGENTS.md.
+3. **Session metadata does not reach the PaymentIntent or Charge.** Set
+   `payment_intent_data.metadata` as well, or the order id is missing from the
+   payment in the Dashboard, on a dispute, and on a refund.
+4. **Checkout waits up to 10 seconds for the webhook** before redirecting the
+   buyer to `success_url`. That is a direct argument for the handler doing its
+   database work and returning — emails and label calls are deferred, never
+   inline.
+
+`success_url` is **not** a fulfilment signal; it fires only if the buyer's
+browser survives the round trip. The webhook is the source of truth, and the
+confirmation page reads the order the webhook wrote.
+
 ### Refunds
 
 Issued from the order page via the Refunds API against the stored
@@ -543,19 +637,44 @@ what the returns policy already promises.
 **Test mode first. Every step below is reversible and costs nothing.**
 
 1. Create a Stripe account. Leave the dashboard toggle in **Test mode**.
-2. Developers → API keys → copy the **secret key** (`sk_test_…`) →
-   `STRIPE_SECRET_KEY`. There is no publishable key in this build: nothing
-   Stripe runs in the browser on our origin.
+2. Developers → API keys → create a **restricted key** (`rk_test_…`) scoped to
+   write on Checkout Sessions and Refunds, read on Events, Charges and
+   PaymentIntents → `STRIPE_SECRET_KEY`. Stripe's own guidance is that secret
+   keys are no longer recommended for new use cases because their permissions
+   cannot be limited.
+   **There is no publishable key in this build, and we will not set one** —
+   an unused `NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY` is an invitation for someone to
+   add Stripe.js later and quietly break the CSP.
 3. Developers → Webhooks → Add endpoint →
    `https://guardtheory.net/api/webhooks/stripe`, events
    `checkout.session.completed`, `checkout.session.async_payment_succeeded`,
    `charge.refunded`. Copy the **signing secret** → `STRIPE_WEBHOOK_SECRET`.
-4. **Stripe Tax**: Settings → Tax → complete the origin address (Los Angeles) and
-   the default product tax category. Then **register for California** under Tax →
-   Registrations, with the date your collection obligation starts. Without a
-   registration Stripe Tax calculates **zero tax** and does not error — you would
-   simply undercharge silently and owe the difference. This is the one setup step
-   with a real financial consequence if skipped.
+4. **Stripe Tax** — the one setup step with a real financial consequence:
+   - Settings → Tax → set the **head office to the Los Angeles address**. This is
+     load-bearing twice over, below.
+   - Set the preset product and shipping tax codes, and default tax behaviour to
+     **Automatic** (which resolves to exclusive for USD).
+   - **Register with the CDTFA**, then add the registration under Tax →
+     Registrations.
+
+   **California is not a threshold state for you.** Stripe's documentation is
+   explicit: *"If your head office in the tax settings page of the Dashboard is
+   in California, you're not a remote seller and you must register due to your
+   physical presence in the state."* Shipping from Los Angeles means
+   **registration is required from sale number one** — the $500,000 remote-seller
+   threshold does not apply.
+
+   California is also **origin-sourced** for the state, county and city portions
+   of the rate — only the district portion follows the customer. So the head
+   office address materially changes what a Sacramento buyer is charged.
+
+   **Without a registration Stripe Tax returns zero tax and does not error.** No
+   warning in the API response; the only signal is `taxability_reason:
+   "not_collecting"` in the breakdown, which is itself ambiguous — it also means
+   a nontaxable product code. A misconfigured Stripe Tax is indistinguishable
+   from a correct one on non-CA orders, so Phase 2 ends with a launch check:
+   place a test order to a California address and assert
+   `total_details.amount_tax > 0`.
 5. Local development uses the Stripe CLI: `stripe listen --forward-to
    localhost:3000/api/webhooks/stripe` prints a **third, different** signing
    secret for local use. Test/live/local are three distinct values.
@@ -731,8 +850,14 @@ POST https://api.goshippo.com/transactions/
 
 Four things that will otherwise cost a day each:
 
-- **`async` defaults to `true`.** Omit it and you get a `QUEUED` transaction with
-  no label and a polling loop you did not want. Send `async: false` on both calls.
+- **`async` defaults to `true`.** Omit it and you get a 2xx with no label, a
+  `QUEUED` status, and a polling loop you did not want. Send `async: false` on
+  both calls — as a **JSON boolean, not the string `"false"`**, which is a
+  long-standing source of "async does nothing" reports. Post JSON, not
+  form-encoding, so it stays a real boolean.
+- **Shippo expects a 2xx within three seconds** and retries only twice, only on
+  408/429/5xx. **Always return 200**, even for events you ignore, or you lose
+  them permanently. One indexed UPDATE fits; anything slower is deferred.
 - **`label_url` is a presigned S3 URL with an expiry in its query string.** It is
   not a permanent link. Download the PDF at purchase and store it in Blob
   ourselves; re-`GET /transactions/{id}` if a fresh URL is ever needed. Storing
@@ -740,7 +865,8 @@ Four things that will otherwise cost a day each:
 - **Send `label_file_type` explicitly.** Omitted, it falls back to a dashboard
   setting, which means someone changing a preference in a web UI silently changes
   what comes out of the printer. `PDF_4x6` for the thermal printer; `PDF` is the
-  8.5×11 plain-paper option, offered alongside it as the brief asks.
+  8.5×11 plain-paper option, offered alongside it as the brief asks. Note
+  `PDF_4x8` and `PDF_A5` are **not** among USPS's supported formats.
 - **`usps_first` and `usps_parcel_select` are dead** (July 2023). The service
   level token is `usps_ground_advantage`.
 
@@ -766,11 +892,21 @@ index.
 **Security, honestly.** Shippo offers three mechanisms. HMAC signing exists but
 is **not self-serve** — it requires emailing an account manager and takes up to
 ten business days, which is not available to a new account on a free plan. So v1
-ships with the two that are: a secret token in the webhook URL query string, plus
-an IP allowlist of Shippo's five US addresses. That is proportionate: the worst
-case of a forged tracking webhook is an order marked Delivered early. No money
-moves. Unlike the Stripe webhook, which is signature-verified and where the
-worst case is an invented order.
+ships with the two that are: a secret token **in the URL path segment** — not the
+query string, which lands in Vercel's request logs — compared timing-safe, plus
+Shippo's five US IPs as defence in depth, logged and alerted on rather than
+hard-blocked, since the published list carries no date.
+
+That is proportionate: the worst case of a forged tracking webhook is an order
+marked Delivered early. No money moves. Unlike the Stripe webhook, which is
+signature-verified and where the worst case is an invented order.
+
+The payload is never treated as authoritative either way: status only ever moves
+forward, only for a tracking number already in our database. Two more
+constraints — the webhook URL must be **under 200 characters**, which rules out
+long preview hostnames, and payloads carry a `test` boolean, so test and live
+each get their own registered endpoint or a preview deploy will corrupt real
+orders.
 
 Shippo retries twice on 5xx or a slow response, and **not at all** on other 4xx —
 so the handler returns 200 quickly and is idempotent, same as the Stripe one.
@@ -983,7 +1119,7 @@ server-only and never reaches the browser bundle.
 | `DATABASE_URL_UNPOOLED` | 1 | Same source | Vercel + `.env.local` | Direct connection. Migrations, `pg_dump`, anything using `SET` — PgBouncer transaction mode breaks those |
 | `BLOB_READ_WRITE_TOKEN` | 1 | Vercel → Storage → Blob → create store (auto-injected) | Vercel + `.env.local` | Server-side uploads only |
 | `NEXT_PUBLIC_BLOB_HOSTNAME` | 1 | `<store-id>.public.blob.vercel-storage.com` | Vercel + `.env.local` | Only to pin `images.remotePatterns`. Not a secret; public because it is read at build |
-| `STRIPE_SECRET_KEY` | 2 | Stripe → Developers → API keys | Vercel + `.env.local` | `sk_test_…` first. The **mode indicator reads this prefix**, so never a restricted key that hides it |
+| `STRIPE_SECRET_KEY` | 2 | Stripe → Developers → API keys | Vercel + `.env.local` | Prefer a **restricted key** (`rk_test_…`) scoped to Checkout Sessions + Refunds write, Events/Charges read. The mode indicator matches `^(sk|rk)_(test|live)_` |
 | `STRIPE_WEBHOOK_SECRET` | 2 | Stripe → Developers → Webhooks → your endpoint → Signing secret | Vercel + `.env.local` | **Different per mode and per endpoint.** Local dev uses the one `stripe listen` prints, which is a third distinct value |
 | `PORTAL_PASSWORD_HASH` | 3 | Generated locally: `node scripts/hash-password.mjs` | Vercel only | argon2id/scrypt hash. The plaintext never leaves your head |
 | `PORTAL_SESSION_SECRET` | 3 | `openssl rand -base64 32` | Vercel + `.env.local` | Signs the session cookie |
@@ -1184,7 +1320,7 @@ a storefront taking real money below that, because the Vercel Pro fee is fixed.
 | | |
 |---|---|
 | Stripe processing | standard card rate, deducted per charge — no monthly fee, no platform fee |
-| Stripe Tax | usage-based per calculated transaction |
+| Stripe Tax | **0.5%** per transaction in jurisdictions where you are registered (Tax Basic, Checkout integration). No monthly fee, no free tier |
 | USPS Ground Advantage | **~$6.95** cross-country for a sub-1lb parcel at Shippo's commercial rate ($7.90 retail) |
 | Shippo fee | **$0.00** under 30 labels/month, then ~7¢ |
 

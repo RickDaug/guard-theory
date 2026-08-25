@@ -50,38 +50,6 @@ export function Button({
   );
 }
 
-/**
- * A plain anchor wearing the same clothes.
- *
- * For destinations that must not be prefetched or client-navigated: a route
- * handler that performs a side effect and redirects off-site. `next/link` would
- * prefetch it, and prefetching a link that creates a Stripe Checkout Session
- * mints sessions for people who only hovered.
- *
- * It is also the shape the Content-Security-Policy requires. `form-action
- * 'self'` blocks the redirect that follows a form submission — verified against
- * Chrome in this repository, see docs/commerce-plan.md §0.1 — while a link
- * navigation and its redirect are governed by no shipped directive at all. So
- * checkout is a link, and this is the link.
- */
-type ButtonAnchorProps = {
-  intent?: Intent;
-  children: ReactNode;
-} & ComponentPropsWithoutRef<"a">;
-
-export function ButtonAnchor({
-  intent = "signal",
-  className = "",
-  children,
-  ...rest
-}: ButtonAnchorProps) {
-  return (
-    <a className={`${BASE} ${INTENT[intent]} ${className}`} {...rest}>
-      {children}
-    </a>
-  );
-}
-
 type ButtonLinkProps = {
   intent?: Intent;
   href: string;

@@ -3,9 +3,7 @@ import { pageMetadata } from "@/lib/metadata";
 import Link from "next/link";
 import { Breadcrumbs } from "@/components/site/Breadcrumbs";
 import { ButtonLink } from "@/components/ui/Button";
-import { STATUS_LABEL } from "@/content/products";
-import { effectivePriceCents, listProductViews, stockStatus } from "@/lib/catalogue";
-import { formatMoney } from "@/lib/money";
+import { PRODUCTS, STATUS_LABEL } from "@/content/products";
 
 export const metadata: Metadata = pageMetadata({
   title: "Shop",
@@ -29,17 +27,7 @@ const ROADMAP = [
   },
 ];
 
-/**
- * Reads live prices and stock, so it renders per request.
- *
- * A cached "available" is a lie with a delay on it. With no database configured
- * the read is a pure function of the content registry and costs nothing, which
- * is also what keeps `next build` working in CI without secrets.
- */
-export const dynamic = "force-dynamic";
-
-export default async function ShopPage() {
-  const products = await listProductViews();
+export default function ShopPage() {
   return (
     <main id="main" className="px-6 py-16 md:px-12">
       <div className="mx-auto max-w-[104rem]">
@@ -69,40 +57,24 @@ export default async function ShopPage() {
           </h2>
 
           <ul className="m-0 grid list-none gap-px bg-steel-dim p-0 lg:grid-cols-2">
-            {products.map((product) => {
-              const availability = stockStatus(product);
-              const priceCents = effectivePriceCents(product);
-
-              return (
-                <li key={product.slug} className="bg-ink">
-                  <Link
-                    href={`/shop/${product.slug}`}
-                    className="group flex h-full flex-col p-8 no-underline transition-colors duration-[140ms] ease-[var(--ease-control)] hover:bg-ink-raised"
-                  >
-                    <span className="notation text-2xs text-steel">
-                      {availability === "purchasable"
-                        ? "Available"
-                        : availability === "sold-out"
-                          ? "Sold out"
-                          : STATUS_LABEL["coming-soon"]}
-                    </span>
-                    <h3 className="display-condensed mt-5 text-xl text-chalk transition-colors duration-[140ms] ease-[var(--ease-control)] group-hover:text-signal-lift">
-                      {product.name} — {product.kind}
-                    </h3>
-                    <p className="mt-4 max-w-[34rem] text-sm text-steel">
-                      {product.summary}
-                    </p>
-                    {/* Rendered only when the owner has entered one. A product
-                        with no price says nothing about price. */}
-                    {priceCents !== null && product.commerce ? (
-                      <p className="display-condensed mt-6 text-lg text-chalk tabular-nums">
-                        {formatMoney(priceCents, product.commerce.currency)}
-                      </p>
-                    ) : null}
-                  </Link>
-                </li>
-              );
-            })}
+            {PRODUCTS.map((product) => (
+              <li key={product.slug} className="bg-ink">
+                <Link
+                  href={`/shop/${product.slug}`}
+                  className="group flex h-full flex-col p-8 no-underline transition-colors duration-[140ms] ease-[var(--ease-control)] hover:bg-ink-raised"
+                >
+                  <span className="notation text-2xs text-steel">
+                    {STATUS_LABEL[product.status]}
+                  </span>
+                  <h3 className="display-condensed mt-5 text-xl text-chalk transition-colors duration-[140ms] ease-[var(--ease-control)] group-hover:text-signal-lift">
+                    {product.name} — {product.kind}
+                  </h3>
+                  <p className="mt-4 max-w-[34rem] text-sm text-steel">
+                    {product.summary}
+                  </p>
+                </Link>
+              </li>
+            ))}
           </ul>
         </section>
 

@@ -32,8 +32,6 @@ const ROUTES = [
   { name: "faq", path: "/faq" },
   { name: "search", path: "/search" },
   { name: "privacy policy", path: "/policies/privacy" },
-  { name: "cart", path: "/cart" },
-  { name: "order confirmed", path: "/order/confirmed" },
   { name: "404", path: "/this-route-does-not-exist" },
 ] as const;
 

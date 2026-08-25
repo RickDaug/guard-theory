@@ -41,22 +41,10 @@ method), and country of manufacture.
 
 ## 4. Pricing
 
-**Decided 2026-08: prices are entered by the owner through the Crew Portal.**
-
-The codebase contains no price. `product.price_cents` is nullable and starts
-null, and the storefront renders a price only when the database holds one — so
-"never invent a fact" is now enforced by a schema rather than by a convention.
-
-Currency is USD, exclusive of tax: US sales tax is calculated and added at
-checkout by Stripe Tax, not folded into a displayed figure.
-
-**Blocks:** nothing further. `Product`/`Offer` structured data becomes permitted
-for a product that has a real price and real stock, and remains forbidden for
-one that does not. `tests/e2e/metadata.spec.ts` changes from asserting the
-absence of that schema to asserting its truthfulness — see
-docs/commerce-plan.md §1 for why that is a stronger guard rather than a weaker
-one. `AggregateRating` and `Review` stay forbidden outright; there are still no
-reviews.
+**Needed:** retail price per SKU and currency, and whether prices are
+inclusive of tax by market.
+**Blocks:** any `Product`/`Offer` structured data — which will remain absent
+until this and stock data are both real.
 
 ## 5. First Edition release date
 
@@ -84,36 +72,15 @@ needs changing, because nothing is currently phrased around its absence.
 
 The waitlist needs somewhere to send data.
 
-**Proposed 2026-08: Resend.** Free to start, $20/month in any month the list is
-mailed in bulk — the free tier caps at 100 messages a day, which order
-confirmations fit inside and an announcement does not. Awaiting owner approval
-and a verified sending domain; see docs/commerce-plan.md §6 for the DNS records
-and the alternatives that were weighed.
-
-**Needed:** approval, then the API key and a from-address on the verified domain.
-
-**Interim behaviour, updated:** storage and mail are no longer the same
-question. Signups now go to Postgres, which is durable, so nothing is waiting on
-a mail provider to avoid being lost. What is still waiting is the ability to
-*send* — announcements and order mail arrive in Phase 4.
+**Needed:** provider choice and API credentials.
+**Interim behaviour:** submissions are written to a local store and the code
+and docs say so plainly. No form silently discards input.
 
 ## 7. Commerce platform
 
-**Decided 2026-08: built in-house in this repository. Not Shopify.**
-
-The adapter layer this item asked for already existed and has now done its job:
-`src/lib/waitlist/index.ts` is "the one place a provider is chosen", and the
-store behind it changed from a local file to Postgres without a single change to
-the UI. Commerce follows the same shape.
-
-The stack is Neon Postgres, Vercel Blob for uploaded photography, Stripe hosted
-Checkout with Stripe Tax, and Shippo for USPS labels. Two new runtime
-dependencies in total. Payments deliberately use the hosted redirect rather than
-embedded Elements, so that no third-party script, frame or origin is introduced
-and the Content-Security-Policy survives unchanged — docs/commerce-plan.md §0.
-
-**Needed:** the accounts and credentials, listed with their costs in
-docs/commerce-plan.md §14 and §17.
+**Needed:** the platform account (Shopify or equivalent) and API credentials.
+**Interim behaviour:** a provider-agnostic adapter layer so the UI does not
+change when a real backend is connected.
 
 ## 8. Photography
 

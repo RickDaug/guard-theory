@@ -1,29 +1,13 @@
 /**
- * The product CONTENT model.
+ * The product content model.
  *
- * Still deliberately missing: price, stock level, rating, review count, release
- * date. That has not been relaxed — it has been enforced harder. Those values
- * now live in the database, entered by the owner through the Crew Portal, and
- * this model still cannot represent them. A registry file physically cannot
- * carry an invented price, which is a stronger guarantee than a rule about not
- * typing one.
- *
- * What a page renders is a ProductView — this content joined to whatever
- * commerce facts exist for the slug. See src/lib/catalogue. With no database
- * the join produces content and nothing else, and the page renders exactly as
- * it did before commerce: no price, no buy box, no claim about either.
- *
- * `Product`/`Offer` structured data is emitted only from a view that has a real
- * price and real stock — asserted in tests/e2e/metadata.spec.ts, which now
- * checks that what we publish is true rather than that we publish nothing.
+ * Deliberately missing: price, stock level, rating, review count, release date.
+ * None of those are known, and a model that cannot represent them is a model
+ * that cannot accidentally publish an invented one. When real values exist they
+ * are added here and to the structured-data emitter at the same time — see
+ * docs/structured-data-map.md.
  */
 
-/**
- * The status a product has before any database row exists for it — which is
- * also its status in a build with no database, and the only status the
- * registry itself can express. Everything else is a commercial fact and lives
- * in the `product` table.
- */
 export type ProductStatus = "coming-soon";
 
 /** A callout on the technical flat, keyed to the drawing by number. */

@@ -38,14 +38,7 @@ const SAMPLED = [
   "/policies/editorial",
 ];
 
-const NOINDEX = [
-  "/design-system",
-  "/search",
-  "/maintenance",
-  "/unsubscribe",
-  "/cart",
-  "/order/confirmed",
-];
+const NOINDEX = ["/design-system", "/search", "/maintenance", "/unsubscribe"];
 
 test("titles and descriptions are unique across the site", async ({ page }) => {
   test.setTimeout(120_000);
@@ -191,17 +184,8 @@ test("structured data parses and claims nothing untrue", async ({ page }) => {
     }
   }
 
-  // Commerce schema must be TRUE, not absent.
-  //
-  // This test used to assert that no Product or Offer appeared anywhere,
-  // because there was no price and no stock to describe. Prices are now entered
-  // by the owner (docs/owner-decisions.md item 4), so the rule it protects —
-  // "no Product/Offer schema without truthful data" — is asserted directly
-  // instead: where an Offer appears it must carry a real price, a real currency
-  // and an availability, and where there is no price no Offer may appear.
-  //
-  // AggregateRating and Review stay forbidden outright. There are still no
-  // reviews, and there is no owner decision pending that would create any.
+  // No Product or Offer anywhere: there is no price, no stock and no rating,
+  // and a waitlist is not a PreOrder.
   for (const path of ["/shop", "/shop/theory-01-long-sleeve", "/first-edition"]) {
     await page.goto(path, { waitUntil: "load" });
     const blocks = await page
@@ -209,52 +193,10 @@ test("structured data parses and claims nothing untrue", async ({ page }) => {
       .allTextContents();
 
     for (const block of blocks) {
-      expect(block, `${path} invents a rating or a review`).not.toMatch(
-        /"@type"\s*:\s*"(AggregateRating|Review)"/,
+      expect(block, `${path} emits commerce schema without truthful data`).not.toMatch(
+        /"@type"\s*:\s*"(Product|Offer|AggregateRating|Review)"/,
       );
-
-      const parsed: unknown = JSON.parse(block);
-      const nodes = Array.isArray(parsed) ? parsed : [parsed];
-
-      for (const node of nodes) {
-        const record = node as Record<string, unknown>;
-
-        if (record["@type"] !== "Product") {
-          continue;
-        }
-
-        const offer = record.offers as Record<string, unknown> | undefined;
-
-        expect(offer, `${path} emits a Product with no Offer`).toBeTruthy();
-
-        // A price that is absent, empty, zero or unparseable is exactly the
-        // invented value this rule exists to prevent.
-        const price = Number(offer?.price);
-        expect(
-          Number.isFinite(price) && price > 0,
-          `${path} emits an Offer with a price of "${String(offer?.price)}"`,
-        ).toBe(true);
-
-        expect(offer?.priceCurrency, `${path} emits an Offer with no currency`).toMatch(
-          /^[A-Z]{3}$/,
-        );
-
-        expect(
-          String(offer?.availability ?? ""),
-          `${path} emits an Offer with no availability`,
-        ).toMatch(/schema\.org\/(InStock|OutOfStock)$/);
-      }
     }
-  }
-
-  // The waitlist is not a PreOrder, and never becomes one.
-  await page.goto("/first-edition", { waitUntil: "load" });
-  for (const block of await page
-    .locator('script[type="application/ld+json"]')
-    .allTextContents()) {
-    expect(block, "the waitlist page describes itself as a purchasable thing").not.toMatch(
-      /"@type"\s*:\s*"(Product|Offer)"/,
-    );
   }
 
   // The figures index must not be readable as a ranking.

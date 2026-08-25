@@ -15,39 +15,6 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 20
 
-    # A real Postgres, so the waitlist and contact paths under test are the same
-    # ones production runs. A mock here would mean the only thing proven is that
-    # the mock works. `pg` talks to this container and to Neon's pooler through
-    # one code path, which is why that driver was chosen.
-    services:
-      postgres:
-        image: postgres:17-alpine
-        env:
-          POSTGRES_USER: guardtheory
-          POSTGRES_PASSWORD: guardtheory
-          POSTGRES_DB: guardtheory_test
-        ports:
-          - 5432:5432
-        options: >-
-          --health-cmd pg_isready
-          --health-interval 10s
-          --health-timeout 5s
-          --health-retries 5
-
-    env:
-      # sslmode=disable is what tells the client this local container offers no
-      # TLS. Neon does, and the same code reads that from its URL instead.
-      DATABASE_URL: postgresql://guardtheory:guardtheory@localhost:5432/guardtheory_test?sslmode=disable
-      DATABASE_URL_UNPOOLED: postgresql://guardtheory:guardtheory@localhost:5432/guardtheory_test?sslmode=disable
-      # A throwaway portal password, so the sign-in path is actually exercised
-      # rather than skipped. The hash is generated below from this value; the
-      # value itself is a fixture and unlocks nothing that exists.
-      PORTAL_TEST_PASSWORD: ci-only-portal-password-not-a-secret
-      # Enough for fulfilCheckoutSession to record an order's mode. No Stripe
-      # call is made with it — the integration tests build their own session
-      # fixtures rather than talking to Stripe.
-      STRIPE_SECRET_KEY: sk_test_ciFixtureNoNetworkCallsAreMadeWithThis
-
     steps:
       - uses: actions/checkout@v4
 
@@ -66,45 +33,8 @@ jobs:
       - name: Lint
         run: npm run lint --  --max-warnings 0
 
-      # ORDER MATTERS HERE, and both orderings have already been got wrong.
-      #
-      #   migrate  — tests/unit/fulfil.test.ts is an integration test that
-      #              drives order creation against a real Postgres and
-      #              deliberately refuses to skip when DATABASE_URL is set. Run
-      #              before the schema exists, its setup fails and all seven
-      #              cases are CANCELLED, which reports as "fail 0" and exits 1.
-      #
-      #   seed     — products, then the invented prices the checkout suite needs.
-      #              seed-e2e refuses to run against a database that already
-      #              holds orders, which is the guard working: those are made-up
-      #              figures and they belong nowhere near real ones. So it has
-      #              to run BEFORE the unit tests, which leave test orders behind.
-      #
-      #   unit     — last of the three, for the reason above.
-      - name: Apply migrations
-        run: npm run db:migrate
-
-      - name: Seed products and test fixtures
-        run: |
-          npm run db:seed
-          npm run db:seed-e2e
-
-      # Derived rather than stored, so there is no hash in the repository that
-      # could ever be mistaken for the real one.
-      - name: Generate a portal password hash for the run
-        run: |
-          HASH=$(node -e '
-            const { pathToFileURL } = require("node:url");
-            (async () => {
-              const { hashPassword } = await import(pathToFileURL("src/lib/portal/auth.ts").href);
-              process.stdout.write(await hashPassword(process.env.PORTAL_TEST_PASSWORD));
-            })();
-          ')
-          echo "PORTAL_PASSWORD_HASH=$HASH" >> "$GITHUB_ENV"
-
       - name: Unit tests
         run: npm run test:unit
-
 
       - name: Build
         run: npm run build

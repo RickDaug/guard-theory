@@ -152,6 +152,22 @@ protecting, or make the case for changing the rule.
   measurements were taken against a build that did not contain the change being
   measured. Always confirm the fix is in the served HTML before trusting a
   number.
+- **PGlite runs the full Playwright suite, but only at `--workers=1`.** Its
+  socket server takes one connection at a time; parallel workers reset it, which
+  reads as ECONNRESET and as the storefront falling back to content-only. That
+  was previously written down as "PGlite cannot do a full suite" — the limit is
+  concurrency, not duration. `npx playwright test tests/e2e --workers=1` against
+  `npm run db:local` passes 92/92. Two nearby red herrings:
+  `ERR_INSUFFICIENT_RESOURCES` on `/_next/static/*` is this machine running out
+  of headroom under parallel workers, not a database problem; and a script that
+  calls `process.exit()` without `closePool()` wedges the socket for the *next*
+  run, so the failure appears one command later than its cause.
+- **`next start` is production, so the no-database path is what e2e hits.**
+  Phase 1's rule is that production without `DATABASE_URL` REFUSES a waitlist
+  signup rather than accepting and dropping it. That is correct behaviour and it
+  makes `waitlist.spec.ts` and the `/first-edition` console check fail locally
+  unless a database is running. Start `npm run db:local` and migrate before
+  concluding anything from those two.
 - **Write control-character regexes with escape sequences**, not literal bytes.
   A class written as backslash-u-0000 through backslash-u-001F is fine; typing
   the actual bytes makes the source file read as binary to `grep` and `git

@@ -115,13 +115,15 @@ export function getMailProvider(): MailProvider {
  * Returns whether it was delivered so a caller can report honestly, but no
  * caller may treat false as a reason to fail.
  *
- * There is no `orderId` argument here, and no `order_id` column behind it,
- * for the same reason the order templates are absent: this build has no
- * orders. `feat/commerce` restores both together.
+ * `orderId` ties an order message to its order, which is how the portal shows
+ * each order's mail state. List mail and `test` pass nothing: `email_log`
+ * began without the column (0002_email_log.sql) and 0003_commerce.sql adds it,
+ * nullable, with its foreign key.
  */
 export async function sendEmail(
   template: EmailTemplate,
   email: Email,
+  orderId: string | null = null,
 ): Promise<boolean> {
   const mail = getMailProvider();
   const result = await mail.send(email);
@@ -135,10 +137,11 @@ export async function sendEmail(
   if (isDatabaseConfigured()) {
     try {
       await query(
-        `insert into email_log (id, to_email, template, provider_id, status, error)
-         values ($1, $2, $3, $4, $5, $6)`,
+        `insert into email_log (id, order_id, to_email, template, provider_id, status, error)
+         values ($1, $2, $3, $4, $5, $6, $7)`,
         [
           randomUUID(),
+          orderId,
           email.to.toLowerCase(),
           template,
           result.ok ? result.providerId : null,

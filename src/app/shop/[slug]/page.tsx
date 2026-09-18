@@ -3,8 +3,17 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { Breadcrumbs } from "@/components/site/Breadcrumbs";
 import { ButtonLink } from "@/components/ui/Button";
+import { BuyBox } from "@/components/product/BuyBox";
 import { GarmentFlat } from "@/components/product/GarmentFlat";
 import { PRODUCTS, STATUS_LABEL, getProduct } from "@/content/products";
+import {
+  effectivePriceCents,
+  getProductView,
+  hasPublishableOffer,
+  stockStatus,
+} from "@/lib/catalogue";
+import { toDecimalString } from "@/lib/money";
+import { absoluteUrl } from "@/lib/site";
 import { pageMetadata } from "@/lib/metadata";
 
 type Params = { params: Promise<{ slug: string }> };
@@ -26,23 +35,62 @@ export async function generateMetadata({ params }: Params): Promise<Metadata> {
 }
 
 /**
- * No Product or Offer structured data is emitted anywhere on this page.
+ * Product and Offer structured data is emitted here ONLY when it is true.
  *
- * There is no price, no availability and no review data, and a waitlist is not
- * a PreOrder. Emitting Product schema without truthful values would be both a
- * lie to readers and a policy violation. The conditions under which it may be
- * added are listed in docs/structured-data-map.md.
+ * The old rule was that none appeared at all, because there was no price and no
+ * availability and a waitlist is not a PreOrder. That has not been relaxed —
+ * hasPublishableOffer() is the same rule, now expressed as a condition instead
+ * of an absence, and tests/e2e/metadata.spec.ts asserts the emitted values
+ * rather than asserting emptiness. A product with no price still emits nothing.
+ *
+ * The page renders per request because stock and price can change between
+ * builds, and a cached "in stock" is a lie with a delay on it. With no database
+ * configured the read is a pure function of the registry and costs nothing.
  */
+export const dynamic = "force-dynamic";
+
 export default async function ProductPage({ params }: Params) {
   const { slug } = await params;
-  const product = getProduct(slug);
+  const product = await getProductView(slug);
   if (!product) notFound();
 
+  const availability = stockStatus(product);
+  const priceCents = effectivePriceCents(product);
+  const showOffer = hasPublishableOffer(product);
   const other = PRODUCTS.filter((p) => p.slug !== product.slug);
 
   return (
     <main id="main" className="px-6 py-16 md:px-12">
       <div className="mx-auto max-w-[104rem]">
+        {showOffer && priceCents !== null && product.commerce ? (
+          <script
+            type="application/ld+json"
+            // Not executable script, so the Content-Security-Policy does not
+            // apply to it. Emitted only when hasPublishableOffer() is true, so
+            // every value below is one the owner entered.
+            dangerouslySetInnerHTML={{
+              __html: JSON.stringify({
+                "@context": "https://schema.org",
+                "@type": "Product",
+                name: `${product.name} — ${product.kind}`,
+                description: product.summary,
+                sku: product.commerce.variants[0]?.sku,
+                url: absoluteUrl(`/shop/${product.slug}`),
+                offers: {
+                  "@type": "Offer",
+                  price: toDecimalString(priceCents),
+                  priceCurrency: product.commerce.currency,
+                  availability:
+                    availability === "purchasable"
+                      ? "https://schema.org/InStock"
+                      : "https://schema.org/OutOfStock",
+                  url: absoluteUrl(`/shop/${product.slug}`),
+                },
+              }),
+            }}
+          />
+        ) : null}
+
         <Breadcrumbs
           trail={[
             { href: "/shop", label: "Shop" },
@@ -89,7 +137,11 @@ export default async function ProductPage({ params }: Params) {
 
           <div className="lg:col-span-5">
             <p className="notation text-2xs text-steel">
-              {STATUS_LABEL[product.status]}
+              {availability === "purchasable"
+                ? "Available"
+                : availability === "sold-out"
+                  ? "Sold out"
+                  : STATUS_LABEL["coming-soon"]}
             </p>
             <h1 className="display-condensed mt-6 text-3xl text-chalk">
               {product.name}
@@ -102,20 +154,29 @@ export default async function ProductPage({ params }: Params) {
               {product.description}
             </p>
 
-            <div className="mt-10 border border-steel-dim p-6">
-              <p className="notation text-2xs text-orchid">
-                First Edition
-              </p>
-              <p className="mt-4 text-base text-steel">
-                Join the list and you will hear the moment it is available. One
-                message, no newsletter.
-              </p>
-              <div className="mt-7">
-                <ButtonLink href="/first-edition">
-                  Join the First Edition list
-                </ButtonLink>
+            {availability === "purchasable" && priceCents !== null && product.commerce ? (
+              <BuyBox
+                productName={product.name}
+                priceCents={priceCents}
+                compareAtCents={
+                  product.commerce.saleCents !== null ? product.commerce.priceCents : null
+                }
+                currency={product.commerce.currency}
+                variants={product.commerce.variants}
+              />
+            ) : (
+              <div className="mt-10 border border-steel-dim p-6">
+                <p className="notation text-2xs text-orchid">First Edition</p>
+                <p className="mt-4 text-base text-steel">
+                  {availability === "sold-out"
+                    ? "That run is finished. We do not quietly restock and call it a new release — join the list and you will hear when it returns."
+                    : "Join the list and you will hear the moment it is available. One message, no newsletter."}
+                </p>
+                <div className="mt-7">
+                  <ButtonLink href="/first-edition">Join the First Edition list</ButtonLink>
+                </div>
               </div>
-            </div>
+            )}
 
             <section aria-labelledby="specs" className="mt-14">
               <h2 id="specs" className="display-condensed mb-6 text-xl text-chalk">

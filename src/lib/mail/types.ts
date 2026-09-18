@@ -7,16 +7,19 @@
  */
 
 /**
- * One real message, plus "test". `feat/commerce` adds "order-confirmation",
- * "order-in-process" and "order-shipped" along with the orders that produce
- * them.
+ * Three order messages, the list announcement, and "test".
  *
  * "test" is what `scripts/mail/test-send.ts` logs under. It must not be
  * "announcement": the send path skips anyone `email_log` says already has the
  * announcement, so a test logged under that name would drop its recipient from
  * the real one.
  */
-export type EmailTemplate = "announcement" | "test";
+export type EmailTemplate =
+  | "order-confirmation"
+  | "order-in-process"
+  | "order-shipped"
+  | "announcement"
+  | "test";
 
 export type Email = {
   to: string;

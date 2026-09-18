@@ -75,9 +75,11 @@ dependencies did.
    build). Note: this branch only uses it to allow the host in
    `images.remotePatterns` — there is no upload code yet, so nothing reads
    `BLOB_READ_WRITE_TOKEN`.
-7. **Run `npm run db:migrate` against production** (0003, 0004) before the
-   merge — additive, and the running site does not read the new tables — then
-   `npm run db:seed` to create the two Theory 01 products as drafts.
+7. **Run `npm run db:migrate:production`** (0003, 0004, and the later ones this
+   branch adds) before the merge — additive, and the running site does not read
+   the new tables — then `npm run db:seed:production` to create the two Theory 01
+   products as drafts. Both print the host and refuse a remote one without the
+   `:production` form; read the host before letting it continue.
 8. **Enter real prices and stock in the portal**, then set the products
    active. The code and the seed contain no price.
 9. **Confirm the flat shipping rate.** `0003_commerce.sql` seeds

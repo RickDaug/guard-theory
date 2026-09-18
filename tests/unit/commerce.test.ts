@@ -9,7 +9,7 @@ import {
 } from "../../src/lib/catalogue/types.ts";
 import { parseCart, cartCount, MAX_QUANTITY_PER_LINE } from "../../src/lib/cart/types.ts";
 import { formatMoney, toDecimalString } from "../../src/lib/money.ts";
-import { stripeMode } from "../../src/lib/stripe/client.ts";
+import { stripeKeyRefusal, stripeMode } from "../../src/lib/stripe/client.ts";
 
 function view(overrides: Partial<ProductView> = {}): ProductView {
   return {
@@ -163,6 +163,46 @@ describe("money is cents, and one text node", () => {
     assert.equal(toDecimalString(6950), "69.50");
     assert.equal(toDecimalString(5), "0.05");
     assert.equal(toDecimalString(0), "0.00");
+  });
+});
+
+describe("a live Stripe key works in production and nowhere else", () => {
+  const env = (values: Record<string, string>) => values as unknown as NodeJS.ProcessEnv;
+
+  it("is refused on a preview, in development, and with no VERCEL_ENV at all", () => {
+    for (const VERCEL_ENV of ["preview", "development", "Production", "production ", ""]) {
+      assert.match(
+        stripeKeyRefusal(env({ STRIPE_SECRET_KEY: "rk_live_abc", VERCEL_ENV })) ?? "",
+        /LIVE Stripe key/,
+        JSON.stringify(VERCEL_ENV),
+      );
+    }
+    assert.notEqual(stripeKeyRefusal(env({ STRIPE_SECRET_KEY: "sk_live_abc" })), null);
+  });
+
+  it("is accepted in production", () => {
+    assert.equal(
+      stripeKeyRefusal(env({ STRIPE_SECRET_KEY: "rk_live_abc", VERCEL_ENV: "production" })),
+      null,
+    );
+  });
+
+  it("a test key is accepted everywhere, production included", () => {
+    for (const VERCEL_ENV of ["production", "preview", "development"]) {
+      assert.equal(stripeKeyRefusal(env({ STRIPE_SECRET_KEY: "sk_test_abc", VERCEL_ENV })), null);
+    }
+    assert.equal(stripeKeyRefusal(env({ STRIPE_SECRET_KEY: "sk_test_abc" })), null);
+  });
+
+  it("the CLI override cannot be switched on from inside a Vercel deployment", () => {
+    const base = { STRIPE_SECRET_KEY: "rk_live_abc", GUARD_THEORY_LIVE_STRIPE_CLI: "1" };
+    assert.equal(stripeKeyRefusal(env(base)), null, "a laptop, asked for by flag");
+    assert.notEqual(stripeKeyRefusal(env({ ...base, VERCEL: "1", VERCEL_ENV: "preview" })), null);
+  });
+
+  it("never echoes the key", () => {
+    const refusal = stripeKeyRefusal(env({ STRIPE_SECRET_KEY: "rk_live_SECRETPART" })) ?? "";
+    assert.doesNotMatch(refusal, /SECRETPART/);
   });
 });
 

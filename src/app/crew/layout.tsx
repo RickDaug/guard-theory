@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { stripeMode } from "@/lib/stripe/client";
+import { stripeKeyRefusal, stripeMode } from "@/lib/stripe/client";
 import { portalUrl } from "@/lib/portal/routes";
 
 export const metadata: Metadata = {
@@ -32,9 +32,23 @@ const NAV = [
 
 function ModeBanner() {
   const mode = stripeMode();
+  const refusal = stripeKeyRefusal();
+  const production = process.env.VERCEL_ENV === "production";
 
-  if (mode === "live") {
+  if (mode === "live" && !refusal) {
     return null;
+  }
+
+  if (refusal) {
+    return (
+      <p
+        role="status"
+        className="border-b border-signal-lift bg-graphite px-6 py-3 text-center text-sm text-chalk md:px-12"
+      >
+        A live Stripe key is set on a deployment that is not production, and it is being refused.
+        Nothing can be sold here. Put a test key on this environment.
+      </p>
+    );
   }
 
   return (
@@ -43,7 +57,9 @@ function ModeBanner() {
       className="border-b border-steel-dim bg-graphite px-6 py-3 text-center text-sm text-chalk md:px-12"
     >
       {mode === "test"
-        ? "Test mode. Orders taken here are not real and no money moves."
+        ? production
+          ? "TEST MODE ON THE LIVE SITE. Checkout works and takes no money: a real customer can place an order that is not real. Switch to the live key before opening."
+          : "Test mode. Orders taken here are not real and no money moves."
         : "Stripe is not configured, or its key is not readable. Nothing can be sold."}
     </p>
   );

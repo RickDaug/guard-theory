@@ -189,7 +189,13 @@ labelled, marked delivered, refunded.
 - Stripe: switch to live mode. Create a **new** restricted key (`rk_live_`) and
   a **new** webhook endpoint — same URL, same three events, same API version.
   Live endpoints have their own signing secret. Replace **`STRIPE_SECRET_KEY`**
-  and **`STRIPE_WEBHOOK_SECRET`** in Vercel.
+  and **`STRIPE_WEBHOOK_SECRET`** in Vercel — **in the Production environment
+  only**. The code refuses a live key anywhere else: on a Preview or Development
+  deployment it treats Stripe as not configured, checkout says it is
+  unavailable, and the portal banner says why. Keep the test key on Preview and
+  Development. A test key in Production is allowed — that is the rehearsal
+  above — and the portal says "TEST MODE ON THE LIVE SITE" on every page until
+  it is replaced.
 - Shippo: generate a live token (`shippo_live_`), replace
   **`SHIPPO_API_TOKEN`**, and register a separate live webhook. Shippo payloads
   carry a `test` flag and test and live need their own endpoints.

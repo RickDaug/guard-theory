@@ -98,7 +98,7 @@ From `grep process.env` / `env.` over `src`, `scripts`, `next.config.ts`:
 |---|---|
 | `DATABASE_URL`, `DATABASE_URL_UNPOOLED` | everything with data (already set in production) |
 | `DATABASE_POOL_MAX`, `DATABASE_POOL_IDLE_MS` | optional pool tuning |
-| `STRIPE_SECRET_KEY` | checkout, refunds, reconciliation, order mode (`sk_`/`rk_` + `test`/`live`) |
+| `STRIPE_SECRET_KEY` | checkout, refunds, reconciliation, order mode (`sk_`/`rk_` + `test`/`live`). A **live** key is refused unless `VERCEL_ENV` is `production`; a test key is accepted anywhere and bannered loudly in production. `scripts/reconcile.mjs --production` is the one off-Vercel exception. |
 | `STRIPE_WEBHOOK_SECRET` | `/api/webhooks/stripe` signature check |
 | `STRIPE_APPAREL_TAX_CODE` | optional; defaults to `txcd_30021000` — for the tax advisor to confirm |
 | `SHIPPO_API_TOKEN` | label purchase (`shippo_test_` / `shippo_live_`) |

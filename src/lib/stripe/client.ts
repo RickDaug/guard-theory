@@ -32,8 +32,45 @@ export function stripeSecretKey(): string | undefined {
   return key ? key : undefined;
 }
 
+/**
+ * A LIVE key is only usable in production.
+ *
+ * Vercel sets `VERCEL_ENV` to "production", "preview" or "development"; a local
+ * `next start` has none. A live key anywhere but production means a preview
+ * deployment — reachable by anyone with the URL, running an unreviewed branch —
+ * can take real money and write real orders. That is refused outright: Stripe
+ * counts as not configured, checkout says "unavailable", and the portal banner
+ * says why.
+ *
+ * The opposite mismatch, a TEST key in production, is allowed on purpose. It is
+ * how the shop is rehearsed end to end before launch, no money can move, and
+ * every order is stamped `test`. It is loud instead: the portal banner says so
+ * on every page. Returns the reason for a refusal, or null.
+ */
+export function stripeKeyRefusal(env: NodeJS.ProcessEnv = process.env): string | null {
+  if (stripeMode(env) !== "live") {
+    return null;
+  }
+
+  if (env.VERCEL_ENV === "production") {
+    return null;
+  }
+
+  // scripts/reconcile.mjs --production, run from a laptop when the portal is
+  // the thing that is broken. Honoured ONLY off Vercel: Vercel sets VERCEL=1 on
+  // every deployment, so setting this variable on a preview does nothing.
+  if (env.GUARD_THEORY_LIVE_STRIPE_CLI === "1" && env.VERCEL !== "1") {
+    return null;
+  }
+
+  return (
+    `a LIVE Stripe key is set outside production (VERCEL_ENV is ${env.VERCEL_ENV ?? "unset"}). ` +
+    "Refusing to use it. Use a test key here; the live key belongs to the Production environment only."
+  );
+}
+
 export function isStripeConfigured(): boolean {
-  return stripeSecretKey() !== undefined;
+  return stripeSecretKey() !== undefined && stripeKeyRefusal() === null;
 }
 
 export function stripe(): Stripe {
@@ -47,6 +84,14 @@ export function stripe(): Stripe {
     throw new Error(
       "STRIPE_SECRET_KEY is not set. Check isStripeConfigured() before reaching for the client.",
     );
+  }
+
+  const refusal = stripeKeyRefusal();
+
+  if (refusal) {
+    // Thrown here as well as reported by isStripeConfigured(), so a caller that
+    // forgot to ask still cannot get a live client on a preview.
+    throw new Error(`Stripe is unavailable: ${refusal}`);
   }
 
   client = new Stripe(key, {

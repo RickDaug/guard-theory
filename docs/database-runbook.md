@@ -9,8 +9,15 @@ Phase 1 of `docs/commerce-plan.md`.
 
 ### 1. Create the database
 
-Vercel dashboard → your project → **Storage** → **Neon** → create. Choose the
-region nearest Los Angeles.
+Vercel dashboard → your project → **Storage** → **Neon** → create.
+
+**Region: match the functions, not yourself.** Every query is made by a Vercel
+function, never by a browser in Los Angeles, so what costs milliseconds is the
+distance from the function to the database. This project sets no `regions`, so
+it runs in Vercel's default `iad1` (us-east-1) — and the database is in
+`aws-us-east-1`, beside it. An earlier draft of this file said to choose the
+region nearest Los Angeles; that was wrong, and following it would have put a
+continent of latency in every signup.
 
 This injects four variables into the project automatically. Two matter:
 
@@ -27,11 +34,44 @@ survivable at all.
 
 ### 2. Pull them locally
 
+**`vercel env pull` does not work for these.** It writes every key with an
+**empty value** — not only the Neon ones, the pre-existing `NEXT_PUBLIC_*` pair
+too. Vercel will not return a stored value through the CLI, and it fails
+silently: you get a plausible-looking `.env.local`, and `db:status` then reports
+`no DATABASE_URL_UNPOOLED or DATABASE_URL set` — which reads as a missing
+database rather than a hollow file. Confirmed 2026-09-17.
+
+Use the Neon CLI, which returns the real strings:
+
 ```
-vercel env pull .env.local
+npx neonctl@latest auth                          # once, opens a browser
+npx neonctl@latest orgs list                     # find the "Vercel: ..." org
+npx neonctl@latest projects list --org-id <org-id>
 ```
 
+Then write both, without echoing either to a terminal:
+
+```
+P=<project-id>
+{
+  echo "DATABASE_URL=$(npx neonctl@latest cs --project-id $P --pooled)"
+  echo "DATABASE_URL_UNPOOLED=$(npx neonctl@latest cs --project-id $P)"
+} > .env.local
+```
+
+`--pooled` is the only thing separating the two, and the pooled string is the
+one with `-pooler` in the hostname. Assert that before trusting the file.
+
+On Git Bash, prefix a raw `neon api /path` call with `MSYS_NO_PATHCONV=1`, or
+MSYS rewrites the leading slash to `C:/Program Files/Git/...` and the CLI
+rejects the path.
+
 `.env.local` is gitignored. Nothing else needs configuring.
+
+**Nothing loads `.env.local` on its own.** Node does not read it automatically,
+so until 2026-09-17 the `db:*` scripts ignored the very file this step creates,
+and these instructions could not have worked as written. They now run under
+`--env-file-if-exists=.env.local`.
 
 ### 3. Apply the schema
 
@@ -158,6 +198,21 @@ compute-hours a month and suspends until the next month when they are used up. A
 store with traffic trickling in around the clock never idles long enough to stay
 inside that. Watch the CU-hours graph in the Neon console during month one; the
 fix is the Launch plan, which is usage-billed with no monthly minimum.
+
+**Check the compute floor before you trust that budget.** 100 compute-hours is a
+CU-hour budget, not a clock, so what it buys depends entirely on the endpoint's
+minimum size. Vercel provisioned this one autoscaling **1 → 2 CU**, which spends
+the whole month in roughly 100 active hours — about three a day — while the
+estimate everyone was working from assumed the 0.25 CU floor and about four times
+that. It was lowered to **0.25 → 2 CU** on 2026-09-17, before any traffic. Check
+it after any re-provision:
+
+```
+MSYS_NO_PATHCONV=1 npx neonctl@latest api /projects/<project-id>/endpoints
+```
+
+A waitlist insert does not need a whole CU sitting warm, and autoscaling still
+takes it to 2 when something actually asks for it.
 
 **A migration failed.** It was rolled back — nothing is half-applied. Fix the SQL
 and run `npm run db:migrate` again.

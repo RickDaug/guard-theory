@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { SignInForm } from "./SignInForm";
+import { safeNextPath } from "@/lib/portal/routes";
 
 export const metadata: Metadata = {
   title: "Crew Portal",
@@ -25,7 +26,7 @@ export default async function SignInPage({
       <div className="mx-auto max-w-[26rem]">
         <p className="notation text-2xs text-orchid">Crew Portal</p>
         <h1 className="display-condensed mt-6 mb-12 text-3xl text-chalk">Sign in</h1>
-        <SignInForm next={next?.startsWith("/") ? next : undefined} />
+        <SignInForm next={safeNextPath(next) ?? undefined} />
       </div>
     </main>
   );

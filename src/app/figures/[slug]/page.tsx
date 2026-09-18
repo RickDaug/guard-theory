@@ -8,6 +8,7 @@ import { crossLinksFor } from "@/content/crosslinks";
 import { FIGURES, FIGURES_ALPHABETICAL, getFigure } from "@/content/figures";
 import { absoluteUrl } from "@/lib/site";
 import { pageMetadata } from "@/lib/metadata";
+import { serialiseJsonLd } from "@/lib/json-ld";
 
 type Params = { params: Promise<{ slug: string }> };
 
@@ -218,7 +219,7 @@ export default async function FigurePage({ params }: Params) {
 
       <script
         type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+        dangerouslySetInnerHTML={{ __html: serialiseJsonLd(jsonLd) }}
       />
     </main>
   );

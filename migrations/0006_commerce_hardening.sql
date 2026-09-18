@@ -49,3 +49,18 @@ create index if not exists checkout_intent_unpaid_idx
 -- Set, atomically, before Shippo is called; cleared if Shippo refuses. Two
 -- clicks used to both see "no tracking number" and both buy postage.
 alter table "order" add column if not exists label_claimed_at timestamptz;
+
+-- SIGN-IN ATTEMPTS -------------------------------------------------------------
+--
+-- The limiter was a Map in one function's memory: per instance, emptied by a
+-- cold start, and so no limit at all on a platform that runs many instances.
+-- This is the shared count. No address is stored — key_hash is a SHA-256 of the
+-- address and a server-side secret. Rows are deleted after a day.
+create table if not exists login_attempt (
+  id           bigint      generated always as identity primary key,
+  key_hash     text        not null,
+  succeeded    boolean     not null default false,
+  attempted_at timestamptz not null default now()
+);
+
+create index if not exists login_attempt_recent_idx on login_attempt (attempted_at);

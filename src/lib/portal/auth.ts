@@ -189,4 +189,27 @@ export function hashSessionToken(token: string): string {
 }
 
 export const SESSION_COOKIE = "gt_crew";
+
+/**
+ * The cookie's name, which in production carries the `__Host-` prefix.
+ *
+ * A browser only accepts a `__Host-` cookie if it is Secure, has Path=/ and has
+ * NO Domain attribute — so it can only have been set by this exact host over
+ * HTTPS, and a sibling subdomain or a plain-HTTP response cannot plant one over
+ * it. Both other conditions are already how the cookie is set. Not used in
+ * development because `next dev` on http://localhost sets a non-Secure cookie,
+ * which a browser would refuse under this name.
+ */
+export function sessionCookieName(env: NodeJS.ProcessEnv = process.env): string {
+  return env.NODE_ENV === "production" ? `__Host-${SESSION_COOKIE}` : SESSION_COOKIE;
+}
+
+/** Absolute lifetime: however busy the session, it ends. */
 export const SESSION_TTL_HOURS = 12;
+
+/**
+ * Idle lifetime: a session nobody has used for this long is over, even inside
+ * the twelve hours. `last_seen` was always written on every request and never
+ * read; this is what reads it.
+ */
+export const SESSION_IDLE_MINUTES = 120;

@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { stripeKeyRefusal, stripeMode } from "@/lib/stripe/client";
 import { portalUrl } from "@/lib/portal/routes";
+import { getSession } from "@/lib/portal/session";
 
 export const metadata: Metadata = {
   robots: { index: false, follow: false, nocache: true },
@@ -65,7 +66,18 @@ function ModeBanner() {
   );
 }
 
-export default function CrewLayout({ children }: { children: React.ReactNode }) {
+export default async function CrewLayout({ children }: { children: React.ReactNode }) {
+  // The sign-in page shares this layout and is public. Which Stripe mode the
+  // shop is in, and what the portal's sections are called, is nobody's business
+  // until they have signed in — so without a session the shell is empty. This
+  // is presentation, not authorisation: every page and action still checks for
+  // itself.
+  const session = await getSession();
+
+  if (!session) {
+    return <div className="min-h-screen">{children}</div>;
+  }
+
   return (
     <div className="min-h-screen">
       <ModeBanner />

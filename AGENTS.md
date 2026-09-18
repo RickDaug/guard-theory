@@ -194,6 +194,17 @@ protecting, or make the case for changing the rule.
   without `--production` (`scripts/db/guard.mjs`), so this mistake stops at a
   refusal — but `next build`, `next start` and Playwright have no such guard,
   and they read `.env.local` too. Still export both.
+- **The signed-in portal e2e test needs `DATABASE_POOL_IDLE_MS=1` on PGlite.**
+  A page and a route handler are separate bundles with a pool each under
+  `next start` too, not only under `next dev`. The test loads `/crew/learn` and
+  then fetches `/crew/list/export`; the page's pool is still holding PGlite's one
+  connection, the route handler's session lookup gets `ECONNRESET`, and the
+  fetch fails. With the idle timeout at 1ms the first pool lets go in time. The
+  test only runs at all when `PORTAL_PASSWORD_HASH` and `PORTAL_TEST_PASSWORD`
+  are exported (hash one with `hashPassword` from `src/lib/portal/auth.ts`); CI
+  sets neither, so it has only ever been run locally. `db:seed-e2e` clears
+  `login_attempt`, because the sign-in limiter is real and one wrong password
+  per run locks the suite out on the fifth run in fifteen minutes.
 - **After switching branches, run `npm install`.** `node_modules` belongs to
   whichever branch installed last. The commerce branch adds `stripe`; checked
   out over a tree installed from `main`, `next build` stopped at "Can't resolve

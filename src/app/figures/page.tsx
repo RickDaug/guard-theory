@@ -6,6 +6,7 @@ import Link from "next/link";
 import { Breadcrumbs } from "@/components/site/Breadcrumbs";
 import { FIGURES_ALPHABETICAL } from "@/content/figures";
 import { absoluteUrl } from "@/lib/site";
+import { serialiseJsonLd } from "@/lib/json-ld";
 
 export const metadata: Metadata = pageMetadata({
   title: "Influential figures",
@@ -107,7 +108,7 @@ export default function FiguresPage() {
 
       <script
         type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+        dangerouslySetInnerHTML={{ __html: serialiseJsonLd(jsonLd) }}
       />
     </main>
   );

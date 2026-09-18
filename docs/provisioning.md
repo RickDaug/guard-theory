@@ -194,10 +194,14 @@ Neon Instant Restore is continuous point-in-time restore within a history window
 survive noticing on Monday that Friday's migration corrupted orders, and it does
 not survive losing the account.
 
-`scripts/db/backup.mjs` exists for this: a nightly `pg_dump` over the
-**unpooled** string to object storage, kept 30 days. At this size that is a file
-measured in megabytes. Schedule it on day one, not later — on Free, six hours is
-the entire safety net. `docs/database-runbook.md` carries the restore procedure,
+`scripts/db/backup.mjs` exists for this, as `npm run db:backup`: a `pg_dump`
+over the **unpooled** string — or a JSON export of every row when `pg_dump` is
+not on PATH — written to `./backups`, which is gitignored. This document used to
+describe it as nightly, to object storage, kept 30 days. It is none of those:
+**nothing schedules it, it writes to the local disk, and nothing prunes it.**
+Someone has to run it and move the file somewhere that is not this laptop. At
+this size that is a file measured in megabytes. Start on day one, not later — on
+Free, six hours is the entire safety net. `docs/database-runbook.md` carries the restore procedure,
 and you should **rehearse a restore before Tier 3 puts money through it**.
 
 **What's still ahead:** re-landing commerce is merging PR #3, once Tier 1 covers

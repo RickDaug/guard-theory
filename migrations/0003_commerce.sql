@@ -1,4 +1,7 @@
--- 0002 — the commerce schema.
+-- 0003 — the commerce schema.
+--
+-- Numbered 0003, not 0002 as it was first written: 0002_email_log.sql shipped
+-- ahead of it and owns the email_log table. See the note at email_log below.
 --
 -- Money is integer cents throughout. There is no float anywhere near a price,
 -- and there never will be.
@@ -198,17 +201,24 @@ create table if not exists webhook_event (
   processed_at timestamptz
 );
 
-create table if not exists email_log (
-  id          text        primary key,
-  order_id    text        references "order"(id) on delete set null,
-  to_email    text        not null,
-  template    text        not null,
-  provider_id text,
-  status      text        not null check (status in ('sent', 'failed')),
-  error       text,
-  attempts    integer     not null default 1,
-  created_at  timestamptz not null default now()
-);
+-- email_log already exists: 0002_email_log.sql created it, without `order_id`,
+-- because that build had no orders for it to point at. This gives order mail
+-- its link back to the order.
+--
+-- Deliberately NOT `add column if not exists`. The one way this could already
+-- exist is a hand-edited database, and an `if not exists` would then skip the
+-- foreign key silently — the same trap a `create table if not exists` here
+-- would have been, which is why this file no longer creates the table. Better
+-- that the migration fails and says so.
+--
+-- Nullable, and `on delete set null`: list mail and test sends have no order,
+-- and deleting an order must not delete the record of what was sent about it.
+alter table email_log
+  add column order_id text
+  constraint email_log_order_id_fkey references "order"(id) on delete set null;
+
+-- The portal's order page lists every message sent about one order.
+create index if not exists email_log_order_idx on email_log (order_id, created_at desc);
 
 -- Owner-editable knobs. The flat shipping rate lives here so changing it is a
 -- text field in the portal rather than a deploy.

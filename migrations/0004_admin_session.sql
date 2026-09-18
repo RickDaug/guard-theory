@@ -1,4 +1,5 @@
--- 0003 — the Crew Portal's sessions.
+-- 0004 — the Crew Portal's sessions. (First written as 0003; renumbered
+-- along with the commerce schema when 0002_email_log.sql landed first.)
 --
 -- Server-side sessions rather than a self-contained signed token, for one
 -- reason: logging out, and revoking a stolen cookie, have to actually work. A

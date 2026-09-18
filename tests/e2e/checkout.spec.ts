@@ -20,9 +20,34 @@ import { expect, test } from "@playwright/test";
 
 const PRODUCT = "/shop/theory-01-long-sleeve";
 
-async function isPurchasable(page: import("@playwright/test").Page): Promise<boolean> {
+/**
+ * Fails — never skips — when the product page has no buy box.
+ *
+ * This used to be `test.skip(!isPurchasable)`, which contradicted the header
+ * above: with the local database wedged, the storefront falls back to
+ * content-only, the buy box disappears, and the four tests that exercise buying
+ * reported "skipped" in a run that otherwise read as green. A skip is not a
+ * pass, and nobody reads the skip count.
+ */
+async function requirePurchasable(page: import("@playwright/test").Page): Promise<void> {
   await page.goto(PRODUCT, { waitUntil: "load" });
-  return (await page.getByRole("button", { name: /add to cart|choose a size/i }).count()) > 0;
+  const buyButtons = await page
+    .getByRole("button", { name: /add to cart|choose a size/i })
+    .count();
+
+  if (buyButtons === 0) {
+    throw new Error(
+      `${PRODUCT} has no buy box, so the buying tests cannot run — and they do not skip.\n` +
+        "The storefront could not read a priced, in-stock product from the database. Locally:\n" +
+        "  1. Stop and restart `npm run db:local` (PGlite wedges after a dropped connection,\n" +
+        "     and an in-memory one forgets everything when it stops).\n" +
+        "  2. With DATABASE_URL and DATABASE_URL_UNPOOLED both pointing at it, run\n" +
+        "     `npm run db:migrate && npm run db:seed && npm run db:seed-e2e`.\n" +
+        "  3. Re-run `npx playwright test tests/e2e --workers=1`, which starts a fresh\n" +
+        "     `next start` — more than one worker resets PGlite's single connection.\n" +
+        "In CI the same three db steps run before this suite; check that they ran.",
+    );
+  }
 }
 
 const STRIPE_PAGE = "https://checkout.stripe.com/c/pay/cs_test_e2eFixture";
@@ -102,7 +127,7 @@ test.describe("cart", () => {
 
 test.describe("buying", () => {
   test("a priced, stocked product can be added and reaches the checkout button", async ({ page }) => {
-    test.skip(!(await isPurchasable(page)), "no priced product in this database");
+    await requirePurchasable(page);
 
     await page.goto(PRODUCT, { waitUntil: "load" });
 
@@ -129,7 +154,7 @@ test.describe("buying", () => {
   });
 
   test("checkout navigates the browser to the URL the server returns", async ({ page }) => {
-    test.skip(!(await isPurchasable(page)), "no priced product in this database");
+    await requirePurchasable(page);
 
     await answerCheckoutWith(page, { ok: true, url: `${STRIPE_PAGE}#fixture` });
 
@@ -148,7 +173,7 @@ test.describe("buying", () => {
   });
 
   test("a checkout that cannot start says so and leaves the cart alone", async ({ page }) => {
-    test.skip(!(await isPurchasable(page)), "no priced product in this database");
+    await requirePurchasable(page);
 
     await answerCheckoutWith(page, { ok: false, problem: "unavailable" });
 
@@ -164,7 +189,7 @@ test.describe("buying", () => {
   });
 
   test("a sold-out size is visible and cannot be bought", async ({ page }) => {
-    test.skip(!(await isPurchasable(page)), "no priced product in this database");
+    await requirePurchasable(page);
 
     await page.goto(PRODUCT, { waitUntil: "load" });
 

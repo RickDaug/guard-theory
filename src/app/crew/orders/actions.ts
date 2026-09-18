@@ -21,6 +21,7 @@ import {
 } from "@/lib/mail/templates";
 import { portalUrl } from "@/lib/portal/routes";
 import { buyUspsLabel, isShippoConfigured, refreshLabelUrl } from "@/lib/shipping/shippo";
+import { claimLabelPurchase, releaseLabelClaim } from "@/lib/orders/label";
 import type { PortalFormState } from "@/lib/portal/form-state";
 
 /** Every action authorises itself. A proxy matcher is not a boundary for these. */
@@ -87,6 +88,20 @@ export async function resolveUnfulfilled(
     : { status: "error", message: "That payment was not open. It may already be dealt with." };
 }
 
+/** A person has looked in Shippo and there is no label: the order may be tried again. */
+export async function releaseLabel(formData: FormData): Promise<void> {
+  await requireSession();
+
+  const id = text(formData, "id");
+
+  if (!id || id.length > 64) {
+    return;
+  }
+
+  await releaseLabelClaim(id);
+  revalidateOrders(id);
+}
+
 /** Tracking typed in by hand, for a label bought outside the portal. */
 export async function setTracking(
   _previous: PortalFormState,
@@ -144,9 +159,19 @@ export async function issueRefund(
 
     const [whole, fraction = ""] = cleaned.split(".");
     amountCents = Number(whole) * 100 + Number(fraction.padEnd(2, "0"));
+
+    // "99999999999999999999" passes the pattern and is not a number of cents
+    // any more: past 2^53 the arithmetic above has already rounded it.
+    if (!Number.isSafeInteger(amountCents) || amountCents <= 0) {
+      return { status: "error", message: "Enter an amount greater than zero." };
+    }
   }
 
-  const result = await refundOrder(id, amountCents);
+  // What the page showed as already refunded when this form was rendered.
+  const seen = text(formData, "refundedCents");
+  const expectedRefundedCents = /^\d{1,12}$/.test(seen) ? Number(seen) : undefined;
+
+  const result = await refundOrder(id, amountCents, { expectedRefundedCents });
 
   if (!result.ok) {
     return { status: "error", message: result.reason };
@@ -282,13 +307,23 @@ export async function buyLabel(
     return { status: "error", message: "That order no longer exists." };
   }
 
-  if (order.tracking_number) {
-    // Buying a second label for the same parcel is real money and two barcodes
-    // on one box. Refuse rather than let a double-click cost postage.
-    return {
-      status: "error",
-      message: "This order already has a tracking number. Clear it first if the label was wrong.",
+  // Buying a second label for the same parcel is real money and two barcodes
+  // on one box. The claim is one atomic UPDATE, taken BEFORE Shippo is called:
+  // of two simultaneous clicks, exactly one gets past this line.
+  const claim = await claimLabelPurchase(order.id);
+
+  if (!claim.claimed) {
+    const message: Record<typeof claim.why, string> = {
+      gone: "That order no longer exists.",
+      "has-tracking":
+        "This order already has a tracking number. Clear it first if the label was wrong.",
+      "in-progress": "A label is already being bought for this order. Give it a moment, then reload.",
+      abandoned:
+        "A label purchase for this order was started and never finished, so it may have gone through. " +
+        "Look in Shippo for a label for this order before buying another. If there is one, paste its " +
+        "tracking number here; if there is not, use Release below and buy again.",
     };
+    return { status: "error", message: message[claim.why] };
   }
 
   let label;
@@ -313,6 +348,9 @@ export async function buyLabel(
       "[guard-theory] label purchase failed:",
       error instanceof Error ? error.message : error,
     );
+    // Shippo answered, and the answer was no: nothing was bought, so the order
+    // may be tried again. (A timeout is different, and buyUspsLabel says so.)
+    await releaseLabelClaim(order.id).catch(() => {});
     return {
       status: "error",
       message:

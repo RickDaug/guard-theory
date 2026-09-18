@@ -1,9 +1,7 @@
 import { query } from "../db/client.ts";
 import { stripe, isStripeConfigured } from "../stripe/client.ts";
 import { fulfilCheckoutSession } from "./fulfil.ts";
-import { sendEmail } from "../mail/index.ts";
-import { orderConfirmation } from "../mail/templates.ts";
-import { getOrder, getOrderItems, toEmailShape } from "./manage.ts";
+import { ensureOrderConfirmationSent } from "./confirmation.ts";
 
 /**
  * Catching what the webhook missed.
@@ -65,16 +63,7 @@ export async function reconcileStripeSessions(
 
         // The customer never got a confirmation, because the webhook that
         // would have sent it never ran. Send it now.
-        const order = await getOrder(result.orderId);
-
-        if (order) {
-          const items = await getOrderItems(order.id);
-          await sendEmail(
-            "order-confirmation",
-            orderConfirmation(toEmailShape(order, items)),
-            order.id,
-          );
-        }
+        await ensureOrderConfirmationSent(result.orderId);
 
         console.log(
           `[guard-theory] reconciled order ${result.orderNumber} from ${session.id}` +

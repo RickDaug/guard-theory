@@ -64,6 +64,8 @@ export type OrderRow = {
   tracking_url: string | null;
   label_url: string | null;
   shippo_transaction_id: string | null;
+  /** Set while a label is being bought; see src/lib/orders/label.ts. */
+  label_claimed_at: Date | null;
   placed_at: Date;
   shipped_at: Date | null;
 };

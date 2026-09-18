@@ -300,6 +300,69 @@ describe("the Stripe webhook, with a valid signature", { skip: !HAS_DB && "no DA
     await query("delete from webhook_event where id = $1", [event.id]);
   });
 
+  it("sends the confirmation on the retry when the first delivery died before it", async () => {
+    // First delivery: order committed, then the function was killed — no email,
+    // claim left behind. Reproduced by doing exactly that much by hand.
+    const intentId = await makeIntent();
+    const session = sessionObject({ client_reference_id: intentId });
+    const event = completed(session);
+
+    const { fulfilCheckoutSession } = await import("../../src/lib/orders/fulfil.ts");
+    const made = await fulfilCheckoutSession(session as never);
+    assert.equal(made.outcome, "created");
+    await query(
+      `insert into webhook_event (id, source, type, received_at)
+       values ($1, 'stripe', $2, now() - make_interval(secs => $3))`,
+      [event.id, event.type, STALE_CLAIM_SECONDS + 30],
+    );
+
+    const orderId = (await ordersFor(session.id))[0]!.id;
+    const before = await query("select id from email_log where order_id = $1", [orderId]);
+    assert.equal(before.length, 0);
+
+    // Stripe's retry. The order is "already recorded" — and the buyer still
+    // gets their email, once.
+    assert.equal((await handleStripeWebhook(signed(event))).status, 200);
+    assert.equal((await handleStripeWebhook(signed(event))).status, 200);
+
+    const log = await query<{ template: string }>(
+      "select template from email_log where order_id = $1",
+      [orderId],
+    );
+    assert.deepEqual(log.map((row) => row.template), ["order-confirmation"]);
+    assert.equal((await ordersFor(session.id)).length, 1);
+  });
+
+  it("charge.refunded updates the order, in whatever order the events arrive", async () => {
+    const intentId = await makeIntent();
+    const session = sessionObject({ client_reference_id: intentId });
+    assert.equal((await handleStripeWebhook(signed(completed(session)))).status, 200);
+
+    const refunded = (amount: number) => ({
+      id: `evt_${randomUUID()}`,
+      object: "event",
+      type: "charge.refunded",
+      data: {
+        object: {
+          id: `ch_${randomUUID()}`,
+          object: "charge",
+          payment_intent: session.payment_intent,
+          amount_refunded: amount,
+        },
+      },
+    });
+
+    // The running totals 5000 and 2000, delivered newest first.
+    assert.equal((await handleStripeWebhook(signed(refunded(5000)))).status, 200);
+    assert.equal((await handleStripeWebhook(signed(refunded(2000)))).status, 200);
+
+    const rows = await query<{ refunded_cents: number; refund_status: string }>(
+      `select refunded_cents, refund_status from "order" where stripe_session_id = $1`,
+      [session.id],
+    );
+    assert.deepEqual(rows[0], { refunded_cents: 5000, refund_status: "partial" });
+  });
+
   it("ignores event types it does not handle without claiming them", async () => {
     const event = { ...completed(sessionObject()), type: "customer.created" };
     const response = await handleStripeWebhook(signed(event));

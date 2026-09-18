@@ -43,3 +43,9 @@ create index if not exists unfulfilled_payment_open_idx
 -- walks, so it never becomes a scan of every intent ever written.
 create index if not exists checkout_intent_unpaid_idx
   on checkout_intent (created_at) where consumed_at is null;
+
+-- ONE LABEL PER ORDER ---------------------------------------------------------
+--
+-- Set, atomically, before Shippo is called; cleared if Shippo refuses. Two
+-- clicks used to both see "no tracking number" and both buy postage.
+alter table "order" add column if not exists label_claimed_at timestamptz;

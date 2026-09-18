@@ -7,10 +7,8 @@ import {
   markEventProcessed,
   releaseEvent,
 } from "./fulfil.ts";
-import { getOrder, getOrderItems, toEmailShape } from "./manage.ts";
+import { ensureOrderConfirmationSent } from "./confirmation.ts";
 import { syncRefundFromCharge } from "./refund.ts";
-import { sendEmail } from "../mail/index.ts";
-import { orderConfirmation } from "../mail/templates.ts";
 
 /**
  * Stripe's webhook.
@@ -147,16 +145,11 @@ export async function handleStripeWebhook(request: Request): Promise<Response> {
       // paid order into a 500 that Stripe then retries against an order that
       // already exists. A failure is logged, recorded in email_log, and
       // resendable from the portal.
-      const order = await getOrder(result.orderId);
-
-      if (order) {
-        const items = await getOrderItems(order.id);
-        await sendEmail(
-          "order-confirmation",
-          orderConfirmation(toEmailShape(order, items)),
-          order.id,
-        );
-      }
+      await ensureOrderConfirmationSent(result.orderId);
+    } else if (result.outcome === "already-recorded") {
+      // A retry of an event whose first handler wrote the order and then died
+      // before the email. Sent now, unless the log shows it already went.
+      await ensureOrderConfirmationSent(result.orderId);
     }
 
     // "unfulfilled" reaches here too, and is marked processed on purpose: the

@@ -1,1 +1,5 @@
 migrations/*.sql text eol=lf
+# bash reads a carriage return as part of the command. With core.autocrlf on, a
+# Windows checkout would otherwise turn these into scripts that fail on line 1.
+*.sh text eol=lf
+tests/fixtures/fake-docker/docker text eol=lf

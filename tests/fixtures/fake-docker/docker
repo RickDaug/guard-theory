@@ -1,0 +1,29 @@
+#!/usr/bin/env bash
+#
+# A stand-in for `docker`, for tests/unit/backup-ci.test.ts. No network, no
+# database: it answers the three things scripts/db/backup-ci.sh asks a postgres
+# container for, from environment variables the test sets.
+#
+#   FAKE_VERSION     what `show server_version_num` prints; empty = cannot connect
+#   FAKE_DUMP        the file `pg_dump` writes to stdout
+#   FAKE_DUMP_ERROR  if set, pg_dump prints it to stderr and fails
+#   FAKE_TOC         what `pg_restore --list` prints
+
+case "$*" in
+  *server_version_num*)
+    [ -n "${FAKE_VERSION:-}" ] || { echo "psql: error: ${FAKE_CONNECT_ERROR:-could not connect}" >&2; exit 2; }
+    echo " ${FAKE_VERSION} "
+    ;;
+  *pg_dump*)
+    if [ -n "${FAKE_DUMP_ERROR:-}" ]; then
+      echo "$FAKE_DUMP_ERROR" >&2
+      exit 1
+    fi
+    cat "$FAKE_DUMP"
+    ;;
+  *pg_restore*)
+    cat >/dev/null
+    printf '%s\n' "${FAKE_TOC:-}"
+    ;;
+  *) exit 99 ;;
+esac

@@ -1,18 +1,27 @@
 # Provisioning — the accounts commerce needs, in order
 
-**Status as of 2026-09-17.** The commerce build is complete and sits on
-`feat/commerce`. It is **still not** in production: it merged to `main` on
-2026-08-24 as `d166df9`, `main` auto-deploys, production had no `DATABASE_URL`,
-and Phase 1 deliberately *refuses* waitlist signups rather than losing them —
-so the merge took down the site's only conversion point and was reverted the
-same day (`970d52c`). Re-landing is `git revert 970d52c`, not a rebuild.
+**Status as of 2026-09-18.** The commerce build is complete. It is **still
+not** in production: it merged to `main` on 2026-08-24 as `d166df9`, `main`
+auto-deploys, production had no `DATABASE_URL`, and Phase 1 deliberately
+*refuses* waitlist signups rather than losing them — so the merge took down the
+site's only conversion point and was reverted the same day (`970d52c`).
+
+The re-land is the branch **`feat/commerce-reland`, draft PR #3**, cut from
+`feat/mail`. It is not `git revert 970d52c`, which is what this document used to
+say: `main` has moved since — the Postgres waitlist, then the mail layer — and
+the branch reconciles the old build with both. Its migrations are renumbered
+0003 and 0004, and the checkout hop is a server action rather than a redirect
+route. `docs/commerce-reland.md` on that branch records the differences.
+
+`docs/owner-checklist.md` covers the same ground as this document, cut down to
+the steps only the owner can take, in order.
 
 **Tier 2, and the account half of Tier 4, are no longer to-do.** Neon Postgres
 is provisioned and Phase 1 — the waitlist on Postgres — is live in production.
 Resend's domain is verified and its keys are set in Production, but nothing
 merged yet reads them: the mail layer sits on `feat/mail`, unmerged, so no mail
-sends. Both tiers below now describe what exists, not what to do next. Tiers 1,
-3, 5 and 6 have not moved and read as before.
+sends. Both tiers below now describe what exists, not what to do next. Tier 1
+was done on 2026-09-18. Tiers 3, 5 and 6 have not started.
 
 **Verified against production on 2026-08-31:**
 
@@ -23,47 +32,95 @@ sends. Both tiers below now describe what exists, not what to do next. Tiers 1,
 
 **Since then:** Tier 2 landed, adding `DATABASE_URL` and
 `DATABASE_URL_UNPOOLED`. Tier 4's account and DNS landed too, adding
-`RESEND_API_KEY` and `RECEIPT_FROM_EMAIL` — both Production only, nothing set
-for Preview. Six variables now, not two. Nothing else here has changed: the
-commerce build is still the reverted `d166df9`, so `/crew` and `/shop` should
-still read the same way.
+`RESEND_API_KEY` and `RECEIPT_FROM_EMAIL` — both Production only. Six variables
+the code reads now, not two. Nothing else here has changed: commerce is still
+unmerged, so `/crew` and `/shop` should still read the same way.
+
+**Checked again on 2026-09-18** with `vercel env ls production` and
+`vercel env ls preview`, names only:
+
+- **Production** holds the four variables set by hand —
+  `NEXT_PUBLIC_ALLOW_INDEXING`, `NEXT_PUBLIC_SITE_URL`, `RESEND_API_KEY`,
+  `RECEIPT_FROM_EMAIL` — and the Neon integration's set, which includes
+  `DATABASE_URL` and `DATABASE_URL_UNPOOLED`.
+- **Preview** holds the Neon integration's set and nothing else. No Resend
+  variable, and neither `NEXT_PUBLIC_*` one.
+- **No Stripe, Shippo or portal variable exists in either environment.**
+
+**The team moved to Pro on 2026-09-18.** The Vercel API reports
+`billing.plan: "pro"` for `chesstrophies-projects`. The Hobby line above is what
+was true on 2026-08-31 and is kept as the record of it. Tier 1 is done.
+
+---
+
+## The merge order
+
+Three branches are waiting, and they merge in this order:
+
+1. **`feat/mail`** — the mail layer. Both of its variables are already in
+   Production.
+2. **`feat/commerce-reland`, PR #3** — after Tiers 3, 5 and 6 below. Tier 1 is
+   already in place.
+3. **`feat/announcement-send`, PR #2** — last.
+
+The announcement goes last because of what the site has promised. The waitlist
+form, the FAQ and the confirmation page all say the same thing: "You will hear
+from us once, when the First Edition opens." That is one email, and it has to
+arrive when there is something to buy. A send path merged before the shop can
+take an order is a way to spend that one email early.
+
+**Migrations are applied to production before the merge that needs them, never
+after.** That is 2026-08-24 in one line. They are additive, and the running site
+does not read the new tables, so applying early costs nothing; applying late is
+an outage. `0003_commerce.sql` and `0004_admin_session.sql` go in before PR #3
+merges. PR #2 is expected to bring a `0005`; it is not on the branch yet, and
+the same rule will apply to it. `docs/commerce-reland.md` records
+`0002_email_log.sql`, from `feat/mail`, as already applied — run
+`npm run db:status` against production to confirm before relying on that.
 
 ---
 
 ## The order matters
 
 The tiers below are sequenced so that each one leaves production in a working
-state. **Do not skip ahead** — Tier 2 is what makes the waitlist safe again, and
-until Tier 1 is done, taking payment at all is a plan-terms violation.
+state. **Do not skip ahead** — Tier 2 is what made the waitlist safe again, and
+Tier 1 is what makes taking payment permitted at all. Both are now done.
 
 | Tier | What it unlocks | Cost | Status |
 |---|---|---|---|
-| 1 — Vercel Pro | The legal right to take payment on this host | $20/mo | not started |
+| 1 — Vercel Pro | The legal right to take payment on this host | $20/mo | **done — 2026-09-18** |
 | 2 — Neon Postgres | Phase 1: the waitlist on a real database | $0 | **done — live in production** |
 | 3 — Stripe | Purchasable products, checkout, tax, refunds | per-transaction | not started |
 | 4 — Resend | Order confirmation and status email | $0, $20/mo to announce | account + DNS done; send path on `feat/mail`, unmerged |
 | 5 — Shippo | USPS labels and tracking | $0 to 30 labels/mo | not started |
 | 6 — Crew Portal | Your own access to the portal | $0 | not started |
 
-Tiers 3, 5 and 6 can land separately, and in that order; none of them depend on
-Tier 4 landing first. Tier 2 alone was a complete, shippable improvement, and it
+Tiers 3, 5 and 6 are provisioned separately, and in that order. The code that
+reads all three merges once, as PR #3, after `feat/mail` — see "The merge
+order" above. Tier 2 alone was a complete, shippable improvement, and it
 has shipped.
 
 ---
 
-## Tier 1 — Vercel Pro ($20/month)
+## Tier 1 — Vercel Pro ($20/month) — done
 
-**Do this first, before any payment code is live.** Vercel's Fair Use policy
-defines taking payment as commercial use, and Hobby is non-commercial only. The
-team is on Hobby today.
+**This had to come first, before any payment code is live.** Vercel's Fair Use
+policy defines taking payment as commercial use, and Hobby is non-commercial
+only. The team was on Hobby until 2026-09-18 and is on **Pro** now. Selling
+requires it to stay there: a downgrade puts the shop back outside the plan's
+terms.
 
-1. Vercel dashboard → team `chesstrophies-projects` → Settings → Billing →
-   upgrade to **Pro**.
+1. ~~Vercel dashboard → team `chesstrophies-projects` → Settings → Billing →
+   upgrade to **Pro**.~~ Done 2026-09-18.
 
 Note: Vercel's own password protection is a **$150/month** add-on. That is why
 the Crew Portal's auth is built in-app (Tier 6) rather than bought.
 
-**Verify:** the team's plan reads `pro`.
+**Verify:** the team's plan reads `pro`. Checked 2026-09-18:
+
+```
+npx vercel api "/v2/teams?slug=chesstrophies-projects"     # billing.plan
+```
 
 ---
 
@@ -145,19 +202,26 @@ Neon Instant Restore is continuous point-in-time restore within a history window
 survive noticing on Monday that Friday's migration corrupted orders, and it does
 not survive losing the account.
 
-`scripts/db/backup.mjs` exists for this: a nightly `pg_dump` over the
-**unpooled** string to object storage, kept 30 days. At this size that is a file
-measured in megabytes. Schedule it on day one, not later — on Free, six hours is
-the entire safety net. `docs/database-runbook.md` carries the restore procedure,
+`scripts/db/backup.mjs` exists for this, as `npm run db:backup`: a `pg_dump`
+over the **unpooled** string — or a JSON export of every row when `pg_dump` is
+not on PATH — written to `./backups`, which is gitignored. This document used to
+describe it as nightly, to object storage, kept 30 days. It is none of those:
+**nothing schedules it, it writes to the local disk, and nothing prunes it.**
+Someone has to run it and move the file somewhere that is not this laptop. At
+this size that is a file measured in megabytes. Start on day one, not later — on
+Free, six hours is the entire safety net. `docs/database-runbook.md` carries the restore procedure,
 and you should **rehearse a restore before Tier 3 puts money through it**.
 
-**What's still ahead:** re-landing commerce is `git revert 970d52c`, once Tier 1
-covers taking payment. Migrations are already applied in production — Phase 1
-would not be live otherwise — and `docs/database-runbook.md` steps 3–4 cover
-running them again on a fresh branch and importing the old NDJSON waitlist
-records if that has not been done yet. Products seed as **drafts with
-`price_cents` NULL** by design — nothing is purchasable until you enter a price
-in the portal.
+**What's still ahead:** re-landing commerce is merging PR #3, once the tiers
+below have put their variables in Production. Tier 1 already covers taking
+payment.
+`0001` is applied in production — Phase 1 would not be live otherwise — and
+`docs/database-runbook.md` step 3 covers running migrations. **There is no
+import step.** An earlier version of this document pointed at one; the old
+NDJSON store held only Playwright fixtures, so the import was retired and its
+script does not exist on `main`. Products seed as **drafts with `price_cents`
+NULL** by design — nothing is purchasable until you enter a price in the
+portal.
 
 ---
 
@@ -165,10 +229,19 @@ in the portal.
 
 **Stay in Test mode for all of this. Every step is reversible and costs nothing.**
 
-1. Create the account. Leave the dashboard toggle in **Test mode**.
+1. Create the account — **a Guard Theory account, separate from any other
+   business's**. Payouts, tax registrations and the seller's permit all attach
+   to the account, and they are hard to untangle afterwards. Leave the dashboard
+   toggle in **Test mode**.
 2. Developers → API keys → create a **restricted key** (`rk_test_…`), scoped to
    **write** on Checkout Sessions and Refunds, **read** on Events, Charges and
    PaymentIntents → `STRIPE_SECRET_KEY`.
+   The code makes exactly three API calls: `checkout.sessions.create`,
+   `checkout.sessions.list` (the reconciler) and `refunds.create`. The two write
+   scopes cover those. No call in the code today exercises the three read
+   scopes, and whether Stripe wants PaymentIntents read for a refund made
+   against a PaymentIntent has not been tested — so keep them, and let a
+   test-mode order and refund settle it.
    Stripe's own guidance is that plain secret keys are no longer recommended for
    new use cases, because their permissions cannot be limited.
    **There is no publishable key in this build and you should not set one.** An
@@ -179,10 +252,28 @@ in the portal.
    `checkout.session.completed`,
    `checkout.session.async_payment_succeeded`,
    `charge.refunded`.
+   Those three are everything the handler acts on
+   (`src/app/api/webhooks/stripe/route.ts`). Any other event is answered 200 and
+   ignored.
+   **Set the endpoint's API version to `2026-07-29.dahlia`.** That is the
+   version the installed SDK (`stripe@22.5.0`) is built against, exported as
+   `STRIPE_API_VERSION` in `src/lib/stripe/client.ts`. The code does not set a
+   version on the client, so the pin that matters is this one. On an older
+   version the shipping address is not at
+   `collected_information.shipping_details`, and the failure is not at checkout
+   — it is days later, when a label cannot be bought.
    Copy the **signing secret** → `STRIPE_WEBHOOK_SECRET`.
-4. Set `STRIPE_APPAREL_TAX_CODE` to **`txcd_30070014`** (Martial Arts Attire).
-   More granular than Athletic Activity Clothing, which Stripe's own entry says
-   to prefer against.
+4. **Decide the apparel tax code.** `STRIPE_APPAREL_TAX_CODE` is **optional**.
+   Unset, the code uses **`txcd_30021000`** (Athletic Activity Clothing). An
+   earlier version of this document called the variable required and gave
+   `txcd_30070014` (Martial Arts Attire) as its value; the code has never
+   required it. The two behave identically in California, which taxes clothing
+   at the full rate. They can differ in states that exempt general clothing but
+   tax athletic wear — New York, New Jersey, Pennsylvania, Massachusetts — which
+   only matters once there is a registration in one of them. Stripe's guidance
+   is that the classification is the seller's to make. **This is an owner
+   decision, for a tax adviser to confirm**; nothing here asserts which code is
+   right. Shipping is fixed in code at `txcd_92010001`.
 
 ### Stripe Tax — the one step with a real financial consequence
 
@@ -268,7 +359,12 @@ no contract and no volume minimum.
 1. Create the account. Test tokens begin `shippo_test_` → `SHIPPO_API_TOKEN`.
    (The portal detects and displays Shippo's mode from the key prefix, the same
    way it does Stripe's.)
-2. Register a tracking webhook → `SHIPPO_WEBHOOK_TOKEN`.
+2. Register a tracking webhook. `SHIPPO_WEBHOOK_TOKEN` is **not issued by
+   Shippo** — it is a long random string of your own. It is the last path
+   segment of the URL you give Shippo,
+   `https://guardtheory.net/api/webhooks/shippo/<token>`, and the route compares
+   that segment against the variable. Shippo's webhooks are unsigned on a new
+   account, so the secret path is the authentication.
    Two constraints: the webhook URL must be **under 200 characters**, which rules
    out long preview hostnames; and payloads carry a `test` boolean, so **test and
    live each need their own registered endpoint** or a preview deploy will
@@ -293,7 +389,14 @@ no contract and no volume minimum.
    through 17 January 2027.
 
 Set the flat rate against **live rates today**, not any 2025 figure, and expect
-to revisit it in January. The portal makes that a text field, which is the point.
+to revisit it in January.
+
+**The flat rate is not editable in the portal.** This document used to say it
+was a text field. It is one row — `setting.shipping_flat_cents`, seeded to
+`700` ($7.00) by `migrations/0003_commerce.sql` and read by
+`src/lib/cart/price.ts` — and no portal screen writes to it. Changing it today
+is a SQL `update`. The $7.00 came from the original build, not from the owner,
+so it needs confirming before the first order either way.
 
 **One question to ask Shippo by email, not in code:** Shippo publishes two
 pricing structures — an app plan (5¢ own-carrier fee) and an API plan (7¢ after
@@ -309,11 +412,7 @@ Shippo's mock tracking numbers — `SHIPPO_DELIVERED`, `SHIPPO_TRANSIT`,
 
 ## Tier 6 — Crew Portal access
 
-1. Choose the portal's URL segment → `PORTAL_PATH`. It is unguessable by design:
-   nothing links to it, it is absent from the sitemap, every route is
-   `noindex, nofollow`, and it is in `robots.ts` disallow. Pick something with no
-   dictionary word in it.
-2. Generate the password hash:
+1. Generate the password hash:
 
    ```
    node scripts/hash-password.mjs
@@ -323,8 +422,24 @@ Shippo's mock tracking numbers — `SHIPPO_DELIVERED`, `SHIPPO_TRANSIT`,
    history or the process list. Copy the line it prints into
    `PORTAL_PASSWORD_HASH`.
 
+   **`PORTAL_PASSWORD_HASH` is the one required variable in this tier, and it
+   fails closed.** Unset, or not a recognisable scrypt hash, sign-in refuses
+   every password and logs why; it does not fall back to anything. Sign-in also
+   needs `DATABASE_URL`, because sessions are rows in `admin_session`.
+2. Optionally, choose a URL segment → `PORTAL_PATH`. **Optional, and read at
+   build time** — `next.config.ts` turns it into a rewrite, so changing it needs
+   a redeploy. Unset, the portal is at `/crew`. This document used to list it as
+   required. With or without it, nothing links to the portal, it is absent from
+   the sitemap, every route is `noindex, nofollow`, and the password is what
+   protects it. If you set one, pick something with no dictionary word in it.
+
 **Never set the plaintext password as an environment variable.** The build wants
 the hash and only the hash.
+
+**There is no `PORTAL_SESSION_SECRET`.** `docs/commerce-plan.md` §14, on the
+commerce branch, lists one for signing a session cookie. The code reads no such
+variable: the cookie carries a random token, and the session it names is a row
+in the database. Nothing is signed, so there is nothing to sign with.
 
 ---
 
@@ -339,23 +454,38 @@ integration; the rest you add by hand.
 | `DATABASE_URL_UNPOOLED` | 2 | yes — direct | **yes** |
 | `STRIPE_SECRET_KEY` | 3 | yes | no |
 | `STRIPE_WEBHOOK_SECRET` | 3 | yes | no |
-| `STRIPE_APPAREL_TAX_CODE` | 3 | yes — `txcd_30070014` | no |
+| `STRIPE_APPAREL_TAX_CODE` | 3 | optional — defaults to `txcd_30021000`; owner decision | no |
 | `RESEND_API_KEY` | 4 | yes | **yes** — nothing merged reads it yet |
 | `RECEIPT_FROM_EMAIL` | 4 | yes | **yes** — nothing merged reads it yet |
 | `SHIPPO_API_TOKEN` | 5 | yes | no |
-| `SHIPPO_WEBHOOK_TOKEN` | 5 | yes | no |
+| `SHIPPO_WEBHOOK_TOKEN` | 5 | yes — a random string of your own | no |
 | `SHIP_FROM_NAME` `_STREET1` `_CITY` `_STATE` `_ZIP` | 5 | yes — all five | no |
 | `SHIP_FROM_STREET2` `_PHONE` `_EMAIL` `_COUNTRY` | 5 | optional | no |
 | `SHIP_PARCEL_LENGTH_IN` `_WIDTH_IN` `_HEIGHT_IN` `_WEIGHT_OZ` | 5 | optional, defaulted | no |
-| `PORTAL_PATH` | 6 | yes | no |
-| `PORTAL_PASSWORD_HASH` | 6 | yes | no |
+| `PORTAL_PASSWORD_HASH` | 6 | yes — fails closed without it | no |
+| `PORTAL_PATH` | 6 | optional, build time — defaults to `/crew` | no |
+| `NEXT_PUBLIC_BLOB_HOSTNAME` | — | optional, build time — deferrable | no |
 | `NEXT_PUBLIC_SITE_URL` | — | already set | **yes** |
 | `NEXT_PUBLIC_ALLOW_INDEXING` | — | already set | **yes** |
 
-None of the four checked variables above are set for **Preview** — the Neon
-integration injects `DATABASE_*` there too (that is what per-preview branching
-in Tier 2 depends on), but `RESEND_API_KEY` and `RECEIPT_FROM_EMAIL` are
-Production-only today.
+**Preview is not empty.** `DATABASE_URL` and `DATABASE_URL_UNPOOLED` are set
+for Preview as well as Production — the Neon integration injects its whole set
+into both, which is what per-preview branching in Tier 2 depends on.
+`RESEND_API_KEY`, `RECEIPT_FROM_EMAIL` and both `NEXT_PUBLIC_*` variables are
+Production only. Every Stripe, Shippo and portal variable is missing from both.
+So a preview of the commerce branch has a database and nothing else: no
+checkout, no labels, no portal sign-in, and mail logged rather than sent.
+
+**`NEXT_PUBLIC_BLOB_HOSTNAME` can wait.** It does one thing: `next.config.ts`
+reads it at build time to add the Vercel Blob host to `images.remotePatterns`.
+There is no upload code on the commerce branch, so nothing is missing without
+it until a product photograph is served from Blob. For the same reason
+**nothing reads `BLOB_READ_WRITE_TOKEN`**, which `docs/commerce-plan.md` §14
+also lists.
+
+The code reads a few more that need no action: `DATABASE_POOL_MAX` and
+`DATABASE_POOL_IDLE_MS` (optional pool tuning), and `VERCEL` and
+`VERCEL_PROJECT_PRODUCTION_URL`, which Vercel sets itself.
 
 **Deliberately absent:** there is no publishable Stripe key, and there should not
 be one. See Tier 3.

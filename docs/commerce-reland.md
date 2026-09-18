@@ -75,9 +75,11 @@ dependencies did.
    build). Note: this branch only uses it to allow the host in
    `images.remotePatterns` — there is no upload code yet, so nothing reads
    `BLOB_READ_WRITE_TOKEN`.
-7. **Run `npm run db:migrate` against production** (0003, 0004) before the
-   merge — additive, and the running site does not read the new tables — then
-   `npm run db:seed` to create the two Theory 01 products as drafts.
+7. **Run `npm run db:migrate:production`** (0003, 0004, 0006, 0007 — 0005 is
+   PR #2's and neither needs the other) before the merge — additive, and the running site does not read
+   the new tables — then `npm run db:seed:production` to create the two Theory 01
+   products as drafts. Both print the host and refuse a remote one without the
+   `:production` form; read the host before letting it continue.
 8. **Enter real prices and stock in the portal**, then set the products
    active. The code and the seed contain no price.
 9. **Confirm the flat shipping rate.** `0003_commerce.sql` seeds
@@ -96,7 +98,7 @@ From `grep process.env` / `env.` over `src`, `scripts`, `next.config.ts`:
 |---|---|
 | `DATABASE_URL`, `DATABASE_URL_UNPOOLED` | everything with data (already set in production) |
 | `DATABASE_POOL_MAX`, `DATABASE_POOL_IDLE_MS` | optional pool tuning |
-| `STRIPE_SECRET_KEY` | checkout, refunds, reconciliation, order mode (`sk_`/`rk_` + `test`/`live`) |
+| `STRIPE_SECRET_KEY` | checkout, refunds, reconciliation, order mode (`sk_`/`rk_` + `test`/`live`). A **live** key is refused unless `VERCEL_ENV` is `production`; a test key is accepted anywhere and bannered loudly in production. `scripts/reconcile.mjs --production` is the one off-Vercel exception. |
 | `STRIPE_WEBHOOK_SECRET` | `/api/webhooks/stripe` signature check |
 | `STRIPE_APPAREL_TAX_CODE` | optional; defaults to `txcd_30021000` — for the tax advisor to confirm |
 | `SHIPPO_API_TOKEN` | label purchase (`shippo_test_` / `shippo_live_`) |

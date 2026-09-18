@@ -1,3 +1,5 @@
+import { readFileSync } from "node:fs";
+import path from "node:path";
 import { expect, test } from "@playwright/test";
 
 /**
@@ -10,6 +12,9 @@ import { expect, test } from "@playwright/test";
  * would break both — and a redirect is the correct answer for a navigation
  * anyway, which is usually the sign that a test is right rather than in the way.
  */
+
+/** `gt_crew` in development, `__Host-gt_crew` under `next start`. */
+const SESSION_COOKIE = /^(__Host-)?gt_crew$/;
 
 test.describe("portal access", () => {
   test("a signed-out visitor is redirected to sign in, never refused", async ({ request }) => {
@@ -49,6 +54,75 @@ test.describe("portal access", () => {
     expect(robots ?? "", "the portal must never be indexable").toContain("noindex");
   });
 
+  test("the sign-in page tells a stranger nothing about the shop", async ({ page }) => {
+    // It shares the portal layout, which used to show everyone the Stripe-mode
+    // banner and the portal's navigation.
+    await page.goto("/crew/sign-in", { waitUntil: "load" });
+
+    await expect(page.getByRole("navigation", { name: "Portal" })).toHaveCount(0);
+    await expect(page.getByText(/test mode|stripe/i)).toHaveCount(0);
+    // "First Edition" is also a link in the public header, so it proves nothing
+    // here; these two exist only in the portal's navigation.
+    for (const label of ["Orders", "Categories"]) {
+      await expect(page.getByRole("link", { name: label, exact: true })).toHaveCount(0);
+    }
+  });
+
+  test("a hostile `next` never reaches the sign-in form", async ({ page }) => {
+    for (const next of ["/\\evil.example", "/%09/evil.example", "//evil.example", "/shop"]) {
+      await page.goto(`/crew/sign-in?next=${next}`, { waitUntil: "load" });
+      await expect(page.locator('input[name="next"]')).toHaveCount(0);
+    }
+
+    await page.goto("/crew/sign-in?next=/crew/orders", { waitUntil: "load" });
+    await expect(page.locator('input[name="next"]')).toHaveValue("/crew/orders");
+  });
+
+  test("a portal action POSTed without a session does nothing", async ({ request }) => {
+    // Server actions are plain POSTs. Their ids are in the build output, so a
+    // stranger can find them; what must hold is that calling one gets nowhere.
+    const manifest = JSON.parse(
+      readFileSync(path.join(process.cwd(), ".next", "server", "server-reference-manifest.json"), "utf8"),
+    ) as { node: Record<string, { workers: Record<string, unknown> }> };
+
+    const ids = Object.entries(manifest.node)
+      .filter(([, entry]) => Object.keys(entry.workers).some((worker) => worker.includes("/crew/orders")))
+      .map(([id]) => id);
+
+    expect(ids.length, "no portal action ids found in the build manifest").toBeGreaterThan(0);
+
+    for (const id of ids) {
+      // No cookie: the proxy turns it away before the action is reached.
+      const bare = await request.post("/crew/orders", {
+        headers: { "Next-Action": id, "Content-Type": "text/plain;charset=UTF-8" },
+        data: "[]",
+        maxRedirects: 0,
+      });
+      expect(bare.status(), `${id} without a cookie`).toBeGreaterThanOrEqual(300);
+      expect(bare.status()).toBeLessThan(400);
+      expect(bare.headers()["location"] ?? "").toContain("/crew/sign-in");
+
+      // A made-up cookie gets past the proxy, which only checks that one is
+      // present — and then the action's own requireSession() refuses it.
+      const forged = await request.post("/crew/orders", {
+        headers: {
+          "Next-Action": id,
+          "Content-Type": "text/plain;charset=UTF-8",
+          Cookie: "__Host-gt_crew=forged; gt_crew=forged",
+          Origin: "http://127.0.0.1:3100",
+        },
+        data: "[]",
+        maxRedirects: 0,
+      });
+      // Next answers a thrown action with an error row in the flight payload —
+      // `1:E{"digest":…}` — and the status is 500 or 200 depending on how far the
+      // stream had got, so the row is what is asserted. It is NotAuthorised,
+      // thrown by requireSession() before the action reads its input.
+      const body = await forged.text();
+      expect(body, `${id} with a forged cookie must be refused`).toMatch(/^1:E\{"digest"/m);
+    }
+  });
+
   test("the portal is not in the sitemap", async ({ request }) => {
     const sitemap = await (await request.get("/sitemap.xml")).text();
     expect(sitemap).not.toContain("/crew");
@@ -83,7 +157,7 @@ test.describe("portal access", () => {
     // Still on the sign-in page, with no session cookie handed out.
     expect(page.url()).toContain("/crew/sign-in");
     const cookies = await page.context().cookies();
-    expect(cookies.find((c) => c.name === "gt_crew")).toBeUndefined();
+    expect(cookies.find((c) => SESSION_COOKIE.test(c.name))).toBeUndefined();
   });
 
   /**
@@ -108,7 +182,7 @@ test.describe("portal access", () => {
 
     const alert = page.locator("form").getByRole("alert");
     await expect(alert).toContainText(/not right/i);
-    expect((await page.context().cookies()).find((c) => c.name === "gt_crew")).toBeUndefined();
+    expect((await page.context().cookies()).find((c) => SESSION_COOKIE.test(c.name))).toBeUndefined();
 
     await page.getByLabel(/password/i).fill(process.env.PORTAL_TEST_PASSWORD!);
     await page.getByRole("button", { name: /^sign in$/i }).click();
@@ -116,7 +190,7 @@ test.describe("portal access", () => {
     await page.waitForURL(/\/crew(\?|$)/);
     await expect(page.getByRole("heading", { level: 1, name: /today/i })).toBeVisible();
 
-    const cookie = (await page.context().cookies()).find((c) => c.name === "gt_crew");
+    const cookie = (await page.context().cookies()).find((c) => SESSION_COOKIE.test(c.name));
     expect(cookie, "a session cookie must be set").toBeTruthy();
     expect(cookie!.httpOnly, "the session cookie must be httpOnly").toBe(true);
     expect(cookie!.sameSite).toBe("Lax");

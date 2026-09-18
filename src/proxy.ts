@@ -1,5 +1,5 @@
 import { NextResponse, type NextRequest } from "next/server";
-import { SESSION_COOKIE } from "@/lib/portal/auth";
+import { sessionCookieName } from "@/lib/portal/auth";
 import { PORTAL_ROOT, hasCustomPortalPath, portalUrl } from "@/lib/portal/routes";
 
 /**
@@ -47,7 +47,7 @@ export function proxy(request: NextRequest): NextResponse {
     return NextResponse.next();
   }
 
-  if (!request.cookies.get(SESSION_COOKIE)?.value) {
+  if (!request.cookies.get(sessionCookieName())?.value) {
     const url = request.nextUrl.clone();
     url.pathname = signIn;
     // Where they were heading, so signing in lands them there rather than on a

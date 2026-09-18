@@ -1,6 +1,6 @@
 import type Stripe from "stripe";
 import { SITE_URL } from "../site.ts";
-import type { PricedLine } from "../cart/types.ts";
+import { CHECKOUT_SESSION_MINUTES, type PricedLine } from "../cart/types.ts";
 import { stripe } from "./client.ts";
 
 /**
@@ -39,8 +39,27 @@ export type SessionInput = {
   currency: string;
 };
 
-export async function createCheckoutSession(input: SessionInput): Promise<Stripe.Checkout.Session> {
+/**
+ * When the session stops being payable, as a Unix timestamp.
+ *
+ * Stock is not reserved while a buyer sits on the payment page, so the life of
+ * the session IS the oversell window. The default is 24 hours; the minimum is
+ * 30 minutes from creation, measured on the provider's clock, so the target is
+ * CHECKOUT_SESSION_MINUTES plus a margin: snapped to the whole minute, the
+ * result is always between one and two minutes over. The snapping is for the
+ * idempotency key — see below.
+ */
+export function sessionExpiresAt(nowMs: number = Date.now()): number {
+  const minute = Math.floor(nowMs / 60_000);
+  return (minute + CHECKOUT_SESSION_MINUTES + 2) * 60;
+}
+
+export async function createCheckoutSession(
+  input: SessionInput,
+  nowMs: number = Date.now(),
+): Promise<Stripe.Checkout.Session> {
   const { intentId, lines, shippingCents, currency } = input;
+  const expiresAt = sessionExpiresAt(nowMs);
 
   if (lines.length === 0) {
     throw new Error("Refusing to create a Checkout Session for an empty cart.");
@@ -109,13 +128,19 @@ export async function createCheckoutSession(input: SessionInput): Promise<Stripe
       // payment in the dashboard, on a dispute, and on a refund.
       payment_intent_data: { metadata: { intent_id: intentId } },
 
+      expires_at: expiresAt,
+
       success_url: `${SITE_URL}/order/confirmed?session_id={CHECKOUT_SESSION_ID}`,
       cancel_url: `${SITE_URL}/cart`,
     },
     {
       // A double-click, or a retry after a timeout, must not create a second
       // session. The intent id is stable for the life of this priced cart.
-      idempotencyKey: `checkout:${intentId}`,
+      // The expiry is part of the key because a reused key with different
+      // parameters is rejected, and `expires_at` is a parameter: two clicks in
+      // the same minute share a key and get the same session back; two clicks
+      // a minute apart are two requests, honestly.
+      idempotencyKey: `checkout:${intentId}:${expiresAt}`,
     },
   );
 }

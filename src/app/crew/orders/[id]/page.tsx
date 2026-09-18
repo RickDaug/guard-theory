@@ -2,7 +2,7 @@ import { notFound } from "next/navigation";
 import Link from "next/link";
 import { requirePortalPage } from "@/lib/portal/guard";
 import { portalUrl } from "@/lib/portal/routes";
-import { clearFlag } from "../actions";
+import { clearFlag, releaseLabel } from "../actions";
 import {
   getOrder,
   getOrderItems,
@@ -190,6 +190,18 @@ export default async function OrderPage({ params }: { params: Promise<{ id: stri
                   labelUrl={order.label_url}
                   configured={isShippoConfigured()}
                 />
+                {order.label_claimed_at && !order.tracking_number ? (
+                  <form action={releaseLabel} className="flex flex-col items-start gap-3">
+                    <input type="hidden" name="id" value={order.id} />
+                    <p className="max-w-[46rem] text-sm text-steel">
+                      A label purchase was started for this order and did not record a result. Look
+                      in Shippo first. Release it only if there is no label there.
+                    </p>
+                    <Button type="submit" intent="quiet">
+                      Release, there is no label in Shippo
+                    </Button>
+                  </form>
+                ) : null}
                 <TrackingControl id={order.id} trackingNumber={order.tracking_number} />
               </>
             ) : order.tracking_number ? (
@@ -219,6 +231,7 @@ export default async function OrderPage({ params }: { params: Promise<{ id: stri
               <RefundControl
                 id={order.id}
                 remainingLabel={formatMoney(remaining, order.currency)}
+                refundedCents={order.refunded_cents}
               />
             ) : (
               <p className="text-base text-steel">This order has been refunded in full.</p>

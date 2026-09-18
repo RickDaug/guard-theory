@@ -201,6 +201,25 @@ protecting, or make the case for changing the rule.
   `npm run db:migrate` leaves `DATABASE_URL_UNPOOLED` pointing at Neon, and that
   is the one the script uses. For local PGlite work export **both**, to the
   same local URL, for the migrate, seed, build and Playwright commands alike.
+  The migrate and seed scripts now print the host and refuse a non-loopback one
+  without `--production` (`scripts/db/guard.mjs`), so this mistake stops at a
+  refusal — but `next build`, `next start` and Playwright have no such guard,
+  and they read `.env.local` too. Still export both.
+- **The signed-in portal e2e test needs `DATABASE_POOL_IDLE_MS=1` on PGlite.**
+  A page and a route handler are separate bundles with a pool each under
+  `next start` too, not only under `next dev`. The test loads `/crew/learn` and
+  then fetches `/crew/list/export`; the page's pool is still holding PGlite's one
+  connection, the route handler's session lookup gets `ECONNRESET`, and the
+  fetch fails. With the idle timeout at 1ms the first pool lets go in time. The
+  test only runs when `PORTAL_PASSWORD_HASH` and `PORTAL_TEST_PASSWORD` are
+  exported. CI derives both (see `ci.yml`) and runs it against a real Postgres,
+  which has no such limit; locally it skips unless you export them yourself
+  (hash one with `hashPassword` from `src/lib/portal/auth.ts`), and then it
+  needs the idle setting above. `db:seed-e2e` also refuses a database that
+  already holds orders, and the unit suite creates orders — so locally it is
+  fresh `db:local`, migrate, seed, seed-e2e, e2e, in that order. It clears
+  `login_attempt`, because the sign-in limiter is real and one wrong password
+  per run locks the suite out on the fifth run in fifteen minutes.
 - **After switching branches, run `npm install`.** `node_modules` belongs to
   whichever branch installed last. The commerce branch adds `stripe`; checked
   out over a tree installed from `main`, `next build` stopped at "Can't resolve

@@ -3,7 +3,13 @@
 import { revalidatePath } from "next/cache";
 import { requireSession } from "@/lib/portal/session";
 import { query } from "@/lib/db/client";
-import { transitionOrder, getOrder, getOrderItems, toEmailShape } from "@/lib/orders/manage";
+import {
+  transitionOrder,
+  getOrder,
+  getOrderItems,
+  toEmailShape,
+  resolveUnfulfilledPayment,
+} from "@/lib/orders/manage";
 import type { OrderStatus } from "@/lib/orders/manage";
 import { refundOrder } from "@/lib/orders/refund";
 import { reconcileStripeSessions, recordReconcileRun } from "@/lib/orders/reconcile";
@@ -14,7 +20,13 @@ import {
   orderShipped,
 } from "@/lib/mail/templates";
 import { portalUrl } from "@/lib/portal/routes";
-import { buyUspsLabel, isShippoConfigured, refreshLabelUrl } from "@/lib/shipping/shippo";
+import {
+  buyUspsLabel,
+  isShippoConfigured,
+  refreshLabelUrl,
+  ShippoError,
+} from "@/lib/shipping/shippo";
+import { claimLabelPurchase, releaseLabelClaim } from "@/lib/orders/label";
 import type { PortalFormState } from "@/lib/portal/form-state";
 
 /** Every action authorises itself. A proxy matcher is not a boundary for these. */
@@ -60,6 +72,41 @@ export async function advanceOrder(
   };
 }
 
+/** A paid-with-no-order row has been dealt with by hand. */
+export async function resolveUnfulfilled(
+  _previous: PortalFormState,
+  formData: FormData,
+): Promise<PortalFormState> {
+  await requireSession();
+
+  const id = text(formData, "id");
+
+  if (!id || id.length > 64) {
+    return { status: "error", message: "That payment could not be identified." };
+  }
+
+  const done = await resolveUnfulfilledPayment(id);
+  revalidateOrders();
+
+  return done
+    ? { status: "success", message: "Marked as dealt with." }
+    : { status: "error", message: "That payment was not open. It may already be dealt with." };
+}
+
+/** A person has looked in Shippo and there is no label: the order may be tried again. */
+export async function releaseLabel(formData: FormData): Promise<void> {
+  await requireSession();
+
+  const id = text(formData, "id");
+
+  if (!id || id.length > 64) {
+    return;
+  }
+
+  await releaseLabelClaim(id);
+  revalidateOrders(id);
+}
+
 /** Tracking typed in by hand, for a label bought outside the portal. */
 export async function setTracking(
   _previous: PortalFormState,
@@ -77,6 +124,23 @@ export async function setTracking(
 
   if (!number) {
     return { status: "error", message: "Enter the tracking number." };
+  }
+
+  // This string goes into an email and into a carrier URL. Carriers use
+  // letters and digits; nothing legitimate is longer than this.
+  if (!/^[A-Za-z0-9 -]{6,40}$/.test(number)) {
+    return {
+      status: "error",
+      message: "That does not look like a tracking number. Letters and digits only, 6 to 40 of them.",
+    };
+  }
+
+  if (!/^[A-Za-z0-9 .&-]{2,30}$/.test(carrier)) {
+    return { status: "error", message: "Write the carrier as a short name, like USPS or UPS." };
+  }
+
+  if (!(await getOrder(id))) {
+    return { status: "error", message: "That order no longer exists." };
   }
 
   const url =
@@ -117,9 +181,19 @@ export async function issueRefund(
 
     const [whole, fraction = ""] = cleaned.split(".");
     amountCents = Number(whole) * 100 + Number(fraction.padEnd(2, "0"));
+
+    // "99999999999999999999" passes the pattern and is not a number of cents
+    // any more: past 2^53 the arithmetic above has already rounded it.
+    if (!Number.isSafeInteger(amountCents) || amountCents <= 0) {
+      return { status: "error", message: "Enter an amount greater than zero." };
+    }
   }
 
-  const result = await refundOrder(id, amountCents);
+  // What the page showed as already refunded when this form was rendered.
+  const seen = text(formData, "refundedCents");
+  const expectedRefundedCents = /^\d{1,12}$/.test(seen) ? Number(seen) : undefined;
+
+  const result = await refundOrder(id, amountCents, { expectedRefundedCents });
 
   if (!result.ok) {
     return { status: "error", message: result.reason };
@@ -255,13 +329,23 @@ export async function buyLabel(
     return { status: "error", message: "That order no longer exists." };
   }
 
-  if (order.tracking_number) {
-    // Buying a second label for the same parcel is real money and two barcodes
-    // on one box. Refuse rather than let a double-click cost postage.
-    return {
-      status: "error",
-      message: "This order already has a tracking number. Clear it first if the label was wrong.",
+  // Buying a second label for the same parcel is real money and two barcodes
+  // on one box. The claim is one atomic UPDATE, taken BEFORE Shippo is called:
+  // of two simultaneous clicks, exactly one gets past this line.
+  const claim = await claimLabelPurchase(order.id);
+
+  if (!claim.claimed) {
+    const message: Record<typeof claim.why, string> = {
+      gone: "That order no longer exists.",
+      "has-tracking":
+        "This order already has a tracking number. Clear it first if the label was wrong.",
+      "in-progress": "A label is already being bought for this order. Give it a moment, then reload.",
+      abandoned:
+        "A label purchase for this order was started and never finished, so it may have gone through. " +
+        "Look in Shippo for a label for this order before buying another. If there is one, paste its " +
+        "tracking number here; if there is not, use Release below and buy again.",
     };
+    return { status: "error", message: message[claim.why] };
   }
 
   let label;
@@ -286,12 +370,18 @@ export async function buyLabel(
       "[guard-theory] label purchase failed:",
       error instanceof Error ? error.message : error,
     );
+    // Released only when it is CERTAIN nothing was bought. If the purchase
+    // request itself went unanswered the claim stays, and the order page asks
+    // the owner to look in Shippo before it can be tried again.
+    if (error instanceof ShippoError && error.nothingBought) {
+      await releaseLabelClaim(order.id).catch(() => {});
+    }
     return {
       status: "error",
       message:
-        error instanceof Error
+        error instanceof ShippoError
           ? error.message
-          : "The label could not be bought. Nothing has been charged.",
+          : "The label could not be bought, and we cannot tell whether Shippo charged for one. Look in Shippo before trying again.",
     };
   }
 

@@ -3,6 +3,7 @@ import { pageMetadata } from "@/lib/metadata";
 import Link from "next/link";
 import { Breadcrumbs } from "@/components/site/Breadcrumbs";
 import { absoluteUrl } from "@/lib/site";
+import { serialiseJsonLd } from "@/lib/json-ld";
 
 export const metadata: Metadata = pageMetadata({
   title: "FAQ",
@@ -116,7 +117,7 @@ export default function FaqPage() {
 
       <script
         type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+        dangerouslySetInnerHTML={{ __html: serialiseJsonLd(jsonLd) }}
       />
     </main>
   );

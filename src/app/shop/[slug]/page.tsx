@@ -15,6 +15,7 @@ import {
 import { toDecimalString } from "@/lib/money";
 import { absoluteUrl } from "@/lib/site";
 import { pageMetadata } from "@/lib/metadata";
+import { serialiseJsonLd } from "@/lib/json-ld";
 
 type Params = { params: Promise<{ slug: string }> };
 
@@ -69,7 +70,7 @@ export default async function ProductPage({ params }: Params) {
             // apply to it. Emitted only when hasPublishableOffer() is true, so
             // every value below is one the owner entered.
             dangerouslySetInnerHTML={{
-              __html: JSON.stringify({
+              __html: serialiseJsonLd({
                 "@context": "https://schema.org",
                 "@type": "Product",
                 name: `${product.name} — ${product.kind}`,
@@ -169,7 +170,7 @@ export default async function ProductPage({ params }: Params) {
                 <p className="notation text-2xs text-orchid">First Edition</p>
                 <p className="mt-4 text-base text-steel">
                   {availability === "sold-out"
-                    ? "That run is finished. We do not quietly restock and call it a new release — join the list and you will hear when it returns."
+                    ? "That run is finished. We do not quietly restock and call it a new release."
                     : "Join the list and you will hear the moment it is available. One message, no newsletter."}
                 </p>
                 <div className="mt-7">

@@ -14,7 +14,12 @@
  * Safe to run repeatedly. Existing rows keep their prices, their stock and
  * their status; only content that has drifted from the registry is refreshed.
  *
+ * Refuses a database that is not on this machine unless `--production` is
+ * passed, and prints the host first — the same guard as the migration runner,
+ * for the same reason: `.env.local` points at Neon.
+ *
  *   node scripts/db/seed-products.mjs
+ *   node scripts/db/seed-products.mjs --production
  */
 
 import path from "node:path";
@@ -22,12 +27,21 @@ import { fileURLToPath } from "node:url";
 import { randomUUID } from "node:crypto";
 import pg from "pg";
 
+import { checkTarget } from "./guard.mjs";
+
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..", "..");
 
 const url = process.env.DATABASE_URL_UNPOOLED?.trim() || process.env.DATABASE_URL?.trim();
 
 if (!url) {
   console.error("[guard-theory] no DATABASE_URL_UNPOOLED or DATABASE_URL set.");
+  process.exit(1);
+}
+
+const guard = checkTarget(url, process.argv.slice(2));
+console.log(`[guard-theory] database: ${guard.target.label}`);
+if (!guard.ok) {
+  console.error(`[guard-theory] ${guard.reason.replace("db:migrate", "db:seed")}`);
   process.exit(1);
 }
 

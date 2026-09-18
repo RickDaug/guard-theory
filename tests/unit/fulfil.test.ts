@@ -7,6 +7,8 @@ import {
   claimEvent,
   fulfilCheckoutSession,
   markEventProcessed,
+  releaseEvent,
+  STALE_CLAIM_SECONDS,
 } from "../../src/lib/orders/fulfil.ts";
 import { closePool, isDatabaseConfigured, query } from "../../src/lib/db/client.ts";
 
@@ -163,14 +165,63 @@ describe("turning a paid session into an order", { skip: !HAS_DB && "no DATABASE
   it("the webhook event ledger claims an id exactly once", async () => {
     const eventId = `evt_${randomUUID()}`;
 
-    assert.equal(await claimEvent(eventId, "checkout.session.completed"), true);
+    assert.equal(await claimEvent(eventId, "checkout.session.completed"), "claimed");
     assert.equal(
       await claimEvent(eventId, "checkout.session.completed"),
-      false,
-      "the primary key is the lock; a second claim must lose",
+      "in-flight",
+      "the primary key is the lock; a second claim must lose while the first is fresh",
     );
 
     await markEventProcessed(eventId);
+    assert.equal(
+      await claimEvent(eventId, "checkout.session.completed"),
+      "processed",
+      "a processed event is a duplicate, however old",
+    );
+
+    await query("delete from webhook_event where id = $1", [eventId]);
+  });
+
+  it("a claim abandoned by a dead handler is taken over once it is stale", async () => {
+    // The handler claimed the event and then died: no processed_at, no release.
+    // This used to answer every one of Stripe's retries with "duplicate, 200".
+    const eventId = `evt_${randomUUID()}`;
+    assert.equal(await claimEvent(eventId, "checkout.session.completed"), "claimed");
+
+    const age = async (seconds: number) =>
+      query("update webhook_event set received_at = now() - make_interval(secs => $2) where id = $1", [
+        eventId,
+        seconds,
+      ]);
+
+    await age(STALE_CLAIM_SECONDS - 5);
+    assert.equal(
+      await claimEvent(eventId, "checkout.session.completed"),
+      "in-flight",
+      "a slow handler inside the window must not be raced",
+    );
+
+    await age(STALE_CLAIM_SECONDS + 5);
+    assert.equal(await claimEvent(eventId, "checkout.session.completed"), "claimed");
+    assert.equal(
+      await claimEvent(eventId, "checkout.session.completed"),
+      "in-flight",
+      "taking a claim over refreshes it, so two retries cannot both take it",
+    );
+
+    // Age is no licence once the work is done.
+    await markEventProcessed(eventId);
+    await age(STALE_CLAIM_SECONDS * 100);
+    assert.equal(await claimEvent(eventId, "checkout.session.completed"), "processed");
+
+    await query("delete from webhook_event where id = $1", [eventId]);
+  });
+
+  it("a released claim can be claimed again", async () => {
+    const eventId = `evt_${randomUUID()}`;
+    assert.equal(await claimEvent(eventId, "checkout.session.completed"), "claimed");
+    await releaseEvent(eventId);
+    assert.equal(await claimEvent(eventId, "checkout.session.completed"), "claimed");
     await query("delete from webhook_event where id = $1", [eventId]);
   });
 
@@ -235,10 +286,22 @@ describe("turning a paid session into an order", { skip: !HAS_DB && "no DATABASE
 
   it("refuses a session with no shipping address rather than inventing one", async () => {
     const intentId = await makeIntent(1, 5);
-    const result = await fulfilCheckoutSession(
-      session({ client_reference_id: intentId, collected_information: null }),
-    );
+    const paid = session({ client_reference_id: intentId, collected_information: null });
+    const result = await fulfilCheckoutSession(paid);
 
-    assert.equal(result.outcome, "ignored");
+    // Still no order and still no invented address — but the payment is no
+    // longer dropped on the floor: it was "ignored", and is now written down.
+    assert.equal(result.outcome, "unfulfilled");
+
+    const orders = await query(`select id from "order" where stripe_session_id = $1`, [paid.id]);
+    assert.equal(orders.length, 0);
+
+    const recorded = await query<{ reason: string }>(
+      "select reason from unfulfilled_payment where stripe_session_id = $1",
+      [paid.id],
+    );
+    assert.deepEqual(recorded.map((row) => row.reason), ["no shipping address"]);
+
+    await query("delete from unfulfilled_payment where stripe_session_id = $1", [paid.id]);
   });
 });

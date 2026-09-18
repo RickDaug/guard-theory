@@ -84,8 +84,11 @@ Stripe script. Do not create a `NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY`.
 
 1. Settings → API → generate a **test** token. It begins `shippo_test_`.
    → **`SHIPPO_API_TOKEN`**
-2. Make up a long random string — a password manager's generator will do. Shippo
-   does not issue this one. → **`SHIPPO_WEBHOOK_TOKEN`**
+2. Make up a long random string — a password manager's generator will do, set to
+   **at least 32 characters, letters and digits only**. Anything shorter is
+   refused by the code and the webhook answers 404 to everyone. Shippo does not
+   issue this one. It appears in Vercel's request logs, so change it whenever
+   someone stops having access to the Vercel project. → **`SHIPPO_WEBHOOK_TOKEN`**
 3. Settings → Webhooks → add a webhook for tracking updates — `track_updated`,
    the only event the handler acts on —
    pointed at `https://guardtheory.net/api/webhooks/shippo/` followed by the
@@ -189,12 +192,34 @@ labelled, marked delivered, refunded.
 - Stripe: switch to live mode. Create a **new** restricted key (`rk_live_`) and
   a **new** webhook endpoint — same URL, same three events, same API version.
   Live endpoints have their own signing secret. Replace **`STRIPE_SECRET_KEY`**
-  and **`STRIPE_WEBHOOK_SECRET`** in Vercel.
+  and **`STRIPE_WEBHOOK_SECRET`** in Vercel — **in the Production environment
+  only**. The code refuses a live key anywhere else: on a Preview or Development
+  deployment it treats Stripe as not configured, checkout says it is
+  unavailable, and the portal banner says why. Keep the test key on Preview and
+  Development. A test key in Production is allowed — that is the rehearsal
+  above — and the portal says "TEST MODE ON THE LIVE SITE" on every page until
+  it is replaced.
 - Shippo: generate a live token (`shippo_live_`), replace
   **`SHIPPO_API_TOKEN`**, and register a separate live webhook. Shippo payloads
   carry a `test` flag and test and live need their own endpoints.
 - Redeploy. The portal's mode banner reads the key prefix, so it changes by
   itself.
+
+### 13. Confirm the promises the policies make
+
+The shipping and returns pages, the order-confirmed page and two of the order
+emails state figures nobody has decided: two business days to dispatch, three
+to five days in transit, thirty-day returns, five-business-day refunds, one free
+exchange per order, a twenty-one-day lost-parcel window. They were left as
+written. A customer can hold you to each from the first order.
+
+The full list, with the file and line of every occurrence, is in
+`docs/owner-decisions.md` §12. For each row: confirm it, give a different
+figure, or say cut. Also there: **how long order records are kept**, which the
+privacy policy does not yet say because no period has been chosen — ask your
+accountant what the floor is.
+
+Do this before the live-mode cutover. It does not block a test-mode rehearsal.
 
 ---
 
@@ -205,7 +230,7 @@ labelled, marked delivered, refunded.
 | 1 — Vercel Pro | Done: the team's plan read `pro` on 2026-09-18. |
 | 3, 4, 5, 6 — variables in Vercel | Runs `vercel env ls production` and checks every required **name** is present. It cannot read the values and does not need to. |
 | — | Merges `feat/mail` and confirms the domain serves the new build. |
-| 6 complete | Applies migrations `0003` and `0004` to production, then seeds the two Theory 01 products as drafts. Both happen **before** the merge; the running site does not read the new tables. |
+| 6 complete | Applies migrations `0003`, `0004`, `0006` and `0007` to production (`0005` belongs to PR #2 and is independent of them), then seeds the two Theory 01 products as drafts. Both happen **before** the merge; the running site does not read the new tables. |
 | 8 — shipping figure | Updates `setting.shipping_flat_cents`. |
 | 9 — tax code | Nothing, unless you chose a non-default code, in which case it checks the name is set. |
 | 10 — specs | Corrects or removes whatever you flag. |

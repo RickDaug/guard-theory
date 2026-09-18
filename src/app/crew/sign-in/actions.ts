@@ -2,10 +2,15 @@
 
 import { headers } from "next/headers";
 import { redirect } from "next/navigation";
-import { checkRateLimit } from "@/lib/rate-limit";
 import { verifyPassword } from "@/lib/portal/auth";
 import { createSession, destroySession, sweepExpiredSessions } from "@/lib/portal/session";
-import { portalUrl } from "@/lib/portal/routes";
+import { portalUrl, safeNextPath } from "@/lib/portal/routes";
+import {
+  addressKey,
+  beginLoginAttempt,
+  markAttemptSucceeded,
+  sweepLoginAttempts,
+} from "@/lib/portal/attempts";
 import type { PortalFormState } from "@/lib/portal/form-state";
 import { isDatabaseConfigured } from "@/lib/db/client";
 
@@ -16,10 +21,9 @@ import { isDatabaseConfigured } from "@/lib/db/client";
  * file is stripped and arrives undefined on the client.
  */
 
-async function clientKey(): Promise<string> {
+async function clientAddress(): Promise<string | null> {
   const list = await headers();
-  const ip = list.get("x-forwarded-for")?.split(",")[0]?.trim();
-  return ip ? `crew:${ip}` : "crew:unknown";
+  return list.get("x-forwarded-for")?.split(",")[0]?.trim() ?? null;
 }
 
 export async function signIn(
@@ -38,24 +42,37 @@ export async function signIn(
     };
   }
 
-  // Tighter than the contact form's three in ten minutes: this is the door to
-  // the order book, not a message box. The limiter is in-process and documented
-  // as insufficient across instances — it raises the cost of casual guessing
-  // rather than stopping a determined attack, which is what the 32-byte
-  // password hash is for.
-  const limit = checkRateLimit(await clientKey(), { limit: 5, windowMs: 15 * 60 * 1000 });
-
-  if (!limit.allowed) {
-    return {
-      status: "error",
-      message: `Too many attempts. Try again in ${limit.retryAfterSeconds} seconds.`,
-    };
-  }
-
   const password = formData.get("password");
 
   if (typeof password !== "string" || password === "") {
     return { status: "error", message: "Enter the password." };
+  }
+
+  // The limiter lives in Postgres, so every instance counts against the same
+  // numbers — see src/lib/portal/attempts.ts. The attempt is recorded before
+  // the password is examined. If the limiter cannot be reached, nobody signs
+  // in: the session table is in the same database, so there is nothing to gain
+  // by pressing on, and an unmetered scrypt is the thing being defended.
+  let gate;
+
+  try {
+    gate = await beginLoginAttempt(addressKey(await clientAddress(), hash));
+  } catch (error) {
+    console.error(
+      "[guard-theory] sign-in limiter unavailable:",
+      error instanceof Error ? error.message : error,
+    );
+    return {
+      status: "error",
+      message: "We could not check that just now. Try again in a moment.",
+    };
+  }
+
+  if (!gate.allowed) {
+    return {
+      status: "error",
+      message: `Too many attempts. Try again in ${Math.ceil(gate.retryAfterSeconds / 60)} minutes.`,
+    };
   }
 
   const ok = await verifyPassword(password, hash);
@@ -67,7 +84,9 @@ export async function signIn(
     return { status: "error", message: "That password is not right." };
   }
 
+  await markAttemptSucceeded(gate.attemptId).catch(() => {});
   await sweepExpiredSessions();
+  await sweepLoginAttempts();
 
   try {
     await createSession();
@@ -85,11 +104,8 @@ export async function signIn(
     };
   }
 
-  const next = formData.get("next");
-  const target =
-    typeof next === "string" && next.startsWith("/") && !next.startsWith("//")
-      ? next
-      : portalUrl();
+  // An allowlist, inside the portal only. See safeNextPath.
+  const target = safeNextPath(formData.get("next")) ?? portalUrl();
 
   // Outside any try/catch: redirect() works by throwing, and a catch would
   // swallow it and leave the reader staring at a form that just worked.

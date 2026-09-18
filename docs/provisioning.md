@@ -72,11 +72,14 @@ take an order is a way to spend that one email early.
 **Migrations are applied to production before the merge that needs them, never
 after.** That is 2026-08-24 in one line. They are additive, and the running site
 does not read the new tables, so applying early costs nothing; applying late is
-an outage. `0003_commerce.sql` and `0004_admin_session.sql` go in before PR #3
-merges. PR #2 is expected to bring a `0005`; it is not on the branch yet, and
+an outage. `0003_commerce.sql`, `0004_admin_session.sql`,
+`0006_commerce_hardening.sql` and `0007_commerce_constraints.sql` go in before
+PR #3 merges. The code on that branch reads `unfulfilled_payment`,
+`login_attempt` and `order.label_claimed_at`, all from `0006`: without it the
+portal's Orders page and sign-in both fail. PR #2 is expected to bring a `0005`; it is not on the branch yet, and
 the same rule will apply to it. `docs/commerce-reland.md` records
 `0002_email_log.sql`, from `feat/mail`, as already applied — run
-`npm run db:status` against production to confirm before relying on that.
+`npm run db:status:production` to confirm before relying on that.
 
 ---
 
@@ -458,7 +461,7 @@ integration; the rest you add by hand.
 | `RESEND_API_KEY` | 4 | yes | **yes** — nothing merged reads it yet |
 | `RECEIPT_FROM_EMAIL` | 4 | yes | **yes** — nothing merged reads it yet |
 | `SHIPPO_API_TOKEN` | 5 | yes | no |
-| `SHIPPO_WEBHOOK_TOKEN` | 5 | yes — a random string of your own | no |
+| `SHIPPO_WEBHOOK_TOKEN` | 5 | yes — a random string of your own, 32 characters or more (shorter is refused) | no |
 | `SHIP_FROM_NAME` `_STREET1` `_CITY` `_STATE` `_ZIP` | 5 | yes — all five | no |
 | `SHIP_FROM_STREET2` `_PHONE` `_EMAIL` `_COUNTRY` | 5 | optional | no |
 | `SHIP_PARCEL_LENGTH_IN` `_WIDTH_IN` `_HEIGHT_IN` `_WEIGHT_OZ` | 5 | optional, defaulted | no |

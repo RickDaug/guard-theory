@@ -81,37 +81,29 @@ export async function hashPassword(password: string): Promise<PasswordHash> {
  * describes the format.
  */
 export async function verifyPassword(password: string, stored: PasswordHash): Promise<boolean> {
-  const parts = stored.split("$");
+  const parsed = parsePasswordHash(stored);
 
-  if (parts.length !== 6 || parts[0] !== "scrypt") {
-    console.error("[guard-theory] PORTAL_PASSWORD_HASH is not a recognised scrypt hash");
-    return false;
-  }
-
-  const [, n, r, p, saltB64, keyB64] = parts;
-  const cost = Number(n);
-  const blockSize = Number(r);
-  const parallelism = Number(p);
-
-  if (!Number.isInteger(cost) || !Number.isInteger(blockSize) || !Number.isInteger(parallelism)) {
-    console.error("[guard-theory] PORTAL_PASSWORD_HASH has unreadable parameters");
+  if (!parsed) {
+    console.error("[guard-theory] PORTAL_PASSWORD_HASH is not a usable scrypt hash");
     return false;
   }
 
   try {
-    const salt = Buffer.from(saltB64!, "base64url");
-    const expected = Buffer.from(keyB64!, "base64url");
-
-    const actual = await scryptAsync(password.normalize("NFKC"), salt, expected.length, {
-      N: cost,
-      r: blockSize,
-      p: parallelism,
+    const actual = await scryptAsync(password.normalize("NFKC"), parsed.salt, KEY_LENGTH, {
+      N: parsed.cost,
+      r: parsed.blockSize,
+      p: parsed.parallelism,
       maxmem: 256 * 1024 * 1024,
     });
 
-    // Lengths are equal by construction above, but timingSafeEqual throws on a
-    // mismatch rather than returning false, so it is still checked.
-    return actual.length === expected.length && timingSafeEqual(actual, expected);
+    // parsePasswordHash guarantees the stored key is KEY_LENGTH bytes; the
+    // length is checked again because timingSafeEqual throws on a mismatch and
+    // because an empty-equals-empty comparison is exactly the bug this replaced.
+    return (
+      actual.length === KEY_LENGTH &&
+      parsed.key.length === KEY_LENGTH &&
+      timingSafeEqual(actual, parsed.key)
+    );
   } catch (error) {
     console.error(
       "[guard-theory] password verification failed:",
@@ -119,6 +111,64 @@ export async function verifyPassword(password: string, stored: PasswordHash): Pr
     );
     return false;
   }
+}
+
+type ParsedHash = {
+  cost: number;
+  blockSize: number;
+  parallelism: number;
+  salt: Buffer;
+  key: Buffer;
+};
+
+const BASE64URL = /^[A-Za-z0-9_-]+$/;
+const DIGITS = /^[1-9][0-9]{0,9}$/;
+
+// The weakest parameters that will be verified against, and the strongest. The
+// floor stops a hand-edited hash from quietly becoming a fast one; the ceiling
+// stops a hostile or mistyped N from pinning a function at 100% CPU per guess.
+const MIN_COST = 2 ** 14;
+const MAX_COST = 2 ** 20;
+const MIN_SALT_BYTES = 16;
+
+/**
+ * Reads `scrypt$N$r$p$salt$key`, or returns null.
+ *
+ * THE BUG THIS EXISTS FOR: the key length used to be taken from the stored
+ * hash. A hash whose key segment was empty — `scrypt$32768$8$1$<salt>$`, which
+ * is what a truncated paste into Vercel looks like — asked scrypt for zero
+ * bytes, compared empty with empty, and let ANY password in. So nothing about
+ * the comparison is taken from the input any more: the key must be exactly
+ * KEY_LENGTH bytes, the salt at least 16, and N, r and p within bounds. Every
+ * other shape is refused before scrypt runs.
+ */
+export function parsePasswordHash(stored: unknown): ParsedHash | null {
+  if (typeof stored !== "string" || stored.length > 512) return null;
+
+  const parts = stored.split("$");
+  if (parts.length !== 6 || parts[0] !== "scrypt") return null;
+
+  const [, n, r, p, saltB64, keyB64] = parts as [string, string, string, string, string, string];
+
+  // Number("") is 0 and Number(" 8 ") is 8; a regex is what "is a number" means here.
+  if (!DIGITS.test(n) || !DIGITS.test(r) || !DIGITS.test(p)) return null;
+  if (!BASE64URL.test(saltB64) || !BASE64URL.test(keyB64)) return null;
+
+  const cost = Number(n);
+  const blockSize = Number(r);
+  const parallelism = Number(p);
+
+  // scrypt requires N to be a power of two; checked here so a bad value is a
+  // refusal with a reason rather than an exception from inside OpenSSL.
+  if (cost < MIN_COST || cost > MAX_COST || (cost & (cost - 1)) !== 0) return null;
+  if (blockSize !== BLOCK_SIZE || parallelism !== PARALLELISM) return null;
+
+  const salt = Buffer.from(saltB64, "base64url");
+  const key = Buffer.from(keyB64, "base64url");
+
+  if (salt.length < MIN_SALT_BYTES || key.length !== KEY_LENGTH) return null;
+
+  return { cost, blockSize, parallelism, salt, key };
 }
 
 /** The opaque value the cookie carries. 256 bits, never derived from anything. */
@@ -139,4 +189,27 @@ export function hashSessionToken(token: string): string {
 }
 
 export const SESSION_COOKIE = "gt_crew";
+
+/**
+ * The cookie's name, which in production carries the `__Host-` prefix.
+ *
+ * A browser only accepts a `__Host-` cookie if it is Secure, has Path=/ and has
+ * NO Domain attribute — so it can only have been set by this exact host over
+ * HTTPS, and a sibling subdomain or a plain-HTTP response cannot plant one over
+ * it. Both other conditions are already how the cookie is set. Not used in
+ * development because `next dev` on http://localhost sets a non-Secure cookie,
+ * which a browser would refuse under this name.
+ */
+export function sessionCookieName(env: NodeJS.ProcessEnv = process.env): string {
+  return env.NODE_ENV === "production" ? `__Host-${SESSION_COOKIE}` : SESSION_COOKIE;
+}
+
+/** Absolute lifetime: however busy the session, it ends. */
 export const SESSION_TTL_HOURS = 12;
+
+/**
+ * Idle lifetime: a session nobody has used for this long is over, even inside
+ * the twelve hours. `last_seen` was always written on every request and never
+ * read; this is what reads it.
+ */
+export const SESSION_IDLE_MINUTES = 120;

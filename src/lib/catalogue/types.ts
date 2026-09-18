@@ -1,4 +1,4 @@
-import type { ConstructionPoint, Specification } from "@/content/products";
+import type { ConstructionPoint, Specification } from "../../content/products/index.ts";
 
 /**
  * The commerce half of a product: the facts the content registry deliberately

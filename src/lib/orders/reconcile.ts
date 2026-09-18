@@ -1,9 +1,7 @@
 import { query } from "../db/client.ts";
 import { stripe, isStripeConfigured } from "../stripe/client.ts";
 import { fulfilCheckoutSession } from "./fulfil.ts";
-import { sendEmail } from "../mail/index.ts";
-import { orderConfirmation } from "../mail/templates.ts";
-import { getOrder, getOrderItems, toEmailShape } from "./manage.ts";
+import { ensureOrderConfirmationSent } from "./confirmation.ts";
 
 /**
  * Catching what the webhook missed.
@@ -65,16 +63,7 @@ export async function reconcileStripeSessions(
 
         // The customer never got a confirmation, because the webhook that
         // would have sent it never ran. Send it now.
-        const order = await getOrder(result.orderId);
-
-        if (order) {
-          const items = await getOrderItems(order.id);
-          await sendEmail(
-            "order-confirmation",
-            orderConfirmation(toEmailShape(order, items)),
-            order.id,
-          );
-        }
+        await ensureOrderConfirmationSent(result.orderId);
 
         console.log(
           `[guard-theory] reconciled order ${result.orderNumber} from ${session.id}` +
@@ -82,6 +71,14 @@ export async function reconcileStripeSessions(
         );
       } else if (result.outcome === "already-recorded") {
         report.alreadyRecorded += 1;
+      } else if (result.outcome === "unfulfilled") {
+        // Paid, and still no order. Already written to unfulfilled_payment by
+        // fulfilCheckoutSession; said again here so the report cannot be read
+        // as "nothing to do".
+        report.skipped.push({
+          sessionId: session.id,
+          reason: `PAID with no order (${result.reason}) — listed under Needs you`,
+        });
       } else {
         report.skipped.push({ sessionId: session.id, reason: result.reason });
       }

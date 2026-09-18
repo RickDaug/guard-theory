@@ -1,8 +1,10 @@
 import { cookies, headers } from "next/headers";
 import { isDatabaseConfigured, query, queryOne } from "../db/client.ts";
+import { cache } from "react";
 import {
-  SESSION_COOKIE,
+  SESSION_IDLE_MINUTES,
   SESSION_TTL_HOURS,
+  sessionCookieName,
   hashSessionToken,
   newSessionToken,
 } from "./auth.ts";
@@ -32,6 +34,11 @@ export async function createSession(): Promise<string> {
 
   const headerList = await headers();
 
+  // One admin, one session. Signing in ends every other session first, so a
+  // cookie lifted from another machine stops working the moment the owner signs
+  // in again — which is also the "sign out everywhere" this portal lacked.
+  await query("delete from admin_session");
+
   await query(
     `insert into admin_session (token_hash, expires_at, ip, user_agent)
      values ($1, $2, $3, $4)`,
@@ -45,7 +52,7 @@ export async function createSession(): Promise<string> {
 
   const store = await cookies();
 
-  store.set(SESSION_COOKIE, token, {
+  store.set(sessionCookieName(), token, {
     httpOnly: true,
     sameSite: "lax",
     // `lax` rather than `strict`: the portal is reached by typing a URL or
@@ -60,13 +67,17 @@ export async function createSession(): Promise<string> {
 }
 
 /** The current session, or null. Also slides `last_seen` for the audit trail. */
-export async function getSession(): Promise<Session | null> {
+/**
+ * Wrapped in React's `cache` so the layout and the page asking in the same
+ * request share one lookup rather than racing two UPDATEs.
+ */
+export const getSession = cache(async function getSession(): Promise<Session | null> {
   if (!isDatabaseConfigured()) {
     return null;
   }
 
   const store = await cookies();
-  const token = store.get(SESSION_COOKIE)?.value;
+  const token = store.get(sessionCookieName())?.value;
 
   if (!token) {
     return null;
@@ -78,8 +89,9 @@ export async function getSession(): Promise<Session | null> {
           set last_seen = now()
         where token_hash = $1
           and expires_at > now()
+          and last_seen > now() - make_interval(mins => $2)
       returning token_hash, expires_at`,
-      [hashSessionToken(token)],
+      [hashSessionToken(token), SESSION_IDLE_MINUTES],
     );
 
     if (!row) {
@@ -95,11 +107,11 @@ export async function getSession(): Promise<Session | null> {
     );
     return null;
   }
-}
+});
 
 export async function destroySession(): Promise<void> {
   const store = await cookies();
-  const token = store.get(SESSION_COOKIE)?.value;
+  const token = store.get(sessionCookieName())?.value;
 
   if (token) {
     try {
@@ -114,13 +126,17 @@ export async function destroySession(): Promise<void> {
 
   // Cleared even if the delete failed — the cookie is the thing in the
   // browser, and leaving it behind is the worse of the two failures.
-  store.delete(SESSION_COOKIE);
+  store.delete(sessionCookieName());
 }
 
 /** Expired rows are rubbish, not history. Swept opportunistically on login. */
 export async function sweepExpiredSessions(): Promise<void> {
   try {
-    await query("delete from admin_session where expires_at < now()");
+    await query(
+      `delete from admin_session
+        where expires_at < now() or last_seen < now() - make_interval(mins => $1)`,
+      [SESSION_IDLE_MINUTES],
+    );
   } catch {
     // Housekeeping. Never worth failing a sign-in over.
   }

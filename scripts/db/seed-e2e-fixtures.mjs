@@ -75,6 +75,11 @@ try {
         where id = (select id from variant order by product_id, sort_index limit 1)`,
     );
 
+    // The sign-in limiter is real and it is shared: a suite that types one wrong
+    // password per run locks itself out on the fifth local run in a quarter of
+    // an hour. This script only ever touches a loopback database.
+    await client.query("delete from login_attempt");
+
     await client.query("COMMIT");
 
     const { rows } = await client.query(

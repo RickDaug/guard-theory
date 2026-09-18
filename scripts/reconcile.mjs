@@ -7,7 +7,12 @@
  * Run it from a laptop with the production DATABASE_URL and STRIPE_SECRET_KEY
  * in the environment and it will find anything missing.
  *
- *   node scripts/reconcile.mjs [--hours 72]
+ *   node scripts/reconcile.mjs [--hours 72] [--production]
+ *
+ * A LIVE key is refused everywhere except the production deployment
+ * (src/lib/stripe/client.ts). This script is the one legitimate exception — a
+ * laptop is not a deployment — and it has to be asked for: `--production`.
+ * The database host is printed first either way.
  *
  * Safe to run repeatedly. Orders are keyed on the Stripe session id, which is
  * unique, so a second run creates nothing and says so.
@@ -29,6 +34,23 @@ if (!process.env.STRIPE_SECRET_KEY?.trim()) {
 }
 
 const args = process.argv.slice(2);
+
+{
+  const { describeTarget } = await import(
+    pathToFileURL(path.join(ROOT, "scripts/db/guard.mjs")).href
+  );
+  console.log(`[guard-theory] database: ${describeTarget(process.env.DATABASE_URL.trim()).label}`);
+}
+
+if (/^(sk|rk)_live_/.test(process.env.STRIPE_SECRET_KEY.trim())) {
+  if (!args.includes("--production")) {
+    console.error(
+      "[guard-theory] that is a LIVE Stripe key. Pass --production if reconciling the real shop is what you mean.",
+    );
+    process.exit(1);
+  }
+  process.env.GUARD_THEORY_LIVE_STRIPE_CLI = "1";
+}
 const hoursArg = args.indexOf("--hours");
 const hours = Number(hoursArg !== -1 && args[hoursArg + 1] ? args[hoursArg + 1] : 72);
 

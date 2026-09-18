@@ -53,14 +53,64 @@ export function shippoMode(env: NodeJS.ProcessEnv = process.env): ShippoMode {
   return "unknown";
 }
 
+/**
+ * A Shippo failure, in words that are safe to show and to log.
+ *
+ * The raw response body used to be put in the Error message, which was then
+ * logged and shown in the portal. A validation error from Shippo can quote the
+ * address it was validating, so that put a customer's address in the function
+ * logs. `message` here never contains a response body.
+ *
+ * `nothingBought` is what buyLabel needs to know before it lets the order be
+ * tried again: true when Shippo answered no, or when the failure was before any
+ * purchase was attempted; FALSE when the purchase request itself got no answer,
+ * because then nobody knows whether postage was bought.
+ */
+export class ShippoError extends Error {
+  readonly nothingBought: boolean;
+
+  constructor(message: string, nothingBought: boolean) {
+    super(message);
+    this.name = "ShippoError";
+    this.nothingBought = nothingBought;
+  }
+}
+
+const PURCHASE_PATH = "/transactions";
+
 async function shippo<T>(path: string, body: unknown): Promise<T> {
   const token = shippoToken();
 
   if (!token) {
-    throw new Error("SHIPPO_API_TOKEN is not set.");
+    throw new ShippoError("SHIPPO_API_TOKEN is not set.", true);
   }
 
-  const response = await fetch(`${BASE}${path}`, {
+  let response: Response;
+
+  try {
+    response = await shippoFetch(path, token, body);
+  } catch {
+    throw new ShippoError(
+      path === PURCHASE_PATH
+        ? "Shippo did not answer the purchase request, so the label may or may not have been bought. Look in Shippo before trying again."
+        : "Shippo did not answer. Nothing has been bought.",
+      path !== PURCHASE_PATH,
+    );
+  }
+
+  if (!response.ok) {
+    // The status, never the body.
+    throw new ShippoError(
+      `Shippo refused the request (${response.status} on ${path}). Nothing has been bought.`,
+      true,
+    );
+  }
+
+  return (await response.json()) as T;
+}
+
+function shippoFetch(path: string, token: string, body: unknown): Promise<Response> {
+  return fetch(`${BASE}${path}`, {
     method: "POST",
     headers: {
       Authorization: `ShippoToken ${token}`,
@@ -71,12 +121,6 @@ async function shippo<T>(path: string, body: unknown): Promise<T> {
     cache: "no-store",
     signal: AbortSignal.timeout(15_000),
   });
-
-  if (!response.ok) {
-    throw new Error(`Shippo ${path} ${response.status}: ${(await response.text()).slice(0, 400)}`);
-  }
-
-  return (await response.json()) as T;
 }
 
 export type Address = {
@@ -184,8 +228,9 @@ export async function buyUspsLabel(to: Address, orderId: string): Promise<Bought
   const from = shipFromAddress();
 
   if (!from) {
-    throw new Error(
+    throw new ShippoError(
       "The ship-from address is not configured. Set SHIP_FROM_NAME, STREET1, CITY, STATE and ZIP.",
+      true,
     );
   }
 
@@ -208,9 +253,12 @@ export async function buyUspsLabel(to: Address, orderId: string): Promise<Bought
       .sort((a, b) => Number(a.amount) - Number(b.amount))[0];
 
   if (!rate) {
-    const detail = (shipment.messages ?? []).map((m) => m.text).filter(Boolean).join("; ");
-    throw new Error(
-      `Shippo returned no USPS rate for that address${detail ? `: ${detail}` : "."}`,
+    // Shippo's own messages can quote the address back, so they are not
+    // carried into the error, which is logged. The owner is looking at the
+    // address already; the Shippo dashboard has the rest.
+    throw new ShippoError(
+      "Shippo returned no USPS rate for that address. Check the address on the order; Shippo's dashboard shows why.",
+      true,
     );
   }
 
@@ -224,8 +272,10 @@ export async function buyUspsLabel(to: Address, orderId: string): Promise<Bought
   });
 
   if (transaction.status !== "SUCCESS" || !transaction.label_url) {
-    const detail = (transaction.messages ?? []).map((m) => m.text).filter(Boolean).join("; ");
-    throw new Error(`Shippo could not produce a label${detail ? `: ${detail}` : "."}`);
+    throw new ShippoError(
+      "Shippo could not produce a label. Nothing has been bought; Shippo's dashboard shows why.",
+      true,
+    );
   }
 
   return {

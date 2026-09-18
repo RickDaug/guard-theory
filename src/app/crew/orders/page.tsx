@@ -2,9 +2,16 @@ import Link from "next/link";
 import { requirePortalPage } from "@/lib/portal/guard";
 import { portalUrl } from "@/lib/portal/routes";
 import { isDatabaseConfigured } from "@/lib/db/client";
-import { listOrders, statusCounts, STATUS_LABEL, type OrderStatus } from "@/lib/orders/manage";
+import {
+  listOrders,
+  listUnfulfilledPayments,
+  statusCounts,
+  STATUS_LABEL,
+  type OrderStatus,
+} from "@/lib/orders/manage";
 import { formatMoney } from "@/lib/money";
 import { ReconcileButton } from "./ReconcileButton";
+import { ResolveUnfulfilledButton } from "./ResolveUnfulfilledButton";
 
 export const dynamic = "force-dynamic";
 
@@ -47,7 +54,11 @@ export default async function OrdersPage({
     );
   }
 
-  const [orders, counts] = await Promise.all([listOrders(active), statusCounts()]);
+  const [orders, counts, unfulfilled] = await Promise.all([
+    listOrders(active),
+    statusCounts(),
+    listUnfulfilledPayments(),
+  ]);
 
   return (
     <main id="main" className="px-6 py-16 md:px-12">
@@ -84,12 +95,47 @@ export default async function OrdersPage({
           </ul>
         </nav>
 
+        {/* On every tab, not only "Needs you": this is money taken with no order
+            to show for it, and the default tab is New. */}
+        {unfulfilled.length > 0 ? (
+          <section aria-labelledby="unfulfilled-heading" className="mb-12 border-l-2 border-signal-lift bg-graphite px-6 py-5">
+            <h2 id="unfulfilled-heading" className="display-plain mb-3 text-lg text-chalk">
+              Paid, with no order
+            </h2>
+            <p className="mb-6 max-w-[46rem] text-sm text-steel">
+              Stripe took payment for these and no order could be made from what it sent. Open the
+              payment in Stripe, then either refund it or fulfil it by hand. Nothing has been
+              emailed to the buyer.
+            </p>
+            <ul className="m-0 flex list-none flex-col gap-6 p-0">
+              {unfulfilled.map((payment) => (
+                <li key={payment.id} className="flex flex-col gap-2 border-t border-steel-dim pt-4">
+                  <p className="display-plain text-base text-chalk tabular-nums">
+                    {payment.amount_total_cents !== null && payment.currency
+                      ? formatMoney(payment.amount_total_cents, payment.currency)
+                      : "Amount not given"}
+                    {payment.stripe_mode === "test" ? " (test)" : ""}
+                  </p>
+                  <p className="text-sm text-steel">{`Why: ${payment.reason}`}</p>
+                  <p className="notation break-all text-2xs text-steel">
+                    {payment.stripe_payment_intent ?? payment.stripe_session_id}
+                  </p>
+                  {payment.email ? <p className="text-sm text-steel">{payment.email}</p> : null}
+                  <ResolveUnfulfilledButton id={payment.id} />
+                </li>
+              ))}
+            </ul>
+          </section>
+        ) : null}
+
         {orders.length === 0 ? (
           <p className="text-lg text-steel">
             {active === "new"
               ? "Nothing new. Everything that has come in has been picked up."
               : active === "flagged"
-                ? "Nothing needs your judgement."
+                ? unfulfilled.length > 0
+                  ? "No order is flagged."
+                  : "Nothing needs your judgement."
                 : `No orders are ${STATUS_LABEL[active as OrderStatus].toLowerCase()}.`}
           </p>
         ) : (

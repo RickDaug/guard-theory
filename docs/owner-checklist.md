@@ -183,11 +183,29 @@ figure in `docs/database-runbook.md`; check it against Neon's current pricing
 page before relying on it. Six hours does not cover noticing on Monday what
 broke on Friday.
 
-`npm run db:backup` writes a dump to `./backups` on this machine. Nothing
-schedules it and nothing moves the file off the laptop. Decide two things: where
-the copies live, and whether to move Neon to Launch (usage-billed, roughly
-$6–19 a month on the figures in `docs/provisioning.md`) for the seven-day
-window. Then have a restore rehearsed once before the first real order.
+PR #3 adds a nightly backup that runs on GitHub: it dumps the database,
+encrypts it, and keeps the last **30 days** as downloadable files on the
+repository's Actions page. Two things about it are yours.
+
+1. **The passphrase.** The repository is public, so anyone signed in to GitHub
+   can download the encrypted file; the passphrase is the only thing between
+   them and your customers' addresses. The assistant generates it and sets it as
+   a GitHub secret, and GitHub will never show it again — to anyone. **It is
+   handed to you once, as a file. Put it in your password manager, under a name
+   you will recognise in two years.** A backup whose passphrase is lost is not a
+   backup. → GitHub secret **`BACKUP_PASSPHRASE`**
+2. **Whether thirty days and one location is enough.** Still open: moving Neon
+   to Launch (usage-billed, roughly $6–19 a month on the figures in
+   `docs/provisioning.md`) for a seven-day restore window, and whether to make
+   the repository private, which would take the backups off public download
+   altogether.
+
+The other secret, **`BACKUP_DATABASE_URL`**, is Neon's *unpooled* connection
+string; the assistant copies it across without displaying it. Then a restore is
+rehearsed once before the first real order, and every quarter after that —
+`docs/database-runbook.md` has the drill.
+
+`npm run db:backup` still exists for a dump on this machine, to `./backups`.
 
 ### 12. Live-mode cutover
 
@@ -243,7 +261,7 @@ Do this before the live-mode cutover. It does not block a test-mode rehearsal.
 | 2–6 and 8–10 | Takes PR #3 out of draft, merges it, and checks guardtheory.net is serving it — the portal sign-in page answers, the shop still renders. |
 | 7 — prices | Nothing. You enter them in the portal and set the products active. |
 | 2 and 3 — registration added | Places a test order to a California address and asserts the tax is greater than zero. |
-| 11 — backups | Takes a backup, rehearses a restore against a Neon branch, and records the result in `docs/database-runbook.md`. |
+| 11 — backups | Sets the GitHub secrets `BACKUP_DATABASE_URL` (from Neon, unpooled, never displayed) and `BACKUP_PASSPHRASE` (generated, handed to you once for your password manager), runs the **Database backup** workflow by hand once, then does the restore drill against a scratch Neon branch and records the result in `docs/database-runbook.md`. |
 | 12 — live keys | Checks the portal banner shows live, and watches the first real order through the webhook. |
 | All of the above, and you have set the opening date | Applies PR #2's migration, merges PR #2 last, runs the announcement as a dry run, shows you the recipient count and the message, and sends only on your word. |
 

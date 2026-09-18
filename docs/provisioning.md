@@ -205,15 +205,29 @@ Neon Instant Restore is continuous point-in-time restore within a history window
 survive noticing on Monday that Friday's migration corrupted orders, and it does
 not survive losing the account.
 
-`scripts/db/backup.mjs` exists for this, as `npm run db:backup`: a `pg_dump`
-over the **unpooled** string — or a JSON export of every row when `pg_dump` is
-not on PATH — written to `./backups`, which is gitignored. This document used to
-describe it as nightly, to object storage, kept 30 days. It is none of those:
-**nothing schedules it, it writes to the local disk, and nothing prunes it.**
-Someone has to run it and move the file somewhere that is not this laptop. At
-this size that is a file measured in megabytes. Start on day one, not later — on
-Free, six hours is the entire safety net. `docs/database-runbook.md` carries the restore procedure,
-and you should **rehearse a restore before Tier 3 puts money through it**.
+This document used to describe a backup that was nightly, to object storage,
+kept 30 days, when nothing of the kind existed. What exists now, on PR #3:
+
+- **`.github/workflows/db-backup.yml`** — nightly, and on demand. It asks the
+  server its version, dumps with the matching `pg_dump` over the **unpooled**
+  string (a `-pooler` host is refused), checks the archive really contains the
+  tables, **encrypts it**, proves the encrypted file decrypts, and keeps it as a
+  workflow artifact for **30 days**. Not object storage: no bucket, no vendor.
+- **`npm run db:backup`** — the manual one, unchanged: `pg_dump`, or a JSON
+  export of every row when `pg_dump` is not on PATH, written to `./backups`,
+  which is gitignored. Nothing schedules or prunes that directory.
+
+**The repository is public**, so the encrypted artifact can be downloaded by
+anyone signed in to GitHub, and the passphrase is the whole of its protection.
+That is why encryption is not optional in the workflow — a separate step reads
+the bytes and refuses to upload anything else.
+
+It needs two **GitHub repository secrets** — not Vercel variables —
+`BACKUP_DATABASE_URL` and `BACKUP_PASSPHRASE`, and it fails every night, by
+name, until both exist. GitHub only runs a schedule from the default branch, so
+nothing happens before PR #3 merges. Setting them, getting a backup back out,
+and the quarterly drill are all in `docs/database-runbook.md`; **rehearse a
+restore before Tier 3 puts money through it**.
 
 **What's still ahead:** re-landing commerce is merging PR #3, once the tiers
 below have put their variables in Production. Tier 1 already covers taking

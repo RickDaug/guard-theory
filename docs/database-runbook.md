@@ -187,7 +187,151 @@ Keep a copy anywhere but Neon. Six hours is no answer to noticing on Monday that
 Friday's migration corrupted something, and no answer at all to losing access to
 the account.
 
-### So: take one yourself
+### The nightly backup
+
+`.github/workflows/db-backup.yml` runs at 09:17 UTC every night, and whenever
+somebody presses **Run workflow** on it. It:
+
+1. asks the server for its version and uses the matching `postgres:<major>`
+   image, because `pg_dump` refuses a server newer than itself and Neon's major
+   version is not recorded anywhere in this repository;
+2. dumps over the **unpooled** connection string, custom format, compressed.
+   **`pg_dump` must not go through the pooler**: it takes its snapshot inside
+   one session, and PgBouncer in transaction mode hands each statement to a
+   different one. A host containing `-pooler` is refused before anything
+   connects;
+3. refuses a dump under 4 KB, lists the archive with `pg_restore`, and refuses
+   one that has no data for `_migration` or `waitlist_signup` — exit 0 is not
+   proof of a backup;
+4. encrypts it with `gpg --symmetric` (AES-256), decrypts it again and compares
+   the result with the original;
+5. runs a separate guard that reads the first bytes of every file about to be
+   uploaded and **refuses anything that is not a gpg-encrypted file**;
+6. uploads it as a workflow artifact with `retention-days: 30`.
+
+It never prints the connection string, and an error from `pg_dump` is printed
+with the host and any URL removed.
+
+**This repository is public** (`gh repo view --json visibility` said `PUBLIC` on
+2026-09-18). Its Actions logs are readable by anyone, and its artifacts can be
+downloaded by anyone signed in to GitHub. So the encrypted file should be
+thought of as published, and the passphrase as the only thing protecting the
+names and addresses inside it. That is why step 5 exists, why the passphrase
+must be 32 characters or more, and why it must never be reused from anywhere
+else. Making the repository private would take the files off public download;
+that is the owner's call.
+
+Thirty days is a request. A repository's own retention limit wins when it is
+lower; this one's was 90 days when checked on 2026-09-18:
+
+```
+gh api repos/RickDaug/guard-theory/actions/permissions/artifact-and-log-retention
+```
+
+Three things that will stop it, none of them silently:
+
+- **A failure emails** whoever last edited the workflow's schedule. A run that
+  fails says why on its summary page, in one line.
+- **GitHub disables scheduled workflows after 60 days without a commit** to the
+  repository, and emails first. Push anything, or press *Enable workflow*.
+- **It only runs from the default branch.** Nothing is scheduled until the PR
+  carrying it is merged.
+
+The shell is tested without a database or a network —
+`tests/unit/backup-ci.test.ts` puts a stand-in for `docker` on PATH and runs the
+rest for real, refusals included. The workflow itself has **not** been run: that
+first happens at merge time, below.
+
+### Setting the two secrets
+
+GitHub repository secrets, not Vercel variables. Done once, at merge time, by
+the owner or the assistant. Neither command prints a value.
+
+```
+# 1. The UNPOOLED connection string, piped straight from Neon — never pasted,
+#    never echoed. (`vercel env pull` returns it empty; neonctl does not.)
+npx neonctl connection-string --project-id cold-resonance-51949822 | gh secret set BACKUP_DATABASE_URL
+
+# 2. The passphrase: 32 random bytes. It is written to a file first because the
+#    owner has to keep a copy — GitHub will never show it again.
+node -e "process.stdout.write(require('crypto').randomBytes(32).toString('base64url'))" > backup-passphrase.txt
+gh secret set BACKUP_PASSPHRASE < backup-passphrase.txt
+```
+
+Then **put the contents of `backup-passphrase.txt` in the owner's password
+manager and delete the file.** It is the one secret on this project that cannot
+simply be regenerated: rotate it and every earlier backup still needs the old
+one. `neonctl connection-string` gives the direct host unless `--pooled` is
+passed; the workflow refuses the pooled one if that ever changes.
+
+Check the names, then take one by hand and watch it:
+
+```
+gh secret list
+gh workflow run db-backup.yml
+gh run watch "$(gh run list --workflow db-backup.yml --limit 1 --json databaseId --jq '.[0].databaseId')"
+```
+
+### Getting one back out
+
+`pg_restore` has to be the same major version as the file or newer; the version
+that wrote it is in the file's name (`…-pg17.pgc.gpg`). Restore into a **scratch
+Neon branch**, never into production first.
+
+```
+# 1. Download the newest. Artifacts are named guard-theory-db-<run id>.
+run=$(gh run list --workflow db-backup.yml --status success --limit 1 --json databaseId --jq '.[0].databaseId')
+gh run download "$run" --dir restore && cd restore/guard-theory-db-*
+
+# 2. It is the file that was uploaded.
+sha256sum -c *.sha256
+
+# 3. Decrypt. gpg asks for the passphrase; it is not put on the command line.
+gpg --output dump.pgc --decrypt guard-theory-*.pgc.gpg
+
+# 4. A scratch branch off production, and its direct connection string.
+npx neonctl branches create --project-id cold-resonance-51949822 --name restore-drill
+SCRATCH=$(npx neonctl connection-string restore-drill --project-id cold-resonance-51949822)
+
+# 5. The branch is a copy of production, so empty it first — otherwise this
+#    proves only that Neon can branch. Then schema and rows, both from the file.
+psql "$SCRATCH" -c 'drop schema public cascade; create schema public;'
+pg_restore --no-owner --no-privileges --exit-on-error --dbname "$SCRATCH" dump.pgc
+
+# 6. Look at it.
+psql "$SCRATCH" -c 'select count(*) from waitlist_signup' -c 'select max(name) from _migration'
+
+# 7. Tidy up. The decrypted dump is customer data on a laptop until this runs.
+npx neonctl branches delete restore-drill --project-id cold-resonance-51949822
+cd ../.. && rm -rf restore
+```
+
+Check `echo "$SCRATCH"` names the scratch branch's host before step 5 — that
+`drop schema` is the one destructive line here.
+
+For a real restore the target is production's unpooled string instead of
+`$SCRATCH`, after the drill above has succeeded against the same file, and with
+the site in maintenance so nothing writes underneath it.
+
+### The quarterly restore drill
+
+First week of January, April, July and October, and once before the first real
+order. Twenty minutes. A backup nobody has restored is a belief, not a backup.
+
+1. Actions → **Database backup**: the recent nightly runs are green. If the
+   workflow says *disabled*, enable it and find out when it stopped.
+2. Do *Getting one back out*, steps 1–6, against the newest artifact **using the
+   passphrase from the password manager** — not from anywhere else. This is the
+   step that finds a lost passphrase while there is still time to set a new one.
+3. Compare the counts in step 6 with production's in the portal. Last night's
+   figures, not today's.
+4. Step 7. Then add a line below.
+
+| Date | Artifact | Restored into | Counts matched | By |
+|---|---|---|---|---|
+| — | — | — | — | not yet run |
+
+### Or take one yourself
 
 ```
 npm run db:backup                 # writes to ./backups, gitignored
@@ -196,10 +340,9 @@ npm run db:backup                 # writes to ./backups, gitignored
 Uses `pg_dump` when it is on PATH, and writes a JSON export of every row when it
 is not — rather than not backing up, which is the failure this whole section is
 about. Either is a complete backup, because `migrations/` is in git: **schema
-from source, rows from the backup file.**
-
-On the Free plan, do this weekly at minimum. Six hours is the entire safety net
-otherwise. Keep the files somewhere that is not this laptop.
+from source, rows from the backup file.** This one is **not encrypted** and
+nothing prunes `./backups`; take it before a risky migration, and do not leave
+it on the laptop.
 
 ---
 
@@ -218,6 +361,9 @@ neon branches restore <target> <source@2026-08-23T04:00:00Z>
 
 ### Older damage, or a lost account — use your own backup
 
+From a nightly artifact: *Getting one back out*, above. From a manual
+`npm run db:backup` file:
+
 ```
 npm run db:migrate:production                                 # schema, from git
 pg_restore --no-owner --dbname "$DATABASE_URL_UNPOOLED" <file> # rows
@@ -227,8 +373,8 @@ For a JSON backup, replay the rows per table after migrating.
 
 ### Rehearse it before it matters
 
-Do a restore drill on a Neon branch **before Phase 2 puts money through this
-database**. A backup nobody has restored is a belief, not a backup.
+Do the restore drill above **before Phase 2 puts money through this database**,
+and every quarter after.
 
 ---
 

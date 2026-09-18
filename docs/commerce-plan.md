@@ -278,10 +278,12 @@ restore preserves the pre-restore state as a branch named
 does not survive noticing on Monday that Friday's migration corrupted orders, and
 it does not survive losing the account.
 
-**What you do manually:** a nightly `pg_dump` over the **unpooled** connection
-string, written to object storage, kept 30 days. At this size that is a file
-measured in megabytes. It goes in on day one of Phase 1, not later, because on
-the Free tier six hours is the entire safety net.
+**What covers it:** a nightly `pg_dump` over the **unpooled** connection
+string, kept 30 days. This plan originally said "written to object storage";
+what was built instead is `.github/workflows/db-backup.yml`, which encrypts the
+dump and keeps it as a GitHub Actions artifact — no bucket, no new vendor. It is
+described in `docs/database-runbook.md`. At this size that is a file measured in
+megabytes.
 
 **Restore procedure** (console): branch → Backup & Restore → pick the branch →
 From history → choose a timestamp or LSN → Restore. Takes seconds, and drops
@@ -314,7 +316,9 @@ permanently. It wins if image storage ever passes a few gigabytes. S3 is the
 weakest fit — same storage price as Blob, worst egress terms, most setup, and no
 meaningful standing free tier for a new account.
 
-The nightly `pg_dump` goes to R2 regardless; its free tier covers it outright.
+The nightly `pg_dump` does **not** go to R2, as this plan first had it: it is an
+encrypted GitHub Actions artifact (`docs/database-runbook.md`). R2 remains the
+place to move it if thirty days of retention stops being enough.
 
 ---
 

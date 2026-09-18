@@ -190,7 +190,7 @@ export async function sendAndRecord(
 ): Promise<SendResult> {
   if (template === "announcement") {
     const error = "the announcement is sent by scripts/mail/send-announcement.ts, which claims first";
-    console.error(`[guard-theory] refused to send ${template} to ${email.to}: ${error}`);
+    console.error(`[guard-theory] refused to send ${template} to ${maskEmail(email.to)}: ${error}`);
     return { ok: false, unknown: false, error };
   }
 

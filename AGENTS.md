@@ -187,6 +187,32 @@ protecting, or make the case for changing the rule.
   A class written as backslash-u-0000 through backslash-u-001F is fine; typing
   the actual bytes makes the source file read as binary to `grep` and `git
   diff`. `scripts/strip-control-bytes.mjs` cleans a file that already has them.
+- **`next build`'s "Running TypeScript" step can die with `Fatal process out of
+  memory: Zone`, and `NODE_OPTIONS=--max-old-space-size=...` does not fix it.**
+  This machine runs at 900MB–1.5GB free RAM out of 7.4GB total day to day, and
+  Windows' pagefile has little room to grow when the disk is also near full.
+  "Zone" is V8's own parser/compiler allocator — a different pool from the JS
+  heap `--max-old-space-size` governs — so raising the heap ceiling cannot help,
+  and setting it above this machine's physical RAM (8192, against 7.4GB total)
+  is actively counterproductive: it just invites V8 to grow the heap further
+  before it would otherwise collect, leaving less room for everything else. It
+  is not a pathological type: `npx tsc --noEmit --extendedDiagnostics` checks
+  all 25,900+ types in ~300MB and ~5s, both with and without `.next/types`
+  present, and `next build` itself completed cleanly every time this was
+  retried in isolation — so the crash is contention with whatever else is
+  running (browser tabs, another worktree's build, antivirus), not a build-time
+  determinism bug, which is also why it will not reproduce on demand. Two
+  mitigations: `next.config.ts` sets `experimental.useTypeScriptCli: true`,
+  which makes this build step spawn the real `tsc` binary — the same lean path
+  `npm run typecheck` already uses — instead of constructing a second, separate
+  full TypeScript Program/Checker inside a forked worker while the
+  webpack/Turbopack process from the step before is still resident. `typescript.
+  ignoreBuildErrors` was considered and rejected: it would silently stop `next
+  build` itself from checking types, which is the one check Vercel's production
+  deploys actually run — the local `npm run typecheck` gate does not cover a
+  deploy that skips it. If this recurs, close other memory-heavy apps (or other
+  worktrees' builds) and retry rather than raising `--max-old-space-size`
+  further.
 
 ## Gates
 

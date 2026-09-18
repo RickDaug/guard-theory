@@ -73,6 +73,24 @@ so until 2026-09-17 the `db:*` scripts ignored the very file this step creates,
 and these instructions could not have worked as written. They now run under
 `--env-file-if-exists=.env.local`.
 
+### 2a. Preview and Production share one database
+
+The Neon integration injects `DATABASE_URL` for **Preview and Production
+together**, and it provisions a single branch. There is no second database
+behind preview deployments: `neon api /projects/<id>/branches` returns exactly
+one, `main`.
+
+So **the Playwright suite must not be pointed at a preview URL.** Its fixtures
+write `test-*@example.com` straight into the production `waitlist_signup` table.
+That is how 55 junk records ended up in the August NDJSON file, and a real
+database will not be as easy to throw away as that file was.
+
+Until per-preview branching is enabled (Vercel → Storage → the database →
+Connect Project → Advanced Options → Deployments Configuration → toggle
+**Preview**), treat any write against a preview as a write against production:
+namespace it, and delete it afterwards.
+
+
 ### 3. Apply the schema
 
 ```

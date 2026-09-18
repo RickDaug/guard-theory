@@ -20,8 +20,8 @@ the steps only the owner can take, in order.
 is provisioned and Phase 1 — the waitlist on Postgres — is live in production.
 Resend's domain is verified and its keys are set in Production, but nothing
 merged yet reads them: the mail layer sits on `feat/mail`, unmerged, so no mail
-sends. Both tiers below now describe what exists, not what to do next. Tiers 1,
-3, 5 and 6 have not moved and read as before.
+sends. Both tiers below now describe what exists, not what to do next. Tier 1
+was done on 2026-09-18. Tiers 3, 5 and 6 have not started.
 
 **Verified against production on 2026-08-31:**
 
@@ -47,8 +47,9 @@ unmerged, so `/crew` and `/shop` should still read the same way.
   variable, and neither `NEXT_PUBLIC_*` one.
 - **No Stripe, Shippo or portal variable exists in either environment.**
 
-The team's plan was not re-checked on that date; Hobby is as verified on
-2026-08-31.
+**The team moved to Pro on 2026-09-18.** The Vercel API reports
+`billing.plan: "pro"` for `chesstrophies-projects`. The Hobby line above is what
+was true on 2026-08-31 and is kept as the record of it. Tier 1 is done.
 
 ---
 
@@ -58,7 +59,8 @@ Three branches are waiting, and they merge in this order:
 
 1. **`feat/mail`** — the mail layer. Both of its variables are already in
    Production.
-2. **`feat/commerce-reland`, PR #3** — after Tiers 1, 3, 5 and 6 below.
+2. **`feat/commerce-reland`, PR #3** — after Tiers 3, 5 and 6 below. Tier 1 is
+   already in place.
 3. **`feat/announcement-send`, PR #2** — last.
 
 The announcement goes last because of what the site has promised. The waitlist
@@ -81,12 +83,12 @@ the same rule will apply to it. `docs/commerce-reland.md` records
 ## The order matters
 
 The tiers below are sequenced so that each one leaves production in a working
-state. **Do not skip ahead** — Tier 2 is what makes the waitlist safe again, and
-until Tier 1 is done, taking payment at all is a plan-terms violation.
+state. **Do not skip ahead** — Tier 2 is what made the waitlist safe again, and
+Tier 1 is what makes taking payment permitted at all. Both are now done.
 
 | Tier | What it unlocks | Cost | Status |
 |---|---|---|---|
-| 1 — Vercel Pro | The legal right to take payment on this host | $20/mo | not started |
+| 1 — Vercel Pro | The legal right to take payment on this host | $20/mo | **done — 2026-09-18** |
 | 2 — Neon Postgres | Phase 1: the waitlist on a real database | $0 | **done — live in production** |
 | 3 — Stripe | Purchasable products, checkout, tax, refunds | per-transaction | not started |
 | 4 — Resend | Order confirmation and status email | $0, $20/mo to announce | account + DNS done; send path on `feat/mail`, unmerged |
@@ -100,19 +102,25 @@ has shipped.
 
 ---
 
-## Tier 1 — Vercel Pro ($20/month)
+## Tier 1 — Vercel Pro ($20/month) — done
 
-**Do this first, before any payment code is live.** Vercel's Fair Use policy
-defines taking payment as commercial use, and Hobby is non-commercial only. The
-team is on Hobby today.
+**This had to come first, before any payment code is live.** Vercel's Fair Use
+policy defines taking payment as commercial use, and Hobby is non-commercial
+only. The team was on Hobby until 2026-09-18 and is on **Pro** now. Selling
+requires it to stay there: a downgrade puts the shop back outside the plan's
+terms.
 
-1. Vercel dashboard → team `chesstrophies-projects` → Settings → Billing →
-   upgrade to **Pro**.
+1. ~~Vercel dashboard → team `chesstrophies-projects` → Settings → Billing →
+   upgrade to **Pro**.~~ Done 2026-09-18.
 
 Note: Vercel's own password protection is a **$150/month** add-on. That is why
 the Crew Portal's auth is built in-app (Tier 6) rather than bought.
 
-**Verify:** the team's plan reads `pro`.
+**Verify:** the team's plan reads `pro`. Checked 2026-09-18:
+
+```
+npx vercel api "/v2/teams?slug=chesstrophies-projects"     # billing.plan
+```
 
 ---
 
@@ -204,8 +212,9 @@ this size that is a file measured in megabytes. Start on day one, not later — 
 Free, six hours is the entire safety net. `docs/database-runbook.md` carries the restore procedure,
 and you should **rehearse a restore before Tier 3 puts money through it**.
 
-**What's still ahead:** re-landing commerce is merging PR #3, once Tier 1 covers
-taking payment and the tiers below have put their variables in Production.
+**What's still ahead:** re-landing commerce is merging PR #3, once the tiers
+below have put their variables in Production. Tier 1 already covers taking
+payment.
 `0001` is applied in production — Phase 1 would not be live otherwise — and
 `docs/database-runbook.md` step 3 covers running migrations. **There is no
 import step.** An earlier version of this document pointed at one; the old

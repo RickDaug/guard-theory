@@ -18,15 +18,7 @@ export const metadata: Metadata = pageMetadata({
  */
 export const dynamic = "force-dynamic";
 
-export default async function CartPage({
-  searchParams,
-}: {
-  searchParams: Promise<{ problem?: string | string[] }>;
-}) {
-  const params = await searchParams;
-  const raw = params.problem;
-  const problem = Array.isArray(raw) ? raw[0] : raw;
-
+export default function CartPage() {
   return (
     <main id="main" className="px-6 py-16 md:px-12">
       <div className="mx-auto max-w-[64rem]">
@@ -37,7 +29,7 @@ export default async function CartPage({
           <h1 className="display-condensed mt-6 text-4xl text-chalk">Cart</h1>
         </header>
 
-        <CartView problem={problem} />
+        <CartView />
       </div>
     </main>
   );

@@ -53,16 +53,13 @@ export function Button({
 /**
  * A plain anchor wearing the same clothes.
  *
- * For destinations that must not be prefetched or client-navigated: a route
- * handler that performs a side effect and redirects off-site. `next/link` would
- * prefetch it, and prefetching a link that creates a Stripe Checkout Session
- * mints sessions for people who only hovered.
+ * For destinations that must not be prefetched or client-navigated — a route
+ * handler that returns a download, like the portal's list export. `next/link`
+ * would prefetch it and try to render the response as a page.
  *
- * It is also the shape the Content-Security-Policy requires. `form-action
- * 'self'` blocks the redirect that follows a form submission — verified against
- * Chrome in this repository, see docs/commerce-plan.md §0.1 — while a link
- * navigation and its redirect are governed by no shipped directive at all. So
- * checkout is a link, and this is the link.
+ * Checkout does not use this. It used to be a link to a route handler that
+ * redirected to Stripe; it is now a button that navigates to a URL the server
+ * returns — see src/lib/stripe/start.ts.
  */
 type ButtonAnchorProps = {
   intent?: Intent;

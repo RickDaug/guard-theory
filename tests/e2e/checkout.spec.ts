@@ -43,35 +43,13 @@ test.describe("cart", () => {
   });
 });
 
-test.describe("checkout hop", () => {
-  test("an unknown intent returns the buyer to an intact cart, not an error", async ({
-    request,
-  }) => {
-    const response = await request.get("/checkout/start?i=not-a-real-intent", {
-      maxRedirects: 0,
-    });
-
-    expect(response.status(), "checkout must redirect, never 4xx at a buyer").toBe(303);
-
-    const location = response.headers()["location"] ?? "";
-    expect(location, "the buyer goes back to the cart with a reason").toMatch(/^\/cart\?problem=/);
-  });
-
-  test("no intent at all is handled the same way", async ({ request }) => {
-    const response = await request.get("/checkout/start", { maxRedirects: 0 });
-    expect(response.status()).toBe(303);
-    expect(response.headers()["location"] ?? "").toMatch(/^\/cart\?problem=/);
-  });
-
-  test("the checkout response is never cached", async ({ request }) => {
-    // A cached 303 would send the next buyer to somebody else's Stripe session.
-    const response = await request.get("/checkout/start?i=x", { maxRedirects: 0 });
-    expect(response.headers()["cache-control"] ?? "").toContain("no-store");
-  });
-});
+// The hop itself — unknown intent, no intent, Stripe unconfigured, already
+// paid — is covered in tests/unit/checkout-start.test.ts. It is a server
+// action returning a value now, not a route answering a GET, so there is no
+// URL here to request.
 
 test.describe("buying", () => {
-  test("a priced, stocked product can be added and reaches a checkout link", async ({ page }) => {
+  test("a priced, stocked product can be added and reaches the checkout button", async ({ page }) => {
     test.skip(!(await isPurchasable(page)), "no priced product in this database");
 
     await page.goto(PRODUCT, { waitUntil: "load" });
@@ -85,16 +63,17 @@ test.describe("buying", () => {
     await page.goto("/cart", { waitUntil: "load" });
     await expect(page.getByText(/your cart is empty/i)).toHaveCount(0);
 
-    const checkout = page.getByRole("link", { name: /^checkout$/i });
+    const checkout = page.getByRole("button", { name: /^checkout$/i });
     await expect(checkout).toBeVisible();
 
-    // The shape the CSP requires. A <form> here would have its redirect blocked
-    // by form-action 'self' — verified against Chrome before this was built,
-    // see docs/commerce-plan.md §0.1. It must stay a link.
-    const href = await checkout.getAttribute("href");
-    expect(href, "checkout must be a link to our own route handler").toMatch(
-      /^\/checkout\/start\?i=/,
-    );
+    // The shape the CSP requires. A <form> whose submission redirects to Stripe
+    // would be blocked by form-action 'self' (docs/commerce-plan.md §0.1), and
+    // a link to a route handler would put a side effect behind a GET. It is a
+    // plain button that asks the server for a URL and navigates to it.
+    expect(
+      await checkout.evaluate((el) => el.closest("form") === null && el.tagName === "BUTTON"),
+      "checkout must be a button outside any form",
+    ).toBe(true);
   });
 
   test("a sold-out size is visible and cannot be bought", async ({ page }) => {

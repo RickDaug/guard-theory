@@ -1,7 +1,7 @@
 "use client";
 
-import { useEffect, useState, useSyncExternalStore } from "react";
-import { priceCartAction } from "@/app/cart/actions";
+import { useEffect, useState, useSyncExternalStore, useTransition } from "react";
+import { priceCartAction, startCheckoutAction } from "@/app/cart/actions";
 import {
   getCartSnapshot,
   getServerCartSnapshot,
@@ -9,9 +9,13 @@ import {
   setCartQuantity,
   subscribeToCart,
 } from "@/lib/cart/client";
-import { MAX_QUANTITY_PER_LINE, type PricedCart } from "@/lib/cart/types";
+import {
+  MAX_QUANTITY_PER_LINE,
+  type CheckoutProblem,
+  type PricedCart,
+} from "@/lib/cart/types";
 import { formatMoney } from "@/lib/money";
-import { Button, ButtonAnchor, ButtonLink } from "@/components/ui/Button";
+import { Button, ButtonLink } from "@/components/ui/Button";
 
 /**
  * The cart.
@@ -20,20 +24,21 @@ import { Button, ButtonAnchor, ButtonLink } from "@/components/ui/Button";
  * total from anything the browser was holding — `priceCartAction` returns the
  * numbers and this renders them.
  *
- * The checkout control is a plain <a>, not a form and not next/link. See
- * src/app/checkout/start/route.ts for why: form-action 'self' blocks the
- * redirect that follows a form submission, and that is verified rather than
- * assumed.
+ * The checkout control is a button that asks the server for a Stripe URL and
+ * then navigates to it with `window.location.assign`. Not a form that
+ * redirects, because form-action 'self' blocks the redirect that follows a
+ * form submission; not a link to a route handler, because that puts a side
+ * effect behind a GET. See src/lib/stripe/start.ts.
  */
 
-const PROBLEMS: Record<string, string> = {
-  expired: "That checkout link had expired. Your cart is untouched — start again when ready.",
+const PROBLEMS: Record<CheckoutProblem, string> = {
+  expired: "That checkout had expired. Your cart is untouched — start again when ready.",
   "already-paid":
     "That order has already been paid for. Check your email for the confirmation before trying again.",
   unavailable:
     "We could not reach the payment provider just now. Nothing has been charged. Try again in a moment.",
   empty: "There was nothing in the cart to check out with.",
-  "no-intent": "That checkout link was incomplete. Start again from here.",
+  "no-intent": "That checkout was incomplete. Start again from here.",
 };
 
 function DroppedNotice({ cart }: { cart: PricedCart }) {
@@ -60,11 +65,34 @@ function DroppedNotice({ cart }: { cart: PricedCart }) {
   );
 }
 
-export function CartView({ problem }: { problem?: string }) {
+export function CartView() {
   const lines = useSyncExternalStore(subscribeToCart, getCartSnapshot, getServerCartSnapshot);
   const [cart, setCart] = useState<PricedCart | null>(null);
   const [failed, setFailed] = useState(false);
   const [settled, setSettled] = useState(false);
+  const [problem, setProblem] = useState<CheckoutProblem | null>(null);
+  const [leaving, startLeaving] = useTransition();
+
+  function checkout(intentId: string) {
+    setProblem(null);
+
+    startLeaving(async () => {
+      try {
+        const result = await startCheckoutAction(intentId);
+
+        if (result.ok) {
+          // A script navigation, not a form redirect: form-action does not
+          // govern it. The pending state stays up while the browser leaves.
+          window.location.assign(result.url);
+          return;
+        }
+
+        setProblem(result.problem);
+      } catch {
+        setProblem("unavailable");
+      }
+    });
+  }
 
   useEffect(() => {
     let cancelled = false;
@@ -114,7 +142,7 @@ export function CartView({ problem }: { problem?: string }) {
 
   return (
     <div className="flex flex-col gap-10">
-      {problem && PROBLEMS[problem] ? (
+      {problem ? (
         <p role="alert" className="border-l-2 border-signal-lift bg-graphite px-5 py-4 text-base text-chalk">
           {PROBLEMS[problem]}
         </p>
@@ -210,10 +238,17 @@ export function CartView({ problem }: { problem?: string }) {
 
           <div className="flex flex-col gap-4">
             {cart!.intentId ? (
-              // A plain anchor. Not a form, and not next/link — see ButtonAnchor.
-              <ButtonAnchor href={`/checkout/start?i=${cart!.intentId}`} intent="signal">
-                Checkout
-              </ButtonAnchor>
+              <div>
+                <Button
+                  type="button"
+                  intent="signal"
+                  disabled={leaving}
+                  aria-busy={leaving}
+                  onClick={() => checkout(cart!.intentId!)}
+                >
+                  {leaving ? "Opening checkout…" : "Checkout"}
+                </Button>
+              </div>
             ) : (
               <p role="alert" className="text-base text-steel">
                 We could not start a checkout just now. Nothing has been charged. Try again in a

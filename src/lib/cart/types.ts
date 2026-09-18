@@ -49,6 +49,16 @@ export type PricedCart = {
   currency: string;
 };
 
+/** Why a checkout could not be started. Each has its own sentence in the cart. */
+export type CheckoutProblem = "no-intent" | "unavailable" | "expired" | "already-paid" | "empty";
+
+/**
+ * What `startCheckoutAction` returns: the Stripe URL for the browser to go to,
+ * or the reason there is not one. A URL, never a redirect — see
+ * src/lib/stripe/start.ts.
+ */
+export type CheckoutStart = { ok: true; url: string } | { ok: false; problem: CheckoutProblem };
+
 export const CART_STORAGE_KEY = "guard-theory:cart:v1";
 export const MAX_QUANTITY_PER_LINE = 10;
 

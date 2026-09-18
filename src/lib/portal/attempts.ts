@@ -89,14 +89,16 @@ export async function markAttemptSucceeded(attemptId: string): Promise<void> {
   await query("update login_attempt set succeeded = true where id = $1::bigint", [attemptId]);
 }
 
-/** Housekeeping. Never worth failing a sign-in over. */
-export async function sweepLoginAttempts(): Promise<void> {
+/** Housekeeping. Never worth failing a sign-in over. Returns how many went. */
+export async function sweepLoginAttempts(): Promise<number> {
   try {
-    await query(
-      "delete from login_attempt where attempted_at < now() - make_interval(hours => $1)",
+    const rows = await query<{ id: string }>(
+      "delete from login_attempt where attempted_at < now() - make_interval(hours => $1) returning id::text as id",
       [LOGIN_ATTEMPT_RETENTION_HOURS],
     );
+    return rows.length;
   } catch {
     // Deliberately quiet.
+    return 0;
   }
 }

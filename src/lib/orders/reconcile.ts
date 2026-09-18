@@ -1,3 +1,4 @@
+import type Stripe from "stripe";
 import { query } from "../db/client.ts";
 import { stripe, isStripeConfigured } from "../stripe/client.ts";
 import { fulfilCheckoutSession } from "./fulfil.ts";
@@ -17,7 +18,7 @@ import { ensureOrderConfirmationSent } from "./confirmation.ts";
  * query, but it needs you to know when the outage started, and events are only
  * kept for thirty days. Listing completed sessions and left-joining against our
  * own table needs no bookkeeping at all and finds gaps nobody noticed. It is
- * cheap enough to run nightly.
+ * cheap enough to run every fifteen minutes, which vercel.json does.
  *
  * It goes through `fulfilCheckoutSession`, the same function the webhook uses,
  * so a reconciled order is indistinguishable from a normal one except for the
@@ -30,10 +31,31 @@ export type ReconcileReport = {
   created: number;
   alreadyRecorded: number;
   skipped: { sessionId: string; reason: string }[];
+  /** True when a bound stopped the walk early. The next run starts again from the top. */
+  truncated?: boolean;
+};
+
+/**
+ * Bounds, for a caller with a clock running against it.
+ *
+ * The portal button and the script walk everything. The scheduled run
+ * (src/lib/orders/cron.ts) is inside a serverless function with a maxDuration,
+ * and a function killed mid-walk reports nothing at all — so it stops itself
+ * first and says so. Stopping early loses nothing: every session is
+ * independent, newest first, and the next run starts from the top.
+ *
+ * `client` exists so a test can hand in a list of sessions instead of Stripe.
+ */
+export type ReconcileOptions = {
+  /** Epoch milliseconds after which no further session is started. */
+  deadlineMs?: number;
+  maxSessions?: number;
+  client?: { checkout: { sessions: Pick<Stripe["checkout"]["sessions"], "list"> } };
 };
 
 export async function reconcileStripeSessions(
   lookbackHours = 72,
+  options: ReconcileOptions = {},
 ): Promise<ReconcileReport> {
   const report: ReconcileReport = { scanned: 0, created: 0, alreadyRecorded: 0, skipped: [] };
 
@@ -44,11 +66,21 @@ export async function reconcileStripeSessions(
 
   const since = Math.floor(Date.now() / 1000) - lookbackHours * 60 * 60;
 
-  for await (const session of stripe().checkout.sessions.list({
+  const client = options.client ?? stripe();
+
+  for await (const session of client.checkout.sessions.list({
     status: "complete",
     created: { gte: since },
     limit: 100,
   })) {
+    if (
+      (options.deadlineMs !== undefined && Date.now() >= options.deadlineMs) ||
+      (options.maxSessions !== undefined && report.scanned >= options.maxSessions)
+    ) {
+      report.truncated = true;
+      break;
+    }
+
     report.scanned += 1;
 
     if (session.payment_status === "unpaid") {

@@ -1,11 +1,11 @@
 import { expect, test } from "@playwright/test";
 
 /**
- * The two public endpoints.
+ * The three public endpoints.
  *
  * These are the only routes that sit outside portal authentication, because
- * Stripe and Shippo have to reach them. What is asserted here is that they
- * refuse everything they should.
+ * Stripe, Shippo and Vercel's scheduler have to reach them. What is asserted
+ * here is that they refuse everything they should.
  */
 
 test.describe("the Stripe webhook", () => {
@@ -48,5 +48,32 @@ test.describe("the Shippo webhook", () => {
     });
 
     expect(response.status()).toBeGreaterThanOrEqual(400);
+  });
+});
+
+test.describe("the scheduled reconciler", () => {
+  // 401 here, where Shippo's gets a 404: this path is in vercel.json in a
+  // public repository, so there is nothing for a 404 to conceal, and a 401 in
+  // Vercel's cron log says what is wrong where a 404 reads as a missing route.
+  test("refuses a caller without the cron secret, and is never cached", async ({ request }) => {
+    const attempts: Record<string, string>[] = [
+      {},
+      { authorization: "Bearer undefined" },
+      { authorization: "Bearer " },
+    ];
+
+    for (const headers of attempts) {
+      const response = await request.get("/api/cron/reconcile", { headers });
+
+      expect(response.status()).toBe(401);
+      expect(response.headers()["cache-control"]).toContain("no-store");
+      expect(response.headers()["x-robots-tag"]).toContain("noindex");
+      expect(await response.json()).toEqual({ ok: false });
+    }
+  });
+
+  test("only answers GET", async ({ request }) => {
+    const response = await request.post("/api/cron/reconcile", { data: {} });
+    expect(response.status()).toBe(405);
   });
 });

@@ -171,6 +171,9 @@ export async function refundOrder(
  * in order: the event for a first partial refund can arrive after the event for
  * the second. Written absolutely, the late one LOWERED the figure. greatest()
  * makes the update monotonic, so the order it arrives in stops mattering.
+ * least() caps it at the order total: 0007 has a CHECK saying a refund cannot
+ * exceed what was paid, and a webhook that violated it would be retried for
+ * three days rather than recorded.
  */
 export async function syncRefundFromCharge(
   paymentIntentId: string,
@@ -182,7 +185,7 @@ export async function syncRefundFromCharge(
 
   await query(
     `update "order"
-        set refunded_cents = greatest(refunded_cents, $2::integer),
+        set refunded_cents = least(greatest(refunded_cents, $2::integer), total_cents),
             refund_status = case
               when greatest(refunded_cents, $2::integer) >= total_cents then 'full'
               when greatest(refunded_cents, $2::integer) > 0 then 'partial'

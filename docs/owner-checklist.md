@@ -214,7 +214,7 @@ labelled, marked delivered, refunded.
 | 1 — Vercel Pro | Done: the team's plan read `pro` on 2026-09-18. |
 | 3, 4, 5, 6 — variables in Vercel | Runs `vercel env ls production` and checks every required **name** is present. It cannot read the values and does not need to. |
 | — | Merges `feat/mail` and confirms the domain serves the new build. |
-| 6 complete | Applies migrations `0003` and `0004` to production, then seeds the two Theory 01 products as drafts. Both happen **before** the merge; the running site does not read the new tables. |
+| 6 complete | Applies migrations `0003`, `0004`, `0006` and `0007` to production (`0005` belongs to PR #2 and is independent of them), then seeds the two Theory 01 products as drafts. Both happen **before** the merge; the running site does not read the new tables. |
 | 8 — shipping figure | Updates `setting.shipping_flat_cents`. |
 | 9 — tax code | Nothing, unless you chose a non-default code, in which case it checks the name is set. |
 | 10 — specs | Corrects or removes whatever you flag. |

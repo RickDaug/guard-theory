@@ -72,8 +72,11 @@ take an order is a way to spend that one email early.
 **Migrations are applied to production before the merge that needs them, never
 after.** That is 2026-08-24 in one line. They are additive, and the running site
 does not read the new tables, so applying early costs nothing; applying late is
-an outage. `0003_commerce.sql` and `0004_admin_session.sql` go in before PR #3
-merges. PR #2 is expected to bring a `0005`; it is not on the branch yet, and
+an outage. `0003_commerce.sql`, `0004_admin_session.sql`,
+`0006_commerce_hardening.sql` and `0007_commerce_constraints.sql` go in before
+PR #3 merges. The code on that branch reads `unfulfilled_payment`,
+`login_attempt` and `order.label_claimed_at`, all from `0006`: without it the
+portal's Orders page and sign-in both fail. PR #2 is expected to bring a `0005`; it is not on the branch yet, and
 the same rule will apply to it. `docs/commerce-reland.md` records
 `0002_email_log.sql`, from `feat/mail`, as already applied — run
 `npm run db:status:production` to confirm before relying on that.

@@ -1,17 +1,15 @@
 import type { Metadata } from "next";
+import { cache } from "react";
 import { UtilityPage } from "@/components/site/UtilityPage";
-import { unsubscribeByToken, type UnsubscribeResult } from "@/lib/waitlist";
-
-export const metadata: Metadata = {
-  title: "Unsubscribed",
-  description: "You have been removed from the Guard Theory First Edition list.",
-  robots: { index: false, follow: false },
-};
+import { unsubscribeByToken } from "@/lib/waitlist";
+import { metaDescriptionFor, metaTitleFor, tokenFromSearchParams, type UnsubscribeOutcome } from "./copy";
 
 /**
  * This page used to assert an outcome with nothing behind it: a static sheet
  * telling the reader their address had been removed, while nothing removed it.
- * It now honours a real token.
+ * It now honours a real token — and the `<title>` honours it too, so a tab or
+ * a screen reader's document title cannot claim success on a link that did
+ * nothing.
  *
  * It is dynamic because it writes. One click on the link in an email is the
  * whole interaction — the privacy policy promises "a one-click unsubscribe" and
@@ -23,13 +21,48 @@ export const metadata: Metadata = {
  */
 export const dynamic = "force-dynamic";
 
+type SearchParams = Promise<{ t?: string | string[] }>;
+
+/**
+ * `generateMetadata` and the page component both need the outcome, and the
+ * lookup writes — `unsubscribeByToken` marks the row unsubscribed on a valid
+ * token. `cache()` makes the two calls in one render share a single write
+ * instead of racing two updates against the same row. The store itself is
+ * idempotent either way (a second update matches no row and reports
+ * "already"), so this is about not doing the write twice, not about
+ * correctness of the result.
+ */
+const resolveOutcome = cache(
+  async (token: string): Promise<UnsubscribeOutcome> => (token ? unsubscribeByToken(token) : "no-token"),
+);
+
+async function outcomeFor(searchParams: SearchParams): Promise<UnsubscribeOutcome> {
+  const params = await searchParams;
+  const token = tokenFromSearchParams(params.t);
+  return resolveOutcome(token);
+}
+
+export async function generateMetadata({
+  searchParams,
+}: {
+  searchParams: SearchParams;
+}): Promise<Metadata> {
+  const outcome = await outcomeFor(searchParams);
+
+  return {
+    title: metaTitleFor(outcome),
+    description: metaDescriptionFor(outcome),
+    robots: { index: false, follow: false },
+  };
+}
+
 type Copy = {
   title: React.ReactNode;
   tone?: "neutral" | "alert";
   body: React.ReactNode;
 };
 
-function copyFor(result: UnsubscribeResult | "no-token"): Copy {
+function copyFor(result: UnsubscribeOutcome): Copy {
   switch (result) {
     case "unsubscribed":
     case "already":
@@ -138,13 +171,9 @@ function copyFor(result: UnsubscribeResult | "no-token"): Copy {
 export default async function UnsubscribePage({
   searchParams,
 }: {
-  searchParams: Promise<{ t?: string | string[] }>;
+  searchParams: SearchParams;
 }) {
-  const params = await searchParams;
-  const raw = params.t;
-  const token = (Array.isArray(raw) ? raw[0] : raw)?.trim() ?? "";
-
-  const result = token ? await unsubscribeByToken(token) : "no-token";
+  const result = await outcomeFor(searchParams);
   const { title, body, tone } = copyFor(result);
 
   return (

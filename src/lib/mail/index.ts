@@ -45,32 +45,64 @@ class ResendProvider implements MailProvider {
   async send(email: Email): Promise<SendResult> {
     // `fetch`, not the SDK. Sending is one POST with a JSON body, and that is
     // not a problem that earns a dependency — see docs/commerce-plan.md §15.
+    let response: Response;
+
     try {
-      const response = await fetch("https://api.resend.com/emails", {
+      response = await fetch("https://api.resend.com/emails", {
         method: "POST",
         headers: {
           Authorization: `Bearer ${this.apiKey}`,
           "Content-Type": "application/json",
+          ...(email.idempotencyKey ? { "Idempotency-Key": email.idempotencyKey } : {}),
         },
         body: JSON.stringify({
           from: this.from,
           to: [email.to],
           subject: email.subject,
           text: email.body,
+          ...(email.headers ? { headers: email.headers } : {}),
         }),
         signal: AbortSignal.timeout(8_000),
       });
-
-      if (!response.ok) {
-        return { ok: false, error: `${response.status}: ${(await response.text()).slice(0, 300)}` };
-      }
-
-      const payload = (await response.json()) as { id?: string };
-      return { ok: true, providerId: payload.id ?? null };
     } catch (error) {
-      return { ok: false, error: error instanceof Error ? error.message : String(error) };
+      // No answer is not a "no". A request that timed out after Resend
+      // accepted it looks exactly like one that never arrived, so this is
+      // reported as unknown and nothing may retry it on its own.
+      return {
+        ok: false,
+        unknown: true,
+        error: `no answer from Resend: ${error instanceof Error ? error.message : String(error)}`,
+      };
     }
+
+    if (!response.ok) {
+      const detail = await response.text().catch(() => "");
+      return {
+        ok: false,
+        unknown: isAmbiguousStatus(response.status),
+        error: `${response.status}: ${detail.slice(0, 300)}`,
+      };
+    }
+
+    // A 2xx is an accepted message whether or not the body can be read. The
+    // id is a convenience for the dashboard; losing it must not turn a sent
+    // message into a failed one.
+    const payload = (await response.json().catch(() => ({}))) as { id?: string };
+    return { ok: true, providerId: payload.id ?? null };
   }
+}
+
+/**
+ * Statuses that do not say whether the message went.
+ *
+ * A 5xx can come from a gateway in front of a Resend that accepted the
+ * message. A 409 is Resend's answer to an idempotency key it has seen before:
+ * either the earlier request is still in flight, or it finished with a
+ * different payload — and in both cases there IS an earlier request. Every
+ * other 4xx (a bad address, a bad key, the 429 quota) is a plain refusal.
+ */
+export function isAmbiguousStatus(status: number): boolean {
+  return status >= 500 || status === 409;
 }
 
 /**
@@ -129,14 +161,27 @@ export async function sendEmail(
 /**
  * `sendEmail`, returning the provider's result instead of a boolean.
  *
- * The announcement run needs the error itself: a 429 means stop for the day,
- * and anything else means carry on to the next address. A boolean cannot tell
- * those apart. Same contract otherwise — it never throws, and it logs.
+ * For a caller that needs to tell a refusal from a send nobody can vouch for
+ * (`unknown`, logged under that status). Same contract otherwise — it never
+ * throws, and it logs.
+ *
+ * NOT FOR THE ANNOUNCEMENT, and it refuses it. This path sends first and
+ * writes the log afterwards, which is right for a message that may be sent
+ * again and wrong for one that must arrive once. The list send claims its row
+ * BEFORE the provider call — `claimRecipient` in `announcement.ts` — and an
+ * announcement sent from here would go out unclaimed, past the one index that
+ * stops a second copy.
  */
 export async function sendAndRecord(
   template: EmailTemplate,
   email: Email,
 ): Promise<SendResult> {
+  if (template === "announcement") {
+    const error = "the announcement is sent by scripts/mail/send-announcement.ts, which claims first";
+    console.error(`[guard-theory] refused to send ${template} to ${email.to}: ${error}`);
+    return { ok: false, unknown: false, error };
+  }
+
   const mail = getMailProvider();
   const result = await mail.send(email);
 
@@ -156,7 +201,7 @@ export async function sendAndRecord(
           email.to.toLowerCase(),
           template,
           result.ok ? result.providerId : null,
-          result.ok ? "sent" : "failed",
+          result.ok ? "sent" : result.unknown ? "unknown" : "failed",
           result.ok ? null : result.error.slice(0, 1000),
         ],
       );

@@ -26,6 +26,19 @@ import type { Email } from "./types.ts";
  * the list carries a working one-click link, which is what the privacy policy
  * promises and what the law requires. It points at `?t=`, which is the
  * parameter `src/app/unsubscribe/page.tsx` actually reads.
+ *
+ * TWO WAYS OUT, FOR TWO KINDS OF READER
+ *
+ * The link in the body is for a person, and it lands on a page with a button:
+ * mail scanners and link prefetchers follow every URL in a message, and a link
+ * that unsubscribes on GET lets them unsubscribe people who never clicked.
+ *
+ * The headers are for the mail client. `List-Unsubscribe` with
+ * `List-Unsubscribe-Post: List-Unsubscribe=One-Click` is RFC 8058: the client
+ * shows its own unsubscribe button and, when it is pressed, POSTs to the URL.
+ * A scanner does not POST. Gmail and Yahoo have required both headers of bulk
+ * senders since February 2024, and a list message without them is more likely
+ * to be filed as spam however few of them there are.
  */
 export function announcement(
   to: string,
@@ -36,6 +49,10 @@ export function announcement(
   return {
     to,
     subject,
+    headers: {
+      "List-Unsubscribe": `<${oneClickUnsubscribeUrl(unsubscribeToken)}>`,
+      "List-Unsubscribe-Post": "List-Unsubscribe=One-Click",
+    },
     body: [
       body.trim(),
       "",
@@ -47,4 +64,9 @@ export function announcement(
       "Guard Theory",
     ].join("\n"),
   };
+}
+
+/** Where a mail client POSTs. `src/app/unsubscribe/one-click/route.ts` answers. */
+export function oneClickUnsubscribeUrl(unsubscribeToken: string): string {
+  return `${SITE_URL}/unsubscribe/one-click?t=${encodeURIComponent(unsubscribeToken)}`;
 }

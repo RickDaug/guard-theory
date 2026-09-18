@@ -168,6 +168,21 @@ protecting, or make the case for changing the rule.
   makes `waitlist.spec.ts` and the `/first-edition` console check fail locally
   unless a database is running. Start `npm run db:local` and migrate before
   concluding anything from those two.
+- **A Ready production deployment is not the same as the domain serving it.**
+  Merging to `main` builds and deploys, and on 2026-09-17 guardtheory.net went on
+  serving a build 28 days older than that deployment — a unique query string still
+  answered `X-Vercel-Cache: HIT`, so this was routing, not caching. The cost is
+  specific and bad: the live form ran the pre-Postgres code, which tells a visitor
+  "YOU'RE ON THE LIST" and writes to a temp directory. `npx vercel promote <url>`
+  fixed it in three seconds. The project has `autoAssignCustomDomains: true` and no
+  rolling release, so there is no setting to correct and this can happen again.
+  After any merge, check what the domain actually serves — a marker that only
+  exists in the new build, not the deployment log:
+
+  ```
+  curl -s https://guardtheory.net/unsubscribe | grep -oi "use the link"
+  ```
+
 - **Write control-character regexes with escape sequences**, not literal bytes.
   A class written as backslash-u-0000 through backslash-u-001F is fine; typing
   the actual bytes makes the source file read as binary to `grep` and `git

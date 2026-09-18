@@ -90,20 +90,63 @@ export function readShippingAddress(session: Stripe.Checkout.Session): ShippingA
 }
 
 /**
+ * How long an unprocessed claim is honoured before a retry may take it over.
+ *
+ * Longer than the webhook route's `maxDuration` (15s) with room to spare, so a
+ * handler that is merely slow is never raced — and short enough that Stripe's
+ * own retries, which back off over hours, will land after it.
+ */
+export const STALE_CLAIM_SECONDS = 60;
+
+export type ClaimResult =
+  /** This delivery owns the event and must handle it. */
+  | "claimed"
+  /** Already handled to completion. Answer 200 and do nothing. */
+  | "processed"
+  /** Another delivery claimed it recently and has not finished. Ask for a retry. */
+  | "in-flight";
+
+/**
  * Claims a webhook event.
  *
  * The primary key is the lock. Two concurrent deliveries of the same event
- * serialise on the unique index; the loser sees the conflict and returns false.
- * A read-then-write check has a race in the middle of it and this does not.
+ * serialise on the unique index; the loser sees the conflict and does not get
+ * the row. A read-then-write check has a race in the middle of it and this
+ * does not.
+ *
+ * WHAT IT USED TO GET WRONG: the claim row is written BEFORE the work. If the
+ * function then died — timeout, crash, a release that itself failed — the row
+ * stayed with `processed_at` null for ever and every one of Stripe's retries
+ * was answered "duplicate, 200". Charged, no order, no email, and nothing left
+ * to retry. So an unprocessed claim older than STALE_CLAIM_SECONDS is taken
+ * over in the same atomic statement, and a fresh unprocessed one is reported
+ * as in-flight so the caller can ask Stripe to come back, rather than telling
+ * it the event was handled when nobody knows that yet.
  */
-export async function claimEvent(id: string, type: string, source = "stripe"): Promise<boolean> {
+export async function claimEvent(
+  id: string,
+  type: string,
+  source = "stripe",
+): Promise<ClaimResult> {
   const rows = await query<{ id: string }>(
     `insert into webhook_event (id, source, type) values ($1, $2, $3)
-     on conflict (id) do nothing
+     on conflict (id) do update set received_at = now()
+       where webhook_event.processed_at is null
+         and webhook_event.received_at < now() - make_interval(secs => $4)
      returning id`,
-    [id, source, type],
+    [id, source, type, STALE_CLAIM_SECONDS],
   );
-  return rows.length > 0;
+
+  if (rows.length > 0) return "claimed";
+
+  const existing = await query<{ processed: boolean }>(
+    "select processed_at is not null as processed from webhook_event where id = $1",
+    [id],
+  );
+
+  // No row at all means it was released between the two statements: the next
+  // delivery will claim it cleanly, so ask for one.
+  return existing[0]?.processed ? "processed" : "in-flight";
 }
 
 export async function markEventProcessed(id: string): Promise<void> {

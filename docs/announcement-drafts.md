@@ -26,6 +26,22 @@ template appends the sign-off and the unsubscribe line; do not write either.
 The list is sent under a 100-per-UTC-day cap, so a list over 100 arrives across
 several days — the copy avoids "today".
 
+The send script now refuses any message with a `[BRACKET]` left in it, so an
+unresolved `[PRICE]` or `[DATE]` is an error at the dry run rather than a line
+in a reader's inbox. It matches a run of capitals in square brackets; `[sic]`
+and `[1]` pass.
+
+## Before the first real send
+
+- Migration `0005_email_log_claim.sql` must be applied to the database being
+  sent from. Without it the first claim fails its status check and the run
+  stops before anything is sent.
+- `NEXT_PUBLIC_SITE_URL` must be exactly `https://guardtheory.net`. The
+  confirmation prompt prints the database host and the link origin; read both.
+- If a run ends with addresses under CHECK BY HAND, they are never retried.
+  Look each one up at resend.com/emails and settle it with the SQL the script
+  prints. Every later run lists them again until that is done.
+
 ## Variant A — "It is open" (recommended)
 
 Subject: The First Edition is open

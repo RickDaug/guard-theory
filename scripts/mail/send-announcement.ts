@@ -199,7 +199,7 @@ async function main(): Promise<number> {
   console.log(options.send ? "SEND" : "DRY RUN — nothing will be sent.");
   console.log("");
   console.log(`  Subscribed, with consent:   ${subscribers.length}`);
-  console.log(`  Already sent (email_log):   ${plan.alreadySent}`);
+  console.log(`  Sent, pending or unknown:   ${plan.alreadySent}`);
   console.log(`  Reserved test domains:      ${plan.reserved.length}`);
   console.log(`  Sent today, any template:   ${sentToday} of ${options.cap}`);
   console.log(`  This run:                   ${plan.send.length}`);

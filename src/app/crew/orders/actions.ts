@@ -20,7 +20,12 @@ import {
   orderShipped,
 } from "@/lib/mail/templates";
 import { portalUrl } from "@/lib/portal/routes";
-import { buyUspsLabel, isShippoConfigured, refreshLabelUrl } from "@/lib/shipping/shippo";
+import {
+  buyUspsLabel,
+  isShippoConfigured,
+  refreshLabelUrl,
+  ShippoError,
+} from "@/lib/shipping/shippo";
 import { claimLabelPurchase, releaseLabelClaim } from "@/lib/orders/label";
 import type { PortalFormState } from "@/lib/portal/form-state";
 
@@ -119,6 +124,23 @@ export async function setTracking(
 
   if (!number) {
     return { status: "error", message: "Enter the tracking number." };
+  }
+
+  // This string goes into an email and into a carrier URL. Carriers use
+  // letters and digits; nothing legitimate is longer than this.
+  if (!/^[A-Za-z0-9 -]{6,40}$/.test(number)) {
+    return {
+      status: "error",
+      message: "That does not look like a tracking number. Letters and digits only, 6 to 40 of them.",
+    };
+  }
+
+  if (!/^[A-Za-z0-9 .&-]{2,30}$/.test(carrier)) {
+    return { status: "error", message: "Write the carrier as a short name, like USPS or UPS." };
+  }
+
+  if (!(await getOrder(id))) {
+    return { status: "error", message: "That order no longer exists." };
   }
 
   const url =
@@ -348,15 +370,18 @@ export async function buyLabel(
       "[guard-theory] label purchase failed:",
       error instanceof Error ? error.message : error,
     );
-    // Shippo answered, and the answer was no: nothing was bought, so the order
-    // may be tried again. (A timeout is different, and buyUspsLabel says so.)
-    await releaseLabelClaim(order.id).catch(() => {});
+    // Released only when it is CERTAIN nothing was bought. If the purchase
+    // request itself went unanswered the claim stays, and the order page asks
+    // the owner to look in Shippo before it can be tried again.
+    if (error instanceof ShippoError && error.nothingBought) {
+      await releaseLabelClaim(order.id).catch(() => {});
+    }
     return {
       status: "error",
       message:
-        error instanceof Error
+        error instanceof ShippoError
           ? error.message
-          : "The label could not be bought. Nothing has been charged.",
+          : "The label could not be bought, and we cannot tell whether Shippo charged for one. Look in Shippo before trying again.",
     };
   }
 

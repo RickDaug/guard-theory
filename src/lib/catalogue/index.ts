@@ -1,4 +1,4 @@
-import { PRODUCTS, getProduct, type Product } from "@/content/products";
+import { PRODUCTS, getProduct, type Product } from "../../content/products/index.ts";
 import { isDatabaseConfigured, query } from "../db/client.ts";
 import type { Commerce, ProductView, VariantView } from "./types.ts";
 
@@ -190,9 +190,9 @@ export async function listProductViews(): Promise<ProductView[]> {
   }
 
   try {
-    const rows = await query<ProductRow>(
-      `${PRODUCT_SELECT} where p.status <> 'archived' order by p.sort_index, p.slug`,
-    );
+    // Archived rows are read too, so that "archived" can be told apart from
+    // "never seeded" below. They are never listed.
+    const rows = await query<ProductRow>(`${PRODUCT_SELECT} order by p.sort_index, p.slug`);
 
     if (rows.length === 0) {
       return PRODUCTS.map(contentOnly);
@@ -213,9 +213,29 @@ export async function listProductViews(): Promise<ProductView[]> {
 
     const views: ProductView[] = [];
 
+    const seen = new Set<string>();
+
     for (const row of rows) {
+      seen.add(row.slug);
+
+      if (row.status === "archived") {
+        continue;
+      }
+
       if (row.status === "draft") {
-        // Staged, not published. It is not on the storefront at all.
+        // Staged, not priced. A draft the owner created in the portal is not on
+        // the storefront at all. A draft with a REGISTRY entry is a garment the
+        // site already publishes as content, and it goes on being listed exactly
+        // as it was before the database existed: content only, no price, no
+        // stock, no buy box. Skipping these emptied /shop the moment the seed
+        // ran — it creates both Theory 01 rows as drafts — while the fallback
+        // above only covers a table with no rows at all.
+        const content = getProduct(row.slug);
+
+        if (content) {
+          views.push(contentOnly(content));
+        }
+
         continue;
       }
 
@@ -228,6 +248,14 @@ export async function listProductViews(): Promise<ProductView[]> {
 
       if (view) {
         views.push(view);
+      }
+    }
+
+    // A registry product with no row yet (a partial seed) is still published
+    // content, for the same reason.
+    for (const product of PRODUCTS) {
+      if (!seen.has(product.slug)) {
+        views.push(contentOnly(product));
       }
     }
 

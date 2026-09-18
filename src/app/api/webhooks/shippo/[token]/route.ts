@@ -12,8 +12,12 @@ import { shippoMode } from "@/lib/shipping/shippo";
  * is not available to a new account on a free plan. The two that are available
  * are a secret in the URL and an IP allowlist, and both are used.
  *
- * The secret is a PATH SEGMENT rather than a query string, deliberately: query
- * strings land in Vercel's request logs, and a secret in a log is not a secret.
+ * The secret is a path segment. That does NOT keep it out of logs — an earlier
+ * version of this comment said it did, and it was wrong: Vercel's request logs
+ * record the full path, so anyone who can read this project's logs can read the
+ * secret. It is a shared secret with that exposure, no better. What limits the
+ * damage is what the endpoint can do (next paragraph), the length floor below,
+ * and rotating SHIPPO_WEBHOOK_TOKEN whenever someone leaves the Vercel team.
  *
  * That is proportionate rather than lax. The worst a forged request here can do
  * is mark an order Delivered early. No money moves, nothing ships, and nothing
@@ -42,10 +46,26 @@ const KNOWN_IPS = new Set([
   "54.81.255.221",
 ]);
 
+/**
+ * A short token is a guessable token, and the comparison being constant-time
+ * does not help with that. 32 characters of hex is 128 bits; anything shorter
+ * is treated as not configured, so a weak secret fails closed (404 for
+ * everyone) rather than quietly working.
+ */
+const MIN_TOKEN_LENGTH = 32;
+
 function secretMatches(candidate: string): boolean {
   const expected = process.env.SHIPPO_WEBHOOK_TOKEN?.trim();
 
   if (!expected) {
+    return false;
+  }
+
+  if (expected.length < MIN_TOKEN_LENGTH) {
+    console.error(
+      `[guard-theory] SHIPPO_WEBHOOK_TOKEN is shorter than ${MIN_TOKEN_LENGTH} characters and is being refused. ` +
+        "Generate one with: node -e \"console.log(require('crypto').randomBytes(32).toString('hex'))\"",
+    );
     return false;
   }
 

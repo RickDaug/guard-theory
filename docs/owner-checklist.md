@@ -84,8 +84,11 @@ Stripe script. Do not create a `NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY`.
 
 1. Settings → API → generate a **test** token. It begins `shippo_test_`.
    → **`SHIPPO_API_TOKEN`**
-2. Make up a long random string — a password manager's generator will do. Shippo
-   does not issue this one. → **`SHIPPO_WEBHOOK_TOKEN`**
+2. Make up a long random string — a password manager's generator will do, set to
+   **at least 32 characters, letters and digits only**. Anything shorter is
+   refused by the code and the webhook answers 404 to everyone. Shippo does not
+   issue this one. It appears in Vercel's request logs, so change it whenever
+   someone stops having access to the Vercel project. → **`SHIPPO_WEBHOOK_TOKEN`**
 3. Settings → Webhooks → add a webhook for tracking updates — `track_updated`,
    the only event the handler acts on —
    pointed at `https://guardtheory.net/api/webhooks/shippo/` followed by the

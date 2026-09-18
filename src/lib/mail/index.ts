@@ -85,12 +85,21 @@ class LoggingProvider implements MailProvider {
   readonly delivers = false;
 
   async send(email: Email): Promise<SendResult> {
+    // Subject and size only. The body of an order email is a name, a postal
+    // address and what was bought; function logs are not where that belongs,
+    // and neither is the recipient's address.
     console.warn(
-      `[guard-theory] no mail provider connected. Not sent:\n` +
-        `  to: ${email.to}\n  subject: ${email.subject}\n\n${email.body}\n`,
+      `[guard-theory] no mail provider connected. Not sent: "${email.subject}" ` +
+        `(${email.body.length} characters) to ${maskEmail(email.to)}`,
     );
     return { ok: true, providerId: null };
   }
+}
+
+/** `s***@example.com` — enough to recognise in a log, not enough to harvest. */
+export function maskEmail(address: string): string {
+  const at = address.lastIndexOf("@");
+  return at <= 0 ? "***" : `${address[0]}***${address.slice(at)}`;
 }
 
 let provider: MailProvider | null = null;
@@ -130,7 +139,7 @@ export async function sendEmail(
 
   if (!result.ok) {
     console.error(
-      `[guard-theory] failed to send ${template} to ${email.to}: ${result.error}`,
+      `[guard-theory] failed to send ${template} to ${maskEmail(email.to)}: ${result.error}`,
     );
   }
 

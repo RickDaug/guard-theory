@@ -33,19 +33,50 @@ type Row = {
   db_kind: string | null;
 };
 
-export async function shippingFlatCents(): Promise<number> {
+/**
+ * The flat shipping rate, or null when it cannot be known.
+ *
+ * It used to answer 0 for a missing row, an unreadable value or a database
+ * error — and a rate of 0 is not "unknown", it is "free": the Checkout Session
+ * is built with no shipping option at all. So every failure made shipping
+ * silently free. Null means the cart is not priced and checkout is not offered,
+ * which costs a sale; 0 cost the postage on every order until someone noticed.
+ *
+ * A stored "0" is still honoured: free shipping is a decision the owner can
+ * make, and it is made by writing 0, not by breaking the row.
+ */
+export function parseShippingCents(value: string | null | undefined): number | null {
+  if (typeof value !== "string" || !/^\d{1,7}$/.test(value.trim())) {
+    return null;
+  }
+  return Number(value.trim());
+}
+
+export async function shippingFlatCents(): Promise<number | null> {
   if (!isDatabaseConfigured()) {
-    return 0;
+    return null;
   }
 
   try {
     const rows = await query<{ value: string }>(
       "select value from setting where key = 'shipping_flat_cents'",
     );
-    const parsed = Number.parseInt(rows[0]?.value ?? "", 10);
-    return Number.isFinite(parsed) && parsed >= 0 ? parsed : 0;
-  } catch {
-    return 0;
+    const cents = parseShippingCents(rows[0]?.value);
+
+    if (cents === null) {
+      console.error(
+        "[guard-theory] setting.shipping_flat_cents is missing or unreadable. " +
+          "Refusing to price carts until it is a whole number of cents.",
+      );
+    }
+
+    return cents;
+  } catch (error) {
+    console.error(
+      "[guard-theory] could not read the shipping rate:",
+      error instanceof Error ? error.message : error,
+    );
+    return null;
   }
 }
 
@@ -221,7 +252,16 @@ export async function priceCart(
   }
 
   const subtotalCents = priced.reduce((total, line) => total + line.lineCents, 0);
-  const shippingCents = priced.length > 0 ? await shippingFlatCents() : 0;
+  const shippingRate = priced.length > 0 ? await shippingFlatCents() : 0;
+
+  if (shippingRate === null) {
+    // No figure, no checkout. Thrown rather than returned as an empty cart: the
+    // cart page already has a sentence for "we could not work out your total",
+    // and an empty cart would tell the buyer their items had gone.
+    throw new Error("The shipping rate could not be read, so the cart was not priced.");
+  }
+
+  const shippingCents = shippingRate;
 
   let intentId: string | null = null;
 

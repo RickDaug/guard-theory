@@ -458,7 +458,7 @@ integration; the rest you add by hand.
 | `RESEND_API_KEY` | 4 | yes | **yes** — nothing merged reads it yet |
 | `RECEIPT_FROM_EMAIL` | 4 | yes | **yes** — nothing merged reads it yet |
 | `SHIPPO_API_TOKEN` | 5 | yes | no |
-| `SHIPPO_WEBHOOK_TOKEN` | 5 | yes — a random string of your own | no |
+| `SHIPPO_WEBHOOK_TOKEN` | 5 | yes — a random string of your own, 32 characters or more (shorter is refused) | no |
 | `SHIP_FROM_NAME` `_STREET1` `_CITY` `_STATE` `_ZIP` | 5 | yes — all five | no |
 | `SHIP_FROM_STREET2` `_PHONE` `_EMAIL` `_COUNTRY` | 5 | optional | no |
 | `SHIP_PARCEL_LENGTH_IN` `_WIDTH_IN` `_HEIGHT_IN` `_WEIGHT_OZ` | 5 | optional, defaulted | no |

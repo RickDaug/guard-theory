@@ -45,7 +45,23 @@ function parsePriceToCents(raw: FormDataEntryValue | null): number | null | "inv
   const [whole, fraction = ""] = cleaned.split(".");
   const cents = Number(whole) * 100 + Number(fraction.padEnd(2, "0"));
 
-  return Number.isSafeInteger(cents) ? cents : "invalid";
+  // The column is a 32-bit integer; anything larger is a typo, not a price.
+  return Number.isSafeInteger(cents) && cents <= MAX_PRICE_CENTS ? cents : "invalid";
+}
+
+const MAX_PRICE_CENTS = 10_000_00;
+const MAX_STOCK = 100_000;
+
+/** "12" is stock. "12abc", "1e3", "-1", " 12 .5" and "" are not. */
+function parseStock(raw: string): number | null {
+  const trimmed = raw.trim();
+
+  if (!/^\d{1,6}$/.test(trimmed)) {
+    return null;
+  }
+
+  const stock = Number(trimmed);
+  return stock <= MAX_STOCK ? stock : null;
 }
 
 function text(formData: FormData, key: string): string {
@@ -113,6 +129,15 @@ export async function saveProduct(
     };
   }
 
+  // Zero is a number, so it got past the check above: the product page showed
+  // $0.00 with a buy box, and the cart then dropped the line as not for sale.
+  if (price === 0 || sale === 0) {
+    return {
+      status: "error",
+      message: "A price cannot be zero. Leave it empty for no price.",
+    };
+  }
+
   try {
     await transaction(async (client) => {
       await client.query(
@@ -129,9 +154,10 @@ export async function saveProduct(
         }
 
         const variantId = key.slice("stock-".length);
-        const stock = Number.parseInt(value.trim(), 10);
+        // parseInt("12abc") is 12. A typo must be a refusal, not a guess.
+        const stock = parseStock(value);
 
-        if (!Number.isInteger(stock) || stock < 0) {
+        if (stock === null) {
           throw new Error(`Stock has to be a whole number, zero or more.`);
         }
 

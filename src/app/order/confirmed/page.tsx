@@ -76,8 +76,11 @@ export default async function OrderConfirmedPage({
       secondary={{ href: "/policies/shipping", label: "Read the shipping policy" }}
     >
       {/* The cart has done its job. Emptying it here rather than before the
-          redirect means a buyer who abandons Stripe still comes back to it. */}
-      <ClearCartOnMount />
+          redirect means a buyer who abandons Stripe still comes back to it.
+          Only when this page was reached with a session id that names a real
+          order: the bare URL sits in browser history, and opening it used to
+          empty whatever was in the cart that day. */}
+      {order ? <ClearCartOnMount /> : null}
 
       {order ? (
         <>

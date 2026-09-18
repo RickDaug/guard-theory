@@ -278,6 +278,39 @@ portal.
    decision, for a tax adviser to confirm**; nothing here asserts which code is
    right. Shipping is fixed in code at `txcd_92010001`.
 
+### The scheduled reconciler, and `CRON_SECRET`
+
+When the webhook handler dies — a deploy that took the route out, an event
+Stripe stopped retrying — the reconciler is what turns the payment into an
+order. It used to run only when somebody pressed **Check Stripe for missed
+orders** in the portal or ran `scripts/reconcile.mjs`, which needs a person to
+notice first. `vercel.json` now schedules it: `GET /api/cron/reconcile` every
+fifteen minutes. That cadence needs Pro (Hobby allows one run a day), which
+Tier 1 already covers. Cron jobs run against the **production** deployment only;
+previews never fire them.
+
+The route is a public URL, so it answers **401 to everybody — Vercel included —
+unless `CRON_SECRET` is set, is 32 characters or more, and arrives as
+`Authorization: Bearer …`**. Vercel sends that header by itself on a cron
+invocation once the variable exists on the project. Nobody needs to know the
+value: it is a random string with no account behind it, so the assistant
+generates it at merge time and pipes it straight into Vercel without printing
+it —
+
+```
+node -e "process.stdout.write(require('crypto').randomBytes(32).toString('hex'))" | npx vercel env add CRON_SECRET production --sensitive
+```
+
+— and the next production deploy picks it up. To rotate it, remove it, add a new
+one the same way, and redeploy.
+
+Until then each run logs one warning and does nothing. With the secret set and
+no Stripe keys yet, a run answers 200, sweeps expired checkout intents, old
+sign-in attempts and dead portal sessions, and asks Stripe nothing. The response
+is counts only, and the logs carry Stripe session ids and nothing about a
+customer. The handler is `src/lib/orders/cron.ts`; the manual button and the
+script still work and are the same code.
+
 ### Stripe Tax — the one step with a real financial consequence
 
 - Settings → Tax → set the **head office to the Los Angeles address**.
@@ -457,6 +490,7 @@ integration; the rest you add by hand.
 | `DATABASE_URL_UNPOOLED` | 2 | yes — direct | **yes** |
 | `STRIPE_SECRET_KEY` | 3 | yes | no |
 | `STRIPE_WEBHOOK_SECRET` | 3 | yes | no |
+| `CRON_SECRET` | 3 | yes — a random string, 32 characters or more (shorter is refused). The assistant generates it at merge time; see below | no |
 | `STRIPE_APPAREL_TAX_CODE` | 3 | optional — defaults to `txcd_30021000`; owner decision | no |
 | `RESEND_API_KEY` | 4 | yes | **yes** — nothing merged reads it yet |
 | `RECEIPT_FROM_EMAIL` | 4 | yes | **yes** — nothing merged reads it yet |

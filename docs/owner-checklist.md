@@ -130,6 +130,11 @@ there.
 
 Nothing changes on the site when you do this. No merged code reads these yet.
 
+One more name, `CRON_SECRET`, is **not yours to do**. It is a random string with
+no account behind it — it lets Vercel's scheduler, and nobody else, run the
+every-fifteen-minutes check for paid orders the webhook missed. The assistant
+generates it and sets it when it merges PR #3.
+
 ---
 
 ## Part two — decisions
@@ -234,6 +239,7 @@ Do this before the live-mode cutover. It does not block a test-mode rehearsal.
 | 8 — shipping figure | Updates `setting.shipping_flat_cents`. |
 | 9 — tax code | Nothing, unless you chose a non-default code, in which case it checks the name is set. |
 | 10 — specs | Corrects or removes whatever you flag. |
+| 6 complete | Generates `CRON_SECRET` (32 random bytes, never printed) and adds it to Vercel Production, so the scheduled reconciler in `vercel.json` is allowed to run from the first deploy. After the merge, checks Vercel → Settings → Cron Jobs lists `/api/cron/reconcile` and that its first run answered 200. |
 | 2–6 and 8–10 | Takes PR #3 out of draft, merges it, and checks guardtheory.net is serving it — the portal sign-in page answers, the shop still renders. |
 | 7 — prices | Nothing. You enter them in the portal and set the products active. |
 | 2 and 3 — registration added | Places a test order to a California address and asserts the tax is greater than zero. |

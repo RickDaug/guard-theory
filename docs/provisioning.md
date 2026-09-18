@@ -1,21 +1,32 @@
 # Provisioning — the accounts commerce needs, in order
 
-**Status as of 2026-08-31.** The commerce build is complete and sits on
-`feat/commerce`. It is **not** in production: it merged to `main` on 2026-08-24
-as `d166df9`, `main` auto-deploys, production had no `DATABASE_URL`, and Phase 1
-deliberately *refuses* waitlist signups rather than losing them — so the merge
-took down the site's only conversion point and was reverted the same day
-(`970d52c`). Re-landing is `git revert 970d52c`, not a rebuild.
+**Status as of 2026-09-17.** The commerce build is complete and sits on
+`feat/commerce`. It is **still not** in production: it merged to `main` on
+2026-08-24 as `d166df9`, `main` auto-deploys, production had no `DATABASE_URL`,
+and Phase 1 deliberately *refuses* waitlist signups rather than losing them —
+so the merge took down the site's only conversion point and was reverted the
+same day (`970d52c`). Re-landing is `git revert 970d52c`, not a rebuild.
 
-Nothing below has been done for you. No account was created, no key exists, and
-no price was set. Every step here is yours.
+**Tier 2, and the account half of Tier 4, are no longer to-do.** Neon Postgres
+is provisioned and Phase 1 — the waitlist on Postgres — is live in production.
+Resend's domain is verified and its keys are set in Production, but nothing
+merged yet reads them: the mail layer sits on `feat/mail`, unmerged, so no mail
+sends. Both tiers below now describe what exists, not what to do next. Tiers 1,
+3, 5 and 6 have not moved and read as before.
 
 **Verified against production on 2026-08-31:**
 
 - Vercel team `chesstrophies-projects` is on the **Hobby** plan.
-- Production holds exactly two environment variables:
+- Production held exactly two environment variables:
   `NEXT_PUBLIC_ALLOW_INDEXING` and `NEXT_PUBLIC_SITE_URL`.
-- `/crew` returns 404; `/shop` serves the pre-commerce page.
+- `/crew` returned 404; `/shop` served the pre-commerce page.
+
+**Since then:** Tier 2 landed, adding `DATABASE_URL` and
+`DATABASE_URL_UNPOOLED`. Tier 4's account and DNS landed too, adding
+`RESEND_API_KEY` and `RECEIPT_FROM_EMAIL` — both Production only, nothing set
+for Preview. Six variables now, not two. Nothing else here has changed: the
+commerce build is still the reverted `d166df9`, so `/crew` and `/shop` should
+still read the same way.
 
 ---
 
@@ -25,17 +36,18 @@ The tiers below are sequenced so that each one leaves production in a working
 state. **Do not skip ahead** — Tier 2 is what makes the waitlist safe again, and
 until Tier 1 is done, taking payment at all is a plan-terms violation.
 
-| Tier | What it unlocks | Cost |
-|---|---|---|
-| 1 — Vercel Pro | The legal right to take payment on this host | $20/mo |
-| 2 — Neon Postgres | Phase 1: the waitlist on a real database. **Re-land here.** | $0 |
-| 3 — Stripe | Purchasable products, checkout, tax, refunds | per-transaction |
-| 4 — Resend | Order confirmation and status email | $0, $20/mo to announce |
-| 5 — Shippo | USPS labels and tracking | $0 to 30 labels/mo |
-| 6 — Crew Portal | Your own access to the portal | $0 |
+| Tier | What it unlocks | Cost | Status |
+|---|---|---|---|
+| 1 — Vercel Pro | The legal right to take payment on this host | $20/mo | not started |
+| 2 — Neon Postgres | Phase 1: the waitlist on a real database | $0 | **done — live in production** |
+| 3 — Stripe | Purchasable products, checkout, tax, refunds | per-transaction | not started |
+| 4 — Resend | Order confirmation and status email | $0, $20/mo to announce | account + DNS done; send path on `feat/mail`, unmerged |
+| 5 — Shippo | USPS labels and tracking | $0 to 30 labels/mo | not started |
+| 6 — Crew Portal | Your own access to the portal | $0 | not started |
 
-Tiers 3–6 can land separately, and in that order. Tier 2 alone is a complete,
-shippable improvement.
+Tiers 3, 5 and 6 can land separately, and in that order; none of them depend on
+Tier 4 landing first. Tier 2 alone was a complete, shippable improvement, and it
+has shipped.
 
 ---
 
@@ -55,17 +67,15 @@ the Crew Portal's auth is built in-app (Tier 6) rather than bought.
 
 ---
 
-## Tier 2 — Neon Postgres (free tier)
+## Tier 2 — Neon Postgres (free tier) — done
 
 Vercel Postgres no longer exists as a product; existing databases moved to Neon
-in December 2024. Install through the **Vercel Marketplace** rather than direct —
-one bill, and both connection strings are injected for you.
+in December 2024. This was installed through the **Vercel Marketplace**
+integration rather than direct — one bill, and both connection strings injected
+automatically. Project **`cold-resonance-51949822`**, **Free** plan, connected
+to the `guard-theory` project's **Production** environment.
 
-1. Vercel dashboard → project `guard-theory` → Storage → Browse Marketplace →
-   **Neon** → create a database in a US-West region.
-2. Connect it to the `guard-theory` project, **Production** environment.
-
-That injects two variables, and the build needs **both**:
+That injected two variables, and the build needs **both**:
 
 - `DATABASE_URL` — the **pooled** host (hostname contains `-pooler`). Every
   application query.
@@ -74,6 +84,46 @@ That injects two variables, and the build needs **both**:
 
 They are not interchangeable. Neon's pooled host runs PgBouncer in transaction
 mode, which breaks `SET`, `LISTEN`/`NOTIFY`, SQL-level `PREPARE` and temp tables.
+
+**`vercel env pull` returns both of these, and every other variable in the
+project, empty.** Not a Vercel-wide policy — the **Sensitive** toggle in the
+integration's connection dialog is on, and a Sensitive variable can be written
+and used at build and runtime but never read back out through the CLI. Pull the
+real values with the Neon CLI instead:
+
+```
+npx neonctl@latest cs --project-id cold-resonance-51949822 --pooled     # DATABASE_URL
+npx neonctl@latest cs --project-id cold-resonance-51949822              # DATABASE_URL_UNPOOLED
+```
+
+`docs/database-runbook.md` §2 has the full sequence, including the
+`MSYS_NO_PATHCONV=1` prefix Git Bash needs for a raw `neon api` path call.
+
+**Per-preview-deployment branching is on.** Every Preview deployment gets its
+own Neon branch — a copy-on-write fork of `main`, named after the git branch —
+so pointing Playwright or a manual check at a preview URL no longer writes test
+rows into the real waitlist table. To check or change this setting: **Storage →
+the database → Projects tab → the row's ⋯ menu → Update Project Connection.**
+
+**Do not disconnect the integration to change a setting.** The connect flow
+refuses a project that is already connected, and disconnecting to get around
+that would pull `DATABASE_URL` out of Production. Every setting reachable from
+Update Project Connection can be changed in place; that was diffed before and
+after and all sixteen injected variables were unchanged.
+
+### The compute floor — check it after any re-provision
+
+Vercel's marketplace flow provisions the endpoint autoscaling **1 → 2 CU** by
+default, not the 0.25 CU floor the Free-tier math below assumes. At a 1 CU
+floor, the 100 compute-hour monthly budget buys roughly 100 active hours — about
+three a day, a quarter of what 0.25→2 CU buys, on an endpoint that does not need
+a whole CU sitting warm for a waitlist insert. This project's floor was lowered
+to **0.25 → 2 CU on 2026-09-17**, before any real traffic. A fresh re-provision
+will start back at the 1 CU floor and need the same fix. Check it:
+
+```
+MSYS_NO_PATHCONV=1 npx neonctl@latest api /projects/cold-resonance-51949822/endpoints
+```
 
 ### The Free-tier trap — read before launch
 
@@ -101,10 +151,13 @@ measured in megabytes. Schedule it on day one, not later — on Free, six hours 
 the entire safety net. `docs/database-runbook.md` carries the restore procedure,
 and you should **rehearse a restore before Tier 3 puts money through it**.
 
-**After this tier:** re-land commerce (`git revert 970d52c`), run migrations over
-the unpooled string, and import the 54 existing NDJSON waitlist records with
-`scripts/db/migrate-ndjson.mjs`. Products seed as **drafts with `price_cents`
-NULL** by design — nothing is purchasable until you enter a price in the portal.
+**What's still ahead:** re-landing commerce is `git revert 970d52c`, once Tier 1
+covers taking payment. Migrations are already applied in production — Phase 1
+would not be live otherwise — and `docs/database-runbook.md` steps 3–4 cover
+running them again on a fresh branch and importing the old NDJSON waitlist
+records if that has not been done yet. Products seed as **drafts with
+`price_cents` NULL** by design — nothing is purchasable until you enter a price
+in the portal.
 
 ---
 
@@ -171,22 +224,36 @@ Test, live and local are **three distinct signing secrets**.
 
 ---
 
-## Tier 4 — Resend
+## Tier 4 — Resend — account and DNS done, send path not merged
 
 Free to start: 3,000 emails a month but **capped at 100 a day**. Order
 confirmations at tens of orders a month sit comfortably inside that. A waitlist
 announcement does not — budget **$20/month Pro** for announcement months.
 
-1. Create the account, add `guardtheory.net`.
-2. Add three DNS records at your registrar — an **MX** plus **SPF** and **DKIM**
-   TXT records — on the **`send.` subdomain, not the root**. Usually verifies in
-   about 15 minutes.
-3. Add DMARC afterwards at `p=none`, tightening only once mail is confirmed
-   passing.
-4. Create an API key with sending permission → `RESEND_API_KEY`.
-5. Pick a from-address on the verified domain → `RECEIPT_FROM_EMAIL`.
+1. ~~Create the account, add `guardtheory.net`.~~ Done. Verified in the
+   **us-east-1** region.
+2. ~~Add DNS records.~~ Done. DNS for `guardtheory.net` is hosted at
+   **vallaserver** (`ns1.vallaserver.com` / `ns2.vallaserver.com`), not at the
+   domain's registrar, and that is where these records were added:
+   - `resend._domainkey` — **TXT** (DKIM)
+   - `send` — **CNAME** → `send.forge.rmta.net`
+   - `rsend` — **CNAME** → `rsend.forge.rmta.net`
 
-A verified custom domain is **mandatory** — Resend will not send without one.
+   `_dmarc` already existed at `p=none` from before Resend and needed no change
+   for the domain to verify.
+3. ~~Create an API key with sending permission.~~ Done — `RESEND_API_KEY` is set
+   in Vercel **Production**.
+4. ~~Pick a from-address on the verified domain.~~ Done — `RECEIPT_FROM_EMAIL`
+   is set in Vercel **Production**.
+
+Neither variable is set for **Preview**. A verified custom domain is
+**mandatory** — Resend will not send without one, and now there is one.
+
+**The account is done; the code is not.** `main` sends no email of any kind —
+the mail layer that would read these two variables lives on `feat/mail`,
+unmerged. Setting the keys ahead of the code was deliberate: DNS propagation and
+domain verification are the slow part of this tier, and there was no reason to
+wait on them once they were no longer blocking anything.
 
 ---
 
@@ -266,24 +333,29 @@ the hash and only the hash.
 Set all of these in Vercel **Production**. `DATABASE_*` are injected by the Neon
 integration; the rest you add by hand.
 
-| Variable | Tier | Required |
-|---|---|---|
-| `DATABASE_URL` | 2 | yes — pooled |
-| `DATABASE_URL_UNPOOLED` | 2 | yes — direct |
-| `STRIPE_SECRET_KEY` | 3 | yes |
-| `STRIPE_WEBHOOK_SECRET` | 3 | yes |
-| `STRIPE_APPAREL_TAX_CODE` | 3 | yes — `txcd_30070014` |
-| `RESEND_API_KEY` | 4 | yes |
-| `RECEIPT_FROM_EMAIL` | 4 | yes |
-| `SHIPPO_API_TOKEN` | 5 | yes |
-| `SHIPPO_WEBHOOK_TOKEN` | 5 | yes |
-| `SHIP_FROM_NAME` `_STREET1` `_CITY` `_STATE` `_ZIP` | 5 | yes — all five |
-| `SHIP_FROM_STREET2` `_PHONE` `_EMAIL` `_COUNTRY` | 5 | optional |
-| `SHIP_PARCEL_LENGTH_IN` `_WIDTH_IN` `_HEIGHT_IN` `_WEIGHT_OZ` | 5 | optional, defaulted |
-| `PORTAL_PATH` | 6 | yes |
-| `PORTAL_PASSWORD_HASH` | 6 | yes |
-| `NEXT_PUBLIC_SITE_URL` | — | already set |
-| `NEXT_PUBLIC_ALLOW_INDEXING` | — | already set |
+| Variable | Tier | Required | Set in Production? |
+|---|---|---|---|
+| `DATABASE_URL` | 2 | yes — pooled | **yes** |
+| `DATABASE_URL_UNPOOLED` | 2 | yes — direct | **yes** |
+| `STRIPE_SECRET_KEY` | 3 | yes | no |
+| `STRIPE_WEBHOOK_SECRET` | 3 | yes | no |
+| `STRIPE_APPAREL_TAX_CODE` | 3 | yes — `txcd_30070014` | no |
+| `RESEND_API_KEY` | 4 | yes | **yes** — nothing merged reads it yet |
+| `RECEIPT_FROM_EMAIL` | 4 | yes | **yes** — nothing merged reads it yet |
+| `SHIPPO_API_TOKEN` | 5 | yes | no |
+| `SHIPPO_WEBHOOK_TOKEN` | 5 | yes | no |
+| `SHIP_FROM_NAME` `_STREET1` `_CITY` `_STATE` `_ZIP` | 5 | yes — all five | no |
+| `SHIP_FROM_STREET2` `_PHONE` `_EMAIL` `_COUNTRY` | 5 | optional | no |
+| `SHIP_PARCEL_LENGTH_IN` `_WIDTH_IN` `_HEIGHT_IN` `_WEIGHT_OZ` | 5 | optional, defaulted | no |
+| `PORTAL_PATH` | 6 | yes | no |
+| `PORTAL_PASSWORD_HASH` | 6 | yes | no |
+| `NEXT_PUBLIC_SITE_URL` | — | already set | **yes** |
+| `NEXT_PUBLIC_ALLOW_INDEXING` | — | already set | **yes** |
+
+None of the four checked variables above are set for **Preview** — the Neon
+integration injects `DATABASE_*` there too (that is what per-preview branching
+in Tier 2 depends on), but `RESEND_API_KEY` and `RECEIPT_FROM_EMAIL` are
+Production-only today.
 
 **Deliberately absent:** there is no publishable Stripe key, and there should not
 be one. See Tier 3.

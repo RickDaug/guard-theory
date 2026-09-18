@@ -123,6 +123,20 @@ export async function sendEmail(
   template: EmailTemplate,
   email: Email,
 ): Promise<boolean> {
+  return (await sendAndRecord(template, email)).ok;
+}
+
+/**
+ * `sendEmail`, returning the provider's result instead of a boolean.
+ *
+ * The announcement run needs the error itself: a 429 means stop for the day,
+ * and anything else means carry on to the next address. A boolean cannot tell
+ * those apart. Same contract otherwise — it never throws, and it logs.
+ */
+export async function sendAndRecord(
+  template: EmailTemplate,
+  email: Email,
+): Promise<SendResult> {
   const mail = getMailProvider();
   const result = await mail.send(email);
 
@@ -156,7 +170,7 @@ export async function sendEmail(
     }
   }
 
-  return result.ok;
+  return result;
 }
 
 export type { Email, EmailTemplate, MailProvider, SendResult } from "./types.ts";

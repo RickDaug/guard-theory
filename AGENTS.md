@@ -162,6 +162,20 @@ protecting, or make the case for changing the rule.
   of headroom under parallel workers, not a database problem; and a script that
   calls `process.exit()` without `closePool()` wedges the socket for the *next*
   run, so the failure appears one command later than its cause.
+- **The PGlite wedge was a leaked connection slot, and Playwright caused it.**
+  pglite-socket 0.2.11 frees a slot only on its handler's `close` event, and its
+  error path strips the socket's `close` listener first — so a client that dies
+  without closing (`taskkill /F`, which is how Playwright stops `next start` on
+  Windows) keeps the one slot for ever. Every later client gets "Connection
+  terminated unexpectedly" once and `read ECONNRESET` after that. It only bites
+  when the pool's connection is still inside its 10s idle window at the kill,
+  which is why it looked random: a unit run straight after an e2e run once went
+  201 pass / 2 fail and could not be reproduced, and a full e2e run straight
+  after `checkout.spec.ts` fell back to content-only from its first query.
+  `scripts/db/local-postgres.mjs` now drops dead handlers before each new
+  connection is admitted; e2e-then-unit was 211/211 four times running with it
+  and wedged on the first attempt without it. If `db:local` prints a WARNING
+  about pglite-socket's internals at startup, an upgrade has undone this.
 - **`next start` is production, so the no-database path is what e2e hits.**
   Phase 1's rule is that production without `DATABASE_URL` REFUSES a waitlist
   signup rather than accepting and dropping it. That is correct behaviour and it

@@ -35,7 +35,9 @@
  *   - ERR_INSUFFICIENT_RESOURCES on `/_next/static/*` is the host machine out
  *     of headroom under parallel Chromium workers. Nothing to do with Postgres.
  *   - A script that calls `process.exit()` without `closePool()` leaves the one
- *     connection half-open and wedges the server for the NEXT run. Close it.
+ *     connection half-open. That used to wedge the server for the NEXT run; the
+ *     reaper below now clears it. Close the pool anyway — real Postgres would
+ *     hold that connection open until it timed out.
  *
  * Both packages are devDependencies. Nothing here ships.
  *
@@ -46,8 +48,8 @@
  * The last one raises pglite-socket's limit of one connection, which is that
  * package's default rather than a property of PGlite. With 8,
  * tests/e2e/checkout.spec.ts passed under Playwright's default parallel workers
- * as well as --workers=1. It does not cure the wedge described above — that was
- * seen once at 8 too — and restarting this script is still the fix.
+ * as well as --workers=1. It never cured the wedge — that was seen once at 8
+ * too, because a leaked slot is leaked at any limit. The reaper below does.
  *
  * Then, in another terminal:
  *   export DATABASE_URL="postgresql://postgres@127.0.0.1:5433/postgres?sslmode=disable"
@@ -78,6 +80,48 @@ const maxConnections = Number(
 const server = new PGLiteSocketServer({ db, port, host: "127.0.0.1", maxConnections });
 
 await server.start();
+
+/**
+ * THE WEDGE, AND WHY THIS REACHES INTO THE LIBRARY
+ *
+ * pglite-socket 0.2.11 leaks a connection slot whenever a client dies without
+ * saying goodbye. Its handler's error path calls `detach()`, which strips the
+ * socket's 'close' listener before 'close' can fire; the server only frees a
+ * slot on the handler's 'close' event, so that slot is never freed. With the
+ * default of one slot, every later client is told "Too many connections" and
+ * hung up on — which `pg` reports as "Connection terminated unexpectedly" once
+ * and "read ECONNRESET" for ever after. Nothing recovers until a restart.
+ *
+ * It is reproducible on demand: open a connection, `taskkill /F` the process,
+ * run `db:status`. And it is what Playwright does to `next start` at the end
+ * of every run on Windows. If the pool's one connection was still inside its
+ * 10s idle window, the NEXT command gets a dead database — a full e2e run that
+ * falls back to content-only, or a unit run with a handful of ECONNRESET
+ * failures in whichever database tests happen to go first.
+ *
+ * So before the library decides whether there is room, drop the handlers whose
+ * socket is already gone. The library defers its own admission check with
+ * `setImmediate`; this listener is synchronous, so it always runs first.
+ * `handlers` and `server` are private in the package's types and plain
+ * properties at runtime. If an upgrade renames them, say so loudly rather than
+ * quietly going back to wedging.
+ */
+const netServer = server.server;
+const handlers = server.handlers;
+
+if (netServer && typeof netServer.prependListener === "function" && handlers instanceof Set) {
+  netServer.prependListener("connection", () => {
+    for (const handler of handlers) {
+      if (!handler.isAttached) handlers.delete(handler);
+    }
+  });
+} else {
+  console.warn(
+    "  WARNING: pglite-socket's internals have moved, so dead connections cannot be reaped.\n" +
+      "  A client killed mid-connection will wedge this server until it is restarted.\n" +
+      "  See the comment above this warning in scripts/db/local-postgres.mjs.\n",
+  );
+}
 
 const url = `postgresql://postgres@127.0.0.1:${port}/postgres?sslmode=disable`;
 

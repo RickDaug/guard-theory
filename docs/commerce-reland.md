@@ -33,9 +33,21 @@ and the split-out mail layer (`feat/mail`).
     → 0003, 0004 apply; the old rows survive with `order_id` null; the
     resulting schema is identical to the empty-start one.
   - `sendEmail(..., orderId)` writes `order_id`; list and test mail write null.
-- **Not run:** `next build`, Playwright, Lighthouse — `next build` does not fit
-  on the development machine. CI runs all three; the rewritten
-  `tests/e2e/checkout.spec.ts` has not been seen green yet.
+- `next build` and `tests/e2e/checkout.spec.ts`, locally against PGlite
+  (2026-09-18): 6/6, three consecutive runs at `--workers=1` and again under
+  the default parallel workers. The build had not failed for memory: `stripe`
+  was in the lockfile and not in `node_modules`, so it stopped at "Can't
+  resolve 'stripe'" until `npm install` was run. The spec now also presses
+  Checkout — once with the server answering a URL, once with a problem — with
+  the answer supplied in the browser, so no Stripe key is used and nothing
+  reaches Stripe.
+- Running it locally means exporting **both** `DATABASE_URL` and
+  `DATABASE_URL_UNPOOLED` as the PGlite URL for the migrate, seed, build and
+  Playwright commands. `.env.local` points at Neon, the scripts prefer
+  `DATABASE_URL_UNPOOLED`, and an exported variable wins over the file — so
+  overriding only one of them migrates Neon.
+- **Not run locally:** the rest of the Playwright suite, and Lighthouse. CI runs
+  both.
 
 ## Before merging — the owner provisions
 

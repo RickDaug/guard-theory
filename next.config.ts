@@ -99,6 +99,28 @@ const securityHeaders = [
 const nextConfig: NextConfig = {
   poweredByHeader: false,
 
+  experimental: {
+    // `next build`'s default type-check step runs inside a forked jest-worker
+    // that constructs its own full TypeScript Program/Checker (via the
+    // `typescript` API), *while the webpack/Turbopack process from the
+    // "Compiled successfully" step immediately before it is still resident*.
+    // On a memory-tight machine that second, independent process is where a
+    // build has died with V8's "Fatal process out of memory: Zone" — the
+    // zone allocator used by V8's own parser/compiler, which `--max-old-space-size`
+    // does not govern (that flag only raises the permitted JS *heap* ceiling,
+    // not what the OS can actually back), so raising it does not help and can
+    // make matters worse by encouraging V8 to grow the heap toward a ceiling
+    // that exceeds the machine's physical RAM. `useTypeScriptCli` swaps that
+    // in-process Program for a plain spawn of `typescript`'s own `tsc` binary —
+    // the same path `npm run typecheck` already uses, measured at ~300MB and
+    // ~6s with --extendedDiagnostics on this project, versus a much larger,
+    // harder-to-predict footprint for the API path's Program+Checker. Type
+    // checking still runs, and still fails the build on a real error; only the
+    // mechanism changes. See docs/technical-architecture.md (or AGENTS.md's
+    // "Gotchas" section) for how this was diagnosed.
+    useTypeScriptCli: true,
+  },
+
   images: {
     // Measured at matched SSIM rather than matched quality number: AVIF came
     // out 39.1% smaller than WebP across every portrait, with equal or better

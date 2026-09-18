@@ -2,7 +2,12 @@ import assert from "node:assert/strict";
 import { randomUUID } from "node:crypto";
 import { after, describe, it } from "node:test";
 
-import { getWaitlistStore, unsubscribeByToken } from "../../src/lib/waitlist/index.ts";
+import {
+  getWaitlistStore,
+  lookupUnsubscribeToken,
+  unsubscribeByToken,
+} from "../../src/lib/waitlist/index.ts";
+import { GET as oneClickGet, POST as oneClickPost } from "../../src/app/unsubscribe/one-click/route.ts";
 import { getContactStore } from "../../src/lib/contact/store.ts";
 import { closePool, isDatabaseConfigured, query } from "../../src/lib/db/client.ts";
 
@@ -111,6 +116,81 @@ describe("the Postgres stores, exercised against a real database", { skip: !conf
       [email],
     );
     assert.notEqual(after[0]?.unsubscribed_at, null, "unsubscribing must be recorded on the row");
+  });
+
+  async function subscriber(name: string): Promise<{ email: string; token: string }> {
+    const email = addr(name);
+    await getWaitlistStore().add({
+      email,
+      firstName: "Pat",
+      sleevePreference: "no-preference",
+      productInterest: [],
+      consent: true as const,
+      submittedAt: new Date().toISOString(),
+    });
+    const rows = await query<{ unsubscribe_token: string }>(
+      "SELECT unsubscribe_token FROM waitlist_signup WHERE email = $1",
+      [email],
+    );
+    return { email, token: rows[0]!.unsubscribe_token };
+  }
+
+  async function isUnsubscribed(email: string): Promise<boolean> {
+    const rows = await query<{ gone: boolean }>(
+      "SELECT unsubscribed_at IS NOT NULL AS gone FROM waitlist_signup WHERE email = $1",
+      [email],
+    );
+    return rows[0]!.gone;
+  }
+
+  it("looking a token up changes nothing, however often a scanner does it", async () => {
+    // The page is a GET, and the first thing to GET a link in an email is
+    // often a mail scanner. The lookup is all the page does.
+    const { email, token } = await subscriber("scanned");
+
+    for (let i = 0; i < 3; i += 1) {
+      assert.equal(await lookupUnsubscribeToken(token), "subscribed");
+    }
+    assert.equal(await isUnsubscribed(email), false);
+
+    assert.equal(await unsubscribeByToken(token), "unsubscribed");
+    assert.equal(await lookupUnsubscribeToken(token), "already");
+    assert.equal(await lookupUnsubscribeToken(randomUUID()), "unknown-token");
+    assert.equal(await lookupUnsubscribeToken(""), "unknown-token");
+  });
+
+  it("the one-click route unsubscribes on POST and only on POST", async () => {
+    const { email, token } = await subscriber("oneclick");
+    const url = `https://guardtheory.net/unsubscribe/one-click?t=${token}`;
+
+    // A GET — a scanner, a prefetcher, a pasted URL — goes to the page.
+    const got = await oneClickGet(new Request(url));
+    assert.equal(got.status, 303);
+    assert.equal(got.headers.get("location"), `/unsubscribe?t=${token}`);
+    assert.equal(await isUnsubscribed(email), false, "a GET must not unsubscribe anyone");
+
+    // What a mail client sends, per RFC 8058.
+    const posted = await oneClickPost(
+      new Request(url, {
+        method: "POST",
+        headers: { "Content-Type": "application/x-www-form-urlencoded" },
+        body: "List-Unsubscribe=One-Click",
+      }),
+    );
+    assert.equal(posted.status, 200);
+    assert.equal(await isUnsubscribed(email), true);
+
+    // Pressed twice is not an error.
+    assert.equal((await oneClickPost(new Request(url, { method: "POST" }))).status, 200);
+  });
+
+  it("the one-click route does not claim success it did not have", async () => {
+    const base = "https://guardtheory.net/unsubscribe/one-click";
+    assert.equal((await oneClickPost(new Request(base, { method: "POST" }))).status, 400);
+    assert.equal(
+      (await oneClickPost(new Request(`${base}?t=${randomUUID()}`, { method: "POST" }))).status,
+      404,
+    );
   });
 
   it("stores a contact message", async () => {

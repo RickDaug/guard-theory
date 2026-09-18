@@ -1,0 +1,18 @@
+# The First Edition announcement: the format, not the message.
+#
+# Lines starting with # at the top are notes and are not sent. Then a
+# "Subject:" line, a blank line, and the body, in plain text.
+#
+# The send script refuses any file that still contains the placeholder marker
+# below. Copy this file somewhere outside the repo, replace the subject and
+# body with the real message, delete the marker, and pass that path instead.
+#
+# Do not write the unsubscribe line or a sign-off. The template adds both, and
+# says why the reader is receiving it.
+#
+# The copy is held to src/content/editorial-voice.ts: no exclamation points,
+# none of the banned constructions. The script prints any it finds.
+
+Subject: [[PLACEHOLDER — NOT WRITTEN YET]]
+
+[[PLACEHOLDER — NOT WRITTEN YET]]

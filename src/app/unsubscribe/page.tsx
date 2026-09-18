@@ -1,8 +1,16 @@
 import type { Metadata } from "next";
 import { cache } from "react";
 import { UtilityPage } from "@/components/site/UtilityPage";
-import { unsubscribeByToken } from "@/lib/waitlist";
-import { metaDescriptionFor, metaTitleFor, tokenFromSearchParams, type UnsubscribeOutcome } from "./copy";
+import { Button } from "@/components/ui/Button";
+import { lookupUnsubscribeToken } from "@/lib/waitlist";
+import { confirmUnsubscribe } from "./actions";
+import {
+  metaDescriptionFor,
+  metaTitleFor,
+  outcomeForLookup,
+  tokenFromSearchParams,
+  type UnsubscribeOutcome,
+} from "./copy";
 
 /**
  * This page used to assert an outcome with nothing behind it: a static sheet
@@ -11,9 +19,16 @@ import { metaDescriptionFor, metaTitleFor, tokenFromSearchParams, type Unsubscri
  * a screen reader's document title cannot claim success on a link that did
  * nothing.
  *
- * It is dynamic because it writes. One click on the link in an email is the
- * whole interaction — the privacy policy promises "a one-click unsubscribe" and
- * a confirmation button would not be one.
+ * A GET CHANGES NOTHING. This page used to unsubscribe whoever's link was
+ * opened, and the first thing to open a link in an email is often not its
+ * reader: mail scanners and prefetchers follow every URL in a message, and each
+ * one was an unsubscribe nobody asked for. So the link lands on a button, and
+ * the button is a same-origin POST (the CSP's `form-action 'self'` allows
+ * exactly that). The privacy policy's "one-click unsubscribe" is kept where
+ * one click is safe — the `List-Unsubscribe-Post` header every list message
+ * carries, which the mail client POSTs to `./one-click/route.ts`.
+ *
+ * It is dynamic because what it shows depends on the row the token names.
  *
  * Reaching it with no token at all is not an error. The links crawl fetches
  * this route directly, and a person can arrive here from a bookmark; both get
@@ -21,25 +36,25 @@ import { metaDescriptionFor, metaTitleFor, tokenFromSearchParams, type Unsubscri
  */
 export const dynamic = "force-dynamic";
 
-type SearchParams = Promise<{ t?: string | string[] }>;
+type SearchParams = Promise<{ t?: string | string[]; failed?: string | string[] }>;
 
 /**
- * `generateMetadata` and the page component both need the outcome, and the
- * lookup writes — `unsubscribeByToken` marks the row unsubscribed on a valid
- * token. `cache()` makes the two calls in one render share a single write
- * instead of racing two updates against the same row. The store itself is
- * idempotent either way (a second update matches no row and reports
- * "already"), so this is about not doing the write twice, not about
- * correctness of the result.
+ * `generateMetadata` and the page component both need the outcome. The lookup
+ * only reads, so asking twice would be harmless; `cache()` makes it once.
  */
-const resolveOutcome = cache(
-  async (token: string): Promise<UnsubscribeOutcome> => (token ? unsubscribeByToken(token) : "no-token"),
-);
+const lookup = cache(async (token: string) => (token ? lookupUnsubscribeToken(token) : "no-token"));
 
-async function outcomeFor(searchParams: SearchParams): Promise<UnsubscribeOutcome> {
+async function resolve(
+  searchParams: SearchParams,
+): Promise<{ outcome: UnsubscribeOutcome; token: string }> {
   const params = await searchParams;
   const token = tokenFromSearchParams(params.t);
-  return resolveOutcome(token);
+  const failed = tokenFromSearchParams(params.failed) !== "";
+  return { outcome: outcomeForLookup(await lookup(token), failed), token };
+}
+
+async function outcomeFor(searchParams: SearchParams): Promise<UnsubscribeOutcome> {
+  return (await resolve(searchParams)).outcome;
 }
 
 export async function generateMetadata({
@@ -90,6 +105,23 @@ function copyFor(result: UnsubscribeOutcome): Copy {
               Nothing is held against the address.
             </p>
           </>
+        ),
+      };
+
+    case "confirm":
+      return {
+        title: (
+          <>
+            Leave the
+            <br />
+            list
+          </>
+        ),
+        body: (
+          <p className="text-lg text-steel">
+            This link belongs to an address on the First Edition list. Press the
+            button and we remove it, and we will not email it again.
+          </p>
         ),
       };
 
@@ -173,7 +205,7 @@ export default async function UnsubscribePage({
 }: {
   searchParams: SearchParams;
 }) {
-  const result = await outcomeFor(searchParams);
+  const { outcome: result, token } = await resolve(searchParams);
   const { title, body, tone } = copyFor(result);
 
   return (
@@ -185,6 +217,12 @@ export default async function UnsubscribePage({
       secondary={{ href: "/journal", label: "Read the Journal" }}
     >
       {body}
+      {result === "confirm" ? (
+        <form action={confirmUnsubscribe}>
+          <input type="hidden" name="t" value={token} />
+          <Button type="submit">Unsubscribe</Button>
+        </form>
+      ) : null}
     </UtilityPage>
   );
 }

@@ -200,9 +200,13 @@ protecting, or make the case for changing the rule.
   then fetches `/crew/list/export`; the page's pool is still holding PGlite's one
   connection, the route handler's session lookup gets `ECONNRESET`, and the
   fetch fails. With the idle timeout at 1ms the first pool lets go in time. The
-  test only runs at all when `PORTAL_PASSWORD_HASH` and `PORTAL_TEST_PASSWORD`
-  are exported (hash one with `hashPassword` from `src/lib/portal/auth.ts`); CI
-  sets neither, so it has only ever been run locally. `db:seed-e2e` clears
+  test only runs when `PORTAL_PASSWORD_HASH` and `PORTAL_TEST_PASSWORD` are
+  exported. CI derives both (see `ci.yml`) and runs it against a real Postgres,
+  which has no such limit; locally it skips unless you export them yourself
+  (hash one with `hashPassword` from `src/lib/portal/auth.ts`), and then it
+  needs the idle setting above. `db:seed-e2e` also refuses a database that
+  already holds orders, and the unit suite creates orders — so locally it is
+  fresh `db:local`, migrate, seed, seed-e2e, e2e, in that order. It clears
   `login_attempt`, because the sign-in limiter is real and one wrong password
   per run locks the suite out on the fifth run in fifteen minutes.
 - **After switching branches, run `npm install`.** `node_modules` belongs to

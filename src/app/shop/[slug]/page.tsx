@@ -170,7 +170,7 @@ export default async function ProductPage({ params }: Params) {
                 <p className="notation text-2xs text-orchid">First Edition</p>
                 <p className="mt-4 text-base text-steel">
                   {availability === "sold-out"
-                    ? "That run is finished. We do not quietly restock and call it a new release — join the list and you will hear when it returns."
+                    ? "That run is finished. We do not quietly restock and call it a new release."
                     : "Join the list and you will hear the moment it is available. One message, no newsletter."}
                 </p>
                 <div className="mt-7">

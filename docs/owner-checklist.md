@@ -205,6 +205,22 @@ labelled, marked delivered, refunded.
 - Redeploy. The portal's mode banner reads the key prefix, so it changes by
   itself.
 
+### 13. Confirm the promises the policies make
+
+The shipping and returns pages, the order-confirmed page and two of the order
+emails state figures nobody has decided: two business days to dispatch, three
+to five days in transit, thirty-day returns, five-business-day refunds, one free
+exchange per order, a twenty-one-day lost-parcel window. They were left as
+written. A customer can hold you to each from the first order.
+
+The full list, with the file and line of every occurrence, is in
+`docs/owner-decisions.md` §12. For each row: confirm it, give a different
+figure, or say cut. Also there: **how long order records are kept**, which the
+privacy policy does not yet say because no period has been chosen — ask your
+accountant what the floor is.
+
+Do this before the live-mode cutover. It does not block a test-mode rehearsal.
+
 ---
 
 ## What the assistant does after each step

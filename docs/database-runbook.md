@@ -36,10 +36,13 @@ survivable at all.
 
 **`vercel env pull` does not work for these.** It writes every key with an
 **empty value** — not only the Neon ones, the pre-existing `NEXT_PUBLIC_*` pair
-too. Vercel will not return a stored value through the CLI, and it fails
-silently: you get a plausible-looking `.env.local`, and `db:status` then reports
-`no DATABASE_URL_UNPOOLED or DATABASE_URL set` — which reads as a missing
-database rather than a hollow file. Confirmed 2026-09-17.
+too. The cause is the **Sensitive** toggle in the integration's connection
+dialog (§2a), which is on: a Sensitive variable can be written and used at build
+and runtime, but never read back out.
+
+It fails silently: you get a plausible-looking `.env.local`, and `db:status`
+then reports `no DATABASE_URL_UNPOOLED or DATABASE_URL set` — which reads as a
+missing database rather than a hollow file. Confirmed 2026-09-17.
 
 Use the Neon CLI, which returns the real strings:
 
@@ -73,22 +76,40 @@ so until 2026-09-17 the `db:*` scripts ignored the very file this step creates,
 and these instructions could not have worked as written. They now run under
 `--env-file-if-exists=.env.local`.
 
-### 2a. Preview and Production share one database
+### 2a. Preview deployments get their own database
 
-The Neon integration injects `DATABASE_URL` for **Preview and Production
-together**, and it provisions a single branch. There is no second database
-behind preview deployments: `neon api /projects/<id>/branches` returns exactly
-one, `main`.
+Enabled 2026-09-17, and verified: a signup made against a preview wrote to the
+preview branch while production stayed empty.
 
-So **the Playwright suite must not be pointed at a preview URL.** Its fixtures
-write `test-*@example.com` straight into the production `waitlist_signup` table.
-That is how 55 junk records ended up in the August NDJSON file, and a real
-database will not be as easy to throw away as that file was.
+Every Preview deployment now gets its own Neon branch — a copy-on-write fork of
+`main`, so it inherits the schema without a migration run. They are named after
+the git branch (`preview/feat/waitlist-db`). Production keeps `main`.
 
-Until per-preview branching is enabled (Vercel → Storage → the database →
-Connect Project → Advanced Options → Deployments Configuration → toggle
-**Preview**), treat any write against a preview as a write against production:
-namespace it, and delete it afterwards.
+**Before this, Preview and Production shared one branch**, which made pointing
+Playwright at a preview URL a way to write `test-*@example.com` into the real
+waitlist table — the same mechanism that filled the August NDJSON file with 55
+fixtures. If the setting is ever turned off, that hazard returns.
+
+To check or change it: **Storage → the database → Projects tab → the row's ⋯ menu
+→ Update Project Connection → Create Database Branch For Deployment → Preview.**
+
+There is **no need to disconnect the project** to change this, and you should not
+try — the connect flow refuses a project that is already connected ("already
+connected to the target store in one of the chosen environments"), and
+disconnecting would pull `DATABASE_URL` out of Production. Updating in place
+leaves all sixteen injected variables untouched; that was diffed before and
+after.
+
+The same dialog holds a **Sensitive** toggle, and it is on. That — not some
+general Vercel policy — is why `vercel env pull` returns empty values. Leave it
+on and use the Neon CLI; a connection string that can be read back out of the
+platform is worth less than the convenience.
+
+Confirm a branch actually appeared after a preview builds:
+
+```
+MSYS_NO_PATHCONV=1 npx neonctl@latest api /projects/<project-id>/branches
+```
 
 
 ### 3. Apply the schema

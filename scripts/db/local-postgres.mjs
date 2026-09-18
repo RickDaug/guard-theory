@@ -41,9 +41,22 @@
  *
  *   node scripts/db/local-postgres.mjs            in-memory, dies with the process
  *   node scripts/db/local-postgres.mjs --dir .pgdata   persists between runs
+ *   node scripts/db/local-postgres.mjs --max-connections 8
+ *
+ * The last one raises pglite-socket's limit of one connection, which is that
+ * package's default rather than a property of PGlite. With 8,
+ * tests/e2e/checkout.spec.ts passed under Playwright's default parallel workers
+ * as well as --workers=1. It does not cure the wedge described above — that was
+ * seen once at 8 too — and restarting this script is still the fix.
  *
  * Then, in another terminal:
- *   DATABASE_URL="postgresql://postgres@127.0.0.1:5433/postgres?sslmode=disable" npm run db:migrate
+ *   export DATABASE_URL="postgresql://postgres@127.0.0.1:5433/postgres?sslmode=disable"
+ *   export DATABASE_URL_UNPOOLED="$DATABASE_URL"
+ *   npm run db:migrate
+ *
+ * BOTH, always. The db scripts prefer DATABASE_URL_UNPOOLED, and .env.local
+ * supplies Neon's for any variable the shell has not set — so overriding only
+ * DATABASE_URL runs the migration against Neon.
  */
 
 import { PGlite } from "@electric-sql/pglite";
@@ -57,7 +70,12 @@ const port = Number(portArg !== -1 && args[portArg + 1] ? args[portArg + 1] : 54
 
 const db = await PGlite.create(dataDir ? { dataDir } : {});
 
-const server = new PGLiteSocketServer({ db, port, host: "127.0.0.1" });
+const connectionsArg = args.indexOf("--max-connections");
+const maxConnections = Number(
+  connectionsArg !== -1 && args[connectionsArg + 1] ? args[connectionsArg + 1] : 1,
+);
+
+const server = new PGLiteSocketServer({ db, port, host: "127.0.0.1", maxConnections });
 
 await server.start();
 
@@ -67,6 +85,8 @@ console.log(`  Postgres listening on 127.0.0.1:${port}`);
 console.log(`  ${dataDir ? `persisting to ${dataDir}` : "in memory — this dies with the process"}`);
 console.log("");
 console.log(`  DATABASE_URL="${url}"`);
+console.log(`  DATABASE_URL_UNPOOLED="${url}"`);
+console.log("  Set both: the db scripts prefer the second, and .env.local fills in whichever is missing.");
 console.log("");
 console.log("  Ctrl-C to stop.");
 

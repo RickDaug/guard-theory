@@ -14,6 +14,7 @@ import {
 import { IS_INDEXABLE, absoluteUrl } from "@/lib/site";
 import { pageMetadata } from "@/lib/metadata";
 import { getAuthor } from "@/content/authors";
+import { serialiseJsonLd } from "@/lib/json-ld";
 
 type Params = { params: Promise<{ slug: string }> };
 
@@ -300,7 +301,7 @@ export default async function ArticlePage({ params }: Params) {
       {jsonLd ? (
         <script
           type="application/ld+json"
-          dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+          dangerouslySetInnerHTML={{ __html: serialiseJsonLd(jsonLd) }}
         />
       ) : null}
     </main>

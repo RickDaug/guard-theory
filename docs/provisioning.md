@@ -72,8 +72,11 @@ take an order is a way to spend that one email early.
 **Migrations are applied to production before the merge that needs them, never
 after.** That is 2026-08-24 in one line. They are additive, and the running site
 does not read the new tables, so applying early costs nothing; applying late is
-an outage. `0003_commerce.sql` and `0004_admin_session.sql` go in before PR #3
-merges. PR #2 is expected to bring a `0005`; it is not on the branch yet, and
+an outage. `0003_commerce.sql`, `0004_admin_session.sql`,
+`0006_commerce_hardening.sql` and `0007_commerce_constraints.sql` go in before
+PR #3 merges. The code on that branch reads `unfulfilled_payment`,
+`login_attempt` and `order.label_claimed_at`, all from `0006`: without it the
+portal's Orders page and sign-in both fail. PR #2 is expected to bring a `0005`; it is not on the branch yet, and
 the same rule will apply to it. `docs/commerce-reland.md` records
 `0002_email_log.sql`, from `feat/mail`, as already applied — run
 `npm run db:status:production` to confirm before relying on that.
@@ -202,15 +205,29 @@ Neon Instant Restore is continuous point-in-time restore within a history window
 survive noticing on Monday that Friday's migration corrupted orders, and it does
 not survive losing the account.
 
-`scripts/db/backup.mjs` exists for this, as `npm run db:backup`: a `pg_dump`
-over the **unpooled** string — or a JSON export of every row when `pg_dump` is
-not on PATH — written to `./backups`, which is gitignored. This document used to
-describe it as nightly, to object storage, kept 30 days. It is none of those:
-**nothing schedules it, it writes to the local disk, and nothing prunes it.**
-Someone has to run it and move the file somewhere that is not this laptop. At
-this size that is a file measured in megabytes. Start on day one, not later — on
-Free, six hours is the entire safety net. `docs/database-runbook.md` carries the restore procedure,
-and you should **rehearse a restore before Tier 3 puts money through it**.
+This document used to describe a backup that was nightly, to object storage,
+kept 30 days, when nothing of the kind existed. What exists now, on PR #3:
+
+- **`.github/workflows/db-backup.yml`** — nightly, and on demand. It asks the
+  server its version, dumps with the matching `pg_dump` over the **unpooled**
+  string (a `-pooler` host is refused), checks the archive really contains the
+  tables, **encrypts it**, proves the encrypted file decrypts, and keeps it as a
+  workflow artifact for **30 days**. Not object storage: no bucket, no vendor.
+- **`npm run db:backup`** — the manual one, unchanged: `pg_dump`, or a JSON
+  export of every row when `pg_dump` is not on PATH, written to `./backups`,
+  which is gitignored. Nothing schedules or prunes that directory.
+
+**The repository is public**, so the encrypted artifact can be downloaded by
+anyone signed in to GitHub, and the passphrase is the whole of its protection.
+That is why encryption is not optional in the workflow — a separate step reads
+the bytes and refuses to upload anything else.
+
+It needs two **GitHub repository secrets** — not Vercel variables —
+`BACKUP_DATABASE_URL` and `BACKUP_PASSPHRASE`, and it fails every night, by
+name, until both exist. GitHub only runs a schedule from the default branch, so
+nothing happens before PR #3 merges. Setting them, getting a backup back out,
+and the quarterly drill are all in `docs/database-runbook.md`; **rehearse a
+restore before Tier 3 puts money through it**.
 
 **What's still ahead:** re-landing commerce is merging PR #3, once the tiers
 below have put their variables in Production. Tier 1 already covers taking
@@ -274,6 +291,39 @@ portal.
    is that the classification is the seller's to make. **This is an owner
    decision, for a tax adviser to confirm**; nothing here asserts which code is
    right. Shipping is fixed in code at `txcd_92010001`.
+
+### The scheduled reconciler, and `CRON_SECRET`
+
+When the webhook handler dies — a deploy that took the route out, an event
+Stripe stopped retrying — the reconciler is what turns the payment into an
+order. It used to run only when somebody pressed **Check Stripe for missed
+orders** in the portal or ran `scripts/reconcile.mjs`, which needs a person to
+notice first. `vercel.json` now schedules it: `GET /api/cron/reconcile` every
+fifteen minutes. That cadence needs Pro (Hobby allows one run a day), which
+Tier 1 already covers. Cron jobs run against the **production** deployment only;
+previews never fire them.
+
+The route is a public URL, so it answers **401 to everybody — Vercel included —
+unless `CRON_SECRET` is set, is 32 characters or more, and arrives as
+`Authorization: Bearer …`**. Vercel sends that header by itself on a cron
+invocation once the variable exists on the project. Nobody needs to know the
+value: it is a random string with no account behind it, so the assistant
+generates it at merge time and pipes it straight into Vercel without printing
+it —
+
+```
+node -e "process.stdout.write(require('crypto').randomBytes(32).toString('hex'))" | npx vercel env add CRON_SECRET production --sensitive
+```
+
+— and the next production deploy picks it up. To rotate it, remove it, add a new
+one the same way, and redeploy.
+
+Until then each run logs one warning and does nothing. With the secret set and
+no Stripe keys yet, a run answers 200, sweeps expired checkout intents, old
+sign-in attempts and dead portal sessions, and asks Stripe nothing. The response
+is counts only, and the logs carry Stripe session ids and nothing about a
+customer. The handler is `src/lib/orders/cron.ts`; the manual button and the
+script still work and are the same code.
 
 ### Stripe Tax — the one step with a real financial consequence
 
@@ -454,11 +504,12 @@ integration; the rest you add by hand.
 | `DATABASE_URL_UNPOOLED` | 2 | yes — direct | **yes** |
 | `STRIPE_SECRET_KEY` | 3 | yes | no |
 | `STRIPE_WEBHOOK_SECRET` | 3 | yes | no |
+| `CRON_SECRET` | 3 | yes — a random string, 32 characters or more (shorter is refused). The assistant generates it at merge time; see below | no |
 | `STRIPE_APPAREL_TAX_CODE` | 3 | optional — defaults to `txcd_30021000`; owner decision | no |
 | `RESEND_API_KEY` | 4 | yes | **yes** — nothing merged reads it yet |
 | `RECEIPT_FROM_EMAIL` | 4 | yes | **yes** — nothing merged reads it yet |
 | `SHIPPO_API_TOKEN` | 5 | yes | no |
-| `SHIPPO_WEBHOOK_TOKEN` | 5 | yes — a random string of your own | no |
+| `SHIPPO_WEBHOOK_TOKEN` | 5 | yes — a random string of your own, 32 characters or more (shorter is refused) | no |
 | `SHIP_FROM_NAME` `_STREET1` `_CITY` `_STATE` `_ZIP` | 5 | yes — all five | no |
 | `SHIP_FROM_STREET2` `_PHONE` `_EMAIL` `_COUNTRY` | 5 | optional | no |
 | `SHIP_PARCEL_LENGTH_IN` `_WIDTH_IN` `_HEIGHT_IN` `_WEIGHT_OZ` | 5 | optional, defaulted | no |

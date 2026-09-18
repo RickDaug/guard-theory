@@ -1,4 +1,5 @@
 import { SITE_DESCRIPTION, SITE_NAME, absoluteUrl } from "@/lib/site";
+import { serialiseJsonLd } from "@/lib/json-ld";
 
 /**
  * Organization and WebSite, emitted once from the root layout.
@@ -44,7 +45,7 @@ export function SiteStructuredData() {
     <script
       type="application/ld+json"
       // Serialised from a literal built above; no user input reaches it.
-      dangerouslySetInnerHTML={{ __html: JSON.stringify(graph) }}
+      dangerouslySetInnerHTML={{ __html: serialiseJsonLd(graph) }}
     />
   );
 }

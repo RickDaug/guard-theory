@@ -84,8 +84,11 @@ Stripe script. Do not create a `NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY`.
 
 1. Settings → API → generate a **test** token. It begins `shippo_test_`.
    → **`SHIPPO_API_TOKEN`**
-2. Make up a long random string — a password manager's generator will do. Shippo
-   does not issue this one. → **`SHIPPO_WEBHOOK_TOKEN`**
+2. Make up a long random string — a password manager's generator will do, set to
+   **at least 32 characters, letters and digits only**. Anything shorter is
+   refused by the code and the webhook answers 404 to everyone. Shippo does not
+   issue this one. It appears in Vercel's request logs, so change it whenever
+   someone stops having access to the Vercel project. → **`SHIPPO_WEBHOOK_TOKEN`**
 3. Settings → Webhooks → add a webhook for tracking updates — `track_updated`,
    the only event the handler acts on —
    pointed at `https://guardtheory.net/api/webhooks/shippo/` followed by the
@@ -126,6 +129,11 @@ Ten required names to add: `STRIPE_SECRET_KEY`, `STRIPE_WEBHOOK_SECRET`,
 there.
 
 Nothing changes on the site when you do this. No merged code reads these yet.
+
+One more name, `CRON_SECRET`, is **not yours to do**. It is a random string with
+no account behind it — it lets Vercel's scheduler, and nobody else, run the
+every-fifteen-minutes check for paid orders the webhook missed. The assistant
+generates it and sets it when it merges PR #3.
 
 ---
 
@@ -175,11 +183,29 @@ figure in `docs/database-runbook.md`; check it against Neon's current pricing
 page before relying on it. Six hours does not cover noticing on Monday what
 broke on Friday.
 
-`npm run db:backup` writes a dump to `./backups` on this machine. Nothing
-schedules it and nothing moves the file off the laptop. Decide two things: where
-the copies live, and whether to move Neon to Launch (usage-billed, roughly
-$6–19 a month on the figures in `docs/provisioning.md`) for the seven-day
-window. Then have a restore rehearsed once before the first real order.
+PR #3 adds a nightly backup that runs on GitHub: it dumps the database,
+encrypts it, and keeps the last **30 days** as downloadable files on the
+repository's Actions page. Two things about it are yours.
+
+1. **The passphrase.** The repository is public, so anyone signed in to GitHub
+   can download the encrypted file; the passphrase is the only thing between
+   them and your customers' addresses. The assistant generates it and sets it as
+   a GitHub secret, and GitHub will never show it again — to anyone. **It is
+   handed to you once, as a file. Put it in your password manager, under a name
+   you will recognise in two years.** A backup whose passphrase is lost is not a
+   backup. → GitHub secret **`BACKUP_PASSPHRASE`**
+2. **Whether thirty days and one location is enough.** Still open: moving Neon
+   to Launch (usage-billed, roughly $6–19 a month on the figures in
+   `docs/provisioning.md`) for a seven-day restore window, and whether to make
+   the repository private, which would take the backups off public download
+   altogether.
+
+The other secret, **`BACKUP_DATABASE_URL`**, is Neon's *unpooled* connection
+string; the assistant copies it across without displaying it. Then a restore is
+rehearsed once before the first real order, and every quarter after that —
+`docs/database-runbook.md` has the drill.
+
+`npm run db:backup` still exists for a dump on this machine, to `./backups`.
 
 ### 12. Live-mode cutover
 
@@ -189,12 +215,34 @@ labelled, marked delivered, refunded.
 - Stripe: switch to live mode. Create a **new** restricted key (`rk_live_`) and
   a **new** webhook endpoint — same URL, same three events, same API version.
   Live endpoints have their own signing secret. Replace **`STRIPE_SECRET_KEY`**
-  and **`STRIPE_WEBHOOK_SECRET`** in Vercel.
+  and **`STRIPE_WEBHOOK_SECRET`** in Vercel — **in the Production environment
+  only**. The code refuses a live key anywhere else: on a Preview or Development
+  deployment it treats Stripe as not configured, checkout says it is
+  unavailable, and the portal banner says why. Keep the test key on Preview and
+  Development. A test key in Production is allowed — that is the rehearsal
+  above — and the portal says "TEST MODE ON THE LIVE SITE" on every page until
+  it is replaced.
 - Shippo: generate a live token (`shippo_live_`), replace
   **`SHIPPO_API_TOKEN`**, and register a separate live webhook. Shippo payloads
   carry a `test` flag and test and live need their own endpoints.
 - Redeploy. The portal's mode banner reads the key prefix, so it changes by
   itself.
+
+### 13. Confirm the promises the policies make
+
+The shipping and returns pages, the order-confirmed page and two of the order
+emails state figures nobody has decided: two business days to dispatch, three
+to five days in transit, thirty-day returns, five-business-day refunds, one free
+exchange per order, a twenty-one-day lost-parcel window. They were left as
+written. A customer can hold you to each from the first order.
+
+The full list, with the file and line of every occurrence, is in
+`docs/owner-decisions.md` §12. For each row: confirm it, give a different
+figure, or say cut. Also there: **how long order records are kept**, which the
+privacy policy does not yet say because no period has been chosen — ask your
+accountant what the floor is.
+
+Do this before the live-mode cutover. It does not block a test-mode rehearsal.
 
 ---
 
@@ -205,14 +253,15 @@ labelled, marked delivered, refunded.
 | 1 — Vercel Pro | Done: the team's plan read `pro` on 2026-09-18. |
 | 3, 4, 5, 6 — variables in Vercel | Runs `vercel env ls production` and checks every required **name** is present. It cannot read the values and does not need to. |
 | — | Merges `feat/mail` and confirms the domain serves the new build. |
-| 6 complete | Applies migrations `0003` and `0004` to production, then seeds the two Theory 01 products as drafts. Both happen **before** the merge; the running site does not read the new tables. |
+| 6 complete | Applies migrations `0003`, `0004`, `0006` and `0007` to production (`0005` belongs to PR #2 and is independent of them), then seeds the two Theory 01 products as drafts. Both happen **before** the merge; the running site does not read the new tables. |
 | 8 — shipping figure | Updates `setting.shipping_flat_cents`. |
 | 9 — tax code | Nothing, unless you chose a non-default code, in which case it checks the name is set. |
 | 10 — specs | Corrects or removes whatever you flag. |
+| 6 complete | Generates `CRON_SECRET` (32 random bytes, never printed) and adds it to Vercel Production, so the scheduled reconciler in `vercel.json` is allowed to run from the first deploy. After the merge, checks Vercel → Settings → Cron Jobs lists `/api/cron/reconcile` and that its first run answered 200. |
 | 2–6 and 8–10 | Takes PR #3 out of draft, merges it, and checks guardtheory.net is serving it — the portal sign-in page answers, the shop still renders. |
 | 7 — prices | Nothing. You enter them in the portal and set the products active. |
 | 2 and 3 — registration added | Places a test order to a California address and asserts the tax is greater than zero. |
-| 11 — backups | Takes a backup, rehearses a restore against a Neon branch, and records the result in `docs/database-runbook.md`. |
+| 11 — backups | Sets the GitHub secrets `BACKUP_DATABASE_URL` (from Neon, unpooled, never displayed) and `BACKUP_PASSPHRASE` (generated, handed to you once for your password manager), runs the **Database backup** workflow by hand once, then does the restore drill against a scratch Neon branch and records the result in `docs/database-runbook.md`. |
 | 12 — live keys | Checks the portal banner shows live, and watches the first real order through the webhook. |
 | All of the above, and you have set the opening date | Applies PR #2's migration, merges PR #2 last, runs the announcement as a dry run, shows you the recipient count and the message, and sends only on your word. |
 

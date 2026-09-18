@@ -13,6 +13,9 @@
     "db:local": "node scripts/db/local-postgres.mjs",
     "db:migrate": "node --env-file-if-exists=.env.local scripts/db/migrate.mjs",
     "db:migrate:production": "node --env-file-if-exists=.env.local scripts/db/migrate.mjs --production",
+    "db:seed": "node --env-file-if-exists=.env.local scripts/db/seed-products.mjs",
+    "db:seed:production": "node --env-file-if-exists=.env.local scripts/db/seed-products.mjs --production",
+    "db:seed-e2e": "node --env-file-if-exists=.env.local scripts/db/seed-e2e-fixtures.mjs",
     "db:status": "node --env-file-if-exists=.env.local scripts/db/migrate.mjs --status",
     "db:status:production": "node --env-file-if-exists=.env.local scripts/db/migrate.mjs --status --production",
     "dev": "next dev",
@@ -28,7 +31,8 @@
     "next": "16.2.12",
     "pg": "^8.23.0",
     "react": "19.2.4",
-    "react-dom": "19.2.4"
+    "react-dom": "19.2.4",
+    "stripe": "^22.5.0"
   },
   "devDependencies": {
     "@axe-core/playwright": "^4.12.1",

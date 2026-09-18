@@ -1,0 +1,88 @@
+name: Database backup
+
+# A nightly pg_dump of production, encrypted, kept for thirty days.
+#
+# Neon Free keeps six hours of restore history. This is the copy that survives
+# noticing on Monday what broke on Friday. The procedure for getting one back
+# out — download, decrypt, restore into a scratch branch — is in
+# docs/database-runbook.md, and so is the quarterly drill that proves it works.
+#
+# THIS REPOSITORY IS PUBLIC. So are this workflow's logs, and its artifacts can
+# be downloaded by anyone signed in to GitHub. Two consequences, both enforced
+# below rather than hoped for: nothing about the database is printed beyond a
+# size and a table count, and the dump is encrypted before it is uploaded, with
+# a separate step that reads the bytes and refuses anything else.
+#
+# GitHub only runs a `schedule` from the default branch, and switches it off
+# after sixty days without a commit to the repository. It says so by email
+# first. If that email arrives, push anything, or press "Enable workflow".
+
+on:
+  schedule:
+    # 09:17 UTC: the small hours in California, and off the top of the hour,
+    # which is when GitHub's scheduler is at its most delayed.
+    - cron: "17 9 * * *"
+  workflow_dispatch:
+
+# Two dumps at once prove nothing twice. A second run waits for the first.
+concurrency:
+  group: db-backup
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+
+jobs:
+  backup:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          # The two scripts and nothing else.
+          sparse-checkout: |
+            scripts/db/backup-ci.sh
+            scripts/db/backup-ci-guard.sh
+          sparse-checkout-cone-mode: false
+          persist-credentials: false
+
+      # Missing secrets are an empty string here, not an error, and a fork or a
+      # repository where nobody has set them yet would otherwise fail somewhere
+      # less obvious. Said first, by name, with where to look.
+      - name: Both secrets are set
+        env:
+          HAS_URL: ${{ secrets.BACKUP_DATABASE_URL != '' }}
+          HAS_PASSPHRASE: ${{ secrets.BACKUP_PASSPHRASE != '' }}
+        run: |
+          if [ "$HAS_URL" != "true" ]; then
+            echo "::error::The BACKUP_DATABASE_URL secret is not set. No backup was taken. See docs/database-runbook.md."
+            exit 1
+          fi
+          if [ "$HAS_PASSPHRASE" != "true" ]; then
+            echo "::error::The BACKUP_PASSPHRASE secret is not set. No backup was taken. See docs/database-runbook.md."
+            exit 1
+          fi
+
+      - name: Dump, check and encrypt
+        env:
+          BACKUP_DATABASE_URL: ${{ secrets.BACKUP_DATABASE_URL }}
+          BACKUP_PASSPHRASE: ${{ secrets.BACKUP_PASSPHRASE }}
+          BACKUP_OUT_DIR: ${{ runner.temp }}/backup-out
+        run: bash scripts/db/backup-ci.sh
+
+      # Has no secrets and trusts nothing the step above said.
+      - name: Refuse to upload anything that is not encrypted
+        run: bash scripts/db/backup-ci-guard.sh "${{ runner.temp }}/backup-out"
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: guard-theory-db-${{ github.run_id }}
+          path: ${{ runner.temp }}/backup-out/
+          # Thirty days, if the repository allows it: the repository's own limit
+          # wins when it is lower. Check it with
+          #   gh api repos/{owner}/{repo}/actions/permissions/artifact-and-log-retention
+          retention-days: 30
+          if-no-files-found: error
+          # Already compressed by pg_dump, and ciphertext does not compress.
+          compression-level: 0

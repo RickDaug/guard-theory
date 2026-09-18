@@ -41,10 +41,22 @@ method), and country of manufacture.
 
 ## 4. Pricing
 
-**Needed:** retail price per SKU and currency, and whether prices are
-inclusive of tax by market.
-**Blocks:** any `Product`/`Offer` structured data — which will remain absent
-until this and stock data are both real.
+**Decided 2026-08: prices are entered by the owner through the Crew Portal.**
+
+The codebase contains no price. `product.price_cents` is nullable and starts
+null, and the storefront renders a price only when the database holds one — so
+"never invent a fact" is now enforced by a schema rather than by a convention.
+
+Currency is USD, exclusive of tax: US sales tax is calculated and added at
+checkout by Stripe Tax, not folded into a displayed figure.
+
+**Blocks:** nothing further. `Product`/`Offer` structured data becomes permitted
+for a product that has a real price and real stock, and remains forbidden for
+one that does not. `tests/e2e/metadata.spec.ts` changes from asserting the
+absence of that schema to asserting its truthfulness — see
+docs/commerce-plan.md §1 for why that is a stronger guard rather than a weaker
+one. `AggregateRating` and `Review` stay forbidden outright; there are still no
+reviews.
 
 ## 5. First Edition release date
 
@@ -72,15 +84,36 @@ needs changing, because nothing is currently phrased around its absence.
 
 The waitlist needs somewhere to send data.
 
-**Needed:** provider choice and API credentials.
-**Interim behaviour:** submissions are written to a local store and the code
-and docs say so plainly. No form silently discards input.
+**Proposed 2026-08: Resend.** Free to start, $20/month in any month the list is
+mailed in bulk — the free tier caps at 100 messages a day, which order
+confirmations fit inside and an announcement does not. Awaiting owner approval
+and a verified sending domain; see docs/commerce-plan.md §6 for the DNS records
+and the alternatives that were weighed.
+
+**Needed:** approval, then the API key and a from-address on the verified domain.
+
+**Interim behaviour, updated:** storage and mail are no longer the same
+question. Signups now go to Postgres, which is durable, so nothing is waiting on
+a mail provider to avoid being lost. What is still waiting is the ability to
+*send* — announcements and order mail arrive in Phase 4.
 
 ## 7. Commerce platform
 
-**Needed:** the platform account (Shopify or equivalent) and API credentials.
-**Interim behaviour:** a provider-agnostic adapter layer so the UI does not
-change when a real backend is connected.
+**Decided 2026-08: built in-house in this repository. Not Shopify.**
+
+The adapter layer this item asked for already existed and has now done its job:
+`src/lib/waitlist/index.ts` is "the one place a provider is chosen", and the
+store behind it changed from a local file to Postgres without a single change to
+the UI. Commerce follows the same shape.
+
+The stack is Neon Postgres, Vercel Blob for uploaded photography, Stripe hosted
+Checkout with Stripe Tax, and Shippo for USPS labels. Two new runtime
+dependencies in total. Payments deliberately use the hosted redirect rather than
+embedded Elements, so that no third-party script, frame or origin is introduced
+and the Content-Security-Policy survives unchanged — docs/commerce-plan.md §0.
+
+**Needed:** the accounts and credentials, listed with their costs in
+docs/commerce-plan.md §14 and §17.
 
 ## 8. Photography
 
@@ -116,3 +149,43 @@ mats as future products.
 **Needed:** confirmation of which, and in what order. The information
 architecture already treats these as first-class future categories, so adding
 them later is not a rebuild.
+
+
+## 12. Fulfilment, returns and retention figures — none of these is a recorded decision
+
+Found by review of PR #3 (2026-09-18). The shipping and returns policies, the
+order confirmation page and two order emails state figures that read as
+commitments. None of them traces to anything you decided: they were written
+with the first build of the policy pages and carried forward. They have been
+**left in place**, because whether to keep a thirty-day returns window is your
+call and not a code review's — but a buyer can hold you to every one of them
+from the first order, so each needs a yes, a different number, or a cut.
+
+What was changed without asking, because the code contradicted it: the claims
+that we ship worldwide, the international delivery times and the duties section
+(checkout accepts a US address only); that prices include tax (tax is added at
+checkout, USD only); that we collect no postal address or phone number (checkout
+collects both); that we share details with nobody (Stripe, Shippo, Resend, Neon
+and Vercel are now named); that every email carries an unsubscribe (list mail
+does, order mail is transactional); and that a payment provider keeps "your
+basket" in a cookie (the cart is local storage on our own origin).
+
+| # | What the site says | Where | Your call |
+|---|---|---|---|
+| a | Orders are "packed and dispatched within two business days" | `src/content/policies/index.ts:148`, `:154`; `src/app/order/confirmed/page.tsx:144-145`; `src/lib/mail/templates.ts:87` (the order confirmation email) | confirm, change, or cut |
+| b | Weekend and public-holiday orders count as placed on the next business day | `src/content/policies/index.ts:155` | confirm or cut |
+| c | Delivery "within three to five business days of dispatch" | `src/content/policies/index.ts:148`, `:176` | confirm, change, or cut |
+| d | "If a parcel has not moved for seven days" we open a trace | `src/content/policies/index.ts:177`; `src/lib/mail/templates.ts:127` (the shipped email) | confirm or change |
+| e | Lost parcel: replaced or refunded in full "after twenty-one days" with no delivery | `src/content/policies/index.ts:184` | confirm or change |
+| f | Damaged parcel: replaced, and the damaged goods need not be returned | `src/content/policies/index.ts:185` | confirm or cut |
+| g | Returns accepted for thirty days from delivery, no reason required | `src/content/policies/index.ts:193`, `:195`, `:199`, `:201`, `:229` | confirm or change |
+| h | Refund "within five business days of the return arriving" | `src/content/policies/index.ts:195`, `:209` | confirm or change |
+| i | We send a return label; we pay postage both ways when the fault is ours; the buyer pays when they changed their mind | `src/content/policies/index.ts:209`, `:216-217`; `src/app/size-and-fit/page.tsx:146-148` | confirm or change |
+| j | Size exchanges free within thirty days, "one per order", replacement dispatched when the carrier scans the return | `src/content/policies/index.ts:195`, `:224`; `src/app/size-and-fit/page.tsx:151-153` | confirm or change |
+| k | The contract is formed when we send a dispatch confirmation | `src/content/policies/index.ts:114` | for the lawyer (§9) |
+| l | **How long order records are kept.** The privacy policy says how long waitlist and contact details are kept and says nothing about orders, because no period has been decided. Tax and accounting rules usually set a floor, which is a question for the accountant. | `src/content/policies/index.ts` — "How long we keep it" | decide, then it gets written |
+| m | The flat shipping amount, `$7.00`, seeded by `0003_commerce.sql` and never confirmed. The shipping policy now says "one flat rate per order" and gives no figure. | checklist step 8 | already open; listed here so the set is complete |
+
+**Needed:** an answer per row. Line numbers are as of the commit that added this
+section; search for the quoted words if they have drifted.
+**Interim behaviour:** the figures stand as published.

@@ -83,9 +83,10 @@ export async function shippingFlatCents(): Promise<number | null> {
 /**
  * Deletes unpaid intents nobody can use any more.
  *
- * Every cart render writes an intent, and nothing removed them. There is no
- * cron on this project and this does not need one: it rides along with a
- * fraction of pricing calls (see priceCart), and one indexed DELETE is cheap.
+ * Every cart render writes an intent, and nothing removed them. It rides along
+ * with a fraction of pricing calls (see priceCart), and one indexed DELETE is
+ * cheap. The scheduled run in src/lib/orders/cron.ts calls it too, so a quiet
+ * week is swept as well.
  * Returns how many went, so a test can watch it work.
  */
 export async function purgeStaleIntents(): Promise<number> {

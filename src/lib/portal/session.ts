@@ -129,16 +129,22 @@ export async function destroySession(): Promise<void> {
   store.delete(sessionCookieName());
 }
 
-/** Expired rows are rubbish, not history. Swept opportunistically on login. */
-export async function sweepExpiredSessions(): Promise<void> {
+/**
+ * Expired rows are rubbish, not history. Swept opportunistically on login, and
+ * by the scheduled run in src/lib/orders/cron.ts. Returns how many went.
+ */
+export async function sweepExpiredSessions(): Promise<number> {
   try {
-    await query(
+    const rows = await query<{ token_hash: string }>(
       `delete from admin_session
-        where expires_at < now() or last_seen < now() - make_interval(mins => $1)`,
+        where expires_at < now() or last_seen < now() - make_interval(mins => $1)
+        returning token_hash`,
       [SESSION_IDLE_MINUTES],
     );
+    return rows.length;
   } catch {
     // Housekeeping. Never worth failing a sign-in over.
+    return 0;
   }
 }
 

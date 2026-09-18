@@ -35,3 +35,11 @@ create table if not exists unfulfilled_payment (
 
 create index if not exists unfulfilled_payment_open_idx
   on unfulfilled_payment (first_seen_at desc) where resolved_at is null;
+
+-- OLD CHECKOUT INTENTS --------------------------------------------------------
+--
+-- Every cart render writes an intent and nothing deleted them. Unpaid ones are
+-- now swept after a week (src/lib/cart/price.ts); this is the index that sweep
+-- walks, so it never becomes a scan of every intent ever written.
+create index if not exists checkout_intent_unpaid_idx
+  on checkout_intent (created_at) where consumed_at is null;

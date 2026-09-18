@@ -50,7 +50,14 @@ export type PricedCart = {
 };
 
 /** Why a checkout could not be started. Each has its own sentence in the cart. */
-export type CheckoutProblem = "no-intent" | "unavailable" | "expired" | "already-paid" | "empty";
+export type CheckoutProblem =
+  | "no-intent"
+  | "unavailable"
+  | "expired"
+  | "already-paid"
+  | "empty"
+  /** A price, a status, the stock or the shipping rate moved since the cart was priced. */
+  | "cart-changed";
 
 /**
  * What `startCheckoutAction` returns: the Stripe URL for the browser to go to,
@@ -61,6 +68,40 @@ export type CheckoutStart = { ok: true; url: string } | { ok: false; problem: Ch
 
 export const CART_STORAGE_KEY = "guard-theory:cart:v1";
 export const MAX_QUANTITY_PER_LINE = 10;
+
+/**
+ * The most distinct sizes one cart may hold. The catalogue is two garments in
+ * six sizes; this is a ceiling on what an unauthenticated caller can make the
+ * server price and store, not a limit any buyer will meet.
+ */
+export const MAX_CART_LINES = 20;
+
+/**
+ * How long a priced cart may be turned into a Checkout Session.
+ *
+ * The intent is a snapshot of prices and stock. Without an age limit a tab left
+ * open over a price change could still check out at the old figure — and after
+ * Stripe forgets the idempotency key (about a day) it would mint a brand-new
+ * session from that stale snapshot. The cart re-prices itself on every render,
+ * so an expired intent costs the buyer one click.
+ */
+export const CHECKOUT_INTENT_TTL_MINUTES = 30;
+
+/**
+ * How long a Stripe Checkout Session stays payable. Stock is not reserved, so
+ * this is the oversell window; Stripe's default is 24 hours and its minimum is
+ * 30 minutes.
+ */
+export const CHECKOUT_SESSION_MINUTES = 30;
+
+/**
+ * Unpaid intents older than this are deleted. Far longer than the TTL on
+ * purpose: a session started in the intent's last minute can be paid half an
+ * hour later, Stripe retries a failed webhook for three days, and the
+ * reconciler looks back 72 hours — and every one of those needs the snapshot to
+ * still be there. Paid intents are never deleted; they are the audit trail.
+ */
+export const CHECKOUT_INTENT_RETENTION_DAYS = 7;
 
 /** Narrowing for whatever is in localStorage, which is not to be trusted. */
 export function parseCart(raw: string | null): CartLine[] {

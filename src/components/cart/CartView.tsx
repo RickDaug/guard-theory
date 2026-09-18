@@ -32,12 +32,15 @@ import { Button, ButtonLink } from "@/components/ui/Button";
  */
 
 const PROBLEMS: Record<CheckoutProblem, string> = {
-  expired: "That checkout had expired. Your cart is untouched — start again when ready.",
+  expired:
+    "That checkout had expired. Your cart is untouched and has been priced again — carry on when ready.",
   "already-paid":
     "That order has already been paid for. Check your email for the confirmation before trying again.",
   unavailable:
     "We could not reach the payment provider just now. Nothing has been charged. Try again in a moment.",
   empty: "There was nothing in the cart to check out with.",
+  "cart-changed":
+    "Something in your cart changed while it was open — a price, or how many are left. Nothing has been charged. The figures below are the current ones; check them and carry on when ready.",
   "no-intent": "That checkout was incomplete. Start again from here.",
 };
 
@@ -71,6 +74,8 @@ export function CartView() {
   const [failed, setFailed] = useState(false);
   const [settled, setSettled] = useState(false);
   const [problem, setProblem] = useState<CheckoutProblem | null>(null);
+  // Bumped to price the cart again without the cart itself having changed.
+  const [repriced, setRepriced] = useState(0);
   const [leaving, startLeaving] = useTransition();
 
   function checkout(intentId: string) {
@@ -88,6 +93,12 @@ export function CartView() {
         }
 
         setProblem(result.problem);
+
+        // Either way the intent on screen is dead. Price again now, so the
+        // button under the message already carries a live one.
+        if (result.problem === "cart-changed" || result.problem === "expired") {
+          setRepriced((n) => n + 1);
+        }
       } catch {
         setProblem("unavailable");
       }
@@ -119,7 +130,7 @@ export function CartView() {
     return () => {
       cancelled = true;
     };
-  }, [lines]);
+  }, [lines, repriced]);
 
   if (!settled && !cart) {
     return (

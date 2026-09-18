@@ -1,5 +1,7 @@
 import { query } from "../db/client.ts";
+import { CHECKOUT_INTENT_TTL_MINUTES } from "../cart/types.ts";
 import type { CheckoutStart, PricedLine } from "../cart/types.ts";
+import { snapshotDrift } from "../cart/price.ts";
 import { createCheckoutSession } from "./checkout.ts";
 import { isStripeConfigured } from "./client.ts";
 
@@ -45,7 +47,14 @@ export async function startCheckout(intentId: string): Promise<CheckoutStart> {
       lines_json: PricedLine[];
       shipping_cents: number;
       consumed_at: Date | null;
-    }>("select lines_json, shipping_cents, consumed_at from checkout_intent where id = $1", [id]);
+      stale: boolean;
+    }>(
+      // Age is judged by the database's clock, the one that stamped created_at.
+      `select lines_json, shipping_cents, consumed_at,
+              created_at < now() - make_interval(mins => $2) as stale
+         from checkout_intent where id = $1`,
+      [id, CHECKOUT_INTENT_TTL_MINUTES],
+    );
 
     const intent = rows[0];
 
@@ -59,10 +68,25 @@ export async function startCheckout(intentId: string): Promise<CheckoutStart> {
       return { ok: false, problem: "already-paid" };
     }
 
+    if (intent.stale) {
+      // A snapshot this old is not re-verified and let through — it is simply
+      // over. The cart re-prices on the spot and hands back a fresh intent.
+      return { ok: false, problem: "expired" };
+    }
+
     const lines = intent.lines_json;
 
     if (!Array.isArray(lines) || lines.length === 0) {
       return { ok: false, problem: "empty" };
+    }
+
+    // Inside the TTL the figures can still have moved. Checked here, at the
+    // last moment before money, rather than trusted from the render.
+    const drift = await snapshotDrift(lines, intent.shipping_cents);
+
+    if (drift) {
+      console.warn(`[guard-theory] checkout intent ${id} no longer matches the shop: ${drift}`);
+      return { ok: false, problem: "cart-changed" };
     }
 
     const session = await createCheckoutSession({

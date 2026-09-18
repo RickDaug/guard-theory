@@ -286,10 +286,22 @@ describe("turning a paid session into an order", { skip: !HAS_DB && "no DATABASE
 
   it("refuses a session with no shipping address rather than inventing one", async () => {
     const intentId = await makeIntent(1, 5);
-    const result = await fulfilCheckoutSession(
-      session({ client_reference_id: intentId, collected_information: null }),
-    );
+    const paid = session({ client_reference_id: intentId, collected_information: null });
+    const result = await fulfilCheckoutSession(paid);
 
-    assert.equal(result.outcome, "ignored");
+    // Still no order and still no invented address — but the payment is no
+    // longer dropped on the floor: it was "ignored", and is now written down.
+    assert.equal(result.outcome, "unfulfilled");
+
+    const orders = await query(`select id from "order" where stripe_session_id = $1`, [paid.id]);
+    assert.equal(orders.length, 0);
+
+    const recorded = await query<{ reason: string }>(
+      "select reason from unfulfilled_payment where stripe_session_id = $1",
+      [paid.id],
+    );
+    assert.deepEqual(recorded.map((row) => row.reason), ["no shipping address"]);
+
+    await query("delete from unfulfilled_payment where stripe_session_id = $1", [paid.id]);
   });
 });

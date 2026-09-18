@@ -3,7 +3,7 @@ import type Stripe from "stripe";
 import type { PoolClient } from "pg";
 import { query, transaction } from "../db/client.ts";
 import type { PricedLine } from "../cart/types.ts";
-import { orderStripeMode } from "../stripe/client.ts";
+import { orderStripeMode, stripeMode } from "../stripe/client.ts";
 
 /**
  * Turning a paid Checkout Session into an order.
@@ -19,7 +19,14 @@ import { orderStripeMode } from "../stripe/client.ts";
 export type FulfilResult =
   | { outcome: "created"; orderId: string; orderNumber: number; oversold: boolean }
   | { outcome: "already-recorded"; orderId: string }
-  | { outcome: "ignored"; reason: string };
+  /** Not paid. Nothing is owed to anyone, so nothing is recorded. */
+  | { outcome: "ignored"; reason: string }
+  /**
+   * PAID, and no order could be made. Recorded in `unfulfilled_payment` before
+   * this is returned, so the portal shows it; if that write fails this throws
+   * instead, and the webhook answers 500 so Stripe tries again.
+   */
+  | { outcome: "unfulfilled"; reason: string };
 
 type ShippingAddress = {
   name: string;
@@ -178,6 +185,66 @@ async function decrementStock(
   return (result.rowCount ?? 0) > 0;
 }
 
+/**
+ * Writes down a payment that could not become an order.
+ *
+ * Money was taken. Whatever went wrong on our side, the one outcome that is
+ * never acceptable is that nobody finds out — so this row exists before the
+ * caller is allowed to tell Stripe the event was handled. Upserts on the
+ * session id: the webhook and the reconciler will both find the same session.
+ */
+export async function recordUnfulfilledPayment(
+  session: Stripe.Checkout.Session,
+  reason: string,
+): Promise<void> {
+  await query(
+    `insert into unfulfilled_payment (
+       id, stripe_session_id, stripe_payment_intent, stripe_mode, reason,
+       amount_total_cents, currency, email
+     )
+     values ($1, $2, $3, $4, $5, $6, $7, $8)
+     on conflict (stripe_session_id) do update set
+       last_seen_at = now(),
+       reason = excluded.reason`,
+    [
+      randomUUID(),
+      session.id,
+      typeof session.payment_intent === "string"
+        ? session.payment_intent
+        : (session.payment_intent?.id ?? null),
+      stripeMode(),
+      reason,
+      session.amount_total ?? null,
+      session.currency ? session.currency.toUpperCase() : null,
+      (session.customer_details?.email ?? session.customer_email ?? null)?.toLowerCase() ?? null,
+    ],
+  );
+
+  console.error(
+    `[guard-theory] PAID session ${session.id} could not become an order (${reason}). ` +
+      "Recorded for the portal under Needs you.",
+  );
+}
+
+async function unfulfilled(
+  session: Stripe.Checkout.Session,
+  reason: string,
+): Promise<FulfilResult> {
+  // An order may already exist for this session — a replay of an event whose
+  // intent has since been cleaned up, say. That is not an unfulfilled payment.
+  const existing = await query<{ id: string }>(
+    `select id from "order" where stripe_session_id = $1`,
+    [session.id],
+  );
+
+  if (existing[0]) {
+    return { outcome: "already-recorded", orderId: existing[0].id };
+  }
+
+  await recordUnfulfilledPayment(session, reason);
+  return { outcome: "unfulfilled", reason };
+}
+
 export async function fulfilCheckoutSession(
   session: Stripe.Checkout.Session,
   options: { flagAs?: "reconciled" } = {},
@@ -190,27 +257,24 @@ export async function fulfilCheckoutSession(
   const intentId = session.client_reference_id ?? session.metadata?.intent_id ?? null;
 
   if (!intentId) {
-    console.error(`[guard-theory] session ${session.id} carries no checkout intent reference`);
-    return { outcome: "ignored", reason: "no intent reference" };
+    return unfulfilled(session, "no intent reference");
   }
 
   const address = readShippingAddress(session);
 
   if (!address) {
-    console.error(`[guard-theory] session ${session.id} has no usable shipping address`);
-    return { outcome: "ignored", reason: "no shipping address" };
+    return unfulfilled(session, "no shipping address");
   }
 
   const email = session.customer_details?.email ?? session.customer_email ?? null;
 
   if (!email) {
-    console.error(`[guard-theory] session ${session.id} has no email address`);
-    return { outcome: "ignored", reason: "no email" };
+    return unfulfilled(session, "no email");
   }
 
   const mode = orderStripeMode();
 
-  return transaction(async (client) => {
+  const result = await transaction<FulfilResult | { outcome: "intent-missing" }>(async (client) => {
     // The unique constraint on stripe_session_id is what makes running this
     // twice — webhook and reconciler, or two deliveries — safe.
     const existing = await client.query<{ id: string }>(
@@ -233,8 +297,9 @@ export async function fulfilCheckoutSession(
     const snapshot = intent.rows[0];
 
     if (!snapshot) {
-      console.error(`[guard-theory] no checkout intent ${intentId} for session ${session.id}`);
-      return { outcome: "ignored" as const, reason: "intent not found" };
+      // Decided outside the transaction: the record of it must not be rolled
+      // back with anything, and there is nothing here to roll back.
+      return { outcome: "intent-missing" as const };
     }
 
     const lines = snapshot.lines_json;
@@ -328,6 +393,14 @@ export async function fulfilCheckoutSession(
 
     await client.query("update checkout_intent set consumed_at = now() where id = $1", [intentId]);
 
+    // If this session was earlier written down as paid-with-no-order, it has
+    // one now.
+    await client.query(
+      `update unfulfilled_payment set resolved_at = now()
+        where stripe_session_id = $1 and resolved_at is null`,
+      [session.id],
+    );
+
     return {
       outcome: "created" as const,
       orderId,
@@ -335,4 +408,10 @@ export async function fulfilCheckoutSession(
       oversold,
     };
   });
+
+  if (result.outcome === "intent-missing") {
+    return unfulfilled(session, "intent not found");
+  }
+
+  return result;
 }

@@ -103,6 +103,40 @@ export async function getOrderItems(orderId: string): Promise<OrderItemRow[]> {
   return query<OrderItemRow>("select * from order_item where order_id = $1 order by id", [orderId]);
 }
 
+/** A paid Checkout Session that could not be turned into an order. */
+export type UnfulfilledPaymentRow = {
+  id: string;
+  stripe_session_id: string;
+  stripe_payment_intent: string | null;
+  stripe_mode: string;
+  reason: string;
+  amount_total_cents: number | null;
+  currency: string | null;
+  email: string | null;
+  first_seen_at: Date;
+};
+
+export async function listUnfulfilledPayments(): Promise<UnfulfilledPaymentRow[]> {
+  return query<UnfulfilledPaymentRow>(
+    `select id, stripe_session_id, stripe_payment_intent, stripe_mode, reason,
+            amount_total_cents, currency, email, first_seen_at
+       from unfulfilled_payment
+      where resolved_at is null
+      order by first_seen_at desc`,
+  );
+}
+
+/** The owner has refunded it or fulfilled it by hand. Returns false if there was nothing open. */
+export async function resolveUnfulfilledPayment(id: string): Promise<boolean> {
+  const rows = await query<{ id: string }>(
+    `update unfulfilled_payment set resolved_at = now()
+      where id = $1 and resolved_at is null
+      returning id`,
+    [id],
+  );
+  return rows.length > 0;
+}
+
 export async function statusCounts(): Promise<Record<string, number>> {
   const rows = await query<{ status: string; n: number }>(
     `select status, count(*)::int as n from "order" group by status`,
@@ -112,7 +146,13 @@ export async function statusCounts(): Promise<Record<string, number>> {
     `select count(*)::int as n from "order" where flagged_reason is not null`,
   );
 
-  const counts: Record<string, number> = { flagged: flagged?.n ?? 0 };
+  const unfulfilled = await queryOne<{ n: number }>(
+    `select count(*)::int as n from unfulfilled_payment where resolved_at is null`,
+  );
+
+  // "Needs you" counts both: an order that wants judgement, and money with no
+  // order at all — which wants it more.
+  const counts: Record<string, number> = { flagged: (flagged?.n ?? 0) + (unfulfilled?.n ?? 0) };
 
   for (const row of rows) {
     counts[row.status] = row.n;

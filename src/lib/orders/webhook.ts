@@ -159,8 +159,14 @@ export async function handleStripeWebhook(request: Request): Promise<Response> {
       }
     }
 
+    // "unfulfilled" reaches here too, and is marked processed on purpose: the
+    // payment has been written to unfulfilled_payment (or fulfilCheckoutSession
+    // threw, and this line is never reached). Retrying cannot conjure a missing
+    // address; a human can, and the portal is now showing them the row.
     await markEventProcessed(event.id);
-    return new Response("ok", { status: 200 });
+    return new Response(result.outcome === "unfulfilled" ? "recorded for review" : "ok", {
+      status: 200,
+    });
   } catch (error) {
     // Let Stripe retry: release the claim, or the retry would be swallowed as
     // a duplicate and the order would never exist.

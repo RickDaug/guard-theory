@@ -82,6 +82,14 @@ export async function reconcileStripeSessions(
         );
       } else if (result.outcome === "already-recorded") {
         report.alreadyRecorded += 1;
+      } else if (result.outcome === "unfulfilled") {
+        // Paid, and still no order. Already written to unfulfilled_payment by
+        // fulfilCheckoutSession; said again here so the report cannot be read
+        // as "nothing to do".
+        report.skipped.push({
+          sessionId: session.id,
+          reason: `PAID with no order (${result.reason}) — listed under Needs you`,
+        });
       } else {
         report.skipped.push({ sessionId: session.id, reason: result.reason });
       }

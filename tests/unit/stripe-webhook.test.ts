@@ -5,6 +5,11 @@ import { after, before, describe, it } from "node:test";
 
 import { handleStripeWebhook } from "../../src/lib/orders/webhook.ts";
 import { STALE_CLAIM_SECONDS } from "../../src/lib/orders/fulfil.ts";
+import {
+  listUnfulfilledPayments,
+  resolveUnfulfilledPayment,
+  statusCounts,
+} from "../../src/lib/orders/manage.ts";
 import { closePool, isDatabaseConfigured, query } from "../../src/lib/db/client.ts";
 
 /**
@@ -200,6 +205,99 @@ describe("the Stripe webhook, with a valid signature", { skip: !HAS_DB && "no DA
     assert.equal(response.status, 200);
     assert.equal(await response.text(), "ok");
     assert.equal((await ordersFor(session.id)).length, 1);
+  });
+
+  it("never lets a PAID session vanish: no order possible means a row the portal shows", async () => {
+    // Each of these used to be console.error + "processed" + 200. Charged, and
+    // nothing anywhere said so.
+    const intentId = await makeIntent();
+    const broken: Record<string, Record<string, unknown>> = {
+      "no intent reference": sessionObject(),
+      "intent not found": sessionObject({ client_reference_id: randomUUID() }),
+      "no shipping address": sessionObject({
+        client_reference_id: intentId,
+        collected_information: null,
+      }),
+      "no email": sessionObject({ client_reference_id: intentId, customer_details: null }),
+    };
+
+    for (const [reason, session] of Object.entries(broken)) {
+      const event = completed(session);
+      const response = await handleStripeWebhook(signed(event));
+      assert.equal(response.status, 200, reason);
+      assert.equal(await response.text(), "recorded for review", reason);
+
+      const rows = await query<{ reason: string; amount_total_cents: number; resolved: boolean }>(
+        `select reason, amount_total_cents, resolved_at is not null as resolved
+           from unfulfilled_payment where stripe_session_id = $1`,
+        [session.id as string],
+      );
+      assert.equal(rows.length, 1, `${reason}: no row was recorded`);
+      assert.equal(rows[0]!.reason, reason);
+      assert.equal(rows[0]!.amount_total_cents, 9600);
+      assert.equal(rows[0]!.resolved, false);
+      assert.equal((await ordersFor(session.id as string)).length, 0);
+    }
+
+    // The portal's count and list see them.
+    const open = await listUnfulfilledPayments();
+    const ids = new Set(open.map((row) => row.stripe_session_id));
+    for (const session of Object.values(broken)) {
+      assert.equal(ids.has(session.id as string), true);
+    }
+    const counts = await statusCounts();
+    assert.ok((counts.flagged ?? 0) >= 4);
+
+    // A second event for the same session is one row, not two.
+    const first = Object.values(broken)[0]!;
+    await handleStripeWebhook(signed(completed(first)));
+    const dupes = await query("select id from unfulfilled_payment where stripe_session_id = $1", [
+      first.id as string,
+    ]);
+    assert.equal(dupes.length, 1);
+
+    // Resolving is what takes it off the list, once.
+    assert.equal(await resolveUnfulfilledPayment(open[0]!.id), true);
+    assert.equal(await resolveUnfulfilledPayment(open[0]!.id), false);
+
+    await query("delete from unfulfilled_payment where stripe_session_id = any($1)", [
+      Object.values(broken).map((session) => session.id as string),
+    ]);
+  });
+
+  it("an unpaid session is still ignored, and is NOT written down as money owed", async () => {
+    const session = sessionObject({ payment_status: "unpaid" });
+    const response = await handleStripeWebhook(signed(completed(session)));
+    assert.equal(response.status, 200);
+    const rows = await query("select id from unfulfilled_payment where stripe_session_id = $1", [
+      session.id,
+    ]);
+    assert.equal(rows.length, 0);
+  });
+
+  it("answers 500, and never marks the event processed, when the payment cannot be written down", async () => {
+    // A session with no id cannot be recorded: the insert fails on NOT NULL.
+    const session = sessionObject({ id: null });
+    const event = completed(session);
+    const response = await handleStripeWebhook(signed(event));
+    assert.equal(response.status, 500, "Stripe must be told to try again");
+
+    // PGlite drops the connection after a failed statement and the next query
+    // pays for it (AGENTS.md) — here that next query is the handler's own
+    // releaseEvent, so locally the release FAILS and on real Postgres it
+    // succeeds. Both are fine, and both are what production can see; what must
+    // hold either way is that the claim is not left looking finished.
+    await query("select 1").catch(() => {});
+
+    const ledger = await query<{ processed: boolean }>(
+      "select processed_at is not null as processed from webhook_event where id = $1",
+      [event.id],
+    );
+    assert.ok(
+      ledger.length === 0 || ledger[0]!.processed === false,
+      "released, or left unprocessed for the stale takeover — never marked done",
+    );
+    await query("delete from webhook_event where id = $1", [event.id]);
   });
 
   it("ignores event types it does not handle without claiming them", async () => {

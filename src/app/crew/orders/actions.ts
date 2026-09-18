@@ -3,7 +3,13 @@
 import { revalidatePath } from "next/cache";
 import { requireSession } from "@/lib/portal/session";
 import { query } from "@/lib/db/client";
-import { transitionOrder, getOrder, getOrderItems, toEmailShape } from "@/lib/orders/manage";
+import {
+  transitionOrder,
+  getOrder,
+  getOrderItems,
+  toEmailShape,
+  resolveUnfulfilledPayment,
+} from "@/lib/orders/manage";
 import type { OrderStatus } from "@/lib/orders/manage";
 import { refundOrder } from "@/lib/orders/refund";
 import { reconcileStripeSessions, recordReconcileRun } from "@/lib/orders/reconcile";
@@ -58,6 +64,27 @@ export async function advanceOrder(
       ? "Moved, and the customer has been told."
       : "Moved. The email did not send — there is a Resend button on the order.",
   };
+}
+
+/** A paid-with-no-order row has been dealt with by hand. */
+export async function resolveUnfulfilled(
+  _previous: PortalFormState,
+  formData: FormData,
+): Promise<PortalFormState> {
+  await requireSession();
+
+  const id = text(formData, "id");
+
+  if (!id || id.length > 64) {
+    return { status: "error", message: "That payment could not be identified." };
+  }
+
+  const done = await resolveUnfulfilledPayment(id);
+  revalidateOrders();
+
+  return done
+    ? { status: "success", message: "Marked as dealt with." }
+    : { status: "error", message: "That payment was not open. It may already be dealt with." };
 }
 
 /** Tracking typed in by hand, for a label bought outside the portal. */

@@ -8,7 +8,7 @@
  * Options:
  *   --send          Actually send. Without it nothing leaves the machine.
  *   --cap <n>       Messages per UTC day, all templates counted. Default 100,
- *                   Resend's free-tier quota.
+ *                   Resend's free-tier quota, and never more than that.
  *   --delay-ms <n>  Pause between messages. Default 250 (Resend allows 10/s).
  *
  * The message file is a `Subject:` line, a blank line and the body — see
@@ -30,9 +30,18 @@
  * worked through across as many days as it takes and nobody gets it twice.
  * The rules live in `src/lib/mail/announcement.ts`, where they are tested.
  *
- * Do not run two at once. Each would read the ledger before the other wrote to
- * it. A lock would need a session-level advisory lock, which the pooled
- * connection this script uses (PgBouncer, transaction mode) cannot hold.
+ * Each address is claimed in `email_log` before its message is sent, under a
+ * unique index (migration 0005). Two runs at once, or a run killed halfway,
+ * therefore cannot send a second copy: the second claim is a conflict. Do not
+ * run two at once anyway — it is safe, and it is confusing.
+ *
+ * WHAT IT WILL NOT DO FOR YOU
+ *
+ * An address whose send timed out, or whose run died mid-send, is left as
+ * `unknown` or `pending` and is never retried: the message may have arrived.
+ * Every run lists those addresses. Look each one up in the Resend dashboard
+ * (resend.com/emails, search by recipient) and settle it by hand with the
+ * statement the script prints.
  *
  * The key is asked for with echo off, for the reasons in `test-send.ts`.
  * RESEND_API_KEY in the environment skips the prompt. A dry run never asks.
@@ -41,20 +50,27 @@ import { readFile } from "node:fs/promises";
 import { createInterface } from "node:readline";
 
 import {
-  DEFAULT_DAILY_CAP,
-  DEFAULT_DELAY_MS,
+  claimRecipient,
   countSentToday,
-  hasSentRow,
   loadAlreadySent,
   loadSubscribers,
+  loadUnresolved,
   parseMessageFile,
   planAnnouncement,
   problemsWithMessage,
   renderFor,
   runAnnouncement,
+  settleClaim,
   type AnnouncementMessage,
+  type ResultKind,
 } from "../../src/lib/mail/announcement.ts";
-import { closePool, isDatabaseConfigured } from "../../src/lib/db/client.ts";
+import {
+  databaseHost,
+  isConfirmed,
+  parseArgs,
+  siteUrlProblem,
+} from "../../src/lib/mail/announcement-cli.ts";
+import { closePool, databaseUrl, isDatabaseConfigured } from "../../src/lib/db/client.ts";
 import { SITE_URL } from "../../src/lib/site.ts";
 
 const DEFAULT_FROM = "Guard Theory <hello@guardtheory.net>";
@@ -89,37 +105,31 @@ function ask(question: string): Promise<string> {
   });
 }
 
-type Options = { file: string; send: boolean; cap: number; delayMs: number };
+const LABEL: Record<ResultKind, string> = {
+  sent: "sent        ",
+  failed: "FAILED      ",
+  unknown: "UNKNOWN     ",
+  unsubscribed: "unsubscribed",
+  claimed: "claimed     ",
+};
 
-function parseArgs(argv: string[]): Options | string {
-  let file: string | undefined;
-  let send = false;
-  let cap = DEFAULT_DAILY_CAP;
-  let delayMs = DEFAULT_DELAY_MS;
-
-  for (let i = 0; i < argv.length; i += 1) {
-    const arg = argv[i]!;
-
-    if (arg === "--send") {
-      send = true;
-    } else if (arg === "--cap" || arg === "--delay-ms") {
-      const value = Number(argv[i + 1]);
-      i += 1;
-      if (!Number.isInteger(value) || value < 0) {
-        return `${arg} needs a whole number.`;
-      }
-      if (arg === "--cap") cap = value;
-      else delayMs = value;
-    } else if (arg.startsWith("--")) {
-      return `Unknown option ${arg}.`;
-    } else if (file === undefined) {
-      file = arg;
-    } else {
-      return `One message file, not two (${file}, ${arg}).`;
-    }
+/** The addresses only a person can settle, and how to settle each. */
+function printNeedsCheck(addresses: readonly string[]) {
+  console.error(
+    "\nCHECK BY HAND — these may or may not have received it, and will never be retried:\n",
+  );
+  for (const address of addresses) {
+    console.error(`  ${address}`);
   }
-
-  return file === undefined ? "No message file given." : { file, send, cap, delayMs };
+  console.error(
+    "\nLook each one up at resend.com/emails (search by recipient), then say which it was:\n\n" +
+      "  -- it arrived:\n" +
+      "  update email_log set status = 'sent' where template = 'announcement'\n" +
+      "    and status in ('pending', 'unknown') and lower(to_email) = '<address>';\n\n" +
+      "  -- it did not, and the next run may send it:\n" +
+      "  update email_log set status = 'failed' where template = 'announcement'\n" +
+      "    and status in ('pending', 'unknown') and lower(to_email) = '<address>';\n",
+  );
 }
 
 function printMessage(to: string, rendered: { subject: string; body: string }) {
@@ -157,13 +167,11 @@ async function main(): Promise<number> {
 
   // The unsubscribe link is built from SITE_URL, which falls back to localhost
   // when nothing sets it. A list send carrying localhost links unsubscribes
-  // nobody, and the page's answer to that is silence.
-  const siteIsReal = /^https:\/\//.test(SITE_URL) && !/localhost|127\.0\.0\.1/.test(SITE_URL);
-  if (!siteIsReal) {
-    console.error(
-      `Unsubscribe links would point at ${SITE_URL}. ` +
-        "Set NEXT_PUBLIC_SITE_URL to the live https origin before sending.\n",
-    );
+  // nobody, and the page's answer to that is silence. A dry run carries on, so
+  // the message can be read anywhere; a send does not.
+  const siteProblem = siteUrlProblem(SITE_URL);
+  if (siteProblem) {
+    console.error(`${siteProblem}\n`);
     if (options.send) {
       return 1;
     }
@@ -179,6 +187,7 @@ async function main(): Promise<number> {
   const subscribers = await loadSubscribers();
   const alreadySent = await loadAlreadySent();
   const sentToday = await countSentToday();
+  const unresolved = await loadUnresolved();
 
   const plan = planAnnouncement({
     subscribers,
@@ -195,8 +204,16 @@ async function main(): Promise<number> {
   console.log(`  Sent today, any template:   ${sentToday} of ${options.cap}`);
   console.log(`  This run:                   ${plan.send.length}`);
   console.log(`  Left for a later day:       ${plan.deferred}`);
+  console.log(`  Unresolved, never retried:  ${unresolved.length}`);
+  console.log(`  Database host:              ${databaseHost(databaseUrl())}`);
   console.log(`  Unsubscribe links point at: ${SITE_URL}`);
   console.log("");
+
+  if (unresolved.length > 0) {
+    printNeedsCheck(
+      unresolved.map((row) => `${row.email}  (${row.status} since ${row.since.toISOString()})`),
+    );
+  }
 
   if (plan.reserved.length > 0) {
     console.log(`Skipped, reserved domains: ${plan.reserved.join(", ")}\n`);
@@ -215,7 +232,7 @@ async function main(): Promise<number> {
       console.log(`Would send to:\n${plan.send.map((s) => `  ${s.email}`).join("\n")}\n`);
     }
     console.log("Dry run. Add --send to send.");
-    return problems.length > 0 || !siteIsReal ? 1 : 0;
+    return problems.length > 0 || siteProblem ? 1 : 0;
   }
 
   if (plan.send.length === 0) {
@@ -238,45 +255,64 @@ async function main(): Promise<number> {
   process.env.RECEIPT_FROM_EMAIL ||= DEFAULT_FROM;
 
   // Imported after the environment is set: the provider is chosen on first use.
-  const { getMailProvider, sendAndRecord } = await import("../../src/lib/mail/index.ts");
+  const { getMailProvider } = await import("../../src/lib/mail/index.ts");
+  const provider = getMailProvider();
 
-  if (!getMailProvider().delivers) {
+  if (!provider.delivers) {
     console.error("No key given, so this would only log. Nothing sent.");
     return 1;
   }
 
+  // Host only, never the URL. It is here so that a send against a preview
+  // branch, or a local database, is something you read before typing the number.
+  console.log(`  Database:  ${databaseHost(databaseUrl())}`);
+  console.log(`  Links to:  ${new URL(SITE_URL).origin}`);
+  console.log(`  From:      ${process.env.RECEIPT_FROM_EMAIL}\n`);
+
   const typed = await ask(
-    `Send to ${plan.send.length} ${plan.send.length === 1 ? "address" : "addresses"} ` +
-      `from ${process.env.RECEIPT_FROM_EMAIL}? Type ${plan.send.length} to confirm: `,
+    `Send to ${plan.send.length} ${plan.send.length === 1 ? "address" : "addresses"}? ` +
+      `Type ${plan.send.length} to confirm: `,
   );
 
-  if (typed !== String(plan.send.length)) {
+  if (!isConfirmed(typed, plan.send.length)) {
     console.log("Not confirmed. Nothing sent.");
     return 1;
   }
 
   const outcome = await runAnnouncement(plan, message, {
-    send: (email) => sendAndRecord("announcement", email),
-    recorded: hasSentRow,
+    claim: claimRecipient,
+    deliver: (email) => provider.send(email),
+    settle: settleClaim,
     sleep: (ms) => new Promise((resolve) => setTimeout(resolve, ms)),
     delayMs: options.delayMs,
-    onResult: (email, ok, index) => {
-      console.log(`  ${index + 1}/${plan.send.length} ${ok ? "sent  " : "FAILED"} ${email}`);
+    onResult: (email, kind, index) => {
+      console.log(`  ${index + 1}/${plan.send.length} ${LABEL[kind]} ${email}`);
     },
   });
 
   console.log("");
-  console.log(`Sent ${outcome.sent}, failed ${outcome.failed}.`);
+  console.log(
+    `Sent ${outcome.sent}, failed ${outcome.failed}, skipped ${outcome.skipped}, ` +
+      `unknown ${outcome.needsCheck.length}.`,
+  );
   if (outcome.stoppedBecause) {
     console.error(`Stopped early. ${outcome.stoppedBecause}`);
   }
-  if (!outcome.stoppedBecause?.includes("email_log") && (plan.deferred > 0 || outcome.failed > 0)) {
-    // Not after a ledger failure: re-running then is exactly the double send
-    // the stop was for. Find out why the row was not written first.
-    console.log("Run it again tomorrow to continue; nobody already sent is sent again.");
+  if (outcome.needsCheck.length > 0) {
+    printNeedsCheck(outcome.needsCheck);
   }
 
-  return outcome.stoppedBecause || outcome.failed > 0 ? 1 : 0;
+  const ledgerBroken = outcome.stoppedBecause?.includes("email_log") ?? false;
+  if (!ledgerBroken && (plan.deferred > 0 || outcome.failed > 0 || outcome.stoppedBecause)) {
+    // Not after a ledger failure: find out why the row could not be written
+    // before anything else is sent.
+    console.log(
+      "Run it again tomorrow to continue. Nobody sent, pending or unknown is sent to again; " +
+        "only a refused address is retried.",
+    );
+  }
+
+  return outcome.stoppedBecause || outcome.failed > 0 || outcome.needsCheck.length > 0 ? 1 : 0;
 }
 
 // closePool, always, and then let the process end by itself rather than

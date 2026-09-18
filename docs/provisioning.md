@@ -76,7 +76,7 @@ an outage. `0003_commerce.sql` and `0004_admin_session.sql` go in before PR #3
 merges. PR #2 is expected to bring a `0005`; it is not on the branch yet, and
 the same rule will apply to it. `docs/commerce-reland.md` records
 `0002_email_log.sql`, from `feat/mail`, as already applied — run
-`npm run db:status` against production to confirm before relying on that.
+`npm run db:status:production` to confirm before relying on that.
 
 ---
 

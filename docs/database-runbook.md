@@ -115,17 +115,40 @@ MSYS_NO_PATHCONV=1 npx neonctl@latest api /projects/<project-id>/branches
 ### 3. Apply the schema
 
 ```
-npm run db:migrate      # apply everything outstanding
+npm run db:migrate      # apply everything outstanding — LOCAL databases only
 npm run db:status       # show applied and pending, change nothing
+
+npm run db:status:production    # the same, against the host in .env.local
+npm run db:migrate:production
 ```
+
+**A database that is not on this machine has to be asked for by name.** The
+runner prints the host it is about to touch — host, port and database, never
+the user or password — and then refuses anything that is not loopback unless
+`--production` was passed, which is all the `:production` scripts add.
+`.env.local` points at Neon and the scripts prefer `DATABASE_URL_UNPOOLED`, so
+before this guard a bare `npm run db:migrate` meant for a local database
+migrated production. Read the printed host every time; it is the check.
+
+A migration waits at most five seconds for a lock (`lock_timeout`) and then
+fails, rolled back, rather than queueing behind a long transaction with every
+other query queueing behind it. Run it again.
 
 Migrations live in `migrations/`, run in filename order, and each one runs inside
 a transaction together with the row recording it — so a migration cannot be
 half-applied and marked done.
 
-**Editing a migration that has already run is refused, loudly.** The runner
-checksums each file; a change to an applied one means this database and every
-other one have quietly diverged. Write a new migration instead.
+**Editing a migration that has already run is refused, loudly, and the run
+stops there.** The runner checksums each file; a change to an applied one means
+this database and every other one have quietly diverged, and nothing after it is
+applied on top. Write a new migration instead.
+
+Checksums are of the file with LF line endings, and `.gitattributes` keeps
+`migrations/*.sql` LF on every checkout. An already-applied migration is also
+accepted if its recorded checksum is that of the CRLF form of the same file: the
+runner used to hash raw bytes, and a Windows checkout with `core.autocrlf=true`
+wrote CRLF, so a migration applied from such a machine carries the CRLF
+checksum. Same file, either ending, accepted; any other difference is an edit.
 
 ### 4. There is no import step
 
@@ -196,7 +219,7 @@ neon branches restore <target> <source@2026-08-23T04:00:00Z>
 ### Older damage, or a lost account — use your own backup
 
 ```
-npm run db:migrate                                            # schema, from git
+npm run db:migrate:production                                 # schema, from git
 pg_restore --no-owner --dbname "$DATABASE_URL_UNPOOLED" <file> # rows
 ```
 
@@ -246,10 +269,15 @@ A waitlist insert does not need a whole CU sitting warm, and autoscaling still
 takes it to 2 when something actually asks for it.
 
 **A migration failed.** It was rolled back — nothing is half-applied. Fix the SQL
-and run `npm run db:migrate` again.
+and run it again.
+
+**`npm run db:migrate` refuses, naming a host.** It is not a local database.
+If that host is the one you meant, use `npm run db:migrate:production`. If you
+meant a local one, export **both** `DATABASE_URL` and `DATABASE_URL_UNPOOLED`.
 
 **`npm run db:migrate` says a migration has changed since it was applied.** Someone
 edited a file that has already run. Revert the edit and write a new migration.
+The run stops at that file; nothing after it is applied until it is resolved.
 
 ---
 

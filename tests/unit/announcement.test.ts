@@ -602,6 +602,42 @@ describe("what the provider's answer means", () => {
   });
 });
 
+/**
+ * The refusal above is the lock; this is what notices someone leaning on it.
+ *
+ * The commerce branch arrived with a second way to send the announcement — a
+ * Crew Portal form that looped over the list calling `sendEmail` — and merged
+ * without a conflict, because nothing in it touched a line this branch had
+ * changed. It would have compiled, been refused for every address, and told
+ * the owner "0 sent, N failed". Nothing reaches the generic path with this
+ * template, in any file.
+ */
+describe("there is one way to send the announcement", () => {
+  it("nothing in src/ hands the announcement to the generic send path", async () => {
+    const { readdir } = await import("node:fs/promises");
+    const root = path.resolve(import.meta.dirname, "..", "..", "src");
+    const entries = await readdir(root, { recursive: true, withFileTypes: true });
+    const offenders: string[] = [];
+
+    for (const entry of entries) {
+      if (!entry.isFile() || !/\.tsx?$/.test(entry.name)) {
+        continue;
+      }
+      const file = path.join(entry.parentPath, entry.name);
+      const source = await readFile(file, "utf8");
+      if (/\b(?:sendEmail|sendAndRecord)\(\s*(?:"announcement"|'announcement'|TEMPLATE)\s*,/.test(source)) {
+        offenders.push(path.relative(root, file));
+      }
+    }
+
+    assert.deepEqual(
+      offenders,
+      [],
+      "the announcement goes through claimRecipient and runAnnouncement, or not at all",
+    );
+  });
+});
+
 describe("the quota's day", () => {
   it("starts at midnight UTC, whatever the clock on this machine says", () => {
     assert.equal(startOfUtcDay(new Date("2026-09-18T23:59:59.999Z")).toISOString(), "2026-09-18T00:00:00.000Z");

@@ -99,16 +99,92 @@ const securityHeaders = [
 const nextConfig: NextConfig = {
   poweredByHeader: false,
 
+  experimental: {
+    // `next build`'s default type-check step runs inside a forked jest-worker
+    // that constructs its own full TypeScript Program/Checker (via the
+    // `typescript` API), *while the webpack/Turbopack process from the
+    // "Compiled successfully" step immediately before it is still resident*.
+    // On a memory-tight machine that second, independent process is where a
+    // build has died with V8's "Fatal process out of memory: Zone" — the
+    // zone allocator used by V8's own parser/compiler, which `--max-old-space-size`
+    // does not govern (that flag only raises the permitted JS *heap* ceiling,
+    // not what the OS can actually back), so raising it does not help and can
+    // make matters worse by encouraging V8 to grow the heap toward a ceiling
+    // that exceeds the machine's physical RAM. `useTypeScriptCli` swaps that
+    // in-process Program for a plain spawn of `typescript`'s own `tsc` binary —
+    // the same path `npm run typecheck` already uses, measured at ~300MB and
+    // ~6s with --extendedDiagnostics on this project, versus a much larger,
+    // harder-to-predict footprint for the API path's Program+Checker. Type
+    // checking still runs, and still fails the build on a real error; only the
+    // mechanism changes. See docs/technical-architecture.md (or AGENTS.md's
+    // "Gotchas" section) for how this was diagnosed.
+    useTypeScriptCli: true,
+  },
+
   images: {
     // Measured at matched SSIM rather than matched quality number: AVIF came
     // out 39.1% smaller than WebP across every portrait, with equal or better
     // fidelity on every file. An earlier measurement compared q75 to q75,
     // which is not a comparison across codecs, and concluded the opposite.
     formats: ["image/avif", "image/webp"],
+
+    // Product photography uploaded through the Crew Portal lives in object
+    // storage, and this is the list of hosts the optimizer is allowed to fetch
+    // from. An unlisted host returns 400 rather than being fetched.
+    //
+    // NOTE, because it reads like a hole in the CSP and is not one: the browser
+    // never requests these hosts. `next/image` fetches the original server-side
+    // and serves the optimized result from `/_next/image` on our own origin, so
+    // `img-src 'self' data:` stays exactly as strict as it looks, and the
+    // "no third-party request" test in tests/e2e/security.spec.ts stays green.
+    //
+    // That guarantee only holds through `next/image`. A raw <img src="https://…">
+    // pointing at the blob host would be a real third-party request and would
+    // fail both the CSP and that test — which is the point of the guard in
+    // tests/unit/images.test.ts.
+    //
+    // The hostname is pinned rather than wildcarded: `remotePatterns` treats an
+    // omitted pathname as `**`, which Next's own documentation warns against.
+    remotePatterns: process.env.NEXT_PUBLIC_BLOB_HOSTNAME
+      ? [
+          {
+            protocol: "https" as const,
+            hostname: process.env.NEXT_PUBLIC_BLOB_HOSTNAME,
+            port: "",
+            pathname: "/**",
+          },
+        ]
+      : [],
   },
 
   async headers() {
     return [{ source: "/:path*", headers: securityHeaders }];
+  },
+
+  /**
+   * The Crew Portal's optional non-obvious URL.
+   *
+   * The pages live at /crew. Setting PORTAL_PATH serves them from somewhere
+   * else instead, and src/proxy.ts then makes /crew itself return 404, so
+   * there is only ever one door.
+   *
+   * This matters because the repository is public: a path written in the
+   * source is a path anyone can read. It is still not the security — the
+   * password is — but it keeps the door out of opportunistic scans.
+   *
+   * Read at build time, so changing it needs a redeploy rather than a restart.
+   */
+  async rewrites() {
+    const custom = (process.env.PORTAL_PATH ?? "").trim().replace(/^\/+|\/+$/g, "");
+
+    if (!custom || custom === "crew") {
+      return [];
+    }
+
+    return [
+      { source: `/${custom}`, destination: "/crew" },
+      { source: `/${custom}/:path*`, destination: "/crew/:path*" },
+    ];
   },
 
   /**

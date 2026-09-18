@@ -173,12 +173,40 @@ protecting, or make the case for changing the rule.
   under `next dev` a page and a route handler are separate bundles with a pool
   each, so hitting both against PGlite makes the second one report
   "unavailable". Restart `db:local` rather than debugging the route.
+- **The PGlite wedge was a leaked connection slot, and Playwright caused it.**
+  pglite-socket 0.2.11 frees a slot only on its handler's `close` event, and its
+  error path strips the socket's `close` listener first — so a client that dies
+  without closing (`taskkill /F`, which is how Playwright stops `next start` on
+  Windows) keeps the one slot for ever. Every later client gets "Connection
+  terminated unexpectedly" once and `read ECONNRESET` after that. It only bites
+  when the pool's connection is still inside its 10s idle window at the kill,
+  which is why it looked random: a unit run straight after an e2e run once went
+  201 pass / 2 fail and could not be reproduced, and a full e2e run straight
+  after `checkout.spec.ts` fell back to content-only from its first query.
+  `scripts/db/local-postgres.mjs` now drops dead handlers before each new
+  connection is admitted; e2e-then-unit was 211/211 four times running with it
+  and wedged on the first attempt without it. If `db:local` prints a WARNING
+  about pglite-socket's internals at startup, an upgrade has undone this.
 - **`next start` is production, so the no-database path is what e2e hits.**
   Phase 1's rule is that production without `DATABASE_URL` REFUSES a waitlist
   signup rather than accepting and dropping it. That is correct behaviour and it
   makes `waitlist.spec.ts` and the `/first-edition` console check fail locally
   unless a database is running. Start `npm run db:local` and migrate before
   concluding anything from those two.
+- **Overriding only `DATABASE_URL` for local work migrates Neon.** The database
+  scripts (`scripts/db/migrate.mjs`, `scripts/db/backup.mjs`) prefer
+  `DATABASE_URL_UNPOOLED` and fall back to `DATABASE_URL`. `.env.local` fills
+  both with Neon, and an exported variable beats the file only for the name that
+  was exported. So exporting `DATABASE_URL` as the PGlite URL and running
+  `npm run db:migrate` leaves `DATABASE_URL_UNPOOLED` pointing at Neon, and that
+  is the one the script uses. For local PGlite work export **both**, to the
+  same local URL, for the migrate, seed, build and Playwright commands alike.
+- **After switching branches, run `npm install`.** `node_modules` belongs to
+  whichever branch installed last. The commerce branch adds `stripe`; checked
+  out over a tree installed from `main`, `next build` stopped at "Can't resolve
+  'stripe'", and that was first read as the branch being unbuildable and then as
+  the memory failure below. It was neither. The lockfile had the package and
+  `node_modules` did not.
 - **A Ready production deployment is not the same as the domain serving it.**
   Merging to `main` builds and deploys, and on 2026-09-17 guardtheory.net went on
   serving a build 28 days older than that deployment — a unique query string still
@@ -198,6 +226,32 @@ protecting, or make the case for changing the rule.
   A class written as backslash-u-0000 through backslash-u-001F is fine; typing
   the actual bytes makes the source file read as binary to `grep` and `git
   diff`. `scripts/strip-control-bytes.mjs` cleans a file that already has them.
+- **`next build`'s "Running TypeScript" step can die with `Fatal process out of
+  memory: Zone`, and `NODE_OPTIONS=--max-old-space-size=...` does not fix it.**
+  This machine runs at 900MB–1.5GB free RAM out of 7.4GB total day to day, and
+  Windows' pagefile has little room to grow when the disk is also near full.
+  "Zone" is V8's own parser/compiler allocator — a different pool from the JS
+  heap `--max-old-space-size` governs — so raising the heap ceiling cannot help,
+  and setting it above this machine's physical RAM (8192, against 7.4GB total)
+  is actively counterproductive: it just invites V8 to grow the heap further
+  before it would otherwise collect, leaving less room for everything else. It
+  is not a pathological type: `npx tsc --noEmit --extendedDiagnostics` checks
+  all 25,900+ types in ~300MB and ~5s, both with and without `.next/types`
+  present, and `next build` itself completed cleanly every time this was
+  retried in isolation — so the crash is contention with whatever else is
+  running (browser tabs, another worktree's build, antivirus), not a build-time
+  determinism bug, which is also why it will not reproduce on demand. Two
+  mitigations: `next.config.ts` sets `experimental.useTypeScriptCli: true`,
+  which makes this build step spawn the real `tsc` binary — the same lean path
+  `npm run typecheck` already uses — instead of constructing a second, separate
+  full TypeScript Program/Checker inside a forked worker while the
+  webpack/Turbopack process from the step before is still resident. `typescript.
+  ignoreBuildErrors` was considered and rejected: it would silently stop `next
+  build` itself from checking types, which is the one check Vercel's production
+  deploys actually run — the local `npm run typecheck` gate does not cover a
+  deploy that skips it. If this recurs, close other memory-heavy apps (or other
+  worktrees' builds) and retry rather than raising `--max-old-space-size`
+  further.
 
 ## Gates
 

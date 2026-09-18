@@ -127,21 +127,13 @@ half-applied and marked done.
 checksums each file; a change to an applied one means this database and every
 other one have quietly diverged. Write a new migration instead.
 
-### 4. Import the old waitlist — once, from this machine only
+### 4. There is no import step
 
-```
-npm run db:import-ndjson -- --dry-run     # count and validate, write nothing
-npm run db:import-ndjson                  # do it
-```
-
-**Read this before skipping it.** `.data/waitlist.ndjson` holds **54 signups**
-and is gitignored, so it exists only on the machine that ran the site in
-development. The production copy lived in the serverless temp directory and is
-already gone — a cold start took it, exactly as the old store warned it would.
-So this file is the entire recoverable set, and only this machine has it.
-
-Safe to run twice: an address already in the database is left alone, because a
-live signup after the cutover outranks a stale copy from the file.
+`.data/waitlist.ndjson`, the pre-database store, turned out to hold only
+Playwright fixtures (`test-*@example.com`) — no real signups — so there is
+nothing to carry across. The import script that an earlier draft of this
+runbook described was never merged to `main` and does not exist. See the
+comment above `/.data/` in `.gitignore`.
 
 ### 5. Vercel Blob, for product photography
 

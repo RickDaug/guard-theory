@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { cache } from "react";
+import Link from "next/link";
 import { UtilityPage } from "@/components/site/UtilityPage";
 import { unsubscribeByToken } from "@/lib/waitlist";
 import { metaDescriptionFor, metaTitleFor, tokenFromSearchParams, type UnsubscribeOutcome } from "./copy";
@@ -82,8 +83,14 @@ function copyFor(result: UnsubscribeOutcome): Copy {
             </p>
             <p className="text-base text-steel">
               Nothing else was deleted automatically. If you would also like the
-              preferences you gave us removed, ask and we will delete them — you
-              do not need to give a reason.
+              preferences you gave us removed,{" "}
+              <Link
+                href="/contact"
+                className="text-chalk underline decoration-steel-dim underline-offset-[5px] transition-colors duration-[140ms] ease-[var(--ease-control)] hover:decoration-signal-lift"
+              >
+                ask
+              </Link>{" "}
+              and we will delete them — you do not need to give a reason.
             </p>
             <p className="text-base text-steel">
               If you did this by accident, you can join again at any time.
@@ -111,7 +118,14 @@ function copyFor(result: UnsubscribeOutcome): Copy {
             </p>
             <p className="text-base text-steel">
               Every email we send carries that link at the foot of it. If you
-              cannot find one, write to us and we will remove you by hand.
+              cannot find one,{" "}
+              <Link
+                href="/contact"
+                className="text-chalk underline decoration-steel-dim underline-offset-[5px] transition-colors duration-[140ms] ease-[var(--ease-control)] hover:decoration-signal-lift"
+              >
+                write to us
+              </Link>{" "}
+              and we will remove you by hand.
             </p>
           </>
         ),
@@ -134,8 +148,14 @@ function copyFor(result: UnsubscribeOutcome): Copy {
               been deleted outright.
             </p>
             <p className="text-base text-steel">
-              Write to us and we will make sure you are off the list. That is
-              faster than trying the link again.
+              <Link
+                href="/contact"
+                className="text-chalk underline decoration-steel-dim underline-offset-[5px] transition-colors duration-[140ms] ease-[var(--ease-control)] hover:decoration-signal-lift"
+              >
+                Write to us
+              </Link>{" "}
+              and we will make sure you are off the list. That is faster than
+              trying the link again.
             </p>
           </>
         ),
@@ -159,7 +179,13 @@ function copyFor(result: UnsubscribeOutcome): Copy {
               nothing.
             </p>
             <p className="text-base text-steel">
-              Try the link again in a few minutes. If it fails twice, write to us
+              Try the link again in a few minutes. If it fails twice,{" "}
+              <Link
+                href="/contact"
+                className="text-chalk underline decoration-steel-dim underline-offset-[5px] transition-colors duration-[140ms] ease-[var(--ease-control)] hover:decoration-signal-lift"
+              >
+                write to us
+              </Link>{" "}
               and we will remove you by hand.
             </p>
           </>

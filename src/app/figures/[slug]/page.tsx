@@ -207,9 +207,16 @@ export default async function FigurePage({ params }: Params) {
                 <p className="notation text-2xs text-slate">
                   <Link
                     href="/policies/editorial"
-                    className="underline underline-offset-[5px]"
+                    className="inline-flex min-h-6 items-center underline underline-offset-[5px]"
                   >
                     Editorial policy
+                  </Link>{" "}
+                  <span aria-hidden="true">·</span>{" "}
+                  <Link
+                    href="/contact"
+                    className="inline-flex min-h-6 items-center underline underline-offset-[5px]"
+                  >
+                    Found a mistake? Tell us
                   </Link>
                 </p>
               </footer>

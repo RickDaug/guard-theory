@@ -3,6 +3,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { Breadcrumbs } from "@/components/site/Breadcrumbs";
 import { POLICIES, getPolicy } from "@/content/policies";
+import { withContactLinks } from "@/content/policies/contact-links";
 import { pageMetadata } from "@/lib/metadata";
 
 type Params = { params: Promise<{ slug: string }> };
@@ -58,13 +59,41 @@ export default async function PolicyPage({ params }: Params) {
                   <div className="mt-5 flex max-w-[36rem] flex-col gap-5">
                     {section.paragraphs.map((paragraph) => (
                       <p key={paragraph} className="text-base text-steel">
-                        {paragraph}
+                        {withContactLinks(paragraph).map((part) =>
+                          part.href ? (
+                            <Link
+                              key={part.text}
+                              href={part.href}
+                              className="text-chalk underline decoration-steel-dim underline-offset-[5px] transition-colors duration-[140ms] ease-[var(--ease-control)] hover:decoration-signal-lift"
+                            >
+                              {part.text}
+                            </Link>
+                          ) : (
+                            part.text
+                          ),
+                        )}
                       </p>
                     ))}
                   </div>
                 </section>
               ))}
             </div>
+
+            {/* The editorial policy says how a piece is checked; this is where
+                a reader who has found something wrong goes. No corrections
+                policy is invented here — it is a route, not a promise. */}
+            {policy.slug === "editorial" ? (
+              <p className="mt-14 max-w-[36rem] text-base text-steel">
+                Found a mistake in something we published?{" "}
+                <Link
+                  href="/contact"
+                  className="text-chalk underline decoration-steel-dim underline-offset-[5px] transition-colors duration-[140ms] ease-[var(--ease-control)] hover:decoration-signal-lift"
+                >
+                  Tell us, and point at the claim
+                </Link>
+                .
+              </p>
+            ) : null}
           </article>
 
           <aside className="lg:col-span-4 lg:col-start-9">

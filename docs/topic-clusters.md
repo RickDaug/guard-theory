@@ -74,6 +74,11 @@ These are entries the eighteen briefs want to link to and cannot, because they d
 | A wall/fence-specific retention entry | B6 | `guard-retention` — **only if we can write it honestly**; we are not an MMA gym |
 | A sweep-mechanics entry (elevation vs off-balancing) | B5, B9 | `butterfly-guard` |
 
+Filled 2026-09-18 (handoff 03 §8): the leg-entanglement entry (`leg-entanglement-as-control`, in
+`submissions`), the de la Riva hook entry (`de-la-riva-hook`) and the sweep-mechanics entry
+(`sweeping-toward-the-missing-post`). Half guard gained `underhook-half-guard`; deep half is still
+missing.
+
 Hand these to the Technique Library owner as requests, not as commissions. **A stub created to
 satisfy a link is a thin page** (`seo-strategy.md` §9), and the correct behaviour when the entry does
 not exist is to link the category.

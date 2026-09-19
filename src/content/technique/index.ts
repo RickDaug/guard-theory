@@ -4,6 +4,7 @@ import { bloodChokeVersusAirChoke } from "./entries/blood-choke-versus-air-choke
 import { butterflyHookAsLever } from "./entries/butterfly-hook-as-lever.ts";
 import { closedGuardPostureBattle } from "./entries/closed-guard-posture-battle.ts";
 import { connectionInOpenGuard } from "./entries/connection-in-open-guard.ts";
+import { deLaRivaHook } from "./entries/de-la-riva-hook.ts";
 import { elbowKneeEscape } from "./entries/elbow-knee-escape.ts";
 import { framesVersusBlocks } from "./entries/frames-versus-blocks.ts";
 import { gettingHipsUnderneath } from "./entries/getting-hips-underneath.ts";
@@ -24,6 +25,7 @@ export const ENTRIES: TechniqueEntry[] = [
   butterflyHookAsLever,
   closedGuardPostureBattle,
   connectionInOpenGuard,
+  deLaRivaHook,
   elbowKneeEscape,
   framesVersusBlocks,
   gettingHipsUnderneath,

@@ -186,6 +186,12 @@ export const CROSS_LINKS: CrossLink[] = [
     basis:
       "The article lists posture among what decides whether the angle is available.",
   },
+  {
+    a: journal("de-la-riva-and-the-guard-that-took-his-name"),
+    b: technique("de-la-riva-hook"),
+    basis:
+      "The article's second section is about what the outside hook controls, which is the entry's subject.",
+  },
 
   // ── Technique Library ↔ Figures ────────────────────────────────────────
   {

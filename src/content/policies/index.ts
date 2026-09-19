@@ -46,7 +46,7 @@ export const POLICIES: Policy[] = [
         id: "what-we-collect",
         heading: "What we collect",
         paragraphs: [
-          "If you join the First Edition list we collect your first name and email address, and — only if you choose to give them — how long you have been training, your preferred sleeve length, and which products interest you. We also record when you joined and that you agreed to be emailed.",
+          "If you join the First Edition list we collect your first name and email address, and — only if you choose to give them — how long you have been training, your preferred sleeve length, and which products interest you. We also record when you joined and that you agreed to be emailed, and when we email you we keep a record of which message was sent.",
           "If you contact us we collect your name, email address and whatever you write to us.",
           "That is the entire list. We do not ask for a postal address, a phone number or a date of birth, because we have nothing to do with them.",
         ],

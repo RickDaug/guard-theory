@@ -35,13 +35,13 @@ const CLAUSES = [
 
 export default function ManifestoPage() {
   return (
-    <main id="main" className="px-6 py-16 md:px-12">
+    <main id="main" tabIndex={-1} className="px-6 py-16 md:px-12">
       <div className="mx-auto max-w-[104rem]">
         <Breadcrumbs trail={[{ href: "/manifesto", label: "Manifesto" }]} />
 
         <header className="mt-10 mb-20 max-w-[52rem]">
           <h1 className="display-condensed text-4xl text-chalk">
-            Great grappling
+            Great grappling{" "}
             <br />
             is not random
           </h1>

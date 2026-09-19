@@ -13,24 +13,40 @@ export const metadata: Metadata = pageMetadata({
 
 export default function HomePage() {
   return (
-    <main id="main">
+    <main id="main" tabIndex={-1}>
         <section className="px-6 pt-16 pb-28 md:px-12 md:pt-24">
           <div className="mx-auto grid max-w-[104rem] gap-16 lg:grid-cols-12 lg:gap-20">
             <div className="lg:col-span-5">
               <h1 className="display-condensed text-4xl text-chalk">
-                Guard is not
+                {/* A <br> is a line, not a space. Without the written one
+                    this read "Guard is nota position.It is a theoryof
+                    control." to anything that takes the text and not the
+                    layout — a search snippet, a copied line, a reader view. */}
+                Guard is not{" "}
                 <br />
-                a position.
+                a position.{" "}
                 <br />
-                <span className="text-steel">It is a theory</span>
+                <span className="text-steel">It is a theory</span>{" "}
                 <br />
                 <span className="text-steel">of control.</span>
               </h1>
 
               <p className="prose-measure mt-10 text-lg text-steel">
-                Guard Theory makes no-gi grappling apparel and publishes the
-                reasoning behind it. Position before submission. Systems before
-                chaos.
+                Guard Theory makes{" "}
+                <Link
+                  href="/shop"
+                  className="text-chalk underline decoration-steel-dim underline-offset-[5px] transition-colors duration-[140ms] ease-[var(--ease-control)] hover:decoration-signal-lift"
+                >
+                  no-gi grappling apparel
+                </Link>{" "}
+                and publishes{" "}
+                <Link
+                  href="/manifesto"
+                  className="text-chalk underline decoration-steel-dim underline-offset-[5px] transition-colors duration-[140ms] ease-[var(--ease-control)] hover:decoration-signal-lift"
+                >
+                  the reasoning behind it
+                </Link>
+                . Position before submission. Systems before chaos.
               </p>
 
               <div className="mt-12 flex flex-wrap items-center gap-x-8 gap-y-4">

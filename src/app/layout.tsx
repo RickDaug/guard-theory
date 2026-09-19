@@ -5,7 +5,9 @@ import { SiteFooter } from "@/components/site/SiteFooter";
 import { SiteStructuredData } from "@/components/site/SiteStructuredData";
 import {
   IS_INDEXABLE,
+  OG_LOCALE,
   SITE_DESCRIPTION,
+  SITE_LANGUAGE,
   SITE_NAME,
   SITE_URL,
 } from "@/lib/site";
@@ -31,7 +33,7 @@ export const metadata: Metadata = {
     title: `${SITE_NAME} — No-gi grappling apparel`,
     description: SITE_DESCRIPTION,
     url: SITE_URL,
-    locale: "en",
+    locale: OG_LOCALE,
   },
   twitter: {
     card: "summary_large_image",
@@ -57,7 +59,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" className={`${fontVariables} h-full`}>
+    <html lang={SITE_LANGUAGE} className={`${fontVariables} h-full`}>
       <body className="flex min-h-full flex-col">
         <a href="#main" className="skip-link">
           Skip to content

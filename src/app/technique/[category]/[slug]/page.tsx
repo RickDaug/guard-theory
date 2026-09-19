@@ -6,9 +6,14 @@ import { CrossLinks } from "@/components/content/CrossLinks";
 import { crossLinksFor } from "@/content/crosslinks";
 import { ENTRIES, getCategory, getEntry } from "@/content/technique";
 import { COACH_DISCLAIMER } from "@/content/technique/types";
-import { pageMetadata } from "@/lib/metadata";
+import { SHARE_IMAGE_OBJECT, pageMetadata } from "@/lib/metadata";
+import { serializeJsonLd } from "@/lib/json-ld";
+import { absoluteUrl } from "@/lib/site";
 
 type Params = { params: Promise<{ category: string; slug: string }> };
+
+/** An unknown slug is a real 404 page — see journal/[slug]/page.tsx. */
+export const dynamicParams = false;
 
 export function generateStaticParams() {
   return ENTRIES.map((entry) => ({
@@ -53,9 +58,15 @@ function Part({
   );
 }
 
+/**
+ * `role="list"` is not redundant here. `list-style: none` makes Safari drop the
+ * list semantics, and these lists are ordered on purpose — the printed ordinal
+ * is `aria-hidden` because "2 of 5" is supposed to come from the list itself.
+ * Without the role, VoiceOver got neither.
+ */
 function OrderedNotes({ items }: { items: string[] }) {
   return (
-    <ol className="m-0 flex list-none flex-col gap-5 p-0">
+    <ol role="list" className="m-0 flex list-none flex-col gap-5 p-0">
       {items.map((item, index) => (
         <li key={item} className="flex gap-5">
           <span
@@ -91,8 +102,35 @@ export default async function TechniqueEntryPage({ params }: Params) {
   // whose recorded work the entry describes.
   const crossLinks = crossLinksFor("technique", entry.slug);
 
+  /**
+   * An Article with no author and no dates, on purpose.
+   *
+   * A Library entry has no byline and no publication date: `TechniqueEntry`
+   * carries neither, by design. So this node states neither. Every property
+   * below is a field the entry type requires, stated as the entry states it;
+   * nothing is derived or defaulted, and the day the registry gains an author
+   * or a date is the day this does.
+   *
+   * `HowTo`, `Course` and `LearningResource` were each considered and rejected
+   * in docs/structured-data-map.md §7: a technique is not a recipe, and there
+   * is no curriculum, completion or credential here to claim.
+   */
+  const url = absoluteUrl(`/technique/${category.slug}/${entry.slug}`);
+  const jsonLd = {
+    "@context": "https://schema.org",
+    "@type": "Article",
+    "@id": `${url}#article`,
+    headline: entry.title,
+    description: entry.metaDescription ?? entry.summary,
+    mainEntityOfPage: url,
+    image: SHARE_IMAGE_OBJECT,
+    articleSection: category.name,
+    isPartOf: { "@id": absoluteUrl("/#website") },
+    publisher: { "@id": absoluteUrl("/#organization") },
+  };
+
   return (
-    <main id="main" className="px-6 py-16 md:px-12">
+    <main id="main" tabIndex={-1} className="px-6 py-16 md:px-12">
       <div className="mx-auto max-w-[104rem]">
         <Breadcrumbs
           trail={[
@@ -134,7 +172,7 @@ export default async function TechniqueEntryPage({ params }: Params) {
           </Part>
 
           <Part title="Common errors">
-            <ul className="m-0 flex list-none flex-col gap-5 p-0">
+            <ul role="list" className="m-0 flex list-none flex-col gap-5 p-0">
               {entry.commonErrors.map((error) => (
                 <li key={error} className="flex gap-5">
                   <span
@@ -161,7 +199,7 @@ export default async function TechniqueEntryPage({ params }: Params) {
 
           {related.length > 0 ? (
             <Part title="Related entries">
-              <ul className="m-0 flex list-none flex-col gap-3 p-0">
+              <ul role="list" className="m-0 flex list-none flex-col gap-3 p-0">
                 {related.map((item) => (
                   <li key={item.slug}>
                     <Link
@@ -183,14 +221,26 @@ export default async function TechniqueEntryPage({ params }: Params) {
             <p className="notation mt-6 text-2xs text-slate">
               <Link
                 href="/policies/editorial"
-                className="underline underline-offset-[5px]"
+                className="inline-flex min-h-6 items-center underline underline-offset-[5px]"
               >
                 Editorial policy
+              </Link>{" "}
+              <span aria-hidden="true">·</span>{" "}
+              <Link
+                href="/contact"
+                className="inline-flex min-h-6 items-center underline underline-offset-[5px]"
+              >
+                Found a mistake? Tell us
               </Link>
               </p>
           </footer>
         </article>
       </div>
+
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: serializeJsonLd(jsonLd) }}
+      />
     </main>
   );
 }

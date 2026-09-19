@@ -6,7 +6,7 @@ import { ButtonLink } from "@/components/ui/Button";
 import { PRODUCTS, STATUS_LABEL } from "@/content/products";
 
 export const metadata: Metadata = pageMetadata({
-  title: "Shop",
+  title: "Shop — No-gi BJJ rash guards",
   description: "What Guard Theory makes, and the published specification behind each garment — fabric, weight, seam construction and print method.",
   path: "/shop",
 });
@@ -29,7 +29,7 @@ const ROADMAP = [
 
 export default function ShopPage() {
   return (
-    <main id="main" className="px-6 py-16 md:px-12">
+    <main id="main" tabIndex={-1} className="px-6 py-16 md:px-12">
       <div className="mx-auto max-w-[104rem]">
         <Breadcrumbs trail={[{ href: "/shop", label: "Shop" }]} />
 
@@ -61,15 +61,17 @@ export default function ShopPage() {
               <li key={product.slug} className="bg-ink">
                 <Link
                   href={`/shop/${product.slug}`}
+                  aria-labelledby={`product-${product.slug}-title`}
+                  aria-describedby={`product-${product.slug}-summary`}
                   className="group flex h-full flex-col p-8 no-underline transition-colors duration-[140ms] ease-[var(--ease-control)] hover:bg-ink-raised"
                 >
                   <span className="notation text-2xs text-steel">
                     {STATUS_LABEL[product.status]}
                   </span>
-                  <h3 className="display-condensed mt-5 text-xl text-chalk transition-colors duration-[140ms] ease-[var(--ease-control)] group-hover:text-signal-lift">
+                  <h3 id={`product-${product.slug}-title`} className="display-condensed mt-5 text-xl text-chalk transition-colors duration-[140ms] ease-[var(--ease-control)] group-hover:text-signal-lift">
                     {product.name} — {product.kind}
                   </h3>
-                  <p className="mt-4 max-w-[34rem] text-sm text-steel">
+                  <p id={`product-${product.slug}-summary`} className="mt-4 max-w-[34rem] text-sm text-steel">
                     {product.summary}
                   </p>
                 </Link>

@@ -18,6 +18,7 @@ export default function FormSuccessPage() {
       eyebrow="Received"
       title="Submitted"
       primary={{ href: "/", label: "Go to the home page" }}
+      secondary={{ href: "/journal", label: "Read the Journal" }}
     >
       <p className="text-lg text-steel">
         Your submission was received. Nothing further is needed from you.

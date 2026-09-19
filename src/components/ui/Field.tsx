@@ -39,8 +39,13 @@ export function FieldShell({
     <div className="flex flex-col gap-2">
       <label htmlFor={id} className="display-plain text-sm text-chalk">
         {label}
+        {/* The space is written, and the margin only widens it. With the margin
+            alone the accessible name was "…been training?Optional". */}
         {optional ? (
-          <span className="ml-2 text-steel">Optional</span>
+          <>
+            {" "}
+            <span className="ml-1 text-steel">Optional</span>
+          </>
         ) : null}
       </label>
 
@@ -64,6 +69,13 @@ export function FieldShell({
     </div>
   );
 }
+
+/**
+ * `border-steel-mid`, not `border-steel-dim`. The border is how a sighted
+ * reader finds the field, so SC 1.4.11 asks 3:1 of it, and steel-dim is 1.7:1
+ * against the graphite fill. See `steel-mid` in src/lib/brand/palette.ts.
+ */
+const CONTROL_BORDER = "border-steel-mid";
 
 const CONTROL =
   "w-full border bg-graphite px-4 py-3 text-base text-chalk placeholder:text-steel transition-colors duration-[140ms] ease-[var(--ease-control)] focus:border-signal-lift";
@@ -92,7 +104,7 @@ export function TextField({
           {...a11y}
           {...rest}
           className={`${CONTROL} ${
-            error ? "border-signal-lift" : "border-steel-dim"
+            error ? "border-signal-lift" : CONTROL_BORDER
           } ${className}`}
         />
       )}
@@ -126,7 +138,7 @@ export function TextAreaField({
           {...rest}
           rows={rows}
           className={`${CONTROL} resize-y ${
-            error ? "border-signal-lift" : "border-steel-dim"
+            error ? "border-signal-lift" : CONTROL_BORDER
           } ${className}`}
         />
       )}
@@ -160,7 +172,7 @@ export function SelectField({
           {...a11y}
           {...rest}
           className={`${CONTROL} ${
-            error ? "border-signal-lift" : "border-steel-dim"
+            error ? "border-signal-lift" : CONTROL_BORDER
           } ${className}`}
         >
           {children}

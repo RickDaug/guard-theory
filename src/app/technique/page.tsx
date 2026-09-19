@@ -14,7 +14,7 @@ export const metadata: Metadata = pageMetadata({
 
 export default function TechniqueIndexPage() {
   return (
-    <main id="main" className="px-6 py-16 md:px-12">
+    <main id="main" tabIndex={-1} className="px-6 py-16 md:px-12">
       <div className="mx-auto max-w-[104rem]">
         <Breadcrumbs trail={[{ href: "/technique", label: "Technique Library" }]} />
 
@@ -38,12 +38,14 @@ export default function TechniqueIndexPage() {
                 <Link
                   prefetch={false}
                   href={`/technique/${category.slug}`}
+                  aria-labelledby={`category-${category.slug}-title`}
+                  aria-describedby={`category-${category.slug}-summary`}
                   className="group flex h-full flex-col p-8 no-underline transition-colors duration-[140ms] ease-[var(--ease-control)] hover:bg-ink-raised"
                 >
-                  <h2 className="display-condensed text-xl text-chalk transition-colors duration-[140ms] ease-[var(--ease-control)] group-hover:text-signal-lift">
+                  <h2 id={`category-${category.slug}-title`} className="display-condensed text-xl text-chalk transition-colors duration-[140ms] ease-[var(--ease-control)] group-hover:text-signal-lift">
                     {category.name}
                   </h2>
-                  <p className="mt-4 text-sm text-steel">{category.summary}</p>
+                  <p id={`category-${category.slug}-summary`} className="mt-4 text-sm text-steel">{category.summary}</p>
                   <span className="notation mt-8 text-2xs text-steel">
                     {entries.length === 1
                       ? "1 entry"

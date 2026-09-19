@@ -5,7 +5,7 @@ import { Breadcrumbs } from "@/components/site/Breadcrumbs";
 import { FIT_NOTES, SIZE_CHART } from "@/content/products/size-chart";
 
 export const metadata: Metadata = pageMetadata({
-  title: "Size and fit",
+  title: "Rash guard size chart and fit guide",
   description: "Guard Theory size chart with garment measurements in inches and centimetres, and how a no-gi rash guard should actually fit.",
   path: "/size-and-fit",
 });
@@ -19,7 +19,7 @@ const CHECKS = [
 
 export default function SizeAndFitPage() {
   return (
-    <main id="main" className="px-6 py-16 md:px-12">
+    <main id="main" tabIndex={-1} className="px-6 py-16 md:px-12">
       <div className="mx-auto max-w-[104rem]">
         <Breadcrumbs trail={[{ href: "/size-and-fit", label: "Size and fit" }]} />
 
@@ -38,7 +38,16 @@ export default function SizeAndFitPage() {
             Size chart
           </h2>
 
-          <div className="max-w-[70rem] overflow-x-auto">
+          {/* The table is wider than a phone, so this box scrolls sideways — and
+              a box that scrolls has to be reachable, or a keyboard user cannot
+              get to the sleeve columns at all (SC 2.1.1). Focusable, named, and
+              a region so the name is announced. */}
+          <div
+            role="region"
+            aria-labelledby="chart"
+            tabIndex={0}
+            className="max-w-[70rem] overflow-x-auto"
+          >
             <table className="w-full min-w-[44rem] border-collapse text-left">
               <caption className="sr-only">
                 Guard Theory size chart. To fit chest in inches and centimetres,

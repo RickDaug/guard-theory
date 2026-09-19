@@ -13,7 +13,7 @@ export default function EmailConfirmedPage() {
       eyebrow="First Edition list"
       title={
         <>
-          Email
+          Email{" "}
           <br />
           confirmed
         </>

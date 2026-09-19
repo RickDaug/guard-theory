@@ -196,15 +196,20 @@ export function GuardSystemMap() {
             const live = activeCode === family.code;
             return (
               <li key={family.code}>
+                {/* One channel, not three. This button used to be described by
+                    the caption, which is also a live region, and to report
+                    itself `pressed` whenever it was merely focused — so a
+                    screen reader heard the definition twice and a state that
+                    was not one, and the first click after focus un-pressed it.
+                    The live region alone announces the definition; the button
+                    shows it, and does nothing else. */}
                 <button
                   type="button"
-                  aria-describedby={captionId}
-                  aria-pressed={live}
                   onMouseEnter={() => setActiveCode(family.code)}
                   onMouseLeave={() => setActiveCode(null)}
                   onFocus={() => setActiveCode(family.code)}
                   onBlur={() => setActiveCode(null)}
-                  onClick={() => setActiveCode(live ? null : family.code)}
+                  onClick={() => setActiveCode(family.code)}
                   className={`notation inline-flex min-h-[24px] items-center gap-x-1.5 text-xs transition-colors duration-[140ms] ease-[var(--ease-control)] ${
                     live ? "text-signal-lift" : "text-steel hover:text-chalk"
                   }`}
@@ -235,8 +240,8 @@ export function GuardSystemMap() {
             </>
           ) : (
             <>
-              Five families, one structure. Hover or tab through the key to read
-              what each one is and which others it connects to.
+              Five families, one structure. Hover, tap or tab through the key
+              to read what each one is and which others it connects to.
             </>
           )}
         </p>

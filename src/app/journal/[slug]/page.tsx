@@ -1,3 +1,4 @@
+import { serializeJsonLd } from "@/lib/json-ld";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
@@ -12,10 +13,27 @@ import {
   readingTimeMinutes,
 } from "@/content/journal";
 import { IS_INDEXABLE, absoluteUrl } from "@/lib/site";
-import { pageMetadata } from "@/lib/metadata";
+import { SHARE_IMAGE_OBJECT, pageMetadata } from "@/lib/metadata";
 import { getAuthor } from "@/content/authors";
 
 type Params = { params: Promise<{ slug: string }> };
+
+/**
+ * A slug that was not built does not exist.
+ *
+ * Left at the default, an unknown slug is rendered on demand and `notFound()`
+ * is thrown from inside that render. What production served for it was
+ * `<html id="__next_error__">` — no `lang`, an empty body, and nothing at all
+ * without JavaScript (SC 3.1.1, and a blank page for a mistyped address). With
+ * this, an unknown slug never reaches the page: the router answers 404 with the
+ * not-found page, which is a whole document. `tests/e2e/not-found.spec.ts`
+ * holds every dynamic route to that with JavaScript switched off.
+ *
+ * Every dynamic route on the site is registry-driven and sets this. A route
+ * that reads its slugs from a database at request time cannot — see the note
+ * on /shop/[slug].
+ */
+export const dynamicParams = false;
 
 export function generateStaticParams() {
   return ARTICLES.map((article) => ({ slug: article.slug }));
@@ -30,7 +48,8 @@ export async function generateMetadata({ params }: Params): Promise<Metadata> {
 
   return {
     ...pageMetadata({
-      title: article.title,
+      title: article.metaTitle ?? article.title,
+      shareTitle: article.title,
       description: article.metaDescription ?? article.standfirst,
       path: `/journal/${article.slug}`,
       type: "article",
@@ -84,25 +103,36 @@ export default async function ArticlePage({ params }: Params) {
         "@id": absoluteUrl(`/journal/${article.slug}#article`),
         headline: article.title,
         description: article.metaDescription ?? article.standfirst,
+        // The page's own share card — the image it already declares as its
+        // og:image. See SHARE_IMAGE_OBJECT.
+        image: SHARE_IMAGE_OBJECT,
         datePublished: article.publishedAt,
+        // Only when a revision was really recorded. No article carries one
+        // yet, so none states a dateModified; repeating datePublished under
+        // that name would be a claim that the piece has been revised.
         ...(article.updatedAt ? { dateModified: article.updatedAt } : {}),
         articleSection: category.name,
         ...(author
           ? {
               author: {
                 "@type": "Person",
+                // One node per author across every article, rather than
+                // twenty unrelated people who share a name. An identifier, not
+                // an address: there is no author page, so there is no `url`.
+                "@id": absoluteUrl(`/#author-${author.id}`),
                 name: author.name,
                 description: author.bio,
               },
             }
           : {}),
+        isPartOf: { "@id": absoluteUrl("/#website") },
         publisher: { "@id": absoluteUrl("/#organization") },
         mainEntityOfPage: absoluteUrl(`/journal/${article.slug}`),
       }
     : null;
 
   return (
-    <main id="main" className="px-6 py-16 md:px-12">
+    <main id="main" tabIndex={-1} className="px-6 py-16 md:px-12">
       <div className="mx-auto max-w-[104rem]">
         <Breadcrumbs
           trail={[
@@ -131,7 +161,7 @@ export default async function ArticlePage({ params }: Params) {
             className="lg:col-span-3 lg:sticky lg:top-8 lg:self-start"
           >
             <p className="notation mb-5 text-2xs text-orchid">Contents</p>
-            <ol className="m-0 flex list-none flex-col gap-3 p-0">
+            <ol role="list" className="m-0 flex list-none flex-col gap-3 p-0">
               {article.sections.map((section) => (
                 <li key={section.id}>
                   <a
@@ -210,7 +240,7 @@ export default async function ArticlePage({ params }: Params) {
                   <h2 className="display-condensed text-xl text-ink">
                     Where the record is contested
                   </h2>
-                  <ul className="m-0 mt-5 flex list-none flex-col gap-4 p-0">
+                  <ul role="list" className="m-0 mt-5 flex list-none flex-col gap-4 p-0">
                     {article.contestedNotes.map((note) => (
                       <li key={note} className="flex gap-5">
                         <span
@@ -228,7 +258,10 @@ export default async function ArticlePage({ params }: Params) {
 
               <section className="mt-14 border-t border-slate/25 pt-8">
                 <h2 className="display-condensed text-xl text-ink">Sources</h2>
-                <ol className="m-0 mt-5 flex list-none flex-col gap-4 p-0">
+                <p className="mt-3 text-sm text-slate">
+                  Each source opens in a new tab.
+                </p>
+                <ol role="list" className="m-0 mt-5 flex list-none flex-col gap-4 p-0">
                   {article.sources.map((source, index) => (
                     <li key={source.url} className="flex gap-5">
                       <span
@@ -240,11 +273,12 @@ export default async function ArticlePage({ params }: Params) {
                       <span className="text-sm text-ink">
                         <a
                           href={source.url}
-                          rel="noopener noreferrer nofollow"
+                          rel="noopener noreferrer"
                           target="_blank"
                           className="underline decoration-slate/40 underline-offset-[5px] transition-colors duration-[140ms] ease-[var(--ease-control)] hover:decoration-signal-dim"
                         >
-                          {source.title}
+                          {source.title}{" "}
+                          <span className="sr-only">(opens in a new tab)</span>
                         </a>
                         <span className="block text-slate">
                           {source.publisher} · consulted {source.accessed}
@@ -260,7 +294,7 @@ export default async function ArticlePage({ params }: Params) {
                   <h2 className="display-condensed text-xl text-ink">
                     Related reading
                   </h2>
-                  <ul className="m-0 mt-5 flex list-none flex-col gap-3 p-0">
+                  <ul role="list" className="m-0 mt-5 flex list-none flex-col gap-3 p-0">
                     {related.map((item) => (
                       <li key={item.slug}>
                         <Link
@@ -286,9 +320,16 @@ export default async function ArticlePage({ params }: Params) {
                 <p className="notation text-2xs text-slate">
                   <Link
                     href="/policies/editorial"
-                    className="underline underline-offset-[5px]"
+                    className="inline-flex min-h-6 items-center underline underline-offset-[5px]"
                   >
                     Editorial policy
+                  </Link>{" "}
+                  <span aria-hidden="true">·</span>{" "}
+                  <Link
+                    href="/contact"
+                    className="inline-flex min-h-6 items-center underline underline-offset-[5px]"
+                  >
+                    Found a mistake? Tell us
                   </Link>
                   </p>
               </footer>
@@ -300,7 +341,7 @@ export default async function ArticlePage({ params }: Params) {
       {jsonLd ? (
         <script
           type="application/ld+json"
-          dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+          dangerouslySetInnerHTML={{ __html: serializeJsonLd(jsonLd) }}
         />
       ) : null}
     </main>

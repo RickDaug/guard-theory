@@ -20,14 +20,21 @@ export const metadata: Metadata = pageMetadata({
  */
 export default function LookbookPage() {
   return (
-    <main id="main" className="px-6 py-16 md:px-12">
+    <main id="main" tabIndex={-1} className="px-6 py-16 md:px-12">
       <div className="mx-auto max-w-[104rem]">
         <Breadcrumbs trail={[{ href: "/lookbook", label: "Lookbook" }]} />
 
         <header className="mt-10 mb-20 max-w-[46rem]">
           <h1 className="display-condensed text-4xl text-chalk">Lookbook</h1>
           <p className="mt-8 text-lg text-steel">
-            Every garment, drawn to production standard. A flat is what the
+            Every garment,{" "}
+            <Link
+              href="/about#how"
+              className="text-chalk underline decoration-steel-dim underline-offset-[5px] transition-colors duration-[140ms] ease-[var(--ease-control)] hover:decoration-signal-lift"
+            >
+              drawn to production standard
+            </Link>
+            . A flat is what the
             factory is handed and what the measurements come from — the part of
             a lookbook you can actually check.
           </p>
@@ -48,6 +55,7 @@ export default function LookbookPage() {
                   points={product.constructionPoints}
                   title={`GUARD THEORY — ${product.name.toUpperCase()}, ${product.kind.toUpperCase()}`}
                   reference={`PL. ${String(index + 1).padStart(2, "0")} / REV A`}
+                  label={`${product.name}, ${product.kind} — flat`}
                 />
               </div>
 
@@ -56,11 +64,14 @@ export default function LookbookPage() {
                   id={`look-${product.slug}`}
                   className="display-condensed text-2xl text-chalk"
                 >
-                  {product.name}
+                  {/* One heading, both halves. Every garment here is a "Theory
+                      01", so the name alone gave the page two identical h2s
+                      and a headings list that could not tell them apart. */}
+                  {product.name}{" "}
+                  <span className="display-plain mt-2 block text-lg tracking-normal text-steel normal-case">
+                    {product.kind}
+                  </span>
                 </h2>
-                <p className="display-plain mt-2 text-lg text-steel">
-                  {product.kind}
-                </p>
                 <p className="mt-6 max-w-[32rem] text-base text-steel">
                   {product.summary}
                 </p>

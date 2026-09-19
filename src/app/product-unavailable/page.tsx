@@ -20,7 +20,7 @@ export default function ProductUnavailablePage() {
       eyebrow="First Edition"
       title={
         <>
-          That run
+          That run{" "}
           <br />
           is finished
         </>

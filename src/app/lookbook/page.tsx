@@ -55,6 +55,7 @@ export default function LookbookPage() {
                   points={product.constructionPoints}
                   title={`GUARD THEORY — ${product.name.toUpperCase()}, ${product.kind.toUpperCase()}`}
                   reference={`PL. ${String(index + 1).padStart(2, "0")} / REV A`}
+                  label={`${product.name}, ${product.kind} — flat`}
                 />
               </div>
 
@@ -63,11 +64,14 @@ export default function LookbookPage() {
                   id={`look-${product.slug}`}
                   className="display-condensed text-2xl text-chalk"
                 >
-                  {product.name}
+                  {/* One heading, both halves. Every garment here is a "Theory
+                      01", so the name alone gave the page two identical h2s
+                      and a headings list that could not tell them apart. */}
+                  {product.name}{" "}
+                  <span className="display-plain mt-2 block text-lg tracking-normal text-steel normal-case">
+                    {product.kind}
+                  </span>
                 </h2>
-                <p className="display-plain mt-2 text-lg text-steel">
-                  {product.kind}
-                </p>
                 <p className="mt-6 max-w-[32rem] text-base text-steel">
                   {product.summary}
                 </p>

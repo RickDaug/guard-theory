@@ -41,7 +41,7 @@ export default function ManifestoPage() {
 
         <header className="mt-10 mb-20 max-w-[52rem]">
           <h1 className="display-condensed text-4xl text-chalk">
-            Great grappling
+            Great grappling{" "}
             <br />
             is not random
           </h1>

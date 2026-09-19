@@ -18,11 +18,15 @@ export default function HomePage() {
           <div className="mx-auto grid max-w-[104rem] gap-16 lg:grid-cols-12 lg:gap-20">
             <div className="lg:col-span-5">
               <h1 className="display-condensed text-4xl text-chalk">
-                Guard is not
+                {/* A <br> is a line, not a space. Without the written one
+                    this read "Guard is nota position.It is a theoryof
+                    control." to anything that takes the text and not the
+                    layout — a search snippet, a copied line, a reader view. */}
+                Guard is not{" "}
                 <br />
-                a position.
+                a position.{" "}
                 <br />
-                <span className="text-steel">It is a theory</span>
+                <span className="text-steel">It is a theory</span>{" "}
                 <br />
                 <span className="text-steel">of control.</span>
               </h1>

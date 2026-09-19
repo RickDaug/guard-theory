@@ -69,7 +69,7 @@ function copyFor(result: UnsubscribeOutcome): Copy {
       return {
         title: (
           <>
-            You are
+            You are{" "}
             <br />
             unsubscribed
           </>
@@ -97,7 +97,7 @@ function copyFor(result: UnsubscribeOutcome): Copy {
       return {
         title: (
           <>
-            Use the link
+            Use the link{" "}
             <br />
             in the email
           </>
@@ -121,7 +121,7 @@ function copyFor(result: UnsubscribeOutcome): Copy {
       return {
         title: (
           <>
-            That link
+            That link{" "}
             <br />
             is not ours
           </>
@@ -146,7 +146,7 @@ function copyFor(result: UnsubscribeOutcome): Copy {
         tone: "alert",
         title: (
           <>
-            We could not
+            We could not{" "}
             <br />
             do that just now
           </>

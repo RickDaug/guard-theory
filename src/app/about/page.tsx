@@ -22,8 +22,15 @@ export default function AboutPage() {
 
             <div className="mt-10 flex max-w-[36rem] flex-col gap-6">
               <p className="text-lg text-steel">
-                Guard Theory makes no-gi grappling apparel and publishes a
-                technical study of the guard. Those are one project, not two.
+                Guard Theory makes{" "}
+                <Link
+                  href="/shop"
+                  className="text-chalk underline decoration-steel-dim underline-offset-[5px] transition-colors duration-[140ms] ease-[var(--ease-control)] hover:decoration-signal-lift"
+                >
+                  no-gi grappling apparel
+                </Link>{" "}
+                and publishes a technical study of the guard. Those are one
+                project, not two.
               </p>
 
               <p className="text-base text-steel">
@@ -52,7 +59,14 @@ export default function AboutPage() {
                   Every diagram on the site is drawn in one notation — a ring for
                   a position, a line for a transition, a numbered callout keyed
                   to a legend, and a title block naming the drawing. A guard
-                  system map and a garment flat are pages from the same document.
+                  system map and{" "}
+                  <Link
+                    href="/lookbook"
+                    className="text-chalk underline decoration-steel-dim underline-offset-[5px] transition-colors duration-[140ms] ease-[var(--ease-control)] hover:decoration-signal-lift"
+                  >
+                    a garment flat
+                  </Link>{" "}
+                  are pages from the same document.
                 </p>
                 <p className="text-base text-steel">
                   Reference material carries no commercial links in its body

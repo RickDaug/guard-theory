@@ -27,7 +27,14 @@ export default function LookbookPage() {
         <header className="mt-10 mb-20 max-w-[46rem]">
           <h1 className="display-condensed text-4xl text-chalk">Lookbook</h1>
           <p className="mt-8 text-lg text-steel">
-            Every garment, drawn to production standard. A flat is what the
+            Every garment,{" "}
+            <Link
+              href="/about#how"
+              className="text-chalk underline decoration-steel-dim underline-offset-[5px] transition-colors duration-[140ms] ease-[var(--ease-control)] hover:decoration-signal-lift"
+            >
+              drawn to production standard
+            </Link>
+            . A flat is what the
             factory is handed and what the measurements come from — the part of
             a lookbook you can actually check.
           </p>

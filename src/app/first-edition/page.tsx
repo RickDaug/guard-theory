@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { pageMetadata } from "@/lib/metadata";
+import Link from "next/link";
 import { Breadcrumbs } from "@/components/site/Breadcrumbs";
 import { WaitlistForm } from "@/components/waitlist/WaitlistForm";
 
@@ -47,9 +48,14 @@ export default function FirstEditionPage() {
             </h1>
 
             <p className="mt-8 max-w-[36rem] text-lg text-steel">
-              No-gi rash guards built to a published standard and designed inside
-              competition rulesets rather than around them. The list gets it
-              first.
+              <Link
+                href="/shop"
+                className="text-chalk underline decoration-steel-dim underline-offset-[5px] transition-colors duration-[140ms] ease-[var(--ease-control)] hover:decoration-signal-lift"
+              >
+                No-gi rash guards
+              </Link>{" "}
+              built to a published standard and designed inside competition
+              rulesets rather than around them. The list gets it first.
             </p>
 
             <ul className="m-0 mt-14 flex list-none flex-col gap-10 p-0">
@@ -76,7 +82,15 @@ export default function FirstEditionPage() {
               </h2>
               <p className="mt-4 mb-10 max-w-[34rem] text-base text-steel">
                 Name, email and your consent to be emailed. Everything else is
-                optional.
+                optional. Questions about the list, sizing or competition
+                legality are answered in the{" "}
+                <Link
+                  href="/faq"
+                  className="text-chalk underline decoration-steel-dim underline-offset-[5px] transition-colors duration-[140ms] ease-[var(--ease-control)] hover:decoration-signal-lift"
+                >
+                  FAQ
+                </Link>
+                .
               </p>
 
               <WaitlistForm />

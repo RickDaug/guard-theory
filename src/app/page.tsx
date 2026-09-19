@@ -28,9 +28,21 @@ export default function HomePage() {
               </h1>
 
               <p className="prose-measure mt-10 text-lg text-steel">
-                Guard Theory makes no-gi grappling apparel and publishes the
-                reasoning behind it. Position before submission. Systems before
-                chaos.
+                Guard Theory makes{" "}
+                <Link
+                  href="/shop"
+                  className="text-chalk underline decoration-steel-dim underline-offset-[5px] transition-colors duration-[140ms] ease-[var(--ease-control)] hover:decoration-signal-lift"
+                >
+                  no-gi grappling apparel
+                </Link>{" "}
+                and publishes{" "}
+                <Link
+                  href="/manifesto"
+                  className="text-chalk underline decoration-steel-dim underline-offset-[5px] transition-colors duration-[140ms] ease-[var(--ease-control)] hover:decoration-signal-lift"
+                >
+                  the reasoning behind it
+                </Link>
+                . Position before submission. Systems before chaos.
               </p>
 
               <div className="mt-12 flex flex-wrap items-center gap-x-8 gap-y-4">

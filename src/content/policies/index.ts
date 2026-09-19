@@ -46,7 +46,7 @@ export const POLICIES: Policy[] = [
         id: "what-we-collect",
         heading: "What we collect",
         paragraphs: [
-          "If you join the First Edition list we collect your first name and email address, and — only if you choose to give them — how long you have been training, your preferred sleeve length, the size you expect to wear, and which products interest you.",
+          "If you join the First Edition list we collect your first name and email address, and — only if you choose to give them — how long you have been training, your preferred sleeve length, and which products interest you. We also record when you joined and that you agreed to be emailed.",
           "If you contact us we collect your name, email address and whatever you write to us.",
           "That is the entire list. We do not ask for a postal address, a phone number or a date of birth, because we have nothing to do with them.",
         ],
@@ -55,8 +55,16 @@ export const POLICIES: Policy[] = [
         id: "why",
         heading: "Why we collect it",
         paragraphs: [
-          "The name and email exist so we can tell you when the First Edition is released and reply if you write to us. The optional answers exist so the first production run is split sensibly between sizes and sleeve lengths rather than guessed at.",
-          "We do not build advertising profiles, we do not track you across other sites, and we do not sell or share your details with anyone.",
+          "The name and email exist so we can tell you when the First Edition is released and reply if you write to us. The optional answers exist so the first production run is split sensibly between sleeve lengths rather than guessed at.",
+          "We do not build advertising profiles, we do not track you across other sites, and we do not sell your details to anyone.",
+        ],
+      },
+      {
+        id: "who-else",
+        heading: "Who else handles it",
+        paragraphs: [
+          "Three companies each do one job for us, and each receives what that job needs.",
+          "Resend delivers our email, so it receives your email address and the message. Neon hosts the database all of this is stored in. Vercel hosts the site, so every request to it passes through Vercel.",
         ],
       },
       {

@@ -19,6 +19,7 @@ import { theGuillotineFromTheFrontHeadlock } from "./entries/the-guillotine-from
 import { theKimuraAsAControlBeforeItIsAFinish } from "./entries/the-kimura-as-a-control-before-it-is-a-finish.ts";
 import { theRearNakedStrangleFromBackControl } from "./entries/the-rear-naked-strangle-from-back-control.ts";
 import { theTriangleAndTheAngle } from "./entries/the-triangle-and-the-angle.ts";
+import { whyTheUnderhookDecidesHalfGuard } from "./entries/why-the-underhook-decides-half-guard.ts";
 import { whySportJiuJitsuDoesNotTransferDirectlyToMma } from "./entries/why-sport-jiu-jitsu-does-not-transfer-directly-to-mma.ts";
 
 /**
@@ -46,6 +47,7 @@ export const ARTICLES: Article[] = [
   theRearNakedStrangleFromBackControl,
   theTriangleAndTheAngle,
   whySportJiuJitsuDoesNotTransferDirectlyToMma,
+  whyTheUnderhookDecidesHalfGuard,
 ];
 
 const BY_SLUG = new Map(ARTICLES.map((article) => [article.slug, article]));

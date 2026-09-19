@@ -186,6 +186,30 @@ export const CROSS_LINKS: CrossLink[] = [
     basis:
       "The article lists posture among what decides whether the angle is available.",
   },
+  {
+    a: journal("why-the-underhook-decides-half-guard"),
+    b: technique("knee-shield"),
+    basis:
+      "The article quotes the entry on what the shield does not stop, and uses its three exits.",
+  },
+  {
+    a: journal("why-the-underhook-decides-half-guard"),
+    b: technique("frames-versus-blocks"),
+    basis:
+      "The article treats the frame as the holding answer while the underhook is contested.",
+  },
+  {
+    a: journal("why-the-underhook-decides-half-guard"),
+    b: technique("knee-cut-pass"),
+    basis:
+      "The entry says whoever has the underhook decides whether it ends as a pass or a sweep.",
+  },
+  {
+    a: journal("why-the-underhook-decides-half-guard"),
+    b: technique("inside-position"),
+    basis:
+      "The article places the half guard underhook inside the general idea of inside control.",
+  },
 
   // ── Technique Library ↔ Figures ────────────────────────────────────────
   {

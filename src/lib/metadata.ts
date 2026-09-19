@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { IS_INDEXABLE, SITE_NAME, absoluteUrl } from "./site.ts";
+import { IS_INDEXABLE, OG_LOCALE, SITE_NAME, absoluteUrl } from "./site.ts";
 
 /**
  * Page metadata, built in one place.
@@ -100,7 +100,7 @@ export function pageMetadata({
       title: shareTitle ?? title,
       description,
       url,
-      locale: "en",
+      locale: OG_LOCALE,
       images: [SHARE_IMAGE],
       ...(publishedTime ? { publishedTime } : {}),
       ...(authors ? { authors } : {}),

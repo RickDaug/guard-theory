@@ -1,5 +1,10 @@
 import { serializeJsonLd } from "@/lib/json-ld";
-import { SITE_DESCRIPTION, SITE_NAME, absoluteUrl } from "@/lib/site";
+import {
+  SITE_DESCRIPTION,
+  SITE_LANGUAGE,
+  SITE_NAME,
+  absoluteUrl,
+} from "@/lib/site";
 
 /**
  * Organization and WebSite, emitted once from the root layout.
@@ -36,7 +41,7 @@ export function SiteStructuredData() {
         url: absoluteUrl("/"),
         description: SITE_DESCRIPTION,
         publisher: { "@id": absoluteUrl("/#organization") },
-        inLanguage: "en",
+        inLanguage: SITE_LANGUAGE,
       },
     ],
   };

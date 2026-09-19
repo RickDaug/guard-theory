@@ -35,6 +35,17 @@ export const SITE_DESCRIPTION =
 export const IS_INDEXABLE =
   process.env.NEXT_PUBLIC_ALLOW_INDEXING === "true";
 
+/**
+ * The language the site is written in, once.
+ *
+ * It is British English — "colour", "self-defence", dates as 14 September —
+ * and three places used to say only "en": the `lang` attribute, `og:locale`
+ * and the WebSite node. `og:locale` is not even well-formed without a
+ * territory; the protocol's format is language_TERRITORY.
+ */
+export const SITE_LANGUAGE = "en-GB";
+export const OG_LOCALE = "en_GB";
+
 export function absoluteUrl(path: string): string {
   return new URL(path, SITE_URL).toString();
 }

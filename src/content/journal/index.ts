@@ -5,6 +5,7 @@ import { gripDecayAndTheHalfLifeOfANoGiGrip } from "./entries/grip-decay-and-the
 import { howToWashARashGuard } from "./entries/how-to-wash-a-rash-guard.ts";
 import { seatedGuardAndSupineGuard } from "./entries/seated-guard-and-supine-guard.ts";
 import { theDropoutNumberNobodyCanSource } from "./entries/the-dropout-number-nobody-can-source.ts";
+import { whatToWearToYourFirstNoGiClass } from "./entries/what-to-wear-to-your-first-no-gi-class.ts";
 import { whatTheEarlyUfcTournamentsDemonstrated } from "./entries/what-the-early-ufc-tournaments-demonstrated.ts";
 import { drillingRehearsingAndPositionalSparring } from "./entries/drilling-rehearsing-and-positional-sparring.ts";
 import { guardRetentionAsASystem } from "./entries/guard-retention-as-a-system.ts";
@@ -40,6 +41,7 @@ export const ARTICLES: Article[] = [
   seatedGuardAndSupineGuard,
   theDropoutNumberNobodyCanSource,
   whatTheEarlyUfcTournamentsDemonstrated,
+  whatToWearToYourFirstNoGiClass,
   takingTheBackFromTurtle,
   theArmbarFromClosedGuard,
   theGuillotineFromTheFrontHeadlock,

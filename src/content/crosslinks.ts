@@ -192,6 +192,18 @@ export const CROSS_LINKS: CrossLink[] = [
     basis:
       "The article's second section is about what the outside hook controls, which is the entry's subject.",
   },
+  {
+    a: journal("how-no-gi-rulesets-reshaped-technique-selection"),
+    b: technique("leg-entanglement-as-control"),
+    basis:
+      "The article's January 2021 section covers the heel hook and reaping rules the entry's safety note refers to.",
+  },
+  {
+    a: journal("guard-retention-as-a-system"),
+    b: technique("leg-entanglement-as-control"),
+    basis:
+      "The article's safety note names leg entanglements and rotational load on the knee.",
+  },
 
   // ── Technique Library ↔ Figures ────────────────────────────────────────
   {

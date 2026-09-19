@@ -45,5 +45,6 @@ export const butterflyHookAsLever: TechniqueEntry = {
     "connection-in-open-guard",
     "inside-position",
     "sweeping-toward-the-missing-post",
+    "leg-entanglement-as-control",
   ],
 };

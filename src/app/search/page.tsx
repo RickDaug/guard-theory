@@ -5,7 +5,8 @@ import { buildSearchIndex } from "@/lib/search";
 
 export const metadata: Metadata = {
   title: "Search",
-  description: "Search the Technique Library, the garments and the policies.",
+  description:
+    "Search the Journal, the Technique Library, the figures index, the garments and the policies.",
   // A search page is not a destination for a crawler; the pages it points at are.
   robots: { index: false, follow: true },
 };

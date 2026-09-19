@@ -155,6 +155,15 @@
     border-radius: 1px;
   }
 
+  /* <main> takes focus only as the target of the skip link — tabindex="-1", so
+     it is never in the tab order. Without that, some browsers scroll to #main
+     and leave focus on the link, and the next Tab goes back to the header. The
+     ring is withheld here and nowhere else: main is not a control, and a ring
+     round the whole page marks nothing. */
+  main[tabindex="-1"]:focus-visible {
+    outline: none;
+  }
+
   /* The study register. signal-dim is 4.9:1 on bone. */
   .bg-bone,
   .bg-bone-raised {

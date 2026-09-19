@@ -26,7 +26,7 @@ export default function JournalIndexPage() {
   const articles = [...ARTICLES].sort((a, b) => a.title.localeCompare(b.title));
 
   return (
-    <main id="main" className="px-6 py-16 md:px-12">
+    <main id="main" tabIndex={-1} className="px-6 py-16 md:px-12">
       <div className="mx-auto max-w-[104rem]">
         <Breadcrumbs trail={[{ href: "/journal", label: "Journal" }]} />
 

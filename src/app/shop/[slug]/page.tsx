@@ -51,7 +51,7 @@ export default async function ProductPage({ params }: Params) {
   const other = PRODUCTS.filter((p) => p.slug !== product.slug);
 
   return (
-    <main id="main" className="px-6 py-16 md:px-12">
+    <main id="main" tabIndex={-1} className="px-6 py-16 md:px-12">
       <div className="mx-auto max-w-[104rem]">
         <Breadcrumbs
           trail={[

@@ -13,7 +13,7 @@ export const metadata: Metadata = pageMetadata({
 
 export default function HomePage() {
   return (
-    <main id="main">
+    <main id="main" tabIndex={-1}>
         <section className="px-6 pt-16 pb-28 md:px-12 md:pt-24">
           <div className="mx-auto grid max-w-[104rem] gap-16 lg:grid-cols-12 lg:gap-20">
             <div className="lg:col-span-5">

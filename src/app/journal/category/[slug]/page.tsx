@@ -109,15 +109,17 @@ export default async function JournalCategoryPage({ params }: Params) {
               <li key={article.slug} className="bg-ink">
                 <Link
                   href={`/journal/${article.slug}`}
+                  aria-labelledby={`article-${article.slug}-title`}
+                  aria-describedby={`article-${article.slug}-summary`}
                   className="group flex h-full flex-col p-8 no-underline transition-colors duration-[140ms] ease-[var(--ease-control)] hover:bg-ink-raised"
                 >
                   <span className="notation text-2xs text-orchid">
                     {isPublished(article) ? "Published" : "Draft"}
                   </span>
-                  <h2 className="display-condensed mt-5 text-xl text-chalk transition-colors duration-[140ms] ease-[var(--ease-control)] group-hover:text-signal-lift">
+                  <h2 id={`article-${article.slug}-title`} className="display-condensed mt-5 text-xl text-chalk transition-colors duration-[140ms] ease-[var(--ease-control)] group-hover:text-signal-lift">
                     {article.title}
                   </h2>
-                  <p className="mt-4 grow text-sm text-steel">
+                  <p id={`article-${article.slug}-summary`} className="mt-4 grow text-sm text-steel">
                     {article.standfirst}
                   </p>
                   <span className="notation mt-8 text-2xs text-steel">

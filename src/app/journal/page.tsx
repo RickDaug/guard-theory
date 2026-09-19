@@ -54,15 +54,17 @@ export default function JournalIndexPage() {
                   <Link
                     prefetch={false}
                     href={`/journal/${article.slug}`}
+                    aria-labelledby={`article-${article.slug}-title`}
+                    aria-describedby={`article-${article.slug}-summary`}
                     className="group flex h-full flex-col p-8 no-underline transition-colors duration-[140ms] ease-[var(--ease-control)] hover:bg-ink-raised"
                   >
                     <span className="notation text-2xs text-orchid">
                       {getJournalCategoryName(article.category)}
                     </span>
-                    <h3 className="display-condensed mt-5 text-xl text-chalk transition-colors duration-[140ms] ease-[var(--ease-control)] group-hover:text-signal-lift">
+                    <h3 id={`article-${article.slug}-title`} className="display-condensed mt-5 text-xl text-chalk transition-colors duration-[140ms] ease-[var(--ease-control)] group-hover:text-signal-lift">
                       {article.title}
                     </h3>
-                    <p className="mt-4 grow text-sm text-steel">
+                    <p id={`article-${article.slug}-summary`} className="mt-4 grow text-sm text-steel">
                       {article.standfirst}
                     </p>
                     <span className="notation mt-8 text-2xs text-steel">
@@ -93,12 +95,14 @@ export default function JournalIndexPage() {
                   <Link
                     prefetch={false}
                     href={`/journal/category/${category.slug}`}
+                    aria-labelledby={`category-${category.slug}-title`}
+                    aria-describedby={`category-${category.slug}-summary`}
                     className="group flex h-full flex-col p-7 no-underline transition-colors duration-[140ms] ease-[var(--ease-control)] hover:bg-ink-raised"
                   >
-                    <h3 className="display-condensed text-lg text-chalk transition-colors duration-[140ms] ease-[var(--ease-control)] group-hover:text-signal-lift">
+                    <h3 id={`category-${category.slug}-title`} className="display-condensed text-lg text-chalk transition-colors duration-[140ms] ease-[var(--ease-control)] group-hover:text-signal-lift">
                       {category.name}
                     </h3>
-                    <p className="mt-3 grow text-sm text-steel">
+                    <p id={`category-${category.slug}-summary`} className="mt-3 grow text-sm text-steel">
                       {category.summary}
                     </p>
                     <span className="notation mt-6 text-2xs text-steel">

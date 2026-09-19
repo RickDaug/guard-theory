@@ -62,6 +62,8 @@ export default function FiguresPage() {
               <Link
                 prefetch={false}
                 href={`/figures/${figure.slug}`}
+                aria-labelledby={`figure-${figure.slug}-title`}
+                aria-describedby={`figure-${figure.slug}-summary`}
                 className="group flex h-full flex-col no-underline transition-colors duration-[140ms] ease-[var(--ease-control)] hover:bg-ink-raised"
               >
                 <div className="relative aspect-4/5 w-full overflow-hidden bg-graphite">
@@ -90,10 +92,10 @@ export default function FiguresPage() {
                       {figure.lifespan}
                     </span>
                   ) : null}
-                  <h2 className="display-condensed mt-4 text-xl text-chalk transition-colors duration-[140ms] ease-[var(--ease-control)] group-hover:text-signal-lift">
+                  <h2 id={`figure-${figure.slug}-title`} className="display-condensed mt-4 text-xl text-chalk transition-colors duration-[140ms] ease-[var(--ease-control)] group-hover:text-signal-lift">
                     {figure.name}
                   </h2>
-                  <p className="mt-4 grow text-sm text-steel">
+                  <p id={`figure-${figure.slug}-summary`} className="mt-4 grow text-sm text-steel">
                     {figure.standfirst}
                   </p>
                   <span className="notation mt-6 text-2xs text-steel">

@@ -61,15 +61,17 @@ export default function ShopPage() {
               <li key={product.slug} className="bg-ink">
                 <Link
                   href={`/shop/${product.slug}`}
+                  aria-labelledby={`product-${product.slug}-title`}
+                  aria-describedby={`product-${product.slug}-summary`}
                   className="group flex h-full flex-col p-8 no-underline transition-colors duration-[140ms] ease-[var(--ease-control)] hover:bg-ink-raised"
                 >
                   <span className="notation text-2xs text-steel">
                     {STATUS_LABEL[product.status]}
                   </span>
-                  <h3 className="display-condensed mt-5 text-xl text-chalk transition-colors duration-[140ms] ease-[var(--ease-control)] group-hover:text-signal-lift">
+                  <h3 id={`product-${product.slug}-title`} className="display-condensed mt-5 text-xl text-chalk transition-colors duration-[140ms] ease-[var(--ease-control)] group-hover:text-signal-lift">
                     {product.name} — {product.kind}
                   </h3>
-                  <p className="mt-4 max-w-[34rem] text-sm text-steel">
+                  <p id={`product-${product.slug}-summary`} className="mt-4 max-w-[34rem] text-sm text-steel">
                     {product.summary}
                   </p>
                 </Link>

@@ -104,15 +104,17 @@ export default async function TechniqueCategoryPage({ params }: Params) {
               <li key={entry.slug} className="bg-ink">
                 <Link
                   href={`/technique/${category.slug}/${entry.slug}`}
+                  aria-labelledby={`entry-${entry.slug}-title`}
+                  aria-describedby={`entry-${entry.slug}-summary`}
                   className="group flex h-full flex-col p-8 no-underline transition-colors duration-[140ms] ease-[var(--ease-control)] hover:bg-ink-raised"
                 >
                   <span className="notation text-2xs text-steel">
                     {entry.difficulty} · {entry.relevance}
                   </span>
-                  <h2 className="display-condensed mt-5 text-xl text-chalk transition-colors duration-[140ms] ease-[var(--ease-control)] group-hover:text-signal-lift">
+                  <h2 id={`entry-${entry.slug}-title`} className="display-condensed mt-5 text-xl text-chalk transition-colors duration-[140ms] ease-[var(--ease-control)] group-hover:text-signal-lift">
                     {entry.title}
                   </h2>
-                  <p className="mt-4 text-sm text-steel">{entry.summary}</p>
+                  <p id={`entry-${entry.slug}-summary`} className="mt-4 text-sm text-steel">{entry.summary}</p>
                 </Link>
               </li>
             ))}

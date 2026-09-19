@@ -14,6 +14,7 @@ import { howNoGiRulesetsReshapedTechniqueSelection } from "./entries/how-no-gi-r
 import { ibjjfNoGiUniformRulesReadCarefully } from "./entries/ibjjf-no-gi-uniform-rules-read-carefully.ts";
 import { longSleeveOrShortSleeve } from "./entries/long-sleeve-or-short-sleeve.ts";
 import { maedaAndTheArrivalOfJudoInBrazil } from "./entries/maeda-and-the-arrival-of-judo-in-brazil.ts";
+import { submissionOnlyAndTheOvertimeProblem } from "./entries/submission-only-and-the-overtime-problem.ts";
 import { takingTheBackFromTurtle } from "./entries/taking-the-back-from-turtle.ts";
 import { theArmbarFromClosedGuard } from "./entries/the-armbar-from-closed-guard.ts";
 import { theGuillotineFromTheFrontHeadlock } from "./entries/the-guillotine-from-the-front-headlock.ts";
@@ -39,6 +40,7 @@ export const ARTICLES: Article[] = [
   howToWashARashGuard,
   maedaAndTheArrivalOfJudoInBrazil,
   seatedGuardAndSupineGuard,
+  submissionOnlyAndTheOvertimeProblem,
   theDropoutNumberNobodyCanSource,
   whatTheEarlyUfcTournamentsDemonstrated,
   whatToWearToYourFirstNoGiClass,

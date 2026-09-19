@@ -187,6 +187,12 @@ export const CROSS_LINKS: CrossLink[] = [
       "The article lists posture among what decides whether the angle is available.",
   },
   {
+    a: journal("submission-only-and-the-overtime-problem"),
+    b: technique("seat-belt-and-hooks"),
+    basis:
+      "The article names the entry as the control that back-start overtime begins from.",
+  },
+  {
     a: journal("why-the-underhook-decides-half-guard"),
     b: technique("knee-shield"),
     basis:

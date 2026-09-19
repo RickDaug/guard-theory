@@ -57,6 +57,13 @@ export const PALETTE: Swatch[] = [
     origin: "given",
   },
   {
+    token: "steel-mid",
+    hex: "#7C728A",
+    role: "The border of anything you can type into or press — an input, a select, an outlined button. A hairline that has to be seen to be used: 3.1:1 on graphite, the lightest dark surface, where steel-dim is 1.7:1. Never text.",
+    usage: "hairline",
+    origin: "steel-dim → steel, 40%",
+  },
+  {
     token: "slate",
     hex: "#4B4359",
     role: "Secondary text on the study ground.",
@@ -175,6 +182,10 @@ export const NON_TEXT_ON_GROUND: Array<{
   { fgToken: "signal-dim", fg: "#2161C9", bgToken: "bone", bg: BONE, role: "focus ring" },
   { fgToken: "signal-dim", fg: "#2161C9", bgToken: "bone-raised", bg: "#F6F2F7", role: "focus ring" },
   { fgToken: "signal", fg: SIGNAL, bgToken: "ink", bg: INK, role: "a filled block or rule against the ground" },
-  { fgToken: "steel", fg: "#A499B3", bgToken: "graphite", bg: "#2E2939", role: "the border of a form control" },
-  { fgToken: "steel", fg: "#A499B3", bgToken: "ink", bg: INK, role: "the border of a form control" },
+  // A control's border has the control's own fill on one side of it and the
+  // page on the other, so it is held to 3:1 against both — and against
+  // ink-raised, which is what a hovered card puts behind an outlined button.
+  { fgToken: "steel-mid", fg: "#7C728A", bgToken: "graphite", bg: "#2E2939", role: "the border of a form control, against its own fill" },
+  { fgToken: "steel-mid", fg: "#7C728A", bgToken: "ink", bg: INK, role: "the border of a form control or an outlined button, against the page" },
+  { fgToken: "steel-mid", fg: "#7C728A", bgToken: "ink-raised", bg: "#282332", role: "the border of an outlined button on a raised surface" },
 ];

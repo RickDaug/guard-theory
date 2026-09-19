@@ -1,4 +1,6 @@
 import assert from "node:assert/strict";
+import { readFileSync } from "node:fs";
+import path from "node:path";
 import { describe, it } from "node:test";
 import {
   NON_TEXT_ON_GROUND,
@@ -100,5 +102,91 @@ describe("brand palette meets WCAG 2.2 AA", () => {
         `${swatch.token} has an invalid hex value`,
       );
     }
+  });
+});
+
+/**
+ * A control's border is how a sighted reader finds the control, so it is a
+ * non-text indicator under SC 1.4.11 and owes 3:1.
+ *
+ * The pairing table above already said so — and listed a colour no control was
+ * using. Every input and the header's outlined button drew `steel-dim`, which
+ * is 1.7:1 on graphite, while the table passed. A table that is not read by the
+ * components proves the table. So this reads the components.
+ */
+describe("control borders use the colour the table tested", () => {
+  const root = path.resolve(import.meta.dirname, "..", "..", "src");
+  const read = (file: string) => readFileSync(path.join(root, file), "utf8");
+
+  const tested = new Set(
+    NON_TEXT_ON_GROUND.filter((p) => /border/.test(p.role)).map((p) => `border-${p.fgToken}`),
+  );
+
+  /** Each file, and the fragment that identifies the control inside it. */
+  const CONTROLS: Array<{ file: string; control: RegExp; name: string }> = [
+    { file: "components/ui/Field.tsx", control: /const CONTROL_BORDER = "([^"]+)"/, name: "input, select, textarea" },
+    { file: "components/ui/Button.tsx", control: /outline:\s*"(border [^"]+)"/, name: "outlined button" },
+    { file: "components/site/SiteHeader.tsx", control: /className="(display-plain border [^"]+)"/, name: "header call to action" },
+    { file: "components/search/SearchClient.tsx", control: /className="(w-full border [^"]+)"/, name: "search input" },
+  ];
+
+  for (const { file, control, name } of CONTROLS) {
+    it(`${name} (${file})`, () => {
+      const classes = control.exec(read(file))?.[1];
+      assert.ok(classes, `could not find the ${name} in ${file} — the guard has gone blind, fix its pattern`);
+
+      const borders = classes
+        .split(/\s+/)
+        .filter((c) => /^border-[a-z]/.test(c) && !/^border-(x|y|t|r|b|l)$/.test(c));
+      assert.ok(borders.length > 0, `${name} declares no border colour`);
+      for (const border of borders) {
+        assert.ok(
+          tested.has(border),
+          `${name} draws ${border}, which is not tested at 3:1 as a control border ` +
+            `(tested: ${[...tested].join(", ")})`,
+        );
+      }
+    });
+  }
+
+  it("never falls back to the hairline inside Field", () => {
+    // Inside a string literal, that is — the comment explaining the rule names it.
+    const literals = read("components/ui/Field.tsx").match(/"[^"]*"/g) ?? [];
+    assert.deepEqual(
+      literals.filter((literal) => literal.includes("border-steel-dim")),
+      [],
+    );
+  });
+});
+
+/**
+ * "Change a colour by changing its mix, not by typing a new hex." This is the
+ * mix, recomputed: linear-light sRGB, the way every derived swatch was solved.
+ */
+describe("steel-mid is the mix it says it is", () => {
+  const toLinear = (c: number) => {
+    const v = c / 255;
+    return v <= 0.04045 ? v / 12.92 : ((v + 0.055) / 1.055) ** 2.4;
+  };
+  const toSrgb = (l: number) =>
+    Math.round(255 * (l <= 0.0031308 ? 12.92 * l : 1.055 * l ** (1 / 2.4) - 0.055));
+  const mix = (from: string, to: string, t: number) => {
+    const a = hexToRgb(from);
+    const b = hexToRgb(to);
+    const channel = (x: number, y: number) =>
+      toSrgb(toLinear(x) * (1 - t) + toLinear(y) * t).toString(16).padStart(2, "0");
+    return `#${channel(a.r, b.r)}${channel(a.g, b.g)}${channel(a.b, b.b)}`.toUpperCase();
+  };
+  const hexOf = (token: string) => PALETTE.find((s) => s.token === token)!.hex;
+
+  it("reproduces a swatch that already existed, so the method is the project's", () => {
+    assert.equal(mix(hexOf("steel-dim"), hexOf("ink"), 0.22), hexOf("slate"));
+    assert.equal(mix(hexOf("ink"), hexOf("steel-dim"), 0.22), hexOf("graphite"));
+  });
+
+  it("steel-dim → steel, 40%", () => {
+    const swatch = PALETTE.find((s) => s.token === "steel-mid")!;
+    assert.equal(swatch.origin, "steel-dim → steel, 40%");
+    assert.equal(mix(hexOf("steel-dim"), hexOf("steel"), 0.4), swatch.hex);
   });
 });

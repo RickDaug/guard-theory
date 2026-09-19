@@ -41,7 +41,7 @@ export function SearchClient({ index }: { index: SearchDocument[] }) {
           autoComplete="off"
           aria-describedby={statusId}
           placeholder="guard retention, rash guard, privacy…"
-          className="w-full border border-steel-dim bg-graphite px-4 py-3 text-base text-chalk placeholder:text-steel transition-colors duration-[140ms] ease-[var(--ease-control)] focus:border-signal-lift"
+          className="w-full border border-steel-mid bg-graphite px-4 py-3 text-base text-chalk placeholder:text-steel transition-colors duration-[140ms] ease-[var(--ease-control)] focus:border-signal-lift"
         />
       </div>
 

@@ -153,8 +153,8 @@ export function GarmentFlat({
                 x2={end[0]}
                 y2={end[1]}
                 stroke={live ? "var(--color-signal-lift)" : "var(--color-steel-dim)"}
-                strokeWidth={1.25}
-                className="transition-[stroke] duration-[140ms] ease-[var(--ease-control)]"
+                strokeWidth={live ? 2.5 : 1.25}
+                className="transition-[stroke,stroke-width] duration-[140ms] ease-[var(--ease-control)]"
               />
               <circle
                 cx={geometry.from[0]}

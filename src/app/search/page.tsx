@@ -22,8 +22,9 @@ export default function SearchPage() {
         <header className="mt-10 mb-12 max-w-[46rem]">
           <h1 className="display-condensed text-4xl text-chalk">Search</h1>
           <p className="mt-8 text-lg text-steel">
-            Everything on the site is indexed in the page you are reading — no
-            query is sent anywhere, and this works with the network off.
+            The Journal, the Technique Library, the figures, the garments and
+            the policies are indexed in the page you are reading — no query is
+            sent anywhere, and this works with the network off.
           </p>
         </header>
 

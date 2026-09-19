@@ -70,7 +70,9 @@ export default function FiguresPage() {
                       src={figure.image.src}
                       alt={figure.image.alt}
                       fill
-                      sizes="(min-width: 1024px) 33vw, (min-width: 640px) 50vw, 100vw"
+                      // Capped where the 104rem container stops growing: a
+                      // third of it, less the gaps, is 507px.
+                      sizes="(min-width: 1760px) 507px, (min-width: 1024px) 33vw, (min-width: 640px) 50vw, 100vw"
                       className="object-cover object-top grayscale transition-[filter] duration-[420ms] ease-[var(--ease-control)] group-hover:grayscale-0"
                     />
                   ) : (

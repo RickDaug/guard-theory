@@ -72,8 +72,16 @@ export default async function FigurePage({ params }: Params) {
                     src={figure.image.src}
                     alt={figure.image.alt}
                     fill
-                    sizes="(min-width: 1024px) 33vw, 100vw"
-                    priority
+                    // The column stops growing when the 104rem container
+                    // does: four of twelve columns is 480px from a 1760px
+                    // viewport up. Without the cap a 2560px screen was told
+                    // 33vw and fetched an 845px-wide file for a 480px box.
+                    sizes="(min-width: 1760px) 480px, (min-width: 1024px) 33vw, 100vw"
+                    // This is the LCP element. `priority` is deprecated in
+                    // Next 16 and no longer reaches the <img>; the docs say to
+                    // state these two instead.
+                    loading="eager"
+                    fetchPriority="high"
                     className="object-cover object-top"
                   />
                 </div>

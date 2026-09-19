@@ -69,8 +69,17 @@ for (const path of ROUTES) {
         /(?:McG|MacD|DeLa|iPhone|JavaScript|JavaSc|YouTube|eMag|:Maeda)/;
       const out: string[] = [];
 
+      /**
+       * `label`, `legend`, `dt` and `figcaption` were added after a form label
+       * shipped as "How long have you been training?Optional": the gap was an
+       * `ml-2` margin on a span, and this list did not include the one element
+       * a form's accessible names are computed from. The pattern below would
+       * have matched it; the selector never looked.
+       */
       for (const el of Array.from(
-        document.querySelectorAll<HTMLElement>("p, li, dd, h1, h2, h3"),
+        document.querySelectorAll<HTMLElement>(
+          "p, li, dd, h1, h2, h3, label, legend, dt, figcaption",
+        ),
       )) {
         /**
          * innerText, NOT textContent.
@@ -191,5 +200,44 @@ for (const path of ROUTES) {
     });
 
     expect(fused, fused.join("\n")).toEqual([]);
+  });
+}
+
+/**
+ * A line break is not a word space.
+ *
+ * `Guard is not<br/>a position.` paints as two lines and reads, to anything
+ * that takes the text rather than the layout — a search snippet, a reader view,
+ * `textContent` — as "Guard is nota position." Neither check above can see it:
+ * `innerText` turns the <br> into a newline, which is exactly the separator the
+ * document does not contain.
+ *
+ * So this looks at the document. On either side of every <br> inside a phrase,
+ * one of the two neighbours has to carry real whitespace.
+ */
+for (const path of ROUTES) {
+  test(`${path} has no word space that exists only as a line break`, async ({
+    page,
+  }) => {
+    await page.goto(path, { waitUntil: "load" });
+
+    const fused = await page.evaluate(() => {
+      const out: string[] = [];
+      const PHRASE = "p, li, dd, dt, h1, h2, h3, label, figcaption";
+
+      for (const br of Array.from(document.querySelectorAll(`:is(${PHRASE}) br`))) {
+        const before = br.previousSibling?.textContent ?? "";
+        const after = br.nextSibling?.textContent ?? "";
+        // A <br> at the very start or end of its parent separates nothing.
+        if (before === "" || after === "") continue;
+        if (/\s$/.test(before) || /^\s/.test(after)) continue;
+
+        out.push(`"${before.slice(-30)}" <br> "${after.slice(0, 30)}"`);
+      }
+
+      return out;
+    });
+
+    expect(fused, fused.join(" | ")).toEqual([]);
   });
 }

@@ -61,6 +61,7 @@ export const SHARE_IMAGE_OBJECT = {
 
 export function pageMetadata({
   title,
+  shareTitle,
   description,
   path,
   type = "website",
@@ -69,6 +70,11 @@ export function pageMetadata({
   indexable = true,
 }: {
   title: string;
+  /**
+   * The title on a link preview, when it should differ from the `<title>`.
+   * A card has room for a full headline that a results page would cut.
+   */
+  shareTitle?: string;
   description: string;
   /** Root-relative, e.g. "/journal/some-slug". */
   path: string;
@@ -91,7 +97,7 @@ export function pageMetadata({
     openGraph: {
       type,
       siteName: SITE_NAME,
-      title,
+      title: shareTitle ?? title,
       description,
       url,
       locale: "en",
@@ -101,7 +107,7 @@ export function pageMetadata({
     },
     twitter: {
       card: "summary_large_image",
-      title,
+      title: shareTitle ?? title,
       description,
       images: [SHARE_IMAGE.url],
     },

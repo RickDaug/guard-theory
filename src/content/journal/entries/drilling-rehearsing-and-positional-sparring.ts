@@ -17,6 +17,7 @@ export const drillingRehearsingAndPositionalSparring: PublishedArticle = {
   slug: "drilling-rehearsing-and-positional-sparring",
   category: "training-culture",
   title: "Drilling, rehearsing, and what positional sparring changes",
+  metaTitle: "Drilling, rehearsal and positional sparring",
   standfirst:
     "Three different activities share one word in most gyms, and the confusion is not linguistic: it shows up in how the hour is spent and in what the room believes it is buying.",
   metaDescription:

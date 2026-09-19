@@ -13,7 +13,7 @@ import {
 import { getAuthor } from "@/content/authors";
 
 export const metadata: Metadata = pageMetadata({
-  title: "Journal",
+  title: "Journal — Researched writing on jiu-jitsu",
   description: "Researched writing on jiu-jitsu: its history, its systems, its equipment and what competition rules do to technique.",
   path: "/journal",
 });

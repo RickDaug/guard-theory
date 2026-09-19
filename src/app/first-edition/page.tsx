@@ -4,7 +4,7 @@ import { Breadcrumbs } from "@/components/site/Breadcrumbs";
 import { WaitlistForm } from "@/components/waitlist/WaitlistForm";
 
 export const metadata: Metadata = pageMetadata({
-  title: "First Edition",
+  title: "First Edition — No-gi rash guards",
   description: "The First Edition: no-gi rash guards built to a published standard, designed inside competition rulesets. Join the list for first access.",
   path: "/first-edition",
 });

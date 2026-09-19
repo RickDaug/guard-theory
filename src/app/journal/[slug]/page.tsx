@@ -31,7 +31,8 @@ export async function generateMetadata({ params }: Params): Promise<Metadata> {
 
   return {
     ...pageMetadata({
-      title: article.title,
+      title: article.metaTitle ?? article.title,
+      shareTitle: article.title,
       description: article.metaDescription ?? article.standfirst,
       path: `/journal/${article.slug}`,
       type: "article",

@@ -6,7 +6,7 @@ import { ButtonLink } from "@/components/ui/Button";
 import { PRODUCTS, STATUS_LABEL } from "@/content/products";
 
 export const metadata: Metadata = pageMetadata({
-  title: "Shop",
+  title: "Shop — No-gi BJJ rash guards",
   description: "What Guard Theory makes, and the published specification behind each garment — fabric, weight, seam construction and print method.",
   path: "/shop",
 });

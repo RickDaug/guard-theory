@@ -18,6 +18,7 @@ export const whySportJiuJitsuDoesNotTransferDirectlyToMma: PublishedArticle = {
   slug: "why-sport-jiu-jitsu-does-not-transfer-directly-to-mma",
   category: "mma-and-jiu-jitsu",
   title: "Why sport jiu-jitsu does not transfer directly to MMA",
+  metaTitle: "Sport jiu-jitsu and MMA: no direct transfer",
   standfirst:
     "Not a question about who would beat whom. A question about which constraints changed between the two activities, and what each change does to the value of a position.",
   metaDescription:

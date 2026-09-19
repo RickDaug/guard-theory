@@ -5,7 +5,7 @@ import { Breadcrumbs } from "@/components/site/Breadcrumbs";
 import { FIT_NOTES, SIZE_CHART } from "@/content/products/size-chart";
 
 export const metadata: Metadata = pageMetadata({
-  title: "Size and fit",
+  title: "Rash guard size chart and fit guide",
   description: "Guard Theory size chart with garment measurements in inches and centimetres, and how a no-gi rash guard should actually fit.",
   path: "/size-and-fit",
 });

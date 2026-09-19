@@ -39,8 +39,13 @@ export function FieldShell({
     <div className="flex flex-col gap-2">
       <label htmlFor={id} className="display-plain text-sm text-chalk">
         {label}
+        {/* The space is written, and the margin only widens it. With the margin
+            alone the accessible name was "…been training?Optional". */}
         {optional ? (
-          <span className="ml-2 text-steel">Optional</span>
+          <>
+            {" "}
+            <span className="ml-1 text-steel">Optional</span>
+          </>
         ) : null}
       </label>
 

@@ -1,4 +1,5 @@
 import assert from "node:assert/strict";
+import { BANNED_CONSTRUCTIONS } from "../../src/content/editorial-voice.ts";
 import { describe, it } from "node:test";
 import {
   CATEGORIES,
@@ -352,19 +353,12 @@ describe("editorial voice", () => {
    * The banned constructions from the brief. Greped rather than trusted,
    * because every one of them reads as machine-written and the whole editorial
    * premise depends on the writing not sounding like that.
+   *
+   * The list now lives in src/content/editorial-voice.ts so transactional email
+   * is held to it too — see tests/unit/email.test.ts. It used to be a const in
+   * this file, which meant it could only ever cover what this file imported.
    */
-  const BANNED = [
-    /in the ever[- ]evolving world of/i,
-    /whether you(?:'|’)re a seasoned (?:practitioner|grappler)/i,
-    /it is important to note/i,
-    /this comprehensive guide will delve into/i,
-    /\bgame[- ]chang(?:er|ing)\b/i,
-    /\blegendary\b/i,
-    /\btapestry\b/i,
-    /\brevolutioniz/i,
-    /\bunlock (?:your|the) (?:potential|game)/i,
-    /\bembark on (?:a|your) journey/i,
-  ];
+  const BANNED = BANNED_CONSTRUCTIONS;
 
   it("keeps banned constructions out of Journal copy", () => {
     for (const article of ARTICLES) {

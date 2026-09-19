@@ -176,6 +176,10 @@ protecting, or make the case for changing the rule.
   `npm run db:migrate` leaves `DATABASE_URL_UNPOOLED` pointing at Neon, and that
   is the one the script uses. For local PGlite work export **both**, to the
   same local URL, for the migrate, seed, build and Playwright commands alike.
+  The migrate and seed scripts now print the host and refuse a non-loopback one
+  without `--production` (`scripts/db/guard.mjs`), so this mistake stops at a
+  refusal — but `next build`, `next start` and Playwright have no such guard,
+  and they read `.env.local` too. Still export both.
 - **After switching branches, run `npm install`.** `node_modules` belongs to
   whichever branch installed last. The commerce branch adds `stripe`; checked
   out over a tree installed from `main`, `next build` stopped at "Can't resolve

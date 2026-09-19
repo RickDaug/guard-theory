@@ -1,5 +1,11 @@
 import type { Metadata } from "next";
 import { SectionCrossNav } from "@/components/content/SectionCrossNav";
+import {
+  SECTION_DESCRIPTIONS,
+  TECHNIQUE_AREA_COUNT,
+  capitalise,
+  numberWord,
+} from "@/content/section-descriptions";
 import { pageMetadata } from "@/lib/metadata";
 import Link from "next/link";
 import { Breadcrumbs } from "@/components/site/Breadcrumbs";
@@ -8,7 +14,7 @@ import { COACH_DISCLAIMER } from "@/content/technique/types";
 
 export const metadata: Metadata = pageMetadata({
   title: "Technique Library",
-  description: "A concepts library for no-gi grappling, organised by the twelve areas of the game. Mechanics, common errors and safety notes for each.",
+  description: SECTION_DESCRIPTIONS.technique,
   path: "/technique",
 });
 
@@ -23,8 +29,8 @@ export default function TechniqueIndexPage() {
             Technique Library
           </h1>
           <p className="mt-8 text-lg text-steel">
-            Twelve areas of the game, written as concepts rather than move lists.
-            Each entry states the problem it addresses, the mechanics that do the
+            {capitalise(numberWord(TECHNIQUE_AREA_COUNT))} areas of the game,
+            written as concepts rather than move lists. Each entry states the problem it addresses, the mechanics that do the
             work, the errors that undo them, and the specific risk it carries.
           </p>
           <p className="mt-6 text-base text-steel">{COACH_DISCLAIMER}</p>

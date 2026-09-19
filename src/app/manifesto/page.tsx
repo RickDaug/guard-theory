@@ -21,7 +21,7 @@ const CLAUSES = [
   },
   {
     heading: "The drawing is the truth",
-    body: "A production flat says how a garment is built. A photograph says how it looked on one day, under one light, on one body. We publish the drawing alongside the photograph, because the drawing is the part you can measure.",
+    body: "A production flat says how a garment is built. A photograph says how it looked on one day, under one light, on one body. We publish the drawing, because the drawing is the part you can measure.",
   },
   {
     heading: "Earn the citation",

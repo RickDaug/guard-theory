@@ -54,9 +54,49 @@ sentence is always available; inventing one never is.
 | No broken internal links | `tests/e2e/links.spec.ts` crawls the whole site. |
 | Zero console errors | `tests/e2e/console.spec.ts`. |
 | Preview builds are not indexable | Opt-in via `NEXT_PUBLIC_ALLOW_INDEXING`; asserted in metadata tests. |
+| What the site says about itself is still true | `src/content/claims.ts`, run by `tests/unit/claims.test.ts`. See below. |
 
 Do not weaken a test to make a change pass. Change the thing the test is
 protecting, or make the case for changing the rule.
+
+## Added a feature? Add or update its claim
+
+The audit's most repeated finding was not a bug. It was a sentence that had been
+true: the FAQ denying a size chart after one was built, search saying the Journal
+was not indexed after it was, the privacy policy listing a waitlist question a
+month after the form stopped asking it. Nobody re-reads the FAQ after shipping a
+feature, so `src/content/claims.ts` does it instead. Each claim names a sentence,
+the files it is printed in, and a check computed from whatever makes it true —
+a registry, the form markup, the migrations, `package.json` — and the test fails
+with the sentence, the file and what changed.
+
+When you change what the site *is*, change what it *says* in the same commit:
+
+- **Adding a table or a column, or a field to either form?** The test fails until
+  `STORED` and the form maps in `claims.ts` account for it — as a phrase the
+  privacy policy's "What we collect" actually contains, or as internal, with the
+  reason. Write the policy sentence first.
+- **Adding a runtime dependency, or code that talks to a new host?** It fails
+  until the dependency is in `DEPENDENCIES` and the host is either a named
+  processor in the privacy policy or in `HOSTS_THAT_RECEIVE_NOTHING`.
+- **Adding a mail template?** Classify it in `LIST_MAIL` or `TRANSACTIONAL_MAIL`.
+  The second makes "every message carries an unsubscribe" false, and says so.
+- **Making a retired sentence true** — a price, product photography, a ruleset
+  line in the specification? Point that claim's `holds` at the new evidence, and
+  only then write the sentence back.
+- **Writing a new sentence that counts something, says something exists or does
+  not, or says "every" or "never"?** If the number comes from a registry, render
+  it from the registry (`src/content/section-descriptions.ts`) and register
+  nothing — a derived sentence cannot drift. Otherwise add a claim, then break
+  it on purpose and watch it fail. One of the first checks written here had
+  backspace bytes where `\b` belonged, matched nothing, and passed against the
+  defect it was written for; the "the guard can fail" block at the bottom of the
+  test is there because of it, and a new check belongs in it.
+
+What this does not do is read prose. It guards the sentences it lists. A false
+sentence nobody registered passes, and so does every promise about what *we will
+do* — delete on request, read every message — which no test can check and which
+are listed for the owner in `docs/owner-decisions.md` §13 instead.
 
 ## Working here
 

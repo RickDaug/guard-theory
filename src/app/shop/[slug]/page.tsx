@@ -158,7 +158,7 @@ export default async function ProductPage({ params }: Params) {
                 ))}
               </ul>
               <p className="mt-6 max-w-[34rem] text-sm text-steel">
-                Full measurements in inches and centimetres are in the{" "}
+                Full measurements are in the{" "}
                 <Link
                   href="/size-and-fit"
                   className="text-chalk underline decoration-steel-dim underline-offset-[5px] transition-colors duration-[140ms] ease-[var(--ease-control)] hover:decoration-signal-lift"

@@ -12,6 +12,7 @@ import { insidePosition } from "./entries/inside-position.ts";
 import { kneeCutPass } from "./entries/knee-cut-pass.ts";
 import { kneeShield } from "./entries/knee-shield.ts";
 import { seatBeltAndHooks } from "./entries/seat-belt-and-hooks.ts";
+import { sweepingTowardTheMissingPost } from "./entries/sweeping-toward-the-missing-post.ts";
 import { underhookHalfGuard } from "./entries/underhook-half-guard.ts";
 
 /**
@@ -33,6 +34,7 @@ export const ENTRIES: TechniqueEntry[] = [
   kneeCutPass,
   kneeShield,
   seatBeltAndHooks,
+  sweepingTowardTheMissingPost,
   underhookHalfGuard,
 ];
 

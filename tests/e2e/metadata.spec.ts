@@ -211,6 +211,68 @@ test("structured data parses and claims nothing untrue", async ({ page }) => {
 });
 
 /**
+ * Structured data may only say what the page and the registry already say.
+ *
+ * An article states an image, and it has to be the image the page shares with —
+ * not a second one nobody checked. It states `dateModified` only when the
+ * registry recorded a revision. A Library entry has no byline and no date, so
+ * its node must carry neither.
+ */
+test("article and entry structured data repeat the page, and add nothing", async ({ page }) => {
+  test.setTimeout(120_000);
+
+  async function nodes(path: string): Promise<Record<string, unknown>[]> {
+    await page.goto(path, { waitUntil: "load" });
+    const blocks = await page
+      .locator('script[type="application/ld+json"]')
+      .allTextContents();
+    return blocks.map((block) => JSON.parse(block) as Record<string, unknown>);
+  }
+
+  const published = ARTICLES.filter(isPublished);
+  expect(published.length, "no published articles to check").toBeGreaterThan(0);
+
+  const authorIds = new Map<string, string>();
+
+  for (const article of published.slice(0, 4)) {
+    const path = `/journal/${article.slug}`;
+    const node = (await nodes(path)).find((n) => n["@type"] === "Article");
+    expect(node, `${path} emits no Article`).toBeDefined();
+
+    const ogImage = await page
+      .locator('meta[property="og:image"]')
+      .first()
+      .getAttribute("content");
+    const image = node!.image as { url?: string } | undefined;
+    expect(image?.url, `${path} Article.image is not the page's og:image`).toBe(ogImage);
+
+    expect(node!.datePublished).toBe(article.publishedAt);
+    expect(
+      node!.dateModified,
+      `${path} states a dateModified the registry does not carry`,
+    ).toBe(article.updatedAt);
+
+    const author = node!.author as { "@id"?: string; name?: string };
+    expect(author?.["@id"], `${path} author has no stable @id`).toMatch(/#author-/);
+    // The same person is the same node wherever they appear.
+    const seen = authorIds.get(article.authorId);
+    if (seen) expect(author["@id"]).toBe(seen);
+    authorIds.set(article.authorId, author["@id"]!);
+  }
+
+  const entryPath = "/technique/no-gi-systems/inside-position";
+  const entry = (await nodes(entryPath)).find((n) => n["@type"] === "Article");
+  expect(entry, `${entryPath} emits no Article`).toBeDefined();
+  expect(entry!.headline).toBe(await page.locator("h1").first().textContent());
+  for (const invented of ["author", "datePublished", "dateModified"]) {
+    expect(
+      entry![invented],
+      `${entryPath} states "${invented}", which the entry registry cannot source`,
+    ).toBeUndefined();
+  }
+});
+
+/**
  * A link preview is either right the first time somebody pastes the URL or it
  * is wrong in public, in somebody else's timeline, cached.
  *

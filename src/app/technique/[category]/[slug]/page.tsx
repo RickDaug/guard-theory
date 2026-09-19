@@ -6,7 +6,9 @@ import { CrossLinks } from "@/components/content/CrossLinks";
 import { crossLinksFor } from "@/content/crosslinks";
 import { ENTRIES, getCategory, getEntry } from "@/content/technique";
 import { COACH_DISCLAIMER } from "@/content/technique/types";
-import { pageMetadata } from "@/lib/metadata";
+import { SHARE_IMAGE_OBJECT, pageMetadata } from "@/lib/metadata";
+import { serializeJsonLd } from "@/lib/json-ld";
+import { absoluteUrl } from "@/lib/site";
 
 type Params = { params: Promise<{ category: string; slug: string }> };
 
@@ -90,6 +92,33 @@ export default async function TechniqueEntryPage({ params }: Params) {
   // The route out of the Library: the arguments in the Journal, and the people
   // whose recorded work the entry describes.
   const crossLinks = crossLinksFor("technique", entry.slug);
+
+  /**
+   * An Article with no author and no dates, on purpose.
+   *
+   * A Library entry has no byline and no publication date: `TechniqueEntry`
+   * carries neither, by design. So this node states neither. Every property
+   * below is a field the entry type requires, stated as the entry states it;
+   * nothing is derived or defaulted, and the day the registry gains an author
+   * or a date is the day this does.
+   *
+   * `HowTo`, `Course` and `LearningResource` were each considered and rejected
+   * in docs/structured-data-map.md §7: a technique is not a recipe, and there
+   * is no curriculum, completion or credential here to claim.
+   */
+  const url = absoluteUrl(`/technique/${category.slug}/${entry.slug}`);
+  const jsonLd = {
+    "@context": "https://schema.org",
+    "@type": "Article",
+    "@id": `${url}#article`,
+    headline: entry.title,
+    description: entry.metaDescription ?? entry.summary,
+    mainEntityOfPage: url,
+    image: SHARE_IMAGE_OBJECT,
+    articleSection: category.name,
+    isPartOf: { "@id": absoluteUrl("/#website") },
+    publisher: { "@id": absoluteUrl("/#organization") },
+  };
 
   return (
     <main id="main" className="px-6 py-16 md:px-12">
@@ -191,6 +220,11 @@ export default async function TechniqueEntryPage({ params }: Params) {
           </footer>
         </article>
       </div>
+
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: serializeJsonLd(jsonLd) }}
+      />
     </main>
   );
 }

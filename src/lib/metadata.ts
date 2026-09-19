@@ -34,7 +34,7 @@ import { IS_INDEXABLE, SITE_NAME, absoluteUrl } from "./site.ts";
  * something that has to be right the first time a link is pasted, and this
  * project's Open Graph card has always been a committed file for that reason.
  */
-const SHARE_IMAGE = {
+export const SHARE_IMAGE = {
   url: absoluteUrl("/og-card.png"),
   width: 1200,
   height: 630,
@@ -42,6 +42,23 @@ const SHARE_IMAGE = {
     "The Guard Theory mark and wordmark on the brand ground, over the line: " +
     "no-gi grappling apparel, and a technical study of the guard.",
 } as const;
+
+/**
+ * The same card, as the `image` of a page's structured data.
+ *
+ * Truthful only because of the paragraph above: this IS the image every page
+ * declares as its `og:image`, so stating it in JSON-LD repeats a claim the page
+ * already makes rather than adding one. It is the page's image, not a
+ * photograph of its subject, and it must not be attached to anything that
+ * reads as one — a Person, a product.
+ */
+export const SHARE_IMAGE_OBJECT = {
+  "@type": "ImageObject",
+  url: SHARE_IMAGE.url,
+  width: SHARE_IMAGE.width,
+  height: SHARE_IMAGE.height,
+} as const;
+
 export function pageMetadata({
   title,
   description,

@@ -20,6 +20,9 @@ import { crossLinksForMany } from "@/content/crosslinks";
 
 type Params = { params: Promise<{ slug: string }> };
 
+/** An unknown slug is a real 404 page — see journal/[slug]/page.tsx. */
+export const dynamicParams = false;
+
 export function generateStaticParams() {
   return CATEGORIES.map((category) => ({ slug: category.slug }));
 }

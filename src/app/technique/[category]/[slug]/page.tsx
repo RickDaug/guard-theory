@@ -12,6 +12,9 @@ import { absoluteUrl } from "@/lib/site";
 
 type Params = { params: Promise<{ category: string; slug: string }> };
 
+/** An unknown slug is a real 404 page — see journal/[slug]/page.tsx. */
+export const dynamicParams = false;
+
 export function generateStaticParams() {
   return ENTRIES.map((entry) => ({
     category: entry.category,

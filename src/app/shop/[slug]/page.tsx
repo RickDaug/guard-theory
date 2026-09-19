@@ -9,6 +9,16 @@ import { pageMetadata } from "@/lib/metadata";
 
 type Params = { params: Promise<{ slug: string }> };
 
+/**
+ * An unknown slug is a real 404 page — see journal/[slug]/page.tsx.
+ *
+ * This holds only while PRODUCTS is a build-time registry. The commerce branch
+ * makes this route database-driven, and a product added after the build would
+ * then 404 for ever. When that lands, this line has to go and the route has to
+ * produce a whole 404 document some other way.
+ */
+export const dynamicParams = false;
+
 export function generateStaticParams() {
   return PRODUCTS.map((product) => ({ slug: product.slug }));
 }

@@ -13,6 +13,9 @@ import { lifespanDates } from "@/content/figures/lifespan";
 
 type Params = { params: Promise<{ slug: string }> };
 
+/** An unknown slug is a real 404 page — see journal/[slug]/page.tsx. */
+export const dynamicParams = false;
+
 export function generateStaticParams() {
   return FIGURES.map((figure) => ({ slug: figure.slug }));
 }

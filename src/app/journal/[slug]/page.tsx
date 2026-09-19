@@ -18,6 +18,23 @@ import { getAuthor } from "@/content/authors";
 
 type Params = { params: Promise<{ slug: string }> };
 
+/**
+ * A slug that was not built does not exist.
+ *
+ * Left at the default, an unknown slug is rendered on demand and `notFound()`
+ * is thrown from inside that render. What production served for it was
+ * `<html id="__next_error__">` — no `lang`, an empty body, and nothing at all
+ * without JavaScript (SC 3.1.1, and a blank page for a mistyped address). With
+ * this, an unknown slug never reaches the page: the router answers 404 with the
+ * not-found page, which is a whole document. `tests/e2e/not-found.spec.ts`
+ * holds every dynamic route to that with JavaScript switched off.
+ *
+ * Every dynamic route on the site is registry-driven and sets this. A route
+ * that reads its slugs from a database at request time cannot — see the note
+ * on /shop/[slug].
+ */
+export const dynamicParams = false;
+
 export function generateStaticParams() {
   return ARTICLES.map((article) => ({ slug: article.slug }));
 }

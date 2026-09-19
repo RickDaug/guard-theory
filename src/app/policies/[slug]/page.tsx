@@ -7,6 +7,9 @@ import { pageMetadata } from "@/lib/metadata";
 
 type Params = { params: Promise<{ slug: string }> };
 
+/** An unknown slug is a real 404 page — see journal/[slug]/page.tsx. */
+export const dynamicParams = false;
+
 export function generateStaticParams() {
   return POLICIES.map((policy) => ({ slug: policy.slug }));
 }

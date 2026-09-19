@@ -28,7 +28,7 @@ export function UtilityPage({
   tone?: "neutral" | "alert";
 }) {
   return (
-    <main id="main" className="px-6 py-24 md:px-12">
+    <main id="main" tabIndex={-1} className="px-6 py-24 md:px-12">
       <div className="mx-auto max-w-[104rem]">
         <p
           className={`notation text-2xs ${
@@ -50,7 +50,7 @@ export function UtilityPage({
             {secondary ? (
               <Link
                 href={secondary.href}
-                className="display-plain text-sm text-chalk underline decoration-steel-dim underline-offset-[6px] transition-colors duration-[140ms] ease-[var(--ease-control)] hover:decoration-signal-lift"
+                className="display-plain inline-flex min-h-6 items-center text-sm text-chalk underline decoration-steel-dim underline-offset-[6px] transition-colors duration-[140ms] ease-[var(--ease-control)] hover:decoration-signal-lift"
               >
                 {secondary.label}
               </Link>

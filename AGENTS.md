@@ -53,7 +53,7 @@ sentence is always available; inventing one never is.
 | No `Product`/`Offer` schema without truthful data | `tests/e2e/metadata.spec.ts` fails if any appears. |
 | No broken internal links | `tests/e2e/links.spec.ts` crawls the whole site. |
 | Zero console errors | `tests/e2e/console.spec.ts`. |
-| Preview builds are not indexable | Opt-in via `NEXT_PUBLIC_ALLOW_INDEXING`; asserted in metadata tests. |
+| Preview builds are not indexable | Opt-in via `NEXT_PUBLIC_ALLOW_INDEXING`, and refused outright when `VERCEL_ENV` is set and is not `production` (meta tag, robots.txt and an `X-Robots-Tag` header). `tests/unit/indexing.test.ts` and the metadata tests. |
 
 Do not weaken a test to make a change pass. Change the thing the test is
 protecting, or make the case for changing the rule.

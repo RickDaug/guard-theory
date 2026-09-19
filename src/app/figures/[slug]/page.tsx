@@ -91,7 +91,7 @@ export default async function FigurePage({ params }: Params) {
                   {figure.image.credit} · {figure.image.license} ·{" "}
                   <a
                     href={figure.image.sourceUrl}
-                    rel="noopener noreferrer nofollow"
+                    rel="noopener noreferrer"
                     target="_blank"
                     className="underline underline-offset-[4px]"
                   >
@@ -175,7 +175,7 @@ export default async function FigurePage({ params }: Params) {
                       <span className="text-sm text-ink">
                         <a
                           href={source.url}
-                          rel="noopener noreferrer nofollow"
+                          rel="noopener noreferrer"
                           target="_blank"
                           className="underline decoration-slate/40 underline-offset-[5px] transition-colors duration-[140ms] ease-[var(--ease-control)] hover:decoration-signal-dim"
                         >

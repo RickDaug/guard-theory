@@ -258,6 +258,9 @@ export default async function ArticlePage({ params }: Params) {
 
               <section className="mt-14 border-t border-slate/25 pt-8">
                 <h2 className="display-condensed text-xl text-ink">Sources</h2>
+                <p className="mt-3 text-sm text-slate">
+                  Each source opens in a new tab.
+                </p>
                 <ol role="list" className="m-0 mt-5 flex list-none flex-col gap-4 p-0">
                   {article.sources.map((source, index) => (
                     <li key={source.url} className="flex gap-5">
@@ -274,7 +277,8 @@ export default async function ArticlePage({ params }: Params) {
                           target="_blank"
                           className="underline decoration-slate/40 underline-offset-[5px] transition-colors duration-[140ms] ease-[var(--ease-control)] hover:decoration-signal-dim"
                         >
-                          {source.title}
+                          {source.title}{" "}
+                          <span className="sr-only">(opens in a new tab)</span>
                         </a>
                         <span className="block text-slate">
                           {source.publisher} · consulted {source.accessed}

@@ -11,6 +11,7 @@ import { insidePosition } from "./entries/inside-position.ts";
 import { kneeCutPass } from "./entries/knee-cut-pass.ts";
 import { kneeShield } from "./entries/knee-shield.ts";
 import { seatBeltAndHooks } from "./entries/seat-belt-and-hooks.ts";
+import { underhookHalfGuard } from "./entries/underhook-half-guard.ts";
 
 /**
  * The registry. Entries are imported explicitly rather than globbed so that the
@@ -30,6 +31,7 @@ export const ENTRIES: TechniqueEntry[] = [
   kneeCutPass,
   kneeShield,
   seatBeltAndHooks,
+  underhookHalfGuard,
 ];
 
 export const ENTRIES_BY_SLUG = new Map(ENTRIES.map((e) => [e.slug, e]));

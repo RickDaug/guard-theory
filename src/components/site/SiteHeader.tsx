@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { Monogram } from "@/components/brand/Monogram";
+import { NavLink } from "./NavLink";
 
 const NAV = [
   { href: "/shop", label: "Shop" },
@@ -25,12 +26,12 @@ export function SiteHeader() {
           <ul className="m-0 flex list-none flex-wrap items-center gap-x-8 gap-y-2 p-0">
             {NAV.map((item) => (
               <li key={item.href}>
-                <Link
+                <NavLink
                   href={item.href}
-                  className="display-plain inline-flex min-h-[24px] items-center text-sm text-steel no-underline transition-colors duration-[140ms] ease-[var(--ease-control)] hover:text-chalk"
+                  className="display-plain inline-flex min-h-[24px] items-center text-sm text-steel no-underline transition-colors duration-[140ms] ease-[var(--ease-control)] hover:text-chalk aria-[current]:text-chalk aria-[current]:underline aria-[current]:decoration-steel-mid aria-[current]:underline-offset-[6px]"
                 >
                   {item.label}
-                </Link>
+                </NavLink>
               </li>
             ))}
             {/* Below sm this would wrap onto a line of its own and read as a

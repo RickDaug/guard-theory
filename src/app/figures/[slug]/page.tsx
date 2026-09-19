@@ -9,6 +9,7 @@ import { crossLinksFor } from "@/content/crosslinks";
 import { FIGURES, FIGURES_ALPHABETICAL, getFigure } from "@/content/figures";
 import { absoluteUrl } from "@/lib/site";
 import { pageMetadata } from "@/lib/metadata";
+import { lifespanDates } from "@/content/figures/lifespan";
 
 type Params = { params: Promise<{ slug: string }> };
 
@@ -42,6 +43,12 @@ export default async function FigurePage({ params }: Params) {
   /**
    * Person, with no award, ranking or rating properties. The index makes no
    * claim about who was best and neither does this.
+   *
+   * Birth and death years come out of the registry's own verified `lifespan`
+   * and nowhere else. There is no `sameAs`: the registry records sources
+   * ABOUT a person, not a page that IS that person, and promoting a citation
+   * to an identity claim would be inventing one. It needs its own sourced
+   * field first.
    */
   const jsonLd = {
     "@context": "https://schema.org",
@@ -49,6 +56,7 @@ export default async function FigurePage({ params }: Params) {
     "@id": absoluteUrl(`/figures/${figure.slug}#person`),
     name: figure.name,
     description: figure.metaDescription ?? figure.standfirst,
+    ...lifespanDates(figure.lifespan),
     ...(figure.image ? { image: absoluteUrl(figure.image.src) } : {}),
   };
 

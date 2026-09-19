@@ -161,7 +161,7 @@ export default async function ArticlePage({ params }: Params) {
             className="lg:col-span-3 lg:sticky lg:top-8 lg:self-start"
           >
             <p className="notation mb-5 text-2xs text-orchid">Contents</p>
-            <ol className="m-0 flex list-none flex-col gap-3 p-0">
+            <ol role="list" className="m-0 flex list-none flex-col gap-3 p-0">
               {article.sections.map((section) => (
                 <li key={section.id}>
                   <a
@@ -240,7 +240,7 @@ export default async function ArticlePage({ params }: Params) {
                   <h2 className="display-condensed text-xl text-ink">
                     Where the record is contested
                   </h2>
-                  <ul className="m-0 mt-5 flex list-none flex-col gap-4 p-0">
+                  <ul role="list" className="m-0 mt-5 flex list-none flex-col gap-4 p-0">
                     {article.contestedNotes.map((note) => (
                       <li key={note} className="flex gap-5">
                         <span
@@ -258,7 +258,7 @@ export default async function ArticlePage({ params }: Params) {
 
               <section className="mt-14 border-t border-slate/25 pt-8">
                 <h2 className="display-condensed text-xl text-ink">Sources</h2>
-                <ol className="m-0 mt-5 flex list-none flex-col gap-4 p-0">
+                <ol role="list" className="m-0 mt-5 flex list-none flex-col gap-4 p-0">
                   {article.sources.map((source, index) => (
                     <li key={source.url} className="flex gap-5">
                       <span
@@ -290,7 +290,7 @@ export default async function ArticlePage({ params }: Params) {
                   <h2 className="display-condensed text-xl text-ink">
                     Related reading
                   </h2>
-                  <ul className="m-0 mt-5 flex list-none flex-col gap-3 p-0">
+                  <ul role="list" className="m-0 mt-5 flex list-none flex-col gap-3 p-0">
                     {related.map((item) => (
                       <li key={item.slug}>
                         <Link

@@ -156,7 +156,7 @@ export default async function FigurePage({ params }: Params) {
                   <h2 className="display-condensed text-xl text-ink">
                     Where the record is contested
                   </h2>
-                  <ul className="m-0 mt-5 flex list-none flex-col gap-4 p-0">
+                  <ul role="list" className="m-0 mt-5 flex list-none flex-col gap-4 p-0">
                     {figure.contestedNotes.map((note) => (
                       <li key={note} className="flex gap-5">
                         <span
@@ -174,7 +174,7 @@ export default async function FigurePage({ params }: Params) {
 
               <section className="mt-14 border-t border-slate/25 pt-8">
                 <h2 className="display-condensed text-xl text-ink">Sources</h2>
-                <ol className="m-0 mt-5 flex list-none flex-col gap-4 p-0">
+                <ol role="list" className="m-0 mt-5 flex list-none flex-col gap-4 p-0">
                   {figure.sources.map((source, index) => (
                     <li key={source.url} className="flex gap-5">
                       <span
@@ -221,7 +221,7 @@ export default async function FigurePage({ params }: Params) {
           <h2 id="more" className="display-condensed mb-8 text-2xl text-chalk">
             Others in the index
           </h2>
-          <ul className="m-0 flex list-none flex-wrap gap-x-8 gap-y-3 p-0">
+          <ul role="list" className="m-0 flex list-none flex-wrap gap-x-8 gap-y-3 p-0">
             {others.map((item) => (
               <li key={item.slug}>
                 <Link

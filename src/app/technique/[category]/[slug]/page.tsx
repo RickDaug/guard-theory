@@ -58,9 +58,15 @@ function Part({
   );
 }
 
+/**
+ * `role="list"` is not redundant here. `list-style: none` makes Safari drop the
+ * list semantics, and these lists are ordered on purpose — the printed ordinal
+ * is `aria-hidden` because "2 of 5" is supposed to come from the list itself.
+ * Without the role, VoiceOver got neither.
+ */
 function OrderedNotes({ items }: { items: string[] }) {
   return (
-    <ol className="m-0 flex list-none flex-col gap-5 p-0">
+    <ol role="list" className="m-0 flex list-none flex-col gap-5 p-0">
       {items.map((item, index) => (
         <li key={item} className="flex gap-5">
           <span
@@ -166,7 +172,7 @@ export default async function TechniqueEntryPage({ params }: Params) {
           </Part>
 
           <Part title="Common errors">
-            <ul className="m-0 flex list-none flex-col gap-5 p-0">
+            <ul role="list" className="m-0 flex list-none flex-col gap-5 p-0">
               {entry.commonErrors.map((error) => (
                 <li key={error} className="flex gap-5">
                   <span
@@ -193,7 +199,7 @@ export default async function TechniqueEntryPage({ params }: Params) {
 
           {related.length > 0 ? (
             <Part title="Related entries">
-              <ul className="m-0 flex list-none flex-col gap-3 p-0">
+              <ul role="list" className="m-0 flex list-none flex-col gap-3 p-0">
                 {related.map((item) => (
                   <li key={item.slug}>
                     <Link

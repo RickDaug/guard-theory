@@ -38,7 +38,16 @@ export default function SizeAndFitPage() {
             Size chart
           </h2>
 
-          <div className="max-w-[70rem] overflow-x-auto">
+          {/* The table is wider than a phone, so this box scrolls sideways — and
+              a box that scrolls has to be reachable, or a keyboard user cannot
+              get to the sleeve columns at all (SC 2.1.1). Focusable, named, and
+              a region so the name is announced. */}
+          <div
+            role="region"
+            aria-labelledby="chart"
+            tabIndex={0}
+            className="max-w-[70rem] overflow-x-auto"
+          >
             <table className="w-full min-w-[44rem] border-collapse text-left">
               <caption className="sr-only">
                 Guard Theory size chart. To fit chest in inches and centimetres,

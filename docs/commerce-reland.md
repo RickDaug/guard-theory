@@ -1,8 +1,17 @@
 # Commerce, re-landed
 
-**Branch:** `feat/commerce-reland`, cut from `feat/mail`. **Not merged.** Merging
-to `main` deploys to guardtheory.net, so nothing below is optional ordering —
-see "Before merging".
+**Landed 2026-09-24.** PR #3 merged to `main` as `0dd9f49` and guardtheory.net
+serves it. Migrations 0003, 0004, 0006 and 0007 were applied and the two
+products seeded as drafts before the merge; `CRON_SECRET` and the backup
+secrets are set. Stripe, Shippo and the portal password are still the owner's —
+`docs/owner-checklist.md` is the live list of what is done and what is next,
+and `docs/provisioning.md` has the state of each tier. The rest of this file is
+the record of what the re-land changed and how it was verified, kept as
+written.
+
+**Branch:** `feat/commerce-reland`, cut from `feat/mail`. Merging to `main`
+deploys to guardtheory.net, which is why "Before merging" below was ordered the
+way it was.
 
 The commerce build was squash-merged as `d166df9` and reverted in `970d52c`
 because production had no database. This branch reverts the revert and

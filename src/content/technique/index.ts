@@ -5,6 +5,7 @@ import {
   type TechniqueReview,
 } from "./types.ts";
 import { armDrag } from "./entries/arm-drag.ts";
+import { armbarIsHipToShoulderDistance } from "./entries/armbar-is-hip-to-shoulder-distance.ts";
 import { bloodChokeVersusAirChoke } from "./entries/blood-choke-versus-air-choke.ts";
 import { butterflyHookAsLever } from "./entries/butterfly-hook-as-lever.ts";
 import { closedGuardPostureBattle } from "./entries/closed-guard-posture-battle.ts";
@@ -13,12 +14,16 @@ import { deLaRivaHook } from "./entries/de-la-riva-hook.ts";
 import { elbowKneeEscape } from "./entries/elbow-knee-escape.ts";
 import { framesVersusBlocks } from "./entries/frames-versus-blocks.ts";
 import { gettingHipsUnderneath } from "./entries/getting-hips-underneath.ts";
+import { guillotineIsABrokenPosture } from "./entries/guillotine-is-a-broken-posture.ts";
+import { headAndArmStrangles } from "./entries/head-and-arm-strangles.ts";
 import { insidePosition } from "./entries/inside-position.ts";
+import { kimuraIsAGripFirst } from "./entries/kimura-is-a-grip-first.ts";
 import { kneeCutPass } from "./entries/knee-cut-pass.ts";
 import { kneeShield } from "./entries/knee-shield.ts";
 import { legEntanglementAsControl } from "./entries/leg-entanglement-as-control.ts";
 import { seatBeltAndHooks } from "./entries/seat-belt-and-hooks.ts";
 import { sweepingTowardTheMissingPost } from "./entries/sweeping-toward-the-missing-post.ts";
+import { triangleClosesAtTheShoulder } from "./entries/triangle-closes-at-the-shoulder.ts";
 import { underhookHalfGuard } from "./entries/underhook-half-guard.ts";
 
 /**
@@ -28,6 +33,7 @@ import { underhookHalfGuard } from "./entries/underhook-half-guard.ts";
  */
 export const ENTRIES: TechniqueEntry[] = [
   armDrag,
+  armbarIsHipToShoulderDistance,
   bloodChokeVersusAirChoke,
   butterflyHookAsLever,
   closedGuardPostureBattle,
@@ -36,12 +42,16 @@ export const ENTRIES: TechniqueEntry[] = [
   elbowKneeEscape,
   framesVersusBlocks,
   gettingHipsUnderneath,
+  guillotineIsABrokenPosture,
+  headAndArmStrangles,
   insidePosition,
+  kimuraIsAGripFirst,
   kneeCutPass,
   kneeShield,
   legEntanglementAsControl,
   seatBeltAndHooks,
   sweepingTowardTheMissingPost,
+  triangleClosesAtTheShoulder,
   underhookHalfGuard,
 ];
 

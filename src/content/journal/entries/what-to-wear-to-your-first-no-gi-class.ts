@@ -1,9 +1,9 @@
 import type { DraftArticle } from "../types.ts";
 
 /**
- * The piece where the honest answer is "nothing, yet", written by a site that
- * sells rash guards. The brief is explicit that this is the point, and that
- * there is no link to the First Edition from here.
+ * The piece where the honest answer is "nothing, yet", written by a rash guard
+ * brand. The brief is explicit that this is the point, and that there is no
+ * link to the First Edition from here.
  *
  * Every rule in it belongs to somebody: four academies whose published policies
  * were read on the accessed date, and two competition rulesets. The academies
@@ -28,8 +28,8 @@ export const whatToWearToYourFirstNoGiClass: DraftArticle = {
       id: "what-you-probably-already-own",
       heading: "What you probably already own",
       paragraphs: [
-        "The short answer, for a first class, is a T-shirt and a pair of athletic shorts, and you very likely have both. That is not our opinion. It is what academies say when they write it down. Crossover BJJ's FAQ tells a new student to \"wear comfortable, workout style clothing, and bring something to drink\", and says that in no-gi classes students \"typically wear Shorts and a T-Shirt\". Mile High Gracie Jiu-Jitsu, whose equipment page is otherwise detailed, notes twice that new students are not required to have all the equipment for their first few classes and can wear basic athletic attire. 10th Planet Airlock, a no-gi-only school, puts it most plainly: \"No uniform. No special gear. Nothing to buy before you walk in.\" It adds that a regular cotton T-shirt is fine for day one.",
-        "We sell rash guards, so it is worth being direct about this. You do not need one to find out whether you like grappling. A fitted top moves around less than a cotton T-shirt, and the third section of this piece says what that means, but a first class is a test of whether you want a second one. Buy nothing until you know.",
+        "The short answer, for a first class, is a T-shirt and a pair of athletic shorts, and you very likely have both. That is not our opinion. It is what academies say when they write it down. Crossover BJJ's FAQ tells a new student to \"wear comfortable, workout style clothing, and bring something to drink\", and says that in no-gi classes students \"typically wear Shorts and a T-Shirt\". Mile High Gracie Jiu-Jitsu, whose equipment page is otherwise detailed, notes twice that new students are not required to have all the equipment for their first few classes and can wear basic athletic attire. 10th Planet Airlock puts it most plainly: \"No uniform. No special gear. Nothing to buy before you walk in.\" It adds that a regular cotton T-shirt is fine for day one.",
+        "We make rash guards, so it is worth being direct about this. You do not need one to find out whether you like grappling. A fitted top moves around less than a cotton T-shirt, and the third section of this piece says what that means, but a first class is a test of whether you want a second one. Buy nothing until you know.",
         "We chose those academies, and the fourth one below, because their policies are published where anybody can read them and because they do not agree with each other. They are four rooms, not a survey, and nothing here says how common any of their rules is.",
       ],
     },
@@ -54,10 +54,10 @@ export const whatToWearToYourFirstNoGiClass: DraftArticle = {
     },
     {
       id: "shorts-and-spats",
-      heading: "Shorts, spats and the question nobody asks out loud",
+      heading: "Shorts, spats and groin protection",
       paragraphs: [
         "Spats are full-length compression leggings. Whether you can wear them on their own depends on the room, and this is one of the places the published policies split. Mile High's page says, in capitals, that males must wear shorts on top of spats or tights. City Jiu Jitsu Academy's no-gi uniform is black shorts with black compression pants underneath. Airlock lists shorts or leggings for a first class, and elsewhere on the page describes spats as worn under shorts. The IBJJF's competition clause is asymmetrical in the same way: compression shorts are permitted for men beneath the shorts, while women may wear shorts, compression pants or compression shorts. If you are unsure, wear shorts over whatever else you have on, because no policy we read objects to that.",
-        "The question nobody asks out loud is about groin protection, and the honest answer is that there is no general rule. The IBJJF forbids cups in competition: clause 8.3.7 bans \"cups (genital protectors), or any other protector fashioned of hard material that may cause harm to an opponent or the athlete him/herself\". The ADCC's published rules do not mention them at all. None of the four academy pages we read mentions them either. So this is a question for the gym, and a routine one.",
+        "On groin protection there is no general rule. The IBJJF forbids cups in competition: clause 8.3.7 bans \"cups (genital protectors), or any other protector fashioned of hard material that may cause harm to an opponent or the athlete him/herself\". The ADCC's published rules do not mention them at all. None of the four academy pages we read mentions them either. So this is a question for the gym, and a routine one.",
         "On underwear the IBJJF is specific, requiring brief-type undergarments at all competitions under 8.3.10. For a first class the practical version is simply to wear something supportive under your shorts that you are comfortable moving in.",
       ],
     },

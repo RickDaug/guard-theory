@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useActionState, useEffect, useRef } from "react";
 import { Button } from "@/components/ui/Button";
 import { SelectField, TextAreaField, TextField } from "@/components/ui/Field";
@@ -75,9 +76,24 @@ export function ContactForm() {
           Message received
         </h2>
         <p className="mt-6 max-w-[34rem] text-base text-steel">
-          A person reads every message. If you asked about sizing or an order,
-          you will get a specific answer rather than a link back to this page.
+          A person reads every message. If you asked about sizing, you will
+          get a specific answer rather than a link back to this page.
         </p>
+
+        {/* Somewhere to go. The form is gone and this panel replaced it, so
+            without these the page ends here. */}
+        <ul role="list" className="m-0 mt-8 flex list-none flex-wrap gap-x-8 gap-y-2 p-0">
+          <li>
+            <Link href="/journal" className="display-plain inline-flex min-h-6 items-center text-sm text-chalk underline decoration-steel-dim underline-offset-[6px] transition-colors duration-[140ms] ease-[var(--ease-control)] hover:decoration-signal-lift">
+              Read the Journal
+            </Link>
+          </li>
+          <li>
+            <Link href="/technique" className="display-plain inline-flex min-h-6 items-center text-sm text-chalk underline decoration-steel-dim underline-offset-[6px] transition-colors duration-[140ms] ease-[var(--ease-control)] hover:decoration-signal-lift">
+              Browse the Technique Library
+            </Link>
+          </li>
+        </ul>
       </div>
     );
   }

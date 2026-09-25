@@ -1,8 +1,14 @@
-import { CATEGORIES as TECHNIQUE_CATEGORIES, ENTRIES } from "@/content/technique";
-import { PRODUCTS } from "@/content/products";
-import { POLICIES } from "@/content/policies";
-import { ARTICLES } from "@/content/journal";
-import { FIGURES } from "@/content/figures";
+// Relative, with extensions, and not "@/content/…": tests/unit/claims.test.ts
+// builds this index under `node --test`, which resolves no path aliases, to
+// hold the search page to its claim that everything on the site is in it.
+import {
+  CATEGORIES as TECHNIQUE_CATEGORIES,
+  ENTRIES,
+} from "../../content/technique/index.ts";
+import { PRODUCTS } from "../../content/products/index.ts";
+import { POLICIES } from "../../content/policies/index.ts";
+import { ARTICLES } from "../../content/journal/index.ts";
+import { FIGURES } from "../../content/figures/index.ts";
 import type { SearchDocument } from "./types.ts";
 
 export type { SearchDocument, SearchKind } from "./types.ts";

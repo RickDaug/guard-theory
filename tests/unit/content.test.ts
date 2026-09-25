@@ -419,6 +419,37 @@ describe("editorial voice", () => {
  * over-long description is not an error, not a build failure and not a ranking
  * penalty — it is simply a sentence the reader never sees the end of.
  */
+/**
+ * A results page cuts a title at about 60 characters, and the layout's template
+ * spends 15 of them on " · Guard Theory". Six headlines ran to 62-76 and lost
+ * their ends. The headline is not shortened to fit — it carries a `metaTitle`.
+ */
+describe("article titles fit a results page", () => {
+  const SUFFIX = " · Guard Theory";
+  const LIMIT = 60;
+
+  it("keeps every rendered <title> within the limit", () => {
+    for (const article of ARTICLES) {
+      const rendered = (article.metaTitle ?? article.title) + SUFFIX;
+      assert.ok(
+        rendered.length <= LIMIT,
+        `journal/${article.slug} renders a ${rendered.length}-character title, over the ` +
+          `${LIMIT} a results page shows. Give it a metaTitle; leave the headline alone.`,
+      );
+    }
+  });
+
+  it("does not carry a metaTitle that changes nothing", () => {
+    for (const article of ARTICLES) {
+      if (article.metaTitle === undefined) continue;
+      assert.ok(
+        article.metaTitle.length < article.title.length,
+        `journal/${article.slug} has a metaTitle no shorter than its headline — delete it`,
+      );
+    }
+  });
+});
+
 describe("meta descriptions fit what search and social display", () => {
   const LIMIT = 160;
 

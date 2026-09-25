@@ -14,7 +14,7 @@ export default function FormErrorPage() {
       tone="alert"
       title={
         <>
-          That did not
+          That did not{" "}
           <br />
           go through
         </>

@@ -17,6 +17,7 @@ export const theTriangleAndTheAngle: PublishedArticle = {
   slug: "the-triangle-and-the-angle",
   category: "technique-notes",
   title: "The triangle, and why the angle matters more than the squeeze",
+  metaTitle: "The triangle: angle over squeeze",
   standfirst:
     "A triangle that will not finish is almost never a triangle that needs more effort; it is a triangle applied along the wrong line.",
   sections: [

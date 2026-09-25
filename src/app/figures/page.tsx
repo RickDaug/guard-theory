@@ -1,5 +1,7 @@
+import { serializeJsonLd } from "@/lib/json-ld";
 import type { Metadata } from "next";
 import { SectionCrossNav } from "@/components/content/SectionCrossNav";
+import { SECTION_DESCRIPTIONS } from "@/content/section-descriptions";
 import { pageMetadata } from "@/lib/metadata";
 import Image from "next/image";
 import Link from "next/link";
@@ -9,7 +11,7 @@ import { absoluteUrl } from "@/lib/site";
 
 export const metadata: Metadata = pageMetadata({
   title: "Influential figures",
-  description: "People whose work changed jiu-jitsu, in alphabetical order, with sources. An index of contributions, not a ranking.",
+  description: SECTION_DESCRIPTIONS.figure,
   path: "/figures",
 });
 
@@ -35,7 +37,7 @@ export default function FiguresPage() {
   };
 
   return (
-    <main id="main" className="px-6 py-16 md:px-12">
+    <main id="main" tabIndex={-1} className="px-6 py-16 md:px-12">
       <div className="mx-auto max-w-[104rem]">
         <Breadcrumbs trail={[{ href: "/figures", label: "Influential figures" }]} />
 
@@ -61,6 +63,8 @@ export default function FiguresPage() {
               <Link
                 prefetch={false}
                 href={`/figures/${figure.slug}`}
+                aria-labelledby={`figure-${figure.slug}-title`}
+                aria-describedby={`figure-${figure.slug}-summary`}
                 className="group flex h-full flex-col no-underline transition-colors duration-[140ms] ease-[var(--ease-control)] hover:bg-ink-raised"
               >
                 <div className="relative aspect-4/5 w-full overflow-hidden bg-graphite">
@@ -69,7 +73,9 @@ export default function FiguresPage() {
                       src={figure.image.src}
                       alt={figure.image.alt}
                       fill
-                      sizes="(min-width: 1024px) 33vw, (min-width: 640px) 50vw, 100vw"
+                      // Capped where the 104rem container stops growing: a
+                      // third of it, less the gaps, is 507px.
+                      sizes="(min-width: 1760px) 507px, (min-width: 1024px) 33vw, (min-width: 640px) 50vw, 100vw"
                       className="object-cover object-top grayscale transition-[filter] duration-[420ms] ease-[var(--ease-control)] group-hover:grayscale-0"
                     />
                   ) : (
@@ -87,10 +93,10 @@ export default function FiguresPage() {
                       {figure.lifespan}
                     </span>
                   ) : null}
-                  <h2 className="display-condensed mt-4 text-xl text-chalk transition-colors duration-[140ms] ease-[var(--ease-control)] group-hover:text-signal-lift">
+                  <h2 id={`figure-${figure.slug}-title`} className="display-condensed mt-4 text-xl text-chalk transition-colors duration-[140ms] ease-[var(--ease-control)] group-hover:text-signal-lift">
                     {figure.name}
                   </h2>
-                  <p className="mt-4 grow text-sm text-steel">
+                  <p id={`figure-${figure.slug}-summary`} className="mt-4 grow text-sm text-steel">
                     {figure.standfirst}
                   </p>
                   <span className="notation mt-6 text-2xs text-steel">
@@ -107,7 +113,7 @@ export default function FiguresPage() {
 
       <script
         type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+        dangerouslySetInnerHTML={{ __html: serializeJsonLd(jsonLd) }}
       />
     </main>
   );

@@ -6,6 +6,12 @@ import { useId, useMemo, useState } from "react";
 // registry, and a client import of it drags all of them into the bundle.
 import { searchDocuments, type SearchDocument } from "@/lib/search/types";
 
+const NO_MATCH_EXITS = [
+  { href: "/technique", label: "Browse the Technique Library" },
+  { href: "/journal", label: "Read the Journal" },
+  { href: "/figures", label: "See the influential figures" },
+];
+
 /**
  * Results update as you type and are announced politely rather than assertively,
  * so a screen reader is not interrupted mid-word on every keystroke.
@@ -41,7 +47,7 @@ export function SearchClient({ index }: { index: SearchDocument[] }) {
           autoComplete="off"
           aria-describedby={statusId}
           placeholder="guard retention, rash guard, privacy…"
-          className="w-full border border-steel-dim bg-graphite px-4 py-3 text-base text-chalk placeholder:text-steel transition-colors duration-[140ms] ease-[var(--ease-control)] focus:border-signal-lift"
+          className="w-full border border-steel-mid bg-graphite px-4 py-3 text-base text-chalk placeholder:text-steel transition-colors duration-[140ms] ease-[var(--ease-control)] focus:border-signal-lift"
         />
       </div>
 
@@ -64,12 +70,21 @@ export function SearchClient({ index }: { index: SearchDocument[] }) {
             Search looks for every word you type, so fewer words usually finds
             more.
           </p>
-          <Link
-            href="/technique"
-            className="display-plain mt-6 inline-flex min-h-6 items-center text-sm text-chalk underline decoration-steel-dim underline-offset-[6px] transition-colors duration-[140ms] ease-[var(--ease-control)] hover:decoration-signal-lift"
-          >
-            Browse the Technique Library instead
-          </Link>
+          {/* Three ways on, not one. Search covers the whole site, so sending
+              everybody who misses to the Library assumed what they were
+              looking for. */}
+          <ul role="list" className="m-0 mt-6 flex list-none flex-col gap-2 p-0">
+            {NO_MATCH_EXITS.map((exit) => (
+              <li key={exit.href}>
+                <Link
+                  href={exit.href}
+                  className="display-plain inline-flex min-h-6 items-center text-sm text-chalk underline decoration-steel-dim underline-offset-[6px] transition-colors duration-[140ms] ease-[var(--ease-control)] hover:decoration-signal-lift"
+                >
+                  {exit.label}
+                </Link>
+              </li>
+            ))}
+          </ul>
         </div>
       ) : null}
 

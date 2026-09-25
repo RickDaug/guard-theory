@@ -132,7 +132,11 @@ export function GuardSystemMap() {
         reference="FIG. 01 / REV A"
       >
         {/* Transitions. Drawn before the rings so the rings sit on top. */}
-        <g strokeWidth={2}>
+        {/* Weight as well as colour, on the connectors as on the rings: the
+            accessibility statement says no active state is carried by colour
+            alone, and for a while these lines changed colour and nothing else.
+            tests/unit/claims.test.ts holds the two together. */}
+        <g>
           {EDGES.map(([from, to]) => {
             const a = byCode.get(from);
             const b = byCode.get(to);
@@ -146,7 +150,8 @@ export function GuardSystemMap() {
                 x2={b.x}
                 y2={b.y}
                 stroke={live ? "var(--color-signal-lift)" : "var(--color-steel-dim)"}
-                className="transition-[stroke] duration-[140ms] ease-[var(--ease-control)]"
+                strokeWidth={live ? 3 : 2}
+                className="transition-[stroke,stroke-width] duration-[140ms] ease-[var(--ease-control)]"
               />
             );
           })}
@@ -196,15 +201,20 @@ export function GuardSystemMap() {
             const live = activeCode === family.code;
             return (
               <li key={family.code}>
+                {/* One channel, not three. This button used to be described by
+                    the caption, which is also a live region, and to report
+                    itself `pressed` whenever it was merely focused — so a
+                    screen reader heard the definition twice and a state that
+                    was not one, and the first click after focus un-pressed it.
+                    The live region alone announces the definition; the button
+                    shows it, and does nothing else. */}
                 <button
                   type="button"
-                  aria-describedby={captionId}
-                  aria-pressed={live}
                   onMouseEnter={() => setActiveCode(family.code)}
                   onMouseLeave={() => setActiveCode(null)}
                   onFocus={() => setActiveCode(family.code)}
                   onBlur={() => setActiveCode(null)}
-                  onClick={() => setActiveCode(live ? null : family.code)}
+                  onClick={() => setActiveCode(family.code)}
                   className={`notation inline-flex min-h-[24px] items-center gap-x-1.5 text-xs transition-colors duration-[140ms] ease-[var(--ease-control)] ${
                     live ? "text-signal-lift" : "text-steel hover:text-chalk"
                   }`}
@@ -235,8 +245,8 @@ export function GuardSystemMap() {
             </>
           ) : (
             <>
-              Five families, one structure. Hover or tab through the key to read
-              what each one is and which others it connects to.
+              Five families, one structure. Hover, tap or tab through the key
+              to read what each one is and which others it connects to.
             </>
           )}
         </p>

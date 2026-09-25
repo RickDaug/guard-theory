@@ -1,5 +1,11 @@
 import type { Metadata } from "next";
 import { SectionCrossNav } from "@/components/content/SectionCrossNav";
+import {
+  SECTION_DESCRIPTIONS,
+  TECHNIQUE_AREA_COUNT,
+  capitalise,
+  numberWord,
+} from "@/content/section-descriptions";
 import { pageMetadata } from "@/lib/metadata";
 import Link from "next/link";
 import { Breadcrumbs } from "@/components/site/Breadcrumbs";
@@ -8,13 +14,13 @@ import { COACH_DISCLAIMER } from "@/content/technique/types";
 
 export const metadata: Metadata = pageMetadata({
   title: "Technique Library",
-  description: "A concepts library for no-gi grappling, organised by the twelve areas of the game. Mechanics, common errors and safety notes for each.",
+  description: SECTION_DESCRIPTIONS.technique,
   path: "/technique",
 });
 
 export default function TechniqueIndexPage() {
   return (
-    <main id="main" className="px-6 py-16 md:px-12">
+    <main id="main" tabIndex={-1} className="px-6 py-16 md:px-12">
       <div className="mx-auto max-w-[104rem]">
         <Breadcrumbs trail={[{ href: "/technique", label: "Technique Library" }]} />
 
@@ -23,8 +29,8 @@ export default function TechniqueIndexPage() {
             Technique Library
           </h1>
           <p className="mt-8 text-lg text-steel">
-            Twelve areas of the game, written as concepts rather than move lists.
-            Each entry states the problem it addresses, the mechanics that do the
+            {capitalise(numberWord(TECHNIQUE_AREA_COUNT))} areas of the game,
+            written as concepts rather than move lists. Each entry states the problem it addresses, the mechanics that do the
             work, the errors that undo them, and the specific risk it carries.
           </p>
           <p className="mt-6 text-base text-steel">{COACH_DISCLAIMER}</p>
@@ -38,12 +44,14 @@ export default function TechniqueIndexPage() {
                 <Link
                   prefetch={false}
                   href={`/technique/${category.slug}`}
+                  aria-labelledby={`category-${category.slug}-title`}
+                  aria-describedby={`category-${category.slug}-summary`}
                   className="group flex h-full flex-col p-8 no-underline transition-colors duration-[140ms] ease-[var(--ease-control)] hover:bg-ink-raised"
                 >
-                  <h2 className="display-condensed text-xl text-chalk transition-colors duration-[140ms] ease-[var(--ease-control)] group-hover:text-signal-lift">
+                  <h2 id={`category-${category.slug}-title`} className="display-condensed text-xl text-chalk transition-colors duration-[140ms] ease-[var(--ease-control)] group-hover:text-signal-lift">
                     {category.name}
                   </h2>
-                  <p className="mt-4 text-sm text-steel">{category.summary}</p>
+                  <p id={`category-${category.slug}-summary`} className="mt-4 text-sm text-steel">{category.summary}</p>
                   <span className="notation mt-8 text-2xs text-steel">
                     {entries.length === 1
                       ? "1 entry"

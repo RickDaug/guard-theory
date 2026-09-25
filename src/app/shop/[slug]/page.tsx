@@ -9,6 +9,16 @@ import { pageMetadata } from "@/lib/metadata";
 
 type Params = { params: Promise<{ slug: string }> };
 
+/**
+ * An unknown slug is a real 404 page — see journal/[slug]/page.tsx.
+ *
+ * This holds only while PRODUCTS is a build-time registry. The commerce branch
+ * makes this route database-driven, and a product added after the build would
+ * then 404 for ever. When that lands, this line has to go and the route has to
+ * produce a whole 404 document some other way.
+ */
+export const dynamicParams = false;
+
 export function generateStaticParams() {
   return PRODUCTS.map((product) => ({ slug: product.slug }));
 }
@@ -41,7 +51,7 @@ export default async function ProductPage({ params }: Params) {
   const other = PRODUCTS.filter((p) => p.slug !== product.slug);
 
   return (
-    <main id="main" className="px-6 py-16 md:px-12">
+    <main id="main" tabIndex={-1} className="px-6 py-16 md:px-12">
       <div className="mx-auto max-w-[104rem]">
         <Breadcrumbs
           trail={[
@@ -158,7 +168,7 @@ export default async function ProductPage({ params }: Params) {
                 ))}
               </ul>
               <p className="mt-6 max-w-[34rem] text-sm text-steel">
-                Full measurements in inches and centimetres are in the{" "}
+                Full measurements are in the{" "}
                 <Link
                   href="/size-and-fit"
                   className="text-chalk underline decoration-steel-dim underline-offset-[5px] transition-colors duration-[140ms] ease-[var(--ease-control)] hover:decoration-signal-lift"

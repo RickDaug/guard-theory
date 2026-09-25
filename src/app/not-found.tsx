@@ -1,5 +1,15 @@
+import type { Metadata } from "next";
 import Link from "next/link";
 import { ButtonLink } from "@/components/ui/Button";
+
+/**
+ * Its own title. Without one a 404 inherits the layout's default, so the tab,
+ * the history entry and a screen reader's first announcement all said this was
+ * the home page.
+ */
+export const metadata: Metadata = {
+  title: "Page not found",
+};
 
 /**
  * An empty screen is an invitation to act. This one says what happened, does
@@ -8,11 +18,11 @@ import { ButtonLink } from "@/components/ui/Button";
  */
 export default function NotFound() {
   return (
-    <main id="main" className="px-6 py-24 md:px-12">
+    <main id="main" tabIndex={-1} className="px-6 py-24 md:px-12">
       <div className="mx-auto max-w-[104rem]">
         <p className="notation text-2xs text-signal-lift">Error 404</p>
         <h1 className="display-condensed mt-6 text-4xl text-chalk">
-          This page
+          This page{" "}
           <br />
           does not exist
         </h1>
@@ -26,13 +36,13 @@ export default function NotFound() {
           <ButtonLink href="/">Go to the home page</ButtonLink>
           <Link
             href="/technique"
-            className="display-plain text-sm text-chalk underline decoration-steel-dim underline-offset-[6px] transition-colors duration-[140ms] ease-[var(--ease-control)] hover:decoration-signal-lift"
+            className="display-plain inline-flex min-h-6 items-center text-sm text-chalk underline decoration-steel-dim underline-offset-[6px] transition-colors duration-[140ms] ease-[var(--ease-control)] hover:decoration-signal-lift"
           >
             Browse the Technique Library
           </Link>
           <Link
             href="/journal"
-            className="display-plain text-sm text-chalk underline decoration-steel-dim underline-offset-[6px] transition-colors duration-[140ms] ease-[var(--ease-control)] hover:decoration-signal-lift"
+            className="display-plain inline-flex min-h-6 items-center text-sm text-chalk underline decoration-steel-dim underline-offset-[6px] transition-colors duration-[140ms] ease-[var(--ease-control)] hover:decoration-signal-lift"
           >
             Read the Journal
           </Link>

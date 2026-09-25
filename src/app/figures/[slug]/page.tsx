@@ -1,3 +1,4 @@
+import { serializeJsonLd } from "@/lib/json-ld";
 import type { Metadata } from "next";
 import Image from "next/image";
 import Link from "next/link";
@@ -8,8 +9,12 @@ import { crossLinksFor } from "@/content/crosslinks";
 import { FIGURES, FIGURES_ALPHABETICAL, getFigure } from "@/content/figures";
 import { absoluteUrl } from "@/lib/site";
 import { pageMetadata } from "@/lib/metadata";
+import { lifespanDates } from "@/content/figures/lifespan";
 
 type Params = { params: Promise<{ slug: string }> };
+
+/** An unknown slug is a real 404 page — see journal/[slug]/page.tsx. */
+export const dynamicParams = false;
 
 export function generateStaticParams() {
   return FIGURES.map((figure) => ({ slug: figure.slug }));
@@ -41,6 +46,12 @@ export default async function FigurePage({ params }: Params) {
   /**
    * Person, with no award, ranking or rating properties. The index makes no
    * claim about who was best and neither does this.
+   *
+   * Birth and death years come out of the registry's own verified `lifespan`
+   * and nowhere else. There is no `sameAs`: the registry records sources
+   * ABOUT a person, not a page that IS that person, and promoting a citation
+   * to an identity claim would be inventing one. It needs its own sourced
+   * field first.
    */
   const jsonLd = {
     "@context": "https://schema.org",
@@ -48,11 +59,12 @@ export default async function FigurePage({ params }: Params) {
     "@id": absoluteUrl(`/figures/${figure.slug}#person`),
     name: figure.name,
     description: figure.metaDescription ?? figure.standfirst,
+    ...lifespanDates(figure.lifespan),
     ...(figure.image ? { image: absoluteUrl(figure.image.src) } : {}),
   };
 
   return (
-    <main id="main" className="px-6 py-16 md:px-12">
+    <main id="main" tabIndex={-1} className="px-6 py-16 md:px-12">
       <div className="mx-auto max-w-[104rem]">
         <Breadcrumbs
           trail={[
@@ -71,8 +83,16 @@ export default async function FigurePage({ params }: Params) {
                     src={figure.image.src}
                     alt={figure.image.alt}
                     fill
-                    sizes="(min-width: 1024px) 33vw, 100vw"
-                    priority
+                    // The column stops growing when the 104rem container
+                    // does: four of twelve columns is 480px from a 1760px
+                    // viewport up. Without the cap a 2560px screen was told
+                    // 33vw and fetched an 845px-wide file for a 480px box.
+                    sizes="(min-width: 1760px) 480px, (min-width: 1024px) 33vw, 100vw"
+                    // This is the LCP element. `priority` is deprecated in
+                    // Next 16 and no longer reaches the <img>; the docs say to
+                    // state these two instead.
+                    loading="eager"
+                    fetchPriority="high"
                     className="object-cover object-top"
                   />
                 </div>
@@ -82,11 +102,14 @@ export default async function FigurePage({ params }: Params) {
                   {figure.image.credit} · {figure.image.license} ·{" "}
                   <a
                     href={figure.image.sourceUrl}
-                    rel="noopener noreferrer nofollow"
+                    rel="noopener noreferrer"
                     target="_blank"
                     className="underline underline-offset-[4px]"
                   >
-                    source
+                    source{" "}
+                    <span className="sr-only">
+                      of this photograph (opens in a new tab)
+                    </span>
                   </a>
                 </figcaption>
               </figure>
@@ -136,7 +159,7 @@ export default async function FigurePage({ params }: Params) {
                   <h2 className="display-condensed text-xl text-ink">
                     Where the record is contested
                   </h2>
-                  <ul className="m-0 mt-5 flex list-none flex-col gap-4 p-0">
+                  <ul role="list" className="m-0 mt-5 flex list-none flex-col gap-4 p-0">
                     {figure.contestedNotes.map((note) => (
                       <li key={note} className="flex gap-5">
                         <span
@@ -154,7 +177,10 @@ export default async function FigurePage({ params }: Params) {
 
               <section className="mt-14 border-t border-slate/25 pt-8">
                 <h2 className="display-condensed text-xl text-ink">Sources</h2>
-                <ol className="m-0 mt-5 flex list-none flex-col gap-4 p-0">
+                <p className="mt-3 text-sm text-slate">
+                  Each source opens in a new tab.
+                </p>
+                <ol role="list" className="m-0 mt-5 flex list-none flex-col gap-4 p-0">
                   {figure.sources.map((source, index) => (
                     <li key={source.url} className="flex gap-5">
                       <span
@@ -166,11 +192,12 @@ export default async function FigurePage({ params }: Params) {
                       <span className="text-sm text-ink">
                         <a
                           href={source.url}
-                          rel="noopener noreferrer nofollow"
+                          rel="noopener noreferrer"
                           target="_blank"
                           className="underline decoration-slate/40 underline-offset-[5px] transition-colors duration-[140ms] ease-[var(--ease-control)] hover:decoration-signal-dim"
                         >
-                          {source.title}
+                          {source.title}{" "}
+                          <span className="sr-only">(opens in a new tab)</span>
                         </a>
                         <span className="block text-slate">
                           {source.publisher} · consulted {source.accessed}
@@ -187,9 +214,16 @@ export default async function FigurePage({ params }: Params) {
                 <p className="notation text-2xs text-slate">
                   <Link
                     href="/policies/editorial"
-                    className="underline underline-offset-[5px]"
+                    className="inline-flex min-h-6 items-center underline underline-offset-[5px]"
                   >
                     Editorial policy
+                  </Link>{" "}
+                  <span aria-hidden="true">·</span>{" "}
+                  <Link
+                    href="/contact"
+                    className="inline-flex min-h-6 items-center underline underline-offset-[5px]"
+                  >
+                    Found a mistake? Tell us
                   </Link>
                 </p>
               </footer>
@@ -201,7 +235,7 @@ export default async function FigurePage({ params }: Params) {
           <h2 id="more" className="display-condensed mb-8 text-2xl text-chalk">
             Others in the index
           </h2>
-          <ul className="m-0 flex list-none flex-wrap gap-x-8 gap-y-3 p-0">
+          <ul role="list" className="m-0 flex list-none flex-wrap gap-x-8 gap-y-3 p-0">
             {others.map((item) => (
               <li key={item.slug}>
                 <Link
@@ -218,7 +252,7 @@ export default async function FigurePage({ params }: Params) {
 
       <script
         type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+        dangerouslySetInnerHTML={{ __html: serializeJsonLd(jsonLd) }}
       />
     </main>
   );

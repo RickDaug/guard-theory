@@ -42,5 +42,10 @@ export const insidePosition: TechniqueEntry = {
     "Positional sparring: the same game, but the grappler who establishes inside position on both sides may then attempt one attack.",
     "Live rounds: notice, without changing anything, how often you concede inside position and how quickly you take it back.",
   ],
-  relatedSlugs: [],
+  relatedSlugs: [
+    "arm-drag",
+    "connection-in-open-guard",
+    "knee-cut-pass",
+    "underhook-half-guard",
+  ],
 };

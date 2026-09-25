@@ -3,9 +3,11 @@ import type { TechniqueEntry } from "../types.ts";
 export const sweepingTowardTheMissingPost: TechniqueEntry = {
   slug: "sweeping-toward-the-missing-post",
   category: "butterfly-guard",
-  title: "Sweeping toward the missing post",
+  title: "The butterfly sweep and the missing post",
   summary:
-    "A sweep works in the direction where the top player has nothing to put on the mat, so the work is removing a post and tipping them over it, not lifting harder.",
+    "A butterfly sweep works in the direction where the top player has nothing to put on the mat, so the work is removing a post and tipping them over it, not lifting harder.",
+  metaDescription:
+    "A butterfly sweep goes where the top player has nothing to post. Remove the post, tip them over it, then lift; lifting harder is not the answer.",
   difficulty: "Foundational",
   relevance: "Gi and no-gi",
   positionAndProblem:

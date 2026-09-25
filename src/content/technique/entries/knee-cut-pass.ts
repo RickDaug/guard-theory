@@ -7,7 +7,7 @@ export const kneeCutPass: TechniqueEntry = {
   summary:
     "Driving a knee diagonally across the opponent's thigh line to arrive chest-to-chest past their legs, and why the upper body decides whether the leg work does anything.",
   metaDescription:
-    "Driving a knee diagonally across the opponent's thigh line to arrive chest-to-chest past their legs - and why the upper body decides whether it works.",
+    "Driving a knee diagonally across the opponent's thigh line to arrive chest-to-chest past their legs, and why the upper body decides whether it works.",
   difficulty: "Foundational",
   relevance: "Gi and no-gi",
   positionAndProblem:

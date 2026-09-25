@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { CartLink } from "@/components/cart/CartLink";
 import { Monogram } from "@/components/brand/Monogram";
+import { NavLink } from "./NavLink";
 
 const NAV = [
   { href: "/shop", label: "Shop" },
@@ -26,12 +27,12 @@ export function SiteHeader() {
           <ul className="m-0 flex list-none flex-wrap items-center gap-x-8 gap-y-2 p-0">
             {NAV.map((item) => (
               <li key={item.href}>
-                <Link
+                <NavLink
                   href={item.href}
-                  className="display-plain inline-flex min-h-[24px] items-center text-sm text-steel no-underline transition-colors duration-[140ms] ease-[var(--ease-control)] hover:text-chalk"
+                  className="display-plain inline-flex min-h-[24px] items-center text-sm text-steel no-underline transition-colors duration-[140ms] ease-[var(--ease-control)] hover:text-chalk aria-[current]:text-chalk aria-[current]:underline aria-[current]:decoration-steel-mid aria-[current]:underline-offset-[6px]"
                 >
                   {item.label}
-                </Link>
+                </NavLink>
               </li>
             ))}
             {/* Appears only once there is something in the cart. */}
@@ -43,7 +44,7 @@ export function SiteHeader() {
             <li className="hidden sm:block">
               <Link
                 href="/first-edition"
-                className="display-plain border border-steel-dim px-4 py-2 text-sm text-chalk no-underline transition-colors duration-[140ms] ease-[var(--ease-control)] hover:border-signal-lift hover:text-signal-lift"
+                className="display-plain border border-steel-mid px-4 py-2 text-sm text-chalk no-underline transition-colors duration-[140ms] ease-[var(--ease-control)] hover:border-signal-lift hover:text-signal-lift"
               >
                 Join the list
               </Link>

@@ -25,8 +25,11 @@ and the split-out mail layer (`feat/mail`).
 ## Verified on this branch
 
 - `tsc --noEmit`: clean. `eslint --max-warnings 0`: clean.
-- `npm run test:unit` without a database: 189/189 (the database suites skip).
-- With a database (PGlite, seeded as CI seeds it): 203/203, none skipped.
+- `npm run test:unit` without a database: the database suites skip.
+- With a database (PGlite, seeded as CI seeds it, 2026-09-24, after the merge
+  of `fix/reaudit-2026-09` and its claims guard): 382/382, none skipped — run
+  with `--test-concurrency=1`, since PGlite takes one connection at a time
+  (AGENTS.md).
 - Migrations, both paths, on PGlite:
   - empty → 0001, 0002, 0003, 0004 apply; re-running applies nothing.
   - a database at 0002 **with existing `email_log` rows** (production's state)

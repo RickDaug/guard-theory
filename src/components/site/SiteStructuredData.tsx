@@ -1,5 +1,10 @@
-import { SITE_DESCRIPTION, SITE_NAME, absoluteUrl } from "@/lib/site";
-import { serialiseJsonLd } from "@/lib/json-ld";
+import { serializeJsonLd } from "@/lib/json-ld";
+import {
+  SITE_DESCRIPTION,
+  SITE_LANGUAGE,
+  SITE_NAME,
+  absoluteUrl,
+} from "@/lib/site";
 
 /**
  * Organization and WebSite, emitted once from the root layout.
@@ -36,7 +41,7 @@ export function SiteStructuredData() {
         url: absoluteUrl("/"),
         description: SITE_DESCRIPTION,
         publisher: { "@id": absoluteUrl("/#organization") },
-        inLanguage: "en",
+        inLanguage: SITE_LANGUAGE,
       },
     ],
   };
@@ -45,7 +50,7 @@ export function SiteStructuredData() {
     <script
       type="application/ld+json"
       // Serialised from a literal built above; no user input reaches it.
-      dangerouslySetInnerHTML={{ __html: serialiseJsonLd(graph) }}
+      dangerouslySetInnerHTML={{ __html: serializeJsonLd(graph) }}
     />
   );
 }

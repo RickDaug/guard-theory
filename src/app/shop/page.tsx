@@ -4,11 +4,12 @@ import Link from "next/link";
 import { Breadcrumbs } from "@/components/site/Breadcrumbs";
 import { ButtonLink } from "@/components/ui/Button";
 import { STATUS_LABEL } from "@/content/products";
+import { capitalise, numberWord } from "@/content/section-descriptions";
 import { effectivePriceCents, listProductViews, stockStatus } from "@/lib/catalogue";
 import { formatMoney } from "@/lib/money";
 
 export const metadata: Metadata = pageMetadata({
-  title: "Shop",
+  title: "Shop — No-gi BJJ rash guards",
   description: "What Guard Theory makes, and the published specification behind each garment — fabric, weight, seam construction and print method.",
   path: "/shop",
 });
@@ -41,7 +42,7 @@ export const dynamic = "force-dynamic";
 export default async function ShopPage() {
   const products = await listProductViews();
   return (
-    <main id="main" className="px-6 py-16 md:px-12">
+    <main id="main" tabIndex={-1} className="px-6 py-16 md:px-12">
       <div className="mx-auto max-w-[104rem]">
         <Breadcrumbs trail={[{ href: "/shop", label: "Shop" }]} />
 
@@ -49,7 +50,7 @@ export default async function ShopPage() {
           <p className="notation text-2xs text-orchid">First Edition</p>
           <h1 className="display-condensed mt-6 text-4xl text-chalk">Shop</h1>
           <p className="mt-8 text-lg text-steel">
-            Two garments. The specification is published in
+            {capitalise(numberWord(products.length))} garments. The specification is published in
             full on each page — fabric, weight, seam construction, print method
             — because that is what you are actually choosing between.
           </p>
@@ -77,6 +78,8 @@ export default async function ShopPage() {
                 <li key={product.slug} className="bg-ink">
                   <Link
                     href={`/shop/${product.slug}`}
+                    aria-labelledby={`product-${product.slug}-title`}
+                    aria-describedby={`product-${product.slug}-summary`}
                     className="group flex h-full flex-col p-8 no-underline transition-colors duration-[140ms] ease-[var(--ease-control)] hover:bg-ink-raised"
                   >
                     <span className="notation text-2xs text-steel">
@@ -86,10 +89,10 @@ export default async function ShopPage() {
                           ? "Sold out"
                           : STATUS_LABEL["coming-soon"]}
                     </span>
-                    <h3 className="display-condensed mt-5 text-xl text-chalk transition-colors duration-[140ms] ease-[var(--ease-control)] group-hover:text-signal-lift">
+                    <h3 id={`product-${product.slug}-title`} className="display-condensed mt-5 text-xl text-chalk transition-colors duration-[140ms] ease-[var(--ease-control)] group-hover:text-signal-lift">
                       {product.name} — {product.kind}
                     </h3>
-                    <p className="mt-4 max-w-[34rem] text-sm text-steel">
+                    <p id={`product-${product.slug}-summary`} className="mt-4 max-w-[34rem] text-sm text-steel">
                       {product.summary}
                     </p>
                     {/* Rendered only when the owner has entered one. A product

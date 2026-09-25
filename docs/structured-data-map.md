@@ -60,7 +60,7 @@
 | `/journal/[category]/[slug]` | `Article` (or `NewsArticle` never — we are not a news outlet), `BreadcrumbList`, `WebPage`, `Person` (author), optional `FAQPage` | See §3 for field-level rules. |
 | `/technique` | `CollectionPage`, `BreadcrumbList`, `ItemList` (of categories) | |
 | `/technique/[category]` | `CollectionPage`, `BreadcrumbList`, `ItemList` (of entries) | |
-| `/technique/[category]/[slug]` | `Article`, `BreadcrumbList`, `WebPage`, `Person` (author) | Considered and **rejected**: `HowTo`. See §7. |
+| `/technique/[category]/[slug]` | `Article`, `BreadcrumbList` | No `author` and no dates: `TechniqueEntry` carries neither, so the node states neither. Considered and **rejected**: `HowTo`. See §7. |
 | `/figures` | `CollectionPage`, `BreadcrumbList`, `ItemList` — **unordered semantics**, see §5 | |
 | `/figures/[slug]` | `ProfilePage`, `BreadcrumbList`, `Person` (the subject), `Article` (the profile text) | See §5 for the distinction between the subject `Person` and the author `Person`. |
 | `/faq` | `FAQPage`, `BreadcrumbList`, `WebPage` | |
@@ -184,6 +184,12 @@ Field notes:
 - **`author` is a `Person`, never the `Organization`.** "Guard Theory" as an author is exactly the
   anonymity signal we are trying to avoid. Every article has a named human with a real bio on
   `/about`, linked by `@id`. If a piece has two authors, use an array of `Person`.
+- As built (2026-09): `/about` does not describe the authors, so `author` carries a fragment
+  `@id` (`/#author-<id>`) that makes one node of the same person across articles, and **no `url`**.
+  Add the `url` when a page that describes them exists, not before.
+- As built: `image` is the share card every page already declares as `og:image`
+  (`SHARE_IMAGE_OBJECT` in `src/lib/metadata.ts`). It is the page's image, not a picture of the
+  subject. Replace it per article when articles have real imagery.
 - `author.url` must resolve to a page describing that person. Until per-author pages exist, point
   at `/about` and use a fragment `@id`. Do not create thin author pages just to have a URL
   (`seo-strategy.md` §5).

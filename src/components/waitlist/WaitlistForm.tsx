@@ -124,8 +124,23 @@ export function WaitlistForm() {
         <p className="mt-6 max-w-[34rem] text-base text-steel">
           {state.alreadyOnList
             ? "This address was already registered, so nothing has changed. You will hear from us once, when the First Edition opens."
-            : "You will hear from us once, when the First Edition opens. No newsletter, no drip sequence. Every message includes a one-click unsubscribe."}
+            : "You will hear from us once, when the First Edition opens. No newsletter, no drip sequence. Every message to the list includes a one-click unsubscribe."}
         </p>
+
+        {/* Somewhere to go. The form is gone and this panel replaced it, so
+            without these the page ends here. */}
+        <ul role="list" className="m-0 mt-8 flex list-none flex-wrap gap-x-8 gap-y-2 p-0">
+          <li>
+            <Link href="/journal" className="display-plain inline-flex min-h-6 items-center text-sm text-chalk underline decoration-steel-dim underline-offset-[6px] transition-colors duration-[140ms] ease-[var(--ease-control)] hover:decoration-signal-lift">
+              Read the Journal
+            </Link>
+          </li>
+          <li>
+            <Link href="/technique" className="display-plain inline-flex min-h-6 items-center text-sm text-chalk underline decoration-steel-dim underline-offset-[6px] transition-colors duration-[140ms] ease-[var(--ease-control)] hover:decoration-signal-lift">
+              Browse the Technique Library
+            </Link>
+          </li>
+        </ul>
       </div>
     );
   }

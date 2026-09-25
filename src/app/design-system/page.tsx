@@ -59,7 +59,7 @@ function Section({
 
 export default function DesignSystemPage() {
   return (
-    <main id="main" className="px-6 py-20 md:px-12">
+    <main id="main" tabIndex={-1} className="px-6 py-20 md:px-12">
       <div className="mx-auto max-w-[84rem]">
         <header className="mb-20">
           <p className="notation mb-5 text-2xs text-orchid">

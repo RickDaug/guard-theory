@@ -14,7 +14,7 @@ export default function MaintenancePage() {
       tone="alert"
       title={
         <>
-          Down for
+          Down for{" "}
           <br />
           maintenance
         </>

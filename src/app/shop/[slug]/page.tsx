@@ -15,7 +15,7 @@ import {
 import { toDecimalString } from "@/lib/money";
 import { absoluteUrl } from "@/lib/site";
 import { pageMetadata } from "@/lib/metadata";
-import { serialiseJsonLd } from "@/lib/json-ld";
+import { serializeJsonLd } from "@/lib/json-ld";
 
 type Params = { params: Promise<{ slug: string }> };
 
@@ -61,7 +61,7 @@ export default async function ProductPage({ params }: Params) {
   const other = PRODUCTS.filter((p) => p.slug !== product.slug);
 
   return (
-    <main id="main" className="px-6 py-16 md:px-12">
+    <main id="main" tabIndex={-1} className="px-6 py-16 md:px-12">
       <div className="mx-auto max-w-[104rem]">
         {showOffer && priceCents !== null && product.commerce ? (
           <script
@@ -70,7 +70,7 @@ export default async function ProductPage({ params }: Params) {
             // apply to it. Emitted only when hasPublishableOffer() is true, so
             // every value below is one the owner entered.
             dangerouslySetInnerHTML={{
-              __html: serialiseJsonLd({
+              __html: serializeJsonLd({
                 "@context": "https://schema.org",
                 "@type": "Product",
                 name: `${product.name} — ${product.kind}`,
@@ -220,7 +220,7 @@ export default async function ProductPage({ params }: Params) {
                 ))}
               </ul>
               <p className="mt-6 max-w-[34rem] text-sm text-steel">
-                Full measurements in inches and centimetres are in the{" "}
+                Full measurements are in the{" "}
                 <Link
                   href="/size-and-fit"
                   className="text-chalk underline decoration-steel-dim underline-offset-[5px] transition-colors duration-[140ms] ease-[var(--ease-control)] hover:decoration-signal-lift"

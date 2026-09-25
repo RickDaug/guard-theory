@@ -189,3 +189,35 @@ basket" in a cookie (the cart is local storage on our own origin).
 **Needed:** an answer per row. Line numbers are as of the commit that added this
 section; search for the quoted words if they have drifted.
 **Interim behaviour:** the figures stand as published.
+
+## 13. Promises about process that nothing in the build carries out
+
+Found by the claims sweep (2026-09-18). These are sentences about what *we will
+do* — keep, delete, read, reply, correct — as opposed to what the site *is*. A
+test can check that a size chart exists; it cannot check that somebody reads
+the inbox. Each of these is true only if you are doing it by hand, so each needs
+a yes, a different promise, or a cut. **Nothing here was changed.**
+
+(Numbered 13 because `feat/commerce-reland` adds a §12 on fulfilment and returns
+figures. The two sections do not overlap.)
+
+| # | What the site says | Where | What the build does | Your call |
+|---|---|---|---|---|
+| a | Waitlist details are "kept until the First Edition has been released and you have been told, or until you ask us to delete them" | `src/content/policies/index.ts:74`, and the privacy meta description at `:43` | Nothing deletes a row, on release or ever. `unsubscribed_at` is set on unsubscribe; the row, with name and email, stays. | decide a retention period and whether unsubscribing deletes; then it gets built |
+| b | "Ask and we will tell you exactly what we hold about you, correct it, or delete it" | `src/content/policies/index.ts:81`; `src/components/waitlist/WaitlistForm.tsx:221` | The only way to ask is the contact form. There is no export or delete tool: it is SQL by hand against `waitlist_signup`, `contact_message` and `email_log` — and `email_log` keeps the address of everyone mailed, with no link back to the signup row. | confirm you will do this by hand, and say whether the send log is deleted with the signup |
+| c | Contact messages are "kept while we deal with them and for as long afterwards as we need to answer a follow-up" | `src/content/policies/index.ts:74` | Kept indefinitely. | decide a period, or confirm the wording is as specific as you want it |
+| d | "A person reads every message", and "answers it specifically" | `src/app/contact/page.tsx:9`, `:25`; `src/components/contact/ContactForm.tsx:78` | A message is a row in `contact_message`. Nothing notifies anyone that it arrived, and on `main` there is no screen that shows it. | confirm someone is checking the table, or have messages forwarded by email now that Resend is connected |
+| e | The optional waitlist answers "exist so the first production run is split sensibly between sleeve lengths rather than guessed at" | `src/content/policies/index.ts:58` | Stored; nothing reads them. In August you removed the size question because a brand surveying the public on what to produce reads as undecided (§5) — this sentence gives that same reason for the questions that stayed. The sweep removed the word "sizes" from it, because the field is gone, and left the purpose alone. | state the purpose you want given, or confirm this one |
+| f | "Factual errors get corrected in the piece with a dated note" | `src/app/faq/page.tsx:61` | An article can carry `updatedAt`, which is emitted as `dateModified`. There is no field for a correction note and no article has one yet, so the promise is untested. | confirm; the note field gets built the first time it is needed |
+| g | "The list is told first, and told once" / "Once, when the First Edition opens" / "One message when it opens, and nothing else" | `src/app/faq/page.tsx:17`, `:29`; `src/app/first-edition/page.tsx:67`; `src/components/waitlist/WaitlistForm.tsx:126-127`; `src/app/shop/[slug]/page.tsx:110` | Nothing sends on `main`. The draft announcement send (PR #2) skips anyone `email_log` says already has it, which is what would enforce "once" — if a second, different message is ever wanted, these sentences forbid it. | confirm one message is the promise |
+| h | Tape "comes first" among accessories; spats and shorts follow the rash guards | `src/app/faq/page.tsx:57`; `src/app/shop/page.tsx:18-26` | §11 above still lists the accessory order as undecided. | answer §11, and the copy follows |
+
+Also found, and not an owner question: `/email-confirmed` tells a visitor "that
+address is confirmed". No confirmation step exists, nothing links to the page,
+and it is excluded from robots and the sitemap — it is unreachable except by
+typing the URL. It is left in place for whoever builds double opt-in, or
+deletes the route.
+
+**Needed:** an answer per row. Line numbers are as of the commit that added this
+section; search for the quoted words if they have drifted.
+**Interim behaviour:** the sentences stand as published.

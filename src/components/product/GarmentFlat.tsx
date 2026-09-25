@@ -78,10 +78,17 @@ export function GarmentFlat({
   points,
   title,
   reference,
+  label,
 }: {
   points: ConstructionPoint[];
   title: string;
   reference: string;
+  /**
+   * What this figure is, when a page shows more than one. The caption is the
+   * key — the same list of construction points on every garment — so two flats
+   * on one page were two figures with one name.
+   */
+  label?: string;
 }) {
   const [activeCode, setActiveCode] = useState<string | null>(null);
   const captionId = useId();
@@ -90,7 +97,7 @@ export function GarmentFlat({
   const RING_R = 15;
 
   return (
-    <figure className="m-0">
+    <figure className="m-0" aria-label={label}>
       <Plate width={W} fieldHeight={FIELD_H} title={title} reference={reference}>
         {/* Garment outline */}
         <path
@@ -153,8 +160,8 @@ export function GarmentFlat({
                 x2={end[0]}
                 y2={end[1]}
                 stroke={live ? "var(--color-signal-lift)" : "var(--color-steel-dim)"}
-                strokeWidth={1.25}
-                className="transition-[stroke] duration-[140ms] ease-[var(--ease-control)]"
+                strokeWidth={live ? 2.5 : 1.25}
+                className="transition-[stroke,stroke-width] duration-[140ms] ease-[var(--ease-control)]"
               />
               <circle
                 cx={geometry.from[0]}
@@ -193,15 +200,15 @@ export function GarmentFlat({
             const live = activeCode === point.code;
             return (
               <li key={point.code}>
+                {/* One channel — see the same control in GuardSystemMap. The
+                    live region announces the note; the button only shows it. */}
                 <button
                   type="button"
-                  aria-describedby={captionId}
-                  aria-pressed={live}
                   onMouseEnter={() => setActiveCode(point.code)}
                   onMouseLeave={() => setActiveCode(null)}
                   onFocus={() => setActiveCode(point.code)}
                   onBlur={() => setActiveCode(null)}
-                  onClick={() => setActiveCode(live ? null : point.code)}
+                  onClick={() => setActiveCode(point.code)}
                   className={`notation inline-flex min-h-[24px] items-center gap-x-1.5 text-xs transition-colors duration-[140ms] ease-[var(--ease-control)] ${
                     live ? "text-signal-lift" : "text-steel hover:text-chalk"
                   }`}
@@ -225,8 +232,8 @@ export function GarmentFlat({
             </>
           ) : (
             <>
-              Front view, production flat. Hover or tab through the key to read
-              each construction point.
+              Front view, production flat. Hover, tap or tab through the key to
+              read each construction point.
             </>
           )}
         </p>

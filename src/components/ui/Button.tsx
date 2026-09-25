@@ -27,7 +27,7 @@ const INTENT: Record<Intent, string> = {
   // by this pairing.
   signal: "bg-signal px-7 py-3.5 text-chalk hover:opacity-85",
   outline:
-    "border border-steel-dim px-7 py-3.5 text-chalk hover:border-signal-lift hover:text-signal-lift",
+    "border border-steel-mid px-7 py-3.5 text-chalk hover:border-signal-lift hover:text-signal-lift",
   quiet:
     "text-chalk underline decoration-steel-dim underline-offset-[6px] hover:decoration-signal-lift",
 };

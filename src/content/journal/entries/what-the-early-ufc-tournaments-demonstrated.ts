@@ -13,6 +13,7 @@ export const whatTheEarlyUfcTournamentsDemonstrated: PublishedArticle = {
   slug: "what-the-early-ufc-tournaments-demonstrated",
   category: "mma-and-jiu-jitsu",
   title: "What the early UFC tournaments actually demonstrated",
+  metaTitle: "What the early UFC tournaments demonstrated",
   standfirst:
     "The events are cited as proof that grappling beats striking. Read the format the way you would read any other experiment and the claim they support is much narrower, and more durable, than the one they are used for.",
   metaDescription:

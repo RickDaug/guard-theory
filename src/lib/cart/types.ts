@@ -12,7 +12,7 @@
  * WHERE IT LIVES: localStorage, not a cookie.
  *
  * Deliberate, and it is a policy decision as much as a technical one. The
- * cookies policy opens "This site sets no cookies of its own", and a
+ * cookies policy opens "This site sets no cookies for readers", and a
  * cookie-backed cart would have cost that sentence. With localStorage the only
  * first-party cookie in the finished system is the admin session, which no
  * reader ever receives.

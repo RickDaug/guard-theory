@@ -22,8 +22,8 @@ export type Policy = {
   /**
    * The search-and-share description, when the summary is too short to be one.
    *
-   * These summaries are deliberately curt — "This site sets no cookies of its
-   * own." is the right sentence to print under the heading, and a 37-character
+   * These summaries are deliberately curt — "This site sets no cookies for
+   * readers." is the right sentence to print under the heading, and a 38-character
    * meta description is not a sentence a search result can use. Two jobs again:
    * the summary states the position, this one tells somebody scanning results
    * what the page will actually answer.
@@ -46,7 +46,7 @@ export const POLICIES: Policy[] = [
         id: "what-we-collect",
         heading: "What we collect",
         paragraphs: [
-          "If you join the First Edition list we collect your first name and email address, and — only if you choose to give them — how long you have been training, your preferred sleeve length, the size you expect to wear, and which products interest you.",
+          "If you join the First Edition list we collect your first name and email address, and — only if you choose to give them — how long you have been training, your preferred sleeve length, and which products interest you. We also record when you joined and that you agreed to be emailed, and when we email you we keep a record of which message was sent.",
           "If you contact us we collect your name, email address and whatever you write to us.",
           "If you place an order we collect your email address, the name and postal address the parcel is going to, and a phone number for the shipping label. We keep those with a record of what you bought, what you paid, and each email we sent you about the order. Your card details are typed into our payment provider's page, not ours. They never reach us and we do not store them.",
           "That is the entire list. We do not ask for a date of birth, and we do not ask for an address or a phone number unless something is being posted to you.",
@@ -56,7 +56,7 @@ export const POLICIES: Policy[] = [
         id: "why",
         heading: "Why we collect it",
         paragraphs: [
-          "The name and email exist so we can tell you when the First Edition is released and reply if you write to us. The optional answers exist so the first production run is split sensibly between sizes and sleeve lengths rather than guessed at. Order details exist so we can take payment, post the parcel to the right door, and answer you if something goes wrong with it.",
+          "The name and email exist so we can tell you when the First Edition is released and reply if you write to us. The optional answers exist so the first production run is split sensibly between sleeve lengths rather than guessed at. Order details exist so we can take payment, post the parcel to the right door, and answer you if something goes wrong with it.",
           "We do not build advertising profiles, we do not track you across other sites, and we do not sell your details to anyone.",
         ],
       },
@@ -236,16 +236,17 @@ export const POLICIES: Policy[] = [
   {
     slug: "cookies",
     title: "Cookies",
-    summary: "This site sets no cookies of its own.",
+    summary: "This site sets no cookies for readers.",
     metaDescription:
-      "This site sets no cookies of its own: no analytics, no advertising pixel, no consent banner. Your cart is kept in your browser. Payment is on Stripe's page.",
+      "This site sets no cookies for readers: no analytics, no advertising pixel, no consent banner. Your cart is kept in your browser. Payment is on Stripe's page.",
     sections: [
       {
         id: "what-we-set",
         heading: "What this site sets",
         paragraphs: [
-          "Nothing. There is no analytics, no advertising pixel and no consent banner, because there is nothing to consent to.",
-          "That is a design decision rather than an oversight. If we ever need a cookie, this page will say what it is and what it does, and it will not be set before you agree.",
+          "Nothing, for a reader. There is no analytics, no advertising pixel and no consent banner, because there is nothing to consent to.",
+          "The one cookie this site sets is the sign-in session for our own portal. It is set only when one of us signs in there, it expires on its own, and a reader is never given one.",
+          "That is a design decision rather than an oversight. If we ever need a cookie for readers, this page will say what it is and what it does, and it will not be set before you agree.",
         ],
       },
       {

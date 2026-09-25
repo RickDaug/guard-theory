@@ -9,17 +9,22 @@ import { bloodChokeVersusAirChoke } from "./entries/blood-choke-versus-air-choke
 import { butterflyHookAsLever } from "./entries/butterfly-hook-as-lever.ts";
 import { closedGuardPostureBattle } from "./entries/closed-guard-posture-battle.ts";
 import { connectionInOpenGuard } from "./entries/connection-in-open-guard.ts";
+import { deLaRivaBackTake } from "./entries/de-la-riva-back-take.ts";
 import { deLaRivaHook } from "./entries/de-la-riva-hook.ts";
 import { elbowKneeEscape } from "./entries/elbow-knee-escape.ts";
 import { framesVersusBlocks } from "./entries/frames-versus-blocks.ts";
 import { gettingHipsUnderneath } from "./entries/getting-hips-underneath.ts";
+import { heelHookIsRotation } from "./entries/heel-hook-is-rotation.ts";
 import { insidePosition } from "./entries/inside-position.ts";
 import { kneeCutPass } from "./entries/knee-cut-pass.ts";
 import { kneeShield } from "./entries/knee-shield.ts";
 import { legEntanglementAsControl } from "./entries/leg-entanglement-as-control.ts";
+import { noGiGripsAreOnATimer } from "./entries/no-gi-grips-are-on-a-timer.ts";
 import { seatBeltAndHooks } from "./entries/seat-belt-and-hooks.ts";
+import { singleLegForJiuJitsu } from "./entries/single-leg-for-jiu-jitsu.ts";
 import { sweepingTowardTheMissingPost } from "./entries/sweeping-toward-the-missing-post.ts";
 import { underhookHalfGuard } from "./entries/underhook-half-guard.ts";
+import { whizzerIsAnOverhookOnTheHip } from "./entries/whizzer-is-an-overhook-on-the-hip.ts";
 
 /**
  * The registry. Entries are imported explicitly rather than globbed so that the
@@ -32,17 +37,22 @@ export const ENTRIES: TechniqueEntry[] = [
   butterflyHookAsLever,
   closedGuardPostureBattle,
   connectionInOpenGuard,
+  deLaRivaBackTake,
   deLaRivaHook,
   elbowKneeEscape,
   framesVersusBlocks,
   gettingHipsUnderneath,
+  heelHookIsRotation,
   insidePosition,
   kneeCutPass,
   kneeShield,
   legEntanglementAsControl,
+  noGiGripsAreOnATimer,
   seatBeltAndHooks,
+  singleLegForJiuJitsu,
   sweepingTowardTheMissingPost,
   underhookHalfGuard,
+  whizzerIsAnOverhookOnTheHip,
 ];
 
 export const ENTRIES_BY_SLUG = new Map(ENTRIES.map((e) => [e.slug, e]));

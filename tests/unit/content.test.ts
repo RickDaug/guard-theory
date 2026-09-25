@@ -360,14 +360,53 @@ describe("editorial voice", () => {
    */
   const BANNED = BANNED_CONSTRUCTIONS;
 
+  /**
+   * Everything a reader or a crawler can see. The metaDescription is here
+   * because it was not: the sweep covered nine fields of technique copy and
+   * skipped the one field written expressly for a search result, which is the
+   * field most likely to be written in a hurry to fit 160 characters.
+   */
+  const journalCopy = (article: (typeof ARTICLES)[number]) =>
+    [
+      article.title,
+      article.metaDescription ?? "",
+      article.standfirst,
+      ...article.sections.flatMap((s) => [s.heading, ...s.paragraphs]),
+      ...article.contestedNotes,
+    ].join(" ");
+
+  const techniqueCopy = (entry: (typeof ENTRIES)[number]) =>
+    [
+      entry.title,
+      entry.summary,
+      entry.metaDescription ?? "",
+      entry.positionAndProblem,
+      entry.objective,
+      entry.coreConcept,
+      entry.safetyNote,
+      ...entry.keyMechanics,
+      ...entry.commonErrors,
+      ...entry.trainingProgression,
+    ].join(" ");
+
+  it("reads the metaDescription as copy, not metadata", () => {
+    // The guard can fail: a banned phrase that appears only in the
+    // metaDescription has to reach the text the patterns run over.
+    const [entry] = ENTRIES;
+    assert.ok(entry);
+    const planted = { ...entry, metaDescription: "It is important to note this." };
+    assert.ok(BANNED.some((pattern) => pattern.test(techniqueCopy(planted))));
+    assert.ok(!BANNED.some((pattern) => pattern.test(techniqueCopy(entry))));
+
+    const [article] = ARTICLES;
+    assert.ok(article);
+    const plantedArticle = { ...article, metaDescription: "A legendary guard." };
+    assert.ok(BANNED.some((pattern) => pattern.test(journalCopy(plantedArticle))));
+  });
+
   it("keeps banned constructions out of Journal copy", () => {
     for (const article of ARTICLES) {
-      const text = [
-        article.title,
-        article.standfirst,
-        ...article.sections.flatMap((s) => [s.heading, ...s.paragraphs]),
-        ...article.contestedNotes,
-      ].join(" ");
+      const text = journalCopy(article);
 
       for (const pattern of BANNED) {
         assert.ok(
@@ -380,17 +419,7 @@ describe("editorial voice", () => {
 
   it("keeps banned constructions out of technique copy", () => {
     for (const entry of ENTRIES) {
-      const text = [
-        entry.title,
-        entry.summary,
-        entry.positionAndProblem,
-        entry.objective,
-        entry.coreConcept,
-        entry.safetyNote,
-        ...entry.keyMechanics,
-        ...entry.commonErrors,
-        ...entry.trainingProgression,
-      ].join(" ");
+      const text = techniqueCopy(entry);
 
       for (const pattern of BANNED) {
         assert.ok(
@@ -445,6 +474,38 @@ describe("article titles fit a results page", () => {
       assert.ok(
         article.metaTitle.length < article.title.length,
         `journal/${article.slug} has a metaTitle no shorter than its headline — delete it`,
+      );
+    }
+  });
+});
+
+/**
+ * Technique entries have no metaTitle: `[slug]/page.tsx` passes `entry.title`
+ * to the same `%s · Guard Theory` template, so the title itself has to fit.
+ * The Journal check above never covered them, and the first audit found one
+ * at 42 characters — three from the cut — with nothing to say so.
+ */
+describe("technique titles fit a results page", () => {
+  const SUFFIX = " · Guard Theory";
+  const LIMIT = 60;
+  const TITLE_LIMIT = LIMIT - SUFFIX.length;
+
+  const fits = (title: string) => (title + SUFFIX).length <= LIMIT;
+
+  it("leaves 45 characters for the title", () => {
+    // The guard can fail: one character over the line is rejected.
+    assert.equal(TITLE_LIMIT, 45);
+    assert.ok(fits("x".repeat(TITLE_LIMIT)));
+    assert.ok(!fits("x".repeat(TITLE_LIMIT + 1)));
+  });
+
+  it("keeps every entry title within it", () => {
+    for (const entry of ENTRIES) {
+      assert.ok(
+        fits(entry.title),
+        `technique/${entry.slug} has a ${entry.title.length}-character title; with ` +
+          `"${SUFFIX}" appended it passes the ${LIMIT} a results page shows. ` +
+          `Keep it to ${TITLE_LIMIT}.`,
       );
     }
   });

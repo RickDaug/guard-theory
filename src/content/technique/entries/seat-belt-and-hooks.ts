@@ -9,7 +9,7 @@ export const seatBeltAndHooks: TechniqueEntry = {
   difficulty: "Foundational",
   relevance: "No-gi first",
   positionAndProblem:
-    "You have arrived behind the opponent. One arm is over a shoulder, the other under the opposite armpit, hands joined in front of their chest — the seat belt, also commonly called the harness. Your legs are somewhere around their hips. The back is the position everything else is trying to reach, and it is also the position most often lost by accident, usually while the person holding it is busy hunting a strangle and has stopped noticing that their chest has come away from their opponent's back.",
+    "You have arrived behind the opponent. One arm is over a shoulder, the other under the opposite armpit, hands joined in front of their chest — the seat belt, also commonly called the harness. Your legs are somewhere around their hips. The back is the position everything else is trying to reach, and it is also the position most often lost by accident, usually while the person holding it is busy hunting a rear naked choke and has stopped noticing that their chest has come away from their opponent's back.",
   objective:
     "Stay attached chest-to-back through the opponent's turning, so that attacks remain available rather than being raced against the clock.",
   coreConcept:

@@ -41,5 +41,10 @@ export const butterflyHookAsLever: TechniqueEntry = {
     "Positional sparring: partner may pass or stand; you must decide within a second whether to keep or remove the hooks, and the round restarts when they are past your knees.",
     "Live rounds from seated starts. Count how many sweeps came from a load you built and how many came from a lift you attempted cold.",
   ],
-  relatedSlugs: ["connection-in-open-guard", "inside-position"],
+  relatedSlugs: [
+    "connection-in-open-guard",
+    "inside-position",
+    "sweeping-toward-the-missing-post",
+    "leg-entanglement-as-control",
+  ],
 };

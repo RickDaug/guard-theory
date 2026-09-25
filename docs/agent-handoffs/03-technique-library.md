@@ -191,3 +191,65 @@ render) and `npm run test:unit` (only `tests/unit/contrast.test.ts` exists and i
 6. **Surface `COACH_DISCLAIMER` on every rendered entry.** It is exported from `types.ts` and the
    file comment says every rendered entry says so. Nothing enforces that yet; it belongs in the entry
    template, not in individual content.
+
+---
+
+## 8. Batch 2 — four second entries (2026-09-18)
+
+Four entries, each the second in its category, chosen from what the plan already asked for:
+`docs/topic-clusters.md` ("Library gaps the briefs expose") and §7.3 above.
+
+| Category | Slug | Difficulty | Relevance | Asked for by |
+| --- | --- | --- | --- | --- |
+| `half-guard` | `underhook-half-guard` | Intermediate | Gi and no-gi | §7.3; brief B10; the keyword map's "three games" |
+| `open-guard` | `de-la-riva-hook` | Intermediate | Gi and no-gi | topic-clusters gap (B4) |
+| `butterfly-guard` | `sweeping-toward-the-missing-post` | Foundational | Gi and no-gi | topic-clusters gap (B5, B9: lifting vs off-balancing) |
+| `submissions` | `leg-entanglement-as-control` | Intermediate | No-gi first | topic-clusters gap (B8, B18) |
+
+No category reaches three entries, so the category index gate (`category-gate.ts`) is unchanged.
+
+**Wiring.** All four are imported explicitly in `src/content/technique/index.ts`. `relatedSlugs`
+were added in both directions on `knee-shield`, `knee-cut-pass`, `connection-in-open-guard`,
+`getting-hips-underneath` and `butterfly-hook-as-lever`. `inside-position` is still linked to and
+still links nowhere (§5.6) — the exemplar was left alone again. Three Journal cross-links were added
+to `src/content/crosslinks.ts`, each with a basis traceable to the article's text: the de la Riva
+article ↔ `de-la-riva-hook`; the rulesets article and the guard-retention article ↔
+`leg-entanglement-as-control`.
+
+**What was checked, all on 2026-09-18.** Every page named here was opened and read; nothing is
+listed from a search snippet.
+
+- **Heel hooks and knee reaping, IBJJF.** ibjjf.com/news/new-rules-updates, read directly: valid from
+  1 January 2021 for black and brown belt adult no-gi divisions. This is the only ruleset statement
+  in the batch and it matches what the rulesets article already says from the same source.
+- **The reaping definition** (thigh behind the leg, calf over the body above the knee, foot past the
+  vertical midline, pressure on the knee from the outside) is the IBJJF rule book's wording as quoted
+  by evolve-mma.com "What Is Knee Reaping In BJJ". The rule book PDF itself was not opened; the entry
+  paraphrases and tells the reader to check the current book.
+- **Heel hook loading.** bjjdoc.com's report of Piekarski et al., *Sports Health* 2026 ("Knee Injury
+  in Competitive Brazilian Jiu Jitsu Athletes"): rotational stress on the knee ligaments, and strain
+  preceding the sensation of pressure. The paper is embargoed on PMC until 2027 and was not read, so
+  its injury-rate figures were **not used**. The entry says only that rotation arrives at the knee
+  ligaments with less warning than a straight lock — the same claim the rulesets article makes.
+- **De la Riva and the hooking knee.** thejiujitsutherapist.com (a physical therapist) names LCL
+  strain and meniscus injury for the guard player; digitsu.com "De La Riva Guard" for the hook's
+  placement, the ankle grip, the second foot, the backstep counter and the weaker no-gi ankle control. The source
+  does not describe the mechanism, so the entry describes the passer's counters mechanically and
+  names only "the outer side of the knee and the meniscus".
+- **Dogfight, whizzer, d'arce.** bjj-world.com "BJJ Dogfight Position Blueprint": the name, both
+  players on their knees, the whizzer as the standard answer to the underhook, the d'arce as the
+  standard threat.
+- **Knee line.** evolve-mma.com "The BJJ Leg Lock Escape Guide": whoever controls the knee controls
+  the escape, and freeing it is the defender's priority.
+- **Butterfly sweep direction and the base-hand post.** bjjgraph.org "Butterfly Sweep".
+
+**Cut for lack of a source.** Injury-rate figures for heel hooks (paper not readable). A sentence
+saying a de la Riva foot crossing the passer's body can count as reaping — the rule book definition
+describes a different leg path and no source was found that settled it. Which way to turn out of a
+heel hook — direction-specific escape advice does not belong in prose. No named athletes appear in
+any of the four.
+
+**No diagrams.** The entry type has no figure field and no existing entry has one.
+
+**Still open from the plan:** deep half guard (B10), a wall-specific retention entry (B6, only if it
+can be written honestly), and the rest of §7.3.

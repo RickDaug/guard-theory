@@ -45,5 +45,6 @@ export const connectionInOpenGuard: TechniqueEntry = {
     "getting-hips-underneath",
     "butterfly-hook-as-lever",
     "inside-position",
+    "de-la-riva-hook",
   ],
 };

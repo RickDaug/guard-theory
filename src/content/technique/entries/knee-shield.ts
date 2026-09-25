@@ -45,5 +45,6 @@ export const kneeShield: TechniqueEntry = {
     "frames-versus-blocks",
     "knee-cut-pass",
     "getting-hips-underneath",
+    "underhook-half-guard",
   ],
 };

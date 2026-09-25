@@ -508,6 +508,7 @@ integration; the rest you add by hand.
 | `STRIPE_APPAREL_TAX_CODE` | 3 | optional — defaults to `txcd_30021000`; owner decision | no |
 | `RESEND_API_KEY` | 4 | yes | **yes** — nothing merged reads it yet |
 | `RECEIPT_FROM_EMAIL` | 4 | yes | **yes** — nothing merged reads it yet |
+| `REPLY_TO_EMAIL` | 4 | optional — an address that has a mailbox. Every message then carries it as its reply-to, so a customer who replies reaches a person instead of a bounce. A stopgap: the real fix is a forwarder for the from-address at the mail host | no |
 | `SHIPPO_API_TOKEN` | 5 | yes | no |
 | `SHIPPO_WEBHOOK_TOKEN` | 5 | yes — a random string of your own, 32 characters or more (shorter is refused) | no |
 | `SHIP_FROM_NAME` `_STREET1` `_CITY` `_STATE` `_ZIP` | 5 | yes — all five | no |

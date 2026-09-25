@@ -1,9 +1,9 @@
+import { serializeJsonLd } from "@/lib/json-ld";
 import type { Metadata } from "next";
 import { pageMetadata } from "@/lib/metadata";
 import Link from "next/link";
 import { Breadcrumbs } from "@/components/site/Breadcrumbs";
 import { absoluteUrl } from "@/lib/site";
-import { serialiseJsonLd } from "@/lib/json-ld";
 
 export const metadata: Metadata = pageMetadata({
   title: "FAQ",
@@ -19,7 +19,7 @@ const FAQS = [
   },
   {
     q: "What will it cost?",
-    a: "The price is published on the product page. There is no introductory price that quietly becomes the real one, and no discount wheel.",
+    a: "There is no introductory price that quietly becomes the real one, and no discount wheel.",
   },
   {
     q: "Can I pre-order?",
@@ -27,19 +27,19 @@ const FAQS = [
   },
   {
     q: "How often will you email me?",
-    a: "Once, when the First Edition opens. There is no newsletter and no drip sequence. Every message carries a one-click unsubscribe.",
+    a: "Once, when the First Edition opens. There is no newsletter and no drip sequence. Every message to the list carries a one-click unsubscribe.",
   },
   {
     q: "Why are there drawings instead of photographs?",
-    a: "Because a production flat states how a garment is built and a photograph only shows how it looks. These are the drawings a factory is given — seam construction, sleeve geometry, hem. Photography sits alongside them, never instead of them.",
+    a: "Because a production flat states how a garment is built and a photograph only shows how it looks. These are the drawings a factory is given — seam construction, sleeve geometry, hem.",
   },
   {
     q: "How do I know what size I am?",
-    a: "The size and fit guide has the full chart in inches and centimetres, plus what to check when you try one on. If a garment does not match those measurements, return postage is ours both ways.",
+    a: "The size and fit guide has the full chart, plus what to check when you try one on. If a garment does not match those measurements, return postage is ours both ways.",
   },
   {
     q: "Will the rash guards be competition legal?",
-    a: "That is the design constraint we started from rather than one we work around. Specific ruleset compliance is stated on the product page, not promised in advance.",
+    a: "That is the design constraint we started from rather than one we work around.",
   },
   {
     q: "Is the Technique Library a substitute for classes?",
@@ -80,7 +80,7 @@ export default function FaqPage() {
   };
 
   return (
-    <main id="main" className="px-6 py-16 md:px-12">
+    <main id="main" tabIndex={-1} className="px-6 py-16 md:px-12">
       <div className="mx-auto max-w-[104rem]">
         <Breadcrumbs trail={[{ href: "/faq", label: "FAQ" }]} />
 
@@ -117,7 +117,7 @@ export default function FaqPage() {
 
       <script
         type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: serialiseJsonLd(jsonLd) }}
+        dangerouslySetInnerHTML={{ __html: serializeJsonLd(jsonLd) }}
       />
     </main>
   );

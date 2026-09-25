@@ -21,7 +21,7 @@ const CLAUSES = [
   },
   {
     heading: "The drawing is the truth",
-    body: "A production flat says how a garment is built. A photograph says how it looked on one day, under one light, on one body. We publish the drawing alongside the photograph, because the drawing is the part you can measure.",
+    body: "A production flat says how a garment is built. A photograph says how it looked on one day, under one light, on one body. We publish the drawing, because the drawing is the part you can measure.",
   },
   {
     heading: "Earn the citation",
@@ -35,13 +35,13 @@ const CLAUSES = [
 
 export default function ManifestoPage() {
   return (
-    <main id="main" className="px-6 py-16 md:px-12">
+    <main id="main" tabIndex={-1} className="px-6 py-16 md:px-12">
       <div className="mx-auto max-w-[104rem]">
         <Breadcrumbs trail={[{ href: "/manifesto", label: "Manifesto" }]} />
 
         <header className="mt-10 mb-20 max-w-[52rem]">
           <h1 className="display-condensed text-4xl text-chalk">
-            Great grappling
+            Great grappling{" "}
             <br />
             is not random
           </h1>

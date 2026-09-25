@@ -6,13 +6,13 @@ import { ContactForm } from "@/components/contact/ContactForm";
 export const metadata: Metadata = pageMetadata({
   title: "Contact",
   description:
-    "Questions about the First Edition, sizing, an order or something we published. A person reads every message and answers it specifically.",
+    "Questions about the First Edition, sizing, or something we published. A person reads every message and answers it specifically.",
   path: "/contact",
 });
 
 export default function ContactPage() {
   return (
-    <main id="main" className="px-6 py-16 md:px-12">
+    <main id="main" tabIndex={-1} className="px-6 py-16 md:px-12">
       <div className="mx-auto max-w-[104rem]">
         <Breadcrumbs trail={[{ href: "/contact", label: "Contact" }]} />
 
@@ -28,7 +28,7 @@ export default function ContactPage() {
 
               <p className="text-base text-steel">
                 Sizing questions get an answer with actual measurements rather
-                than a guess. Order problems get sorted rather than escalated.
+                than a guess.
               </p>
 
               <p className="text-base text-steel">

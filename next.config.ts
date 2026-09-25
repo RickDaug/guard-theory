@@ -158,7 +158,22 @@ const nextConfig: NextConfig = {
   },
 
   async headers() {
-    return [{ source: "/:path*", headers: securityHeaders }];
+    // The second lock on indexing — see `isIndexable` in src/lib/site.ts, which
+    // makes the same decision for the robots meta tag and robots.txt. A header
+    // also covers what a meta tag cannot: images, the sitemap, anything that is
+    // not HTML. Read here, at call time, rather than imported: this file is
+    // loaded before the path aliases exist.
+    const vercelEnv = process.env.VERCEL_ENV;
+    const isNonProductionDeployment = Boolean(vercelEnv) && vercelEnv !== "production";
+
+    return [
+      {
+        source: "/:path*",
+        headers: isNonProductionDeployment
+          ? [...securityHeaders, { key: "X-Robots-Tag", value: "noindex" }]
+          : securityHeaders,
+      },
+    ];
   },
 
   /**

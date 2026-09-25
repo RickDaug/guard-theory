@@ -94,6 +94,19 @@ type ArticleBase = {
   slug: string;
   category: JournalCategorySlug;
   title: string;
+  /**
+   * The `<title>`, when the headline is too long to be one.
+   *
+   * The layout appends " · Guard Theory" — 15 characters — and a results page
+   * cuts a title at about 60, so a headline over 45 loses its end to an
+   * ellipsis. The headline on the page is written to be read and stays as it
+   * is; this is the same claim in fewer words, for the tab and the result. It
+   * may drop a word. It may not say anything the headline does not.
+   *
+   * Optional. Omit it when the headline already fits — asserted either way in
+   * tests/unit/content.test.ts.
+   */
+  metaTitle?: string;
   /** One sentence. Used in listings and on the page. */
   standfirst: string;
   /**

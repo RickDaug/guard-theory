@@ -41,6 +41,10 @@
      must never carry text there. */
   --color-steel: #a499b3;
   --color-steel-dim: #534b62;
+  /* steel-mid is the border of a CONTROL — an input, a select, an outlined
+     button. steel-dim → steel, 40%: 3.1:1 on graphite and 3.9:1 on ink, where
+     steel-dim is 1.7:1 and 2.1:1 and fails SC 1.4.11. Still never text. */
+  --color-steel-mid: #7c728a;
   /* slate is secondary TEXT on the study ground — 7.8:1 on bone. */
   --color-slate: #4b4359;
   /* orchid is the annotation layer on ink — 9.9:1. */
@@ -149,6 +153,15 @@
     outline: 2px solid var(--focus-ring, var(--color-signal-lift));
     outline-offset: 3px;
     border-radius: 1px;
+  }
+
+  /* <main> takes focus only as the target of the skip link — tabindex="-1", so
+     it is never in the tab order. Without that, some browsers scroll to #main
+     and leave focus on the link, and the next Tab goes back to the header. The
+     ring is withheld here and nowhere else: main is not a control, and a ring
+     round the whole page marks nothing. */
+  main[tabindex="-1"]:focus-visible {
+    outline: none;
   }
 
   /* The study register. signal-dim is 4.9:1 on bone. */

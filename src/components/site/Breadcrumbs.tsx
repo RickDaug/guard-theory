@@ -1,6 +1,6 @@
+import { serializeJsonLd } from "@/lib/json-ld";
 import Link from "next/link";
 import { SITE_URL } from "@/lib/site";
-import { serialiseJsonLd } from "@/lib/json-ld";
 
 /**
  * Breadcrumbs and their structured data come from one source, so the trail a
@@ -91,7 +91,7 @@ export function Breadcrumbs({ trail }: { trail: Crumb[] }) {
       <script
         type="application/ld+json"
         // Serialised from a literal object built above; no user input reaches it.
-        dangerouslySetInnerHTML={{ __html: serialiseJsonLd(jsonLd) }}
+        dangerouslySetInnerHTML={{ __html: serializeJsonLd(jsonLd) }}
       />
     </>
   );

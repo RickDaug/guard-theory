@@ -6,7 +6,7 @@ import { after, describe, it } from "node:test";
 
 import { safeNextPath } from "../../src/lib/portal/routes.ts";
 import { sessionCookieName } from "../../src/lib/portal/auth.ts";
-import { serialiseJsonLd } from "../../src/lib/json-ld.ts";
+import { serializeJsonLd } from "../../src/lib/json-ld.ts";
 import {
   LOGIN_MAX_FAILURES_GLOBAL,
   LOGIN_MAX_FAILURES_PER_ADDRESS,
@@ -96,7 +96,7 @@ describe("the session cookie's name", () => {
 
 describe("structured data", () => {
   it("cannot close its own script element", () => {
-    const out = serialiseJsonLd({ name: "Theory 01 </script><script>alert(1)</script>", n: 1 });
+    const out = serializeJsonLd({ name: "Theory 01 </script><script>alert(1)</script>", n: 1 });
     assert.doesNotMatch(out, /</);
     assert.deepEqual(JSON.parse(out), {
       name: "Theory 01 </script><script>alert(1)</script>",

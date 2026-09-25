@@ -13,6 +13,7 @@ export const howNoGiRulesetsReshapedTechniqueSelection: PublishedArticle = {
   slug: "how-no-gi-rulesets-reshaped-technique-selection",
   category: "competition-analysis",
   title: "How no-gi rulesets reshaped technique selection",
+  metaTitle: "No-gi rulesets and technique selection",
   standfirst:
     "Read the IBJJF and ADCC rule books side by side and they stop looking like safety regulations and start looking like two different price lists for the same actions.",
   metaDescription:

@@ -45,5 +45,6 @@ export const gettingHipsUnderneath: TechniqueEntry = {
     "frames-versus-blocks",
     "connection-in-open-guard",
     "knee-shield",
+    "de-la-riva-hook",
   ],
 };

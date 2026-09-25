@@ -4,13 +4,17 @@ import { bloodChokeVersusAirChoke } from "./entries/blood-choke-versus-air-choke
 import { butterflyHookAsLever } from "./entries/butterfly-hook-as-lever.ts";
 import { closedGuardPostureBattle } from "./entries/closed-guard-posture-battle.ts";
 import { connectionInOpenGuard } from "./entries/connection-in-open-guard.ts";
+import { deLaRivaHook } from "./entries/de-la-riva-hook.ts";
 import { elbowKneeEscape } from "./entries/elbow-knee-escape.ts";
 import { framesVersusBlocks } from "./entries/frames-versus-blocks.ts";
 import { gettingHipsUnderneath } from "./entries/getting-hips-underneath.ts";
 import { insidePosition } from "./entries/inside-position.ts";
 import { kneeCutPass } from "./entries/knee-cut-pass.ts";
 import { kneeShield } from "./entries/knee-shield.ts";
+import { legEntanglementAsControl } from "./entries/leg-entanglement-as-control.ts";
 import { seatBeltAndHooks } from "./entries/seat-belt-and-hooks.ts";
+import { sweepingTowardTheMissingPost } from "./entries/sweeping-toward-the-missing-post.ts";
+import { underhookHalfGuard } from "./entries/underhook-half-guard.ts";
 
 /**
  * The registry. Entries are imported explicitly rather than globbed so that the
@@ -23,13 +27,17 @@ export const ENTRIES: TechniqueEntry[] = [
   butterflyHookAsLever,
   closedGuardPostureBattle,
   connectionInOpenGuard,
+  deLaRivaHook,
   elbowKneeEscape,
   framesVersusBlocks,
   gettingHipsUnderneath,
   insidePosition,
   kneeCutPass,
   kneeShield,
+  legEntanglementAsControl,
   seatBeltAndHooks,
+  sweepingTowardTheMissingPost,
+  underhookHalfGuard,
 ];
 
 export const ENTRIES_BY_SLUG = new Map(ENTRIES.map((e) => [e.slug, e]));

@@ -36,10 +36,12 @@ class ResendProvider implements MailProvider {
   // this line rather than the test.
   private readonly apiKey: string;
   private readonly from: string;
+  private readonly replyTo: string | null;
 
-  constructor(apiKey: string, from: string) {
+  constructor(apiKey: string, from: string, replyTo: string | null) {
     this.apiKey = apiKey;
     this.from = from;
+    this.replyTo = replyTo;
   }
 
   async send(email: Email): Promise<SendResult> {
@@ -52,12 +54,7 @@ class ResendProvider implements MailProvider {
           Authorization: `Bearer ${this.apiKey}`,
           "Content-Type": "application/json",
         },
-        body: JSON.stringify({
-          from: this.from,
-          to: [email.to],
-          subject: email.subject,
-          text: email.body,
-        }),
+        body: JSON.stringify(resendPayload(this.from, this.replyTo, email)),
         signal: AbortSignal.timeout(8_000),
       });
 
@@ -96,6 +93,47 @@ class LoggingProvider implements MailProvider {
   }
 }
 
+/**
+ * The body of Resend's POST. A function rather than an inline literal so the
+ * test can see exactly what is sent without a network.
+ *
+ * `reply_to` is Resend's field name. It is only present when there is an
+ * address to put in it, so a deployment without `REPLY_TO_EMAIL` sends the
+ * same bytes it always has.
+ */
+export function resendPayload(from: string, replyTo: string | null, email: Email) {
+  return {
+    from,
+    to: [email.to],
+    subject: email.subject,
+    text: email.body,
+    ...(replyTo ? { reply_to: replyTo } : {}),
+  };
+}
+
+/**
+ * `REPLY_TO_EMAIL`, when it is set and shaped like an address.
+ *
+ * The from-address has no mailbox behind it, so a customer who replies to an
+ * order email gets a bounce until a forwarder exists at the mail host. This
+ * lets the owner route replies somewhere that does exist in the meantime. It
+ * is optional, and a malformed value is dropped with a warning rather than
+ * refused: mail configuration must never be what stops an order email.
+ */
+export function readReplyTo(value: string | undefined = process.env.REPLY_TO_EMAIL): string | null {
+  const replyTo = value?.trim();
+  if (!replyTo) {
+    return null;
+  }
+  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(replyTo)) {
+    console.warn(
+      "[guard-theory] REPLY_TO_EMAIL is not an email address and was ignored; replies go to the from-address.",
+    );
+    return null;
+  }
+  return replyTo;
+}
+
 /** `s***@example.com` — enough to recognise in a log, not enough to harvest. */
 export function maskEmail(address: string): string {
   const at = address.lastIndexOf("@");
@@ -113,7 +151,8 @@ export function getMailProvider(): MailProvider {
   const apiKey = process.env.RESEND_API_KEY?.trim();
   const from = process.env.RECEIPT_FROM_EMAIL?.trim();
 
-  provider = apiKey && from ? new ResendProvider(apiKey, from) : new LoggingProvider();
+  provider =
+    apiKey && from ? new ResendProvider(apiKey, from, readReplyTo()) : new LoggingProvider();
 
   return provider;
 }

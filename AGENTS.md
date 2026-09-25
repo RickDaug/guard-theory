@@ -267,6 +267,17 @@ are listed for the owner in `docs/owner-decisions.md` §13 instead.
   while each file passes alone. `node --test --test-concurrency=1
   "tests/unit/*.test.ts"` was 382/382. CI runs a real Postgres and does not
   need the flag.
+- **`notFound()` from a per-request render is Next's empty shell, and nothing
+  in the app can change that.** A 404 with the right title and `noindex`, whose
+  `<html>` has no `lang` and whose body is drawn on hydration. The routes that
+  serve a whole 404 document never throw: `dynamicParams = false` makes the
+  router render the not-found *route*, layouts and all, from the build-time
+  manifest. Tried and ruled out for `/shop/[slug]`, whose slugs are decided at
+  request time: dropping `generateStaticParams` (no effect), a segment
+  `not-found.tsx` (a client boundary; the HTML is identical), a database lookup
+  in the proxy (src/proxy.ts says why not), and `NoFallbackError` (internal).
+  The spec records the route as expected to fail; owner-decisions §14 has the
+  choice. Reproduce with `next dev` and `curl`, not a build.
 - **After switching branches, run `npm install`.** `node_modules` belongs to
   whichever branch installed last. The commerce branch adds `stripe`; checked
   out over a tree installed from `main`, `next build` stopped at "Can't resolve

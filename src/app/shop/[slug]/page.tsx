@@ -1,11 +1,13 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
+import { cache } from "react";
+import { metadata as notFoundMetadata } from "@/app/not-found";
 import { Breadcrumbs } from "@/components/site/Breadcrumbs";
 import { ButtonLink } from "@/components/ui/Button";
 import { BuyBox } from "@/components/product/BuyBox";
 import { GarmentFlat } from "@/components/product/GarmentFlat";
-import { PRODUCTS, STATUS_LABEL, getProduct } from "@/content/products";
+import { PRODUCTS, STATUS_LABEL } from "@/content/products";
 import {
   effectivePriceCents,
   getProductView,
@@ -19,14 +21,42 @@ import { serializeJsonLd } from "@/lib/json-ld";
 
 type Params = { params: Promise<{ slug: string }> };
 
-export function generateStaticParams() {
-  return PRODUCTS.map((product) => ({ slug: product.slug }));
-}
+/*
+ * No generateStaticParams and no `dynamicParams = false` here, on purpose —
+ * and a known cost.
+ *
+ * Every other dynamic route lists its slugs at build time and refuses the
+ * rest, so an unknown slug never reaches the page: the router renders the
+ * not-found route, layouts and all, as a whole document. This route cannot.
+ * Its products come from the database at request time, and a product the
+ * owner creates in the portal has no registry entry to list, so it is rendered
+ * per request (`dynamic` below) and an unknown slug throws `notFound()` from
+ * inside the render.
+ *
+ * What Next 16.2 serves for that is a 404 with the right title and `noindex`
+ * whose body is `<html id="__next_error__">`: the not-found page is drawn once
+ * JavaScript runs, and with it off the screen is blank. There is no supported
+ * way round it for a slug decided at request time. A not-found.tsx beside this
+ * file is a client boundary and changes nothing in the HTML; the whole-document
+ * 404 is only ever the not-found route, which the router reaches by an
+ * unmatched path or by the build-time manifest; and the proxy does no database
+ * lookups (src/proxy.ts says why). tests/e2e/not-found.spec.ts records this
+ * route as the one exception, and fails the day it stops being one.
+ * docs/owner-decisions.md §14 has the choice this leaves the owner.
+ */
+
+/**
+ * One read per request. generateMetadata and the page both need the product,
+ * and without this each would query the database for it.
+ */
+const loadProduct = cache((slug: string) => getProductView(slug));
 
 export async function generateMetadata({ params }: Params): Promise<Metadata> {
   const { slug } = await params;
-  const product = getProduct(slug);
-  if (!product) return {};
+  const product = await loadProduct(slug);
+  // The not-found boundary's own title, so a mistyped address is not titled
+  // as if it were the shop.
+  if (!product) return notFoundMetadata;
 
   return pageMetadata({
     title: `${product.name} — ${product.kind}`,
@@ -52,7 +82,7 @@ export const dynamic = "force-dynamic";
 
 export default async function ProductPage({ params }: Params) {
   const { slug } = await params;
-  const product = await getProductView(slug);
+  const product = await loadProduct(slug);
   if (!product) notFound();
 
   const availability = stockStatus(product);

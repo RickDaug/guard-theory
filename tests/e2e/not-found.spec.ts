@@ -29,8 +29,29 @@ const BOGUS = [
   "/no-such-page",
 ];
 
+/**
+ * The one route that cannot meet the standard: /shop/[slug].
+ *
+ * Its products come from the database at request time, so it cannot list its
+ * slugs at build time and set `dynamicParams = false` like the others. An
+ * unknown slug throws `notFound()` from inside a per-request render, and what
+ * Next 16.2 serves for that is `<html id="__next_error__">` — a 404 with the
+ * right title and `noindex`, whose body arrives with hydration. The comment on
+ * src/app/shop/[slug]/page.tsx has what was tried. It stays in the list above
+ * and is marked as expected to fail, so the day Next serves the whole document
+ * for it — or the owner takes the other side of docs/owner-decisions.md §14 —
+ * this run goes red until the mark is removed. What it can promise is tested
+ * below.
+ */
+const SHELL_ONLY = "/shop/no-such-product";
+
 for (const path of BOGUS) {
   test(`${path} is a whole 404 document without JavaScript`, async ({ page }) => {
+    test.fail(
+      path === SHELL_ONLY,
+      "products are read from the database per request, and Next answers notFound() from a per-request render with its empty shell",
+    );
+
     const response = await page.goto(path, { waitUntil: "load" });
     expect(response?.status(), `${path} should be a 404`).toBe(404);
 
@@ -57,3 +78,23 @@ for (const path of BOGUS) {
     );
   });
 }
+
+test.describe("a wrong product address", () => {
+  test("is a 404 that says so in its head, without JavaScript", async ({ page }) => {
+    const response = await page.goto(SHELL_ONLY, { waitUntil: "load" });
+    expect(response?.status()).toBe(404);
+    expect(await page.title()).toMatch(/not found/i);
+    await expect(page.locator('meta[name="robots"][content*="noindex"]').first()).toHaveCount(1);
+  });
+
+  test.describe("with JavaScript", () => {
+    test.use({ javaScriptEnabled: true });
+
+    test("draws the not-found page once it has hydrated", async ({ page }) => {
+      const response = await page.goto(SHELL_ONLY);
+      expect(response?.status()).toBe(404);
+      await expect(page.locator("main h1")).toContainText("does not exist");
+      await expect(page.locator('main a[href="/"]')).toBeVisible();
+    });
+  });
+});

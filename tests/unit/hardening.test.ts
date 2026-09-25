@@ -61,8 +61,18 @@ describe("pricing a cart when the rate cannot be read", { skip: !HAS_DB && "no D
   });
 
   it("refuses to price — never charges 0 — when the rate is unreadable or gone", async () => {
+    // Only intents for THIS cart. The suite's files run in parallel against
+    // one database, and several of them price carts of their own; a count of
+    // every row in the table moved under this test once in CI (19 !== 18)
+    // because another file inserted an intent between the two reads. The
+    // fixture variant's id is random, so a line carrying it is this test's.
     const intents = async () =>
-      (await query<{ n: number }>("select count(*)::int as n from checkout_intent"))[0]!.n;
+      (
+        await query<{ n: number }>(
+          "select count(*)::int as n from checkout_intent where lines_json @> $1::jsonb",
+          [JSON.stringify([{ variantId }])],
+        )
+      )[0]!.n;
 
     for (const broken of ["seven dollars", "", "-700", "7.00"]) {
       await query("update setting set value = $1 where key = 'shipping_flat_cents'", [broken]);

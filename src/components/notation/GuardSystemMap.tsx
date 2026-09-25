@@ -132,7 +132,11 @@ export function GuardSystemMap() {
         reference="FIG. 01 / REV A"
       >
         {/* Transitions. Drawn before the rings so the rings sit on top. */}
-        <g strokeWidth={2}>
+        {/* Weight as well as colour, on the connectors as on the rings: the
+            accessibility statement says no active state is carried by colour
+            alone, and for a while these lines changed colour and nothing else.
+            tests/unit/claims.test.ts holds the two together. */}
+        <g>
           {EDGES.map(([from, to]) => {
             const a = byCode.get(from);
             const b = byCode.get(to);
@@ -146,7 +150,8 @@ export function GuardSystemMap() {
                 x2={b.x}
                 y2={b.y}
                 stroke={live ? "var(--color-signal-lift)" : "var(--color-steel-dim)"}
-                className="transition-[stroke] duration-[140ms] ease-[var(--ease-control)]"
+                strokeWidth={live ? 3 : 2}
+                className="transition-[stroke,stroke-width] duration-[140ms] ease-[var(--ease-control)]"
               />
             );
           })}

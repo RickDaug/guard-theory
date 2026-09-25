@@ -6,7 +6,7 @@ import { FIT_NOTES, SIZE_CHART } from "@/content/products/size-chart";
 
 export const metadata: Metadata = pageMetadata({
   title: "Rash guard size chart and fit guide",
-  description: "Guard Theory size chart with garment measurements in inches and centimetres, and how a no-gi rash guard should actually fit.",
+  description: "Guard Theory size chart: to-fit chest in inches and centimetres, garment measurements in centimetres, and how a no-gi rash guard should actually fit.",
   path: "/size-and-fit",
 });
 

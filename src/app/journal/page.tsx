@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { SectionCrossNav } from "@/components/content/SectionCrossNav";
+import { SECTION_DESCRIPTIONS } from "@/content/section-descriptions";
 import { pageMetadata } from "@/lib/metadata";
 import Link from "next/link";
 import { Breadcrumbs } from "@/components/site/Breadcrumbs";
@@ -14,7 +15,7 @@ import { getAuthor } from "@/content/authors";
 
 export const metadata: Metadata = pageMetadata({
   title: "Journal — Researched writing on jiu-jitsu",
-  description: "Researched writing on jiu-jitsu: its history, its systems, its equipment and what competition rules do to technique.",
+  description: SECTION_DESCRIPTIONS.journal,
   path: "/journal",
 });
 

@@ -1,6 +1,7 @@
 import { serializeJsonLd } from "@/lib/json-ld";
 import type { Metadata } from "next";
 import { SectionCrossNav } from "@/components/content/SectionCrossNav";
+import { SECTION_DESCRIPTIONS } from "@/content/section-descriptions";
 import { pageMetadata } from "@/lib/metadata";
 import Image from "next/image";
 import Link from "next/link";
@@ -10,7 +11,7 @@ import { absoluteUrl } from "@/lib/site";
 
 export const metadata: Metadata = pageMetadata({
   title: "Influential figures",
-  description: "People whose work changed jiu-jitsu, in alphabetical order, with sources. An index of contributions, not a ranking.",
+  description: SECTION_DESCRIPTIONS.figure,
   path: "/figures",
 });
 

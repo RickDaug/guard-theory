@@ -76,8 +76,8 @@ export function ContactForm() {
           Message received
         </h2>
         <p className="mt-6 max-w-[34rem] text-base text-steel">
-          A person reads every message. If you asked about sizing or an order,
-          you will get a specific answer rather than a link back to this page.
+          A person reads every message. If you asked about sizing, you will
+          get a specific answer rather than a link back to this page.
         </p>
 
         {/* Somewhere to go. The form is gone and this panel replaced it, so

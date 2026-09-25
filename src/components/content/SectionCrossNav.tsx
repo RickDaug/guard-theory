@@ -1,5 +1,6 @@
 import Link from "next/link";
 import type { Collection } from "@/content/crosslinks";
+import { SECTION_DESCRIPTIONS } from "@/content/section-descriptions";
 
 /**
  * The route between the three editorial sections at index level.
@@ -8,9 +9,9 @@ import type { Collection } from "@/content/crosslinks";
  * separate collections and each index linked only into itself — a reader who
  * reached the bottom of any of them had no way across without the site header.
  *
- * The descriptions here are the sections' own meta descriptions, copied
- * deliberately rather than rewritten: two descriptions of the same thing drift,
- * and the shorter one always ends up flattering.
+ * The descriptions here are the sections' own meta descriptions — the same
+ * strings, imported, not copies of them. Two descriptions of the same thing
+ * drift, and the shorter one always ends up flattering.
  */
 
 const SECTIONS: Record<
@@ -20,20 +21,17 @@ const SECTIONS: Record<
   journal: {
     href: "/journal",
     name: "Journal",
-    description:
-      "Researched writing on jiu-jitsu: its history, its systems, its equipment and what competition rules do to technique.",
+    description: SECTION_DESCRIPTIONS.journal,
   },
   technique: {
     href: "/technique",
     name: "Technique Library",
-    description:
-      "A concepts library for no-gi grappling, organised by the twelve areas of the game. Mechanics, common errors and safety notes for each.",
+    description: SECTION_DESCRIPTIONS.technique,
   },
   figure: {
     href: "/figures",
     name: "Influential figures",
-    description:
-      "People whose work changed jiu-jitsu, in alphabetical order, with sources. An index of contributions, not a ranking.",
+    description: SECTION_DESCRIPTIONS.figure,
   },
 };
 

@@ -26,8 +26,8 @@ export default function EmailConfirmedPage() {
       </p>
       <p className="text-base text-steel">
         You will hear from us once, when the First Edition opens.
-        There is no newsletter and no drip sequence, and every message carries a
-        one-click unsubscribe.
+        There is no newsletter and no drip sequence, and every message to the
+        list carries a one-click unsubscribe.
       </p>
     </UtilityPage>
   );

@@ -85,12 +85,21 @@ class LoggingProvider implements MailProvider {
   readonly delivers = false;
 
   async send(email: Email): Promise<SendResult> {
+    // Subject and size only. The body of an order email is a name, a postal
+    // address and what was bought; function logs are not where that belongs,
+    // and neither is the recipient's address.
     console.warn(
-      `[guard-theory] no mail provider connected. Not sent:\n` +
-        `  to: ${email.to}\n  subject: ${email.subject}\n\n${email.body}\n`,
+      `[guard-theory] no mail provider connected. Not sent: "${email.subject}" ` +
+        `(${email.body.length} characters) to ${maskEmail(email.to)}`,
     );
     return { ok: true, providerId: null };
   }
+}
+
+/** `s***@example.com` — enough to recognise in a log, not enough to harvest. */
+export function maskEmail(address: string): string {
+  const at = address.lastIndexOf("@");
+  return at <= 0 ? "***" : `${address[0]}***${address.slice(at)}`;
 }
 
 let provider: MailProvider | null = null;
@@ -115,30 +124,33 @@ export function getMailProvider(): MailProvider {
  * Returns whether it was delivered so a caller can report honestly, but no
  * caller may treat false as a reason to fail.
  *
- * There is no `orderId` argument here, and no `order_id` column behind it,
- * for the same reason the order templates are absent: this build has no
- * orders. `feat/commerce` restores both together.
+ * `orderId` ties an order message to its order, which is how the portal shows
+ * each order's mail state. List mail and `test` pass nothing: `email_log`
+ * began without the column (0002_email_log.sql) and 0003_commerce.sql adds it,
+ * nullable, with its foreign key.
  */
 export async function sendEmail(
   template: EmailTemplate,
   email: Email,
+  orderId: string | null = null,
 ): Promise<boolean> {
   const mail = getMailProvider();
   const result = await mail.send(email);
 
   if (!result.ok) {
     console.error(
-      `[guard-theory] failed to send ${template} to ${email.to}: ${result.error}`,
+      `[guard-theory] failed to send ${template} to ${maskEmail(email.to)}: ${result.error}`,
     );
   }
 
   if (isDatabaseConfigured()) {
     try {
       await query(
-        `insert into email_log (id, to_email, template, provider_id, status, error)
-         values ($1, $2, $3, $4, $5, $6)`,
+        `insert into email_log (id, order_id, to_email, template, provider_id, status, error)
+         values ($1, $2, $3, $4, $5, $6, $7)`,
         [
           randomUUID(),
+          orderId,
           email.to.toLowerCase(),
           template,
           result.ok ? result.providerId : null,

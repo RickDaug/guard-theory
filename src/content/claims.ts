@@ -120,8 +120,102 @@ export const STORED: Record<string, Record<string, Disclosure>> = {
     error: { internal: "the provider's error text when it did not" },
     attempts: { internal: "a retry counter" },
     created_at: { internal: "when the send was attempted" },
+    order_id: { says: "each email we sent you about the order" },
   },
+
+  /* The catalogue. Nothing in these five tables is about a person. */
+  category: internal(["id", "slug", "name", "active", "sort_index"], "the catalogue: a product category the owner edits in the portal"),
+  product: internal(
+    ["id", "slug", "category_id", "status", "price_cents", "sale_cents", "currency", "name", "kind", "summary", "description", "sort_index", "archived_at", "created_at", "updated_at"],
+    "the catalogue: a product's price, status and content, entered by the owner",
+  ),
+  product_spec: internal(["product_id", "position", "label", "value"], "the catalogue: a specification row"),
+  product_construction_point: internal(["product_id", "code", "label", "note"], "the catalogue: a construction callout"),
+  product_image: internal(["id", "product_id", "blob_url", "alt", "width", "height", "sort_index"], "the catalogue: a product image"),
+  variant: internal(["id", "product_id", "size_label", "sku", "stock", "sort_index"], "the catalogue: a size and its stock"),
+
+  /* An order, and the copy of the cart it was priced from. */
+  order: {
+    id: { internal: "a random identifier we generate" },
+    number: { internal: "the order number we assign" },
+    status: { internal: "where the order is in fulfilment" },
+    flagged_reason: { internal: "why the order needs the owner's attention, when it does" },
+    email: { says: "email address" },
+    ship_name: { says: "the name and postal address the parcel is going to" },
+    ship_line1: { says: "the name and postal address the parcel is going to" },
+    ship_line2: { says: "the name and postal address the parcel is going to" },
+    ship_city: { says: "the name and postal address the parcel is going to" },
+    ship_state: { says: "the name and postal address the parcel is going to" },
+    ship_postal: { says: "the name and postal address the parcel is going to" },
+    ship_country: { says: "the name and postal address the parcel is going to" },
+    phone: { says: "a phone number for the shipping label" },
+    subtotal_cents: { says: "what you paid" },
+    shipping_cents: { says: "what you paid" },
+    tax_cents: { says: "what you paid" },
+    total_cents: { says: "what you paid" },
+    currency: { says: "what you paid" },
+    stripe_session_id: { internal: "Stripe's reference for the checkout; the reconciliation key" },
+    stripe_payment_intent: { internal: "Stripe's reference for the payment" },
+    stripe_mode: { internal: "whether the Stripe key that took the payment was test or live" },
+    refund_status: { internal: "whether any of the payment has been refunded; derived from Stripe's events" },
+    refunded_cents: { internal: "how much has been refunded; derived from Stripe's events" },
+    tracking_carrier: { internal: "the carrier for the parcel; from the postage label, not from the buyer" },
+    tracking_number: { internal: "the parcel's tracking number; from the postage label, not from the buyer" },
+    tracking_url: { internal: "the carrier's tracking page for that number" },
+    label_url: { internal: "where the postage label can be downloaded" },
+    shippo_transaction_id: { internal: "Shippo's reference for the label" },
+    label_claimed_at: { internal: "set while a label is being bought, so two clicks cannot buy two" },
+    placed_at: { internal: "when the order was placed" },
+    in_process_at: { internal: "when the owner started on it" },
+    shipped_at: { internal: "when it was dispatched" },
+    delivered_at: { internal: "when the carrier reported delivery" },
+  },
+  order_item: {
+    id: { internal: "a random identifier we generate" },
+    order_id: { internal: "which order the line belongs to" },
+    variant_id: { internal: "which catalogue size was bought, while that row exists" },
+    product_name: { says: "what you bought" },
+    product_kind: { says: "what you bought" },
+    size_label: { says: "what you bought" },
+    sku: { says: "what you bought" },
+    unit_cents: { says: "what you paid" },
+    quantity: { says: "what you bought" },
+  },
+  checkout_intent: internal(
+    ["id", "lines_json", "subtotal_cents", "shipping_cents", "created_at", "consumed_at"],
+    "the cart's sizes, quantities and totals as we priced them before sending the buyer to Stripe; nothing about who is buying, and swept after a week if never paid",
+  ),
+  webhook_event: internal(["id", "source", "type", "received_at", "processed_at"], "a ledger of which provider events have been handled, so none is handled twice"),
+  unfulfilled_payment: {
+    id: { internal: "a random identifier we generate" },
+    stripe_session_id: { internal: "Stripe's reference for a payment that could not be turned into an order" },
+    stripe_payment_intent: { internal: "Stripe's reference for the payment" },
+    stripe_mode: { internal: "whether the Stripe key that took the payment was test or live" },
+    reason: { internal: "why an order could not be created from it" },
+    amount_total_cents: { says: "what you paid" },
+    currency: { says: "what you paid" },
+    email: { says: "email address" },
+    first_seen_at: { internal: "when the payment was first noticed" },
+    last_seen_at: { internal: "when it was last noticed" },
+    resolved_at: { internal: "when the owner dealt with it" },
+  },
+  setting: internal(["key", "value", "updated_at"], "an owner-editable knob such as the flat shipping rate"),
+
+  /* The portal. These rows are about whoever signs in to it — the owner — never a reader. */
+  admin_session: internal(
+    ["token_hash", "created_at", "expires_at", "last_seen", "ip", "user_agent"],
+    "the portal sign-in session: a hash of the owner's session token, its lifetime, and the address and browser it was opened from",
+  ),
+  login_attempt: internal(
+    ["id", "key_hash", "succeeded", "attempted_at"],
+    "the portal's sign-in limiter: a keyed hash of the attempt's address, never the address, deleted after a day",
+  ),
 };
+
+/** Every column of a table that holds nothing collected from a person. */
+function internal(columns: string[], reason: string): Record<string, Disclosure> {
+  return Object.fromEntries(columns.map((column) => [column, { internal: reason }]));
+}
 
 /** The `name` of each waitlist form control, and the column it is stored in. */
 export const WAITLIST_FORM_FIELDS: Record<string, string | { notStored: string }> = {
@@ -302,6 +396,16 @@ export const PROCESSORS: Array<{
     evidence: "src/lib/site.ts reads VERCEL_PROJECT_PRODUCTION_URL, and main deploys there",
     present: (context) => context.read("src/lib/site.ts").includes("VERCEL_PROJECT_PRODUCTION_URL"),
   },
+  {
+    name: "Stripe",
+    evidence: "`stripe` is a runtime dependency, and src/lib/stripe creates the Checkout Sessions the buyer pays on",
+    present: (context) => runtimeDependencies(context).includes("stripe"),
+  },
+  {
+    name: "Shippo",
+    evidence: "src/lib/shipping/shippo.ts posts the parcel's address to api.goshippo.com",
+    present: (context) => externalHosts(context).includes("api.goshippo.com"),
+  },
 ];
 
 /** Hosts that appear in code and receive nothing about a reader. */
@@ -311,6 +415,11 @@ export const HOSTS_THAT_RECEIVE_NOTHING: Record<string, string> = {
   localhost: "the development fallback origin",
   "guardtheory.net": "this site",
   "api.resend.com": "accounted for as the processor Resend",
+  "api.goshippo.com": "accounted for as the processor Shippo",
+  "tools.usps.com":
+    "the carrier's tracking page, linked from the shipped email and the order page; the buyer's browser requests it if they click, this site never does",
+  evil: "an example in a comment of the spreadsheet formula the CSV export refuses; never requested",
+  "evil.example": "an example in a comment of the redirect the sign-in return check refuses; never requested",
 };
 
 /** Runtime dependencies, and why each does or does not move data off the site. */
@@ -319,6 +428,7 @@ export const DEPENDENCIES: Record<string, string> = {
   react: "sends nothing anywhere",
   "react-dom": "sends nothing anywhere",
   pg: "the Postgres driver; accounted for as the processor Neon",
+  stripe: "the Stripe SDK; accounted for as the processor Stripe",
 };
 
 function externalHosts(context: ClaimContext): string[] {
@@ -392,15 +502,16 @@ function processorsMatchPolicy(context: ClaimContext): true | string {
 
 /**
  * Every exported template is one or the other. List mail carries an
- * unsubscribe link; "every message carries a one-click unsubscribe" is true
- * only while there is no other kind. The day an order confirmation exists, the
- * sentences that say "every message" have to become "every message to the
- * list", and this is what says so.
+ * unsubscribe link. Order mail does not — it is sent because an order was
+ * placed, not because anyone joined a list — so "every message carries a
+ * one-click unsubscribe" stopped being true the day the order confirmation
+ * arrived. The copy now says "every message to the list", and the broad
+ * sentence is retired below until there is no transactional mail.
  */
 export const LIST_MAIL = ["announcement"];
-export const TRANSACTIONAL_MAIL: string[] = [];
+export const TRANSACTIONAL_MAIL = ["orderConfirmation", "orderInProcess", "orderShipped"];
 
-function everyMessageCarriesUnsubscribe(): true | string {
+function listMailCarriesUnsubscribe(): true | string {
   const problems: string[] = [];
 
   for (const [name, template] of Object.entries(mailTemplates)) {
@@ -409,12 +520,7 @@ function everyMessageCarriesUnsubscribe(): true | string {
       if (!template.toString().includes("/unsubscribe?t=")) {
         problems.push(`the list template "${name}" no longer builds an unsubscribe link`);
       }
-    } else if (TRANSACTIONAL_MAIL.includes(name)) {
-      problems.push(
-        `"${name}" is mail that carries no unsubscribe link, so "every message" is no longer true. ` +
-          `Reword to "every message to the list" and narrow this claim`,
-      );
-    } else {
+    } else if (!TRANSACTIONAL_MAIL.includes(name)) {
       problems.push(
         `src/lib/mail/templates.ts now exports "${name}". Add it to LIST_MAIL or TRANSACTIONAL_MAIL in src/content/claims.ts`,
       );
@@ -423,6 +529,16 @@ function everyMessageCarriesUnsubscribe(): true | string {
 
   return problems.length === 0 ? true : problems.join("; ");
 }
+
+/**
+ * The cookies this site sets itself, by the file that sets them, and the
+ * words the cookies policy uses for each. A file that sets a cookie and is not
+ * here fails the no-cookies claim; one that is here fails it when the policy
+ * stops saying so.
+ */
+export const OWN_COOKIES: Record<string, string> = {
+  "src/lib/portal/session.ts": "the sign-in session for our own portal",
+};
 
 /* ------------------------------------------------------------------------ */
 /* Products                                                                  */
@@ -456,19 +572,6 @@ const FAQ = "src/app/faq/page.tsx";
 const POLICIES = "src/content/policies/index.ts";
 
 export const CLAIMS: Claim[] = [
-  {
-    id: "shop-garment-count",
-    says: /\b(\w+) garments\. The specification is published/,
-    kind: "stated",
-    where: ["src/app/shop/page.tsx"],
-    // Asserted here, not rendered from PRODUCTS on the page, only because
-    // feat/commerce-reland rewrites that file's data source. Derive it once
-    // that branch has landed.
-    holds: ({ match }) =>
-      match?.[1]?.toLowerCase() === numberWord(PRODUCTS.length)
-        ? true
-        : `the product registry holds ${numberWord(PRODUCTS.length)}`,
-  },
   {
     id: "specifications-published",
     says: /(Fabric weight, composition, seam construction and print method are stated on the product page|fabric, weight, seam construction(,| and) print method)/,
@@ -587,8 +690,8 @@ export const CLAIMS: Claim[] = [
     },
   },
   {
-    id: "every-message-carries-unsubscribe",
-    says: /Every (message|email we send) (carries|includes) a one-click unsubscribe|every message carries a one-click unsubscribe/,
+    id: "every-message-to-the-list-carries-unsubscribe",
+    says: /Every (message|email we send) to the (First Edition )?list (carries|includes) a one-click unsubscribe|every message to the list carries a one-click unsubscribe/,
     kind: "stated",
     where: [
       FAQ,
@@ -596,7 +699,7 @@ export const CLAIMS: Claim[] = [
       "src/components/waitlist/WaitlistForm.tsx",
       "src/app/email-confirmed/page.tsx",
     ],
-    holds: everyMessageCarriesUnsubscribe,
+    holds: listMailCarriesUnsubscribe,
   },
   {
     id: "privacy-what-we-collect",
@@ -619,12 +722,22 @@ export const CLAIMS: Claim[] = [
     where: [POLICIES],
     holds: ({ list, read }) => {
       const tells = /\bcookies\(\)|document\.cookie|set-cookie|from "next\/script"|googletagmanager|google-analytics|plausible\.io|posthog|@vercel\/analytics/i;
-      const found = list("src")
+      const policy = read(POLICIES);
+      const cookiesPolicy = policy.slice(policy.indexOf('slug: "cookies"'), policy.indexOf('slug: "accessibility"'));
+      const problems = list("src")
         .filter((file) => /\.(ts|tsx)$/.test(file) && file !== "src/content/claims.ts")
-        .filter((file) => tells.test(read(file)));
-      return found.length === 0
-        ? true
-        : `${found.join(", ")} sets a cookie or loads a script. If it is ours and necessary, the cookies policy has to say what it is`;
+        .filter((file) => tells.test(read(file)))
+        .map((file) => {
+          const disclosed = OWN_COOKIES[file];
+          if (!disclosed) {
+            return `${file} sets a cookie or loads a script. If it is ours and necessary, the cookies policy has to say what it is, and OWN_COOKIES has to point at it`;
+          }
+          return cookiesPolicy.includes(disclosed)
+            ? null
+            : `${file} sets a cookie and the cookies policy no longer says "${disclosed}"`;
+        })
+        .filter((problem): problem is string => problem !== null);
+      return problems.length === 0 ? true : problems.join("; ");
     },
   },
   {
@@ -651,8 +764,9 @@ export const CLAIMS: Claim[] = [
     kind: "retired",
     where: [FAQ],
     // A price claim is allowed only when every product has a publishable
-    // price. The Product model has no price field at all; when one arrives
-    // (feat/commerce-reland reads it from the database), point this at it.
+    // price. The registry's Product has no price field; a price is a nullable
+    // database column the owner fills in per product, so a sentence saying one
+    // is published is not unconditionally true and stays cut.
     holds: () =>
       productHas(/price/i) ? true : "no product carries a price — the Product model has no field for one",
   },
@@ -715,6 +829,16 @@ export const CLAIMS: Claim[] = [
       list("src/app").some((file) => /^src\/app\/(order|cart|checkout)\//.test(file))
         ? true
         : "nothing can be ordered: there is no cart, checkout or order route",
+  },
+  {
+    id: "retired-every-message-carries-unsubscribe",
+    says: /Every (message|email we send) (carries|includes) a one-click unsubscribe|every message carries a one-click unsubscribe/,
+    kind: "retired",
+    where: [FAQ, POLICIES, "src/components/waitlist/WaitlistForm.tsx", "src/app/email-confirmed/page.tsx"],
+    holds: () =>
+      TRANSACTIONAL_MAIL.length === 0
+        ? true
+        : `order mail (${TRANSACTIONAL_MAIL.join(", ")}) carries no unsubscribe link; only the list's does`,
   },
   {
     id: "retired-waitlist-collects-a-size",

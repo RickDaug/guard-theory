@@ -50,6 +50,35 @@ export function Button({
   );
 }
 
+/**
+ * A plain anchor wearing the same clothes.
+ *
+ * For destinations that must not be prefetched or client-navigated — a route
+ * handler that returns a download, like the portal's list export. `next/link`
+ * would prefetch it and try to render the response as a page.
+ *
+ * Checkout does not use this. It used to be a link to a route handler that
+ * redirected to Stripe; it is now a button that navigates to a URL the server
+ * returns — see src/lib/stripe/start.ts.
+ */
+type ButtonAnchorProps = {
+  intent?: Intent;
+  children: ReactNode;
+} & ComponentPropsWithoutRef<"a">;
+
+export function ButtonAnchor({
+  intent = "signal",
+  className = "",
+  children,
+  ...rest
+}: ButtonAnchorProps) {
+  return (
+    <a className={`${BASE} ${INTENT[intent]} ${className}`} {...rest}>
+      {children}
+    </a>
+  );
+}
+
 type ButtonLinkProps = {
   intent?: Intent;
   href: string;

@@ -202,6 +202,20 @@ are listed for the owner in `docs/owner-decisions.md` §13 instead.
   of headroom under parallel workers, not a database problem; and a script that
   calls `process.exit()` without `closePool()` wedges the socket for the *next*
   run, so the failure appears one command later than its cause.
+- **The PGlite wedge was a leaked connection slot, and Playwright caused it.**
+  pglite-socket 0.2.11 frees a slot only on its handler's `close` event, and its
+  error path strips the socket's `close` listener first — so a client that dies
+  without closing (`taskkill /F`, which is how Playwright stops `next start` on
+  Windows) keeps the one slot for ever. Every later client gets "Connection
+  terminated unexpectedly" once and `read ECONNRESET` after that. It only bites
+  when the pool's connection is still inside its 10s idle window at the kill,
+  which is why it looked random: a unit run straight after an e2e run once went
+  201 pass / 2 fail and could not be reproduced, and a full e2e run straight
+  after `checkout.spec.ts` fell back to content-only from its first query.
+  `scripts/db/local-postgres.mjs` now drops dead handlers before each new
+  connection is admitted; e2e-then-unit was 211/211 four times running with it
+  and wedged on the first attempt without it. If `db:local` prints a WARNING
+  about pglite-socket's internals at startup, an upgrade has undone this.
 - **`next start` is production, so the no-database path is what e2e hits.**
   Phase 1's rule is that production without `DATABASE_URL` REFUSES a waitlist
   signup rather than accepting and dropping it. That is correct behaviour and it
@@ -220,6 +234,39 @@ are listed for the owner in `docs/owner-decisions.md` §13 instead.
   without `--production` (`scripts/db/guard.mjs`), so this mistake stops at a
   refusal — but `next build`, `next start` and Playwright have no such guard,
   and they read `.env.local` too. Still export both.
+- **The signed-in portal e2e test needs `DATABASE_POOL_IDLE_MS=1` on PGlite.**
+  A page and a route handler are separate bundles with a pool each under
+  `next start` too, not only under `next dev`. The test loads `/crew/learn` and
+  then fetches `/crew/list/export`; the page's pool is still holding PGlite's one
+  connection, the route handler's session lookup gets `ECONNRESET`, and the
+  fetch fails. With the idle timeout at 1ms the first pool lets go in time. The
+  test only runs when `PORTAL_PASSWORD_HASH` and `PORTAL_TEST_PASSWORD` are
+  exported. CI derives both (see `ci.yml`) and runs it against a real Postgres,
+  which has no such limit; locally it skips unless you export them yourself
+  (hash one with `hashPassword` from `src/lib/portal/auth.ts`), and then it
+  needs the idle setting above. `db:seed-e2e` also refuses a database that
+  already holds orders, and the unit suite creates orders — so locally it is
+  fresh `db:local`, migrate, seed, seed-e2e, e2e, in that order. It clears
+  `login_attempt`, because the sign-in limiter is real and one wrong password
+  per run locks the suite out on the fifth run in fifteen minutes.
+- **The unit suite against PGlite needs `--test-concurrency=1` too.** `node
+  --test` runs test files in parallel, and the same one-connection limit that
+  makes Playwright need `--workers=1` makes the database suites fail together
+  — nine order tests, the migration runner, the sign-in limiter, the refunds —
+  while each file passes alone. `node --test --test-concurrency=1
+  "tests/unit/*.test.ts"` was 382/382. CI runs a real Postgres and does not
+  need the flag.
+- **`notFound()` from a per-request render is Next's empty shell, and nothing
+  in the app can change that.** A 404 with the right title and `noindex`, whose
+  `<html>` has no `lang` and whose body is drawn on hydration. The routes that
+  serve a whole 404 document never throw: `dynamicParams = false` makes the
+  router render the not-found *route*, layouts and all, from the build-time
+  manifest. Tried and ruled out for `/shop/[slug]`, whose slugs are decided at
+  request time: dropping `generateStaticParams` (no effect), a segment
+  `not-found.tsx` (a client boundary; the HTML is identical), a database lookup
+  in the proxy (src/proxy.ts says why not), and `NoFallbackError` (internal).
+  The spec records the route as expected to fail; owner-decisions §14 has the
+  choice. Reproduce with `next dev` and `curl`, not a build.
 - **After switching branches, run `npm install`.** `node_modules` belongs to
   whichever branch installed last. The commerce branch adds `stripe`; checked
   out over a tree installed from `main`, `next build` stopped at "Can't resolve

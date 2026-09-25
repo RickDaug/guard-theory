@@ -124,7 +124,7 @@ export function WaitlistForm() {
         <p className="mt-6 max-w-[34rem] text-base text-steel">
           {state.alreadyOnList
             ? "This address was already registered, so nothing has changed. You will hear from us once, when the First Edition opens."
-            : "You will hear from us once, when the First Edition opens. No newsletter, no drip sequence. Every message includes a one-click unsubscribe."}
+            : "You will hear from us once, when the First Edition opens. No newsletter, no drip sequence. Every message to the list includes a one-click unsubscribe."}
         </p>
 
         {/* Somewhere to go. The form is gone and this panel replaced it, so

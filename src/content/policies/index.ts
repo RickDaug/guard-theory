@@ -22,8 +22,8 @@ export type Policy = {
   /**
    * The search-and-share description, when the summary is too short to be one.
    *
-   * These summaries are deliberately curt — "This site sets no cookies of its
-   * own." is the right sentence to print under the heading, and a 37-character
+   * These summaries are deliberately curt — "This site sets no cookies for
+   * readers." is the right sentence to print under the heading, and a 38-character
    * meta description is not a sentence a search result can use. Two jobs again:
    * the summary states the position, this one tells somebody scanning results
    * what the page will actually answer.
@@ -40,7 +40,7 @@ export const POLICIES: Policy[] = [
     title: "Privacy",
     summary: "What we collect, why, how long we keep it, and how to get it deleted.",
     metaDescription:
-      "First name and email if you join the list, kept until the First Edition is released or until you ask us to delete it. No analytics, no tracking scripts.",
+      "What we hold if you join the list, write to us or place an order, and the five companies that handle it for us. No analytics, no tracking scripts.",
     sections: [
       {
         id: "what-we-collect",
@@ -48,14 +48,15 @@ export const POLICIES: Policy[] = [
         paragraphs: [
           "If you join the First Edition list we collect your first name and email address, and — only if you choose to give them — how long you have been training, your preferred sleeve length, and which products interest you. We also record when you joined and that you agreed to be emailed, and when we email you we keep a record of which message was sent.",
           "If you contact us we collect your name, email address and whatever you write to us.",
-          "That is the entire list. We do not ask for a postal address, a phone number or a date of birth, because we have nothing to do with them.",
+          "If you place an order we collect your email address, the name and postal address the parcel is going to, and a phone number for the shipping label. We keep those with a record of what you bought, what you paid, and each email we sent you about the order. Your card details are typed into our payment provider's page, not ours. They never reach us and we do not store them.",
+          "That is the entire list. We do not ask for a date of birth, and we do not ask for an address or a phone number unless something is being posted to you.",
         ],
       },
       {
         id: "why",
         heading: "Why we collect it",
         paragraphs: [
-          "The name and email exist so we can tell you when the First Edition is released and reply if you write to us. The optional answers exist so the first production run is split sensibly between sleeve lengths rather than guessed at.",
+          "The name and email exist so we can tell you when the First Edition is released and reply if you write to us. The optional answers exist so the first production run is split sensibly between sleeve lengths rather than guessed at. Order details exist so we can take payment, post the parcel to the right door, and answer you if something goes wrong with it.",
           "We do not build advertising profiles, we do not track you across other sites, and we do not sell your details to anyone.",
         ],
       },
@@ -63,8 +64,8 @@ export const POLICIES: Policy[] = [
         id: "who-else",
         heading: "Who else handles it",
         paragraphs: [
-          "Three companies each do one job for us, and each receives what that job needs.",
-          "Resend delivers our email, so it receives your email address and the message. Neon hosts the database all of this is stored in. Vercel hosts the site, so every request to it passes through Vercel.",
+          "Five companies each do one job for us, and each receives what that job needs.",
+          "Stripe takes payment and works out sales tax. You enter your card, email address, shipping address and phone number on Stripe's own page. Shippo buys the postage label, so it receives the name, address, phone number and email address for the parcel. Resend delivers our email, so it receives your email address and the message. Neon hosts the database all of this is stored in. Vercel hosts the site, so every request to it passes through Vercel.",
         ],
       },
       {
@@ -78,7 +79,7 @@ export const POLICIES: Policy[] = [
         id: "your-rights",
         heading: "Your data, and getting rid of it",
         paragraphs: [
-          "Ask and we will tell you exactly what we hold about you, correct it, or delete it. There is no form and no reason required. Every email we send carries a one-click unsubscribe.",
+          "Ask and we will tell you exactly what we hold about you, correct it, or delete it. There is no form and no reason required. Every email we send to the First Edition list carries a one-click unsubscribe. Emails about an order — the confirmation, the dispatch notice — are sent because you placed that order. They are not a mailing list, and placing an order does not add you to one.",
           "If you are in the UK, EU or California, you have statutory rights to access, correction, deletion and portability. We apply the same standard to everyone regardless of where they live.",
         ],
       },
@@ -111,7 +112,7 @@ export const POLICIES: Policy[] = [
         heading: "Orders and pricing",
         paragraphs: [
           "An order is an offer to buy. It is accepted when we send a dispatch confirmation, and the contract is formed at that point.",
-          "Prices are shown in the currency selected at checkout and include applicable sales tax or VAT where we are required to charge it. Import duties on international orders are covered in the shipping policy.",
+          "Prices are in US dollars and do not include sales tax. Where we are required to charge it, tax is worked out from your shipping address and added at checkout, where you see the full amount before you pay.",
           "If a product is listed at a clearly incorrect price, we will contact you before dispatch rather than silently cancelling or charging the wrong amount. You may confirm at the corrected price or cancel for a full refund.",
         ],
       },
@@ -144,7 +145,7 @@ export const POLICIES: Policy[] = [
     title: "Shipping",
     summary: "Where we ship, what it costs, and how long it takes.",
     metaDescription:
-      "Dispatched within two business days, shipped worldwide. Three to five business days domestically, seven to fourteen international. A lost parcel is ours.",
+      "We ship within the United States, at a flat rate shown in your cart. Dispatched within two business days, three to five in transit. A lost parcel is ours.",
     sections: [
       {
         id: "dispatch",
@@ -158,29 +159,29 @@ export const POLICIES: Policy[] = [
         id: "destinations",
         heading: "Where we ship",
         paragraphs: [
-          "We ship worldwide, with the exception of destinations subject to sanctions or where our carriers do not deliver. If we cannot ship to your address, checkout will tell you before you pay rather than after.",
+          "We ship within the United States. Checkout accepts a US shipping address and no other, so if we cannot ship to you it tells you before you pay rather than after.",
+        ],
+      },
+      {
+        id: "cost",
+        heading: "What it costs",
+        paragraphs: [
+          "Shipping is one flat rate per order, whatever is in it. Your cart shows the figure before you go to pay.",
         ],
       },
       {
         id: "times",
         heading: "Delivery times",
         paragraphs: [
-          "Domestic orders typically arrive within three to five business days of dispatch. International orders typically take seven to fourteen business days, and longer where customs inspection applies.",
+          "Orders typically arrive within three to five business days of dispatch.",
           "These are carrier estimates rather than guarantees. If a parcel has not moved for seven days, contact us and we will open a trace with the carrier — you do not need to chase it yourself.",
-        ],
-      },
-      {
-        id: "duties",
-        heading: "Duties and taxes",
-        paragraphs: [
-          "International orders may attract import duty, VAT or a customs handling fee on arrival. These are set by the destination country and are payable by the recipient. We declare every parcel at its true value and contents; we will not under-declare a shipment.",
         ],
       },
       {
         id: "problems",
         heading: "If something goes wrong",
         paragraphs: [
-          "A parcel lost in transit is our problem, not yours. If tracking shows no delivery after twenty-one days for domestic orders or thirty days for international, we will replace the order or refund it in full, whichever you prefer.",
+          "A parcel lost in transit is our problem, not yours. If tracking shows no delivery after twenty-one days, we will replace the order or refund it in full, whichever you prefer.",
           "If a parcel arrives damaged, photograph it before opening if you can, and contact us. We will replace it and we will not ask you to return the damaged goods.",
         ],
       },
@@ -235,23 +236,25 @@ export const POLICIES: Policy[] = [
   {
     slug: "cookies",
     title: "Cookies",
-    summary: "This site sets no cookies of its own.",
+    summary: "This site sets no cookies for readers.",
     metaDescription:
-      "This site sets no cookies of its own: no analytics, no advertising pixel, no consent banner. A payment provider sets strictly necessary ones at checkout.",
+      "This site sets no cookies for readers: no analytics, no advertising pixel, no consent banner. Your cart is kept in your browser. Payment is on Stripe's page.",
     sections: [
       {
         id: "what-we-set",
         heading: "What this site sets",
         paragraphs: [
-          "Nothing. There is no analytics, no advertising pixel and no consent banner, because there is nothing to consent to.",
-          "That is a design decision rather than an oversight. If we ever need a cookie, this page will say what it is and what it does, and it will not be set before you agree.",
+          "Nothing, for a reader. There is no analytics, no advertising pixel and no consent banner, because there is nothing to consent to.",
+          "The one cookie this site sets is the sign-in session for our own portal. It is set only when one of us signs in there, it expires on its own, and a reader is never given one.",
+          "That is a design decision rather than an oversight. If we ever need a cookie for readers, this page will say what it is and what it does, and it will not be set before you agree.",
         ],
       },
       {
         id: "checkout",
-        heading: "At checkout",
+        heading: "Your cart, and checkout",
         paragraphs: [
-          "When a store is live, a payment provider will set a small number of strictly necessary cookies to keep your basket and process your payment securely. Those are required for the transaction to work and carry no tracking function.",
+          "Your cart is not a cookie. It is kept in your own browser, in local storage for this site, and holds only which sizes you chose and how many. It is sent to us when you open the cart, so that we can price it. Clearing your browser's site data empties it.",
+          "Payment happens on Stripe's page, on Stripe's own domain, and Stripe sets the cookies it needs there to process the payment securely. Those are Stripe's, not ours, and its privacy policy covers them.",
         ],
       },
     ],

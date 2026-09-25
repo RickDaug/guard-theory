@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { CartLink } from "@/components/cart/CartLink";
 import { Monogram } from "@/components/brand/Monogram";
 import { NavLink } from "./NavLink";
 
@@ -34,6 +35,9 @@ export function SiteHeader() {
                 </NavLink>
               </li>
             ))}
+            {/* Appears only once there is something in the cart. */}
+            <CartLink />
+
             {/* Below sm this would wrap onto a line of its own and read as a
                 stranded element. The hero carries the same action, prominently,
                 so the header simply does without it on the narrowest screens. */}

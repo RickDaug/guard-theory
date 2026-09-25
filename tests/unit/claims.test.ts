@@ -194,9 +194,26 @@ describe("the guard can fail", () => {
 
     const manifest = "package.json";
     const added = byId("privacy-who-else-handles-it").holds(
-      contextFor(null, { [manifest]: raw(manifest).replace('"pg":', '"stripe": "^1.0.0",\n    "pg":') }),
+      contextFor(null, { [manifest]: raw(manifest).replace('"pg":', '"@vercel/analytics": "^1.0.0",\n    "pg":') }),
     );
-    assert.match(String(added), /"stripe" is now a runtime dependency/);
+    assert.match(String(added), /"@vercel\/analytics" is now a runtime dependency/);
+  });
+
+  it("objects when the cookies policy stops naming the portal's session cookie", () => {
+    const policy = "src/content/policies/index.ts";
+    const verdict = byId("no-cookies-no-tracking").holds(
+      contextFor(null, {
+        [policy]: raw(policy).replace("the sign-in session for our own portal", "a session"),
+      }),
+    );
+    assert.match(String(verdict), /session\.ts sets a cookie and the cookies policy no longer says/);
+  });
+
+  it("keeps the broad unsubscribe sentence cut while order mail exists", () => {
+    const claim = byId("retired-every-message-carries-unsubscribe");
+    assert.notEqual(claim.holds(contextFor(null)), true);
+    assert.match("Every message carries a one-click unsubscribe.", claim.says);
+    assert.doesNotMatch("Every message to the list carries a one-click unsubscribe.", claim.says);
   });
 
   it("objects when the FAQ names authors the published articles do not carry", () => {

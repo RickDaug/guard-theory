@@ -27,7 +27,7 @@ const FAQS = [
   },
   {
     q: "How often will you email me?",
-    a: "Once, when the First Edition opens. There is no newsletter and no drip sequence. Every message carries a one-click unsubscribe.",
+    a: "Once, when the First Edition opens. There is no newsletter and no drip sequence. Every message to the list carries a one-click unsubscribe.",
   },
   {
     q: "Why are there drawings instead of photographs?",

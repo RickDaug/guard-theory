@@ -1,9 +1,20 @@
 # Owner checklist — what only you can do, in order
 
-**As of 2026-09-18.** Two things are waiting on this list: merging commerce
+**As of 2026-09-24.** Two things are waiting on this list: merging commerce
 (`feat/commerce-reland`, draft PR #3) and sending the First Edition announcement
 (`feat/announcement-send`, draft PR #2). Everything here needs an account, a
 card, a signature or a decision, which is why none of it can be done for you.
+
+**Merge order.** Four PRs go in ahead of commerce, and the order is fixed:
+#12 (`fix/claims-drift-guard`) → #10 (`fix/reaudit-2026-09`) → #9
+(`content/technique-batch-2`) → #11 (`content/journal-batch-3`) → #3 → #2.
+On 2026-09-24 each branch was merged into the one after it, so every step
+merges cleanly once the one before it has landed, and #3 and #2 were tested
+against that whole stack. Nothing on this list changes because of the four —
+they are copy, SEO and accessibility, and #12's claims guard, which now runs
+on the commerce branch too. After each merge, check the domain is serving the
+new build (AGENTS.md, "A Ready production deployment is not the same as the
+domain serving it").
 
 `docs/provisioning.md` has the reasoning behind each step. This is the same
 ground as a list.
@@ -252,13 +263,13 @@ Do this before the live-mode cutover. It does not block a test-mode rehearsal.
 |---|---|
 | 1 — Vercel Pro | Done: the team's plan read `pro` on 2026-09-18. |
 | 3, 4, 5, 6 — variables in Vercel | Runs `vercel env ls production` and checks every required **name** is present. It cannot read the values and does not need to. |
-| — | Merges `feat/mail` and confirms the domain serves the new build. |
+| — | Done: `feat/mail` merged as #8 on 2026-09-18. Next in line are #12, #10, #9 and #11, in that order, each followed by a check that the domain serves the new build. |
 | 6 complete | Applies migrations `0003`, `0004`, `0006` and `0007` to production (`0005` belongs to PR #2 and is independent of them), then seeds the two Theory 01 products as drafts. Both happen **before** the merge; the running site does not read the new tables. |
 | 8 — shipping figure | Updates `setting.shipping_flat_cents`. |
 | 9 — tax code | Nothing, unless you chose a non-default code, in which case it checks the name is set. |
 | 10 — specs | Corrects or removes whatever you flag. |
 | 6 complete | Generates `CRON_SECRET` (32 random bytes, never printed) and adds it to Vercel Production, so the scheduled reconciler in `vercel.json` is allowed to run from the first deploy. After the merge, checks Vercel → Settings → Cron Jobs lists `/api/cron/reconcile` and that its first run answered 200. |
-| 2–6 and 8–10 | Takes PR #3 out of draft, merges it, and checks guardtheory.net is serving it — the portal sign-in page answers, the shop still renders. |
+| 2–6 and 8–10, and #12, #10, #9 and #11 merged | Takes PR #3 out of draft, merges it, and checks guardtheory.net is serving it — the portal sign-in page answers, the shop still renders. |
 | 7 — prices | Nothing. You enter them in the portal and set the products active. |
 | 2 and 3 — registration added | Places a test order to a California address and asserts the tax is greater than zero. |
 | 11 — backups | Sets the GitHub secrets `BACKUP_DATABASE_URL` (from Neon, unpooled, never displayed) and `BACKUP_PASSPHRASE` (generated, handed to you once for your password manager), runs the **Database backup** workflow by hand once, then does the restore drill against a scratch Neon branch and records the result in `docs/database-runbook.md`. |

@@ -221,3 +221,23 @@ deletes the route.
 **Needed:** an answer per row. Line numbers are as of the commit that added this
 section; search for the quoted words if they have drifted.
 **Interim behaviour:** the sentences stand as published.
+
+
+## 14. A mistyped product address is blank until JavaScript runs
+
+Found merging the 2026-09 re-audit into commerce (2026-09-24). The re-audit
+made every wrong address a whole 404 document with JavaScript off, by listing
+each route's slugs at build time and refusing the rest. `/shop/[slug]` cannot
+do that: its products come from the database per request, so a product you
+create in the portal has no build-time list to be on. For an unknown product
+address Next 16.2 serves a 404 with the right title and `noindex` whose body
+is drawn on hydration — blank with JavaScript off. No supported route round it
+was found; the page's comment lists what was tried. Every other route meets the
+standard, and `tests/e2e/not-found.spec.ts` records this one as the exception.
+
+| Option | What it costs |
+|---|---|
+| a. Keep products request-time (as now) | A mistyped product URL is blank without JavaScript. Search engines see a 404 with `noindex`; readers with JavaScript see the not-found page. |
+| b. List the registry's products at build time and refuse the rest | A product created in the portal without a registry entry has no page until the next deploy — the storefront would list it and its link would 404. |
+
+**Needed:** a or b. **Interim behaviour:** a.

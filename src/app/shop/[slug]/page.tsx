@@ -22,16 +22,27 @@ import { serializeJsonLd } from "@/lib/json-ld";
 type Params = { params: Promise<{ slug: string }> };
 
 /*
- * No generateStaticParams and no `dynamicParams = false` here, on purpose.
+ * No generateStaticParams and no `dynamicParams = false` here, on purpose —
+ * and a known cost.
  *
  * Every other dynamic route lists its slugs at build time and refuses the
- * rest, so an unknown slug never reaches the page. This route cannot: its
- * products come from the database at request time, and a product the owner
- * creates in the portal after the build has no registry entry to list. So it
- * is rendered per request (`dynamic` below), an unknown slug throws
- * `notFound()` from inside the render, and not-found.tsx beside this file is
- * what turns that into a whole 404 document rather than Next's empty shell —
- * see the note there.
+ * rest, so an unknown slug never reaches the page: the router renders the
+ * not-found route, layouts and all, as a whole document. This route cannot.
+ * Its products come from the database at request time, and a product the
+ * owner creates in the portal has no registry entry to list, so it is rendered
+ * per request (`dynamic` below) and an unknown slug throws `notFound()` from
+ * inside the render.
+ *
+ * What Next 16.2 serves for that is a 404 with the right title and `noindex`
+ * whose body is `<html id="__next_error__">`: the not-found page is drawn once
+ * JavaScript runs, and with it off the screen is blank. There is no supported
+ * way round it for a slug decided at request time. A not-found.tsx beside this
+ * file is a client boundary and changes nothing in the HTML; the whole-document
+ * 404 is only ever the not-found route, which the router reaches by an
+ * unmatched path or by the build-time manifest; and the proxy does no database
+ * lookups (src/proxy.ts says why). tests/e2e/not-found.spec.ts records this
+ * route as the one exception, and fails the day it stops being one.
+ * docs/owner-decisions.md §14 has the choice this leaves the owner.
  */
 
 /**

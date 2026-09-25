@@ -6,6 +6,50 @@
 
 ---
 
+## State as of 2026-09-18
+
+This section is newer than everything below it. Where they disagree, this is right.
+
+**The byline blocker in §0 was resolved on 2026-08-04.** `src/content/authors.ts` holds two real
+authors supplied by the owner, and twenty articles are published under them. §0 is kept for the
+record of why nothing was published before that date.
+
+**Briefs written (11 of 18):**
+
+| Brief | Slug | State |
+| --- | --- | --- |
+| B4 | `de-la-riva-and-the-guard-that-took-his-name` | published 2026-08-04 |
+| B7 | `what-the-early-ufc-tournaments-demonstrated` | published 2026-08-04 |
+| B9 | `seated-guard-and-supine-guard` | published 2026-08-04 |
+| B11 | `grip-decay-and-the-half-life-of-a-no-gi-grip` | published 2026-08-04 |
+| B13 | `the-dropout-number-nobody-can-source` | published 2026-08-04 |
+| B14 | `how-to-wash-a-rash-guard` | published 2026-08-04 |
+| B15 | `long-sleeve-or-short-sleeve` | published 2026-08-19 |
+| B17 | `ibjjf-no-gi-uniform-rules-read-carefully` | published 2026-08-19 |
+| B10 | `why-the-underhook-decides-half-guard` | **draft**, written 2026-09-18 |
+| B12 | `what-to-wear-to-your-first-no-gi-class` | **draft**, written 2026-09-18 |
+| B18 | `submission-only-and-the-overtime-problem` | **draft**, written 2026-09-18 |
+
+The three drafts are publish-ready in the sense of §0.3: sourced, reviewed against their briefs'
+"must not claim" lists, and passing `tests/unit/content.test.ts`. They are drafts because a byline
+belongs to a person, and neither author has read them. Publishing each is a three-line change
+(`status`, `publishedAt`, `authorId`) made on the day an author signs it off, with that day's date.
+
+**Briefs still unwritten (7):** B1, B2, B3, B5, B6, B8, B16. Handoff 07 §5 records why B2 and B3
+(thin sourcing), B6 and B8 (duplicate intent with published pieces) were passed over; none of that
+has changed. B16 still waits on owner-decision item 3.
+
+**Category counts that follow from this.** `technique-notes` was already past the three-entry gate.
+`training-culture` has two published pieces and `competition-analysis` has two; B12 and B18 are the
+third in each, so publishing them opens both category pages to the sitemap
+(`src/content/category-gate.ts` counts published articles only).
+
+B18's research did conclude what the Week 12 dependency note anticipated: no primary rule book for the Eddie Bravo
+Invitational overtime was located. The piece says so and is built on the rule sets that are
+published.
+
+---
+
 ## 0. The blocker, stated first
 
 **Nothing on this calendar publishes until there is a real named author with real credentials.**

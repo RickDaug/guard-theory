@@ -5,6 +5,7 @@ import { gripDecayAndTheHalfLifeOfANoGiGrip } from "./entries/grip-decay-and-the
 import { howToWashARashGuard } from "./entries/how-to-wash-a-rash-guard.ts";
 import { seatedGuardAndSupineGuard } from "./entries/seated-guard-and-supine-guard.ts";
 import { theDropoutNumberNobodyCanSource } from "./entries/the-dropout-number-nobody-can-source.ts";
+import { whatToWearToYourFirstNoGiClass } from "./entries/what-to-wear-to-your-first-no-gi-class.ts";
 import { whatTheEarlyUfcTournamentsDemonstrated } from "./entries/what-the-early-ufc-tournaments-demonstrated.ts";
 import { drillingRehearsingAndPositionalSparring } from "./entries/drilling-rehearsing-and-positional-sparring.ts";
 import { guardRetentionAsASystem } from "./entries/guard-retention-as-a-system.ts";
@@ -13,12 +14,14 @@ import { howNoGiRulesetsReshapedTechniqueSelection } from "./entries/how-no-gi-r
 import { ibjjfNoGiUniformRulesReadCarefully } from "./entries/ibjjf-no-gi-uniform-rules-read-carefully.ts";
 import { longSleeveOrShortSleeve } from "./entries/long-sleeve-or-short-sleeve.ts";
 import { maedaAndTheArrivalOfJudoInBrazil } from "./entries/maeda-and-the-arrival-of-judo-in-brazil.ts";
+import { submissionOnlyAndTheOvertimeProblem } from "./entries/submission-only-and-the-overtime-problem.ts";
 import { takingTheBackFromTurtle } from "./entries/taking-the-back-from-turtle.ts";
 import { theArmbarFromClosedGuard } from "./entries/the-armbar-from-closed-guard.ts";
 import { theGuillotineFromTheFrontHeadlock } from "./entries/the-guillotine-from-the-front-headlock.ts";
 import { theKimuraAsAControlBeforeItIsAFinish } from "./entries/the-kimura-as-a-control-before-it-is-a-finish.ts";
 import { theRearNakedStrangleFromBackControl } from "./entries/the-rear-naked-strangle-from-back-control.ts";
 import { theTriangleAndTheAngle } from "./entries/the-triangle-and-the-angle.ts";
+import { whyTheUnderhookDecidesHalfGuard } from "./entries/why-the-underhook-decides-half-guard.ts";
 import { whySportJiuJitsuDoesNotTransferDirectlyToMma } from "./entries/why-sport-jiu-jitsu-does-not-transfer-directly-to-mma.ts";
 
 /**
@@ -37,8 +40,10 @@ export const ARTICLES: Article[] = [
   howToWashARashGuard,
   maedaAndTheArrivalOfJudoInBrazil,
   seatedGuardAndSupineGuard,
+  submissionOnlyAndTheOvertimeProblem,
   theDropoutNumberNobodyCanSource,
   whatTheEarlyUfcTournamentsDemonstrated,
+  whatToWearToYourFirstNoGiClass,
   takingTheBackFromTurtle,
   theArmbarFromClosedGuard,
   theGuillotineFromTheFrontHeadlock,
@@ -46,6 +51,7 @@ export const ARTICLES: Article[] = [
   theRearNakedStrangleFromBackControl,
   theTriangleAndTheAngle,
   whySportJiuJitsuDoesNotTransferDirectlyToMma,
+  whyTheUnderhookDecidesHalfGuard,
 ];
 
 const BY_SLUG = new Map(ARTICLES.map((article) => [article.slug, article]));

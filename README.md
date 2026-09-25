@@ -100,7 +100,10 @@ rather than merely forbidden.
 
 ## Environment variables
 
-None are required to run or build. Two matter in deployment:
+None are required to run or build locally. Two matter on every deployment, and
+the commerce code (live since 2026-09-24) reads a dozen more — Postgres, Stripe,
+Shippo, Resend, the portal — which `docs/provisioning.md` lists with what is
+set and what is not. The two:
 
 | Variable | Effect |
 |---|---|
@@ -129,12 +132,15 @@ curl -s "https://guardtheory.net$CSS" | grep -o '#1b1725'   # a token you just c
 ```
 
 `npm run build` produces a standard Next.js output; any host that runs Next 16
-will serve it. Before the first production deploy:
+will serve it. Production on Vercel is provisioned as far as the code can be —
+Postgres, mail and the commerce code are live, and what remains (Stripe,
+Shippo, the portal password, prices) is the owner's, in
+`docs/owner-checklist.md`. For any other host:
 
-1. Set both environment variables above.
-2. Connect a mail provider — see `docs/owner-decisions.md` item 6. Until then
-   waitlist and contact submissions append to a gitignored local file, and both
-   pages say so on the page.
+1. Set both environment variables above, and `DATABASE_URL` /
+   `DATABASE_URL_UNPOOLED` — production without a database refuses waitlist
+   signups rather than dropping them.
+2. Set `RESEND_API_KEY` and `RECEIPT_FROM_EMAIL`, or mail is logged, not sent.
 3. Replace the in-memory rate limiter with a shared store if running more than
    one instance. It is documented as insufficient in `src/lib/rate-limit.ts`.
 

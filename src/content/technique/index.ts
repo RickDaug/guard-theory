@@ -5,18 +5,24 @@ import {
   type TechniqueReview,
 } from "./types.ts";
 import { armDrag } from "./entries/arm-drag.ts";
+import { backRetentionFollowingTheTurn } from "./entries/back-retention-following-the-turn.ts";
 import { bloodChokeVersusAirChoke } from "./entries/blood-choke-versus-air-choke.ts";
 import { butterflyHookAsLever } from "./entries/butterfly-hook-as-lever.ts";
 import { closedGuardPostureBattle } from "./entries/closed-guard-posture-battle.ts";
 import { connectionInOpenGuard } from "./entries/connection-in-open-guard.ts";
 import { deLaRivaHook } from "./entries/de-la-riva-hook.ts";
+import { defendingTheGuillotine } from "./entries/defending-the-guillotine.ts";
 import { elbowKneeEscape } from "./entries/elbow-knee-escape.ts";
+import { escapingBackControl } from "./entries/escaping-back-control.ts";
+import { escapingSideControl } from "./entries/escaping-side-control.ts";
 import { framesVersusBlocks } from "./entries/frames-versus-blocks.ts";
 import { gettingHipsUnderneath } from "./entries/getting-hips-underneath.ts";
 import { insidePosition } from "./entries/inside-position.ts";
 import { kneeCutPass } from "./entries/knee-cut-pass.ts";
 import { kneeShield } from "./entries/knee-shield.ts";
 import { legEntanglementAsControl } from "./entries/leg-entanglement-as-control.ts";
+import { positionalHierarchy } from "./entries/positional-hierarchy.ts";
+import { rearNakedStrangle } from "./entries/rear-naked-strangle.ts";
 import { seatBeltAndHooks } from "./entries/seat-belt-and-hooks.ts";
 import { sweepingTowardTheMissingPost } from "./entries/sweeping-toward-the-missing-post.ts";
 import { underhookHalfGuard } from "./entries/underhook-half-guard.ts";
@@ -28,18 +34,24 @@ import { underhookHalfGuard } from "./entries/underhook-half-guard.ts";
  */
 export const ENTRIES: TechniqueEntry[] = [
   armDrag,
+  backRetentionFollowingTheTurn,
   bloodChokeVersusAirChoke,
   butterflyHookAsLever,
   closedGuardPostureBattle,
   connectionInOpenGuard,
   deLaRivaHook,
+  defendingTheGuillotine,
   elbowKneeEscape,
+  escapingBackControl,
+  escapingSideControl,
   framesVersusBlocks,
   gettingHipsUnderneath,
   insidePosition,
   kneeCutPass,
   kneeShield,
   legEntanglementAsControl,
+  positionalHierarchy,
+  rearNakedStrangle,
   seatBeltAndHooks,
   sweepingTowardTheMissingPost,
   underhookHalfGuard,

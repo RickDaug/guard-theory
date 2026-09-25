@@ -45,5 +45,6 @@ export const kneeCutPass: TechniqueEntry = {
     "knee-shield",
     "inside-position",
     "connection-in-open-guard",
+    "underhook-half-guard",
   ],
 };

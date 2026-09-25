@@ -35,7 +35,10 @@ import {
   isPublished,
   ARTICLES,
 } from "./journal/index.ts";
-import { CATEGORIES as TECHNIQUE_CATEGORIES, ENTRIES } from "./technique/index.ts";
+import {
+  CATEGORIES as TECHNIQUE_CATEGORIES,
+  PUBLISHED_ENTRIES,
+} from "./technique/index.ts";
 
 /** The documented bar. One number, quoted by both collections. */
 export const CATEGORY_ENTRY_MINIMUM = 3;
@@ -51,8 +54,13 @@ export function journalCategoryCount(slug: string): number {
   return ARTICLES.filter((a) => a.category === slug && isPublished(a)).length;
 }
 
+/**
+ * Published entries only, for the same reason: a technique draft is noindex
+ * and unlisted until a person signs it off (src/content/technique/index.ts),
+ * so it cannot be one of the three that open a category page.
+ */
 export function techniqueCategoryCount(slug: string): number {
-  return ENTRIES.filter((e) => e.category === slug).length;
+  return PUBLISHED_ENTRIES.filter((e) => e.category === slug).length;
 }
 
 export function isJournalCategoryIndexable(slug: string): boolean {

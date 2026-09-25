@@ -322,6 +322,13 @@ export const POLICIES: Policy[] = [
         ],
       },
       {
+        id: "sign-off",
+        heading: "Drafting and sign-off",
+        paragraphs: [
+          "A Technique Library entry may be drafted with research and writing assistance. Every entry is then fact-audited and voice-audited, each independently of the draft, and nothing is published until a named person has read it and signed it off in the source. Until then it is unlisted and marked as a draft.",
+        ],
+      },
+      {
         id: "independence",
         heading: "Independence",
         paragraphs: [

@@ -230,6 +230,25 @@ describe("the guard can fail", () => {
     );
   });
 
+  it("objects when the sitemap or the entry page stops going through the publication gate", () => {
+    const claim = byId("editorial-technique-sign-off");
+    assert.equal(claim.holds(contextFor(null)), true);
+
+    const sitemap = "src/app/sitemap.ts";
+    const listed = claim.holds(
+      contextFor(null, {
+        [sitemap]: raw(sitemap).replace("publishedEntryPaths()", "ENTRIES.map((e) => e.slug)"),
+      }),
+    );
+    assert.match(String(listed), /sitemap lists technique entries without going through/);
+
+    const page = "src/app/technique/[category]/[slug]/page.tsx";
+    const unmarked = claim.holds(
+      contextFor(null, { [page]: raw(page).replace(/review\.drafted/g, "review.factAudit") }),
+    );
+    assert.match(String(unmarked), /no longer marks a draft as a draft/);
+  });
+
   it("objects when a connector changes colour and not weight", () => {
     const map = "src/components/notation/GuardSystemMap.tsx";
     const verdict = byId("active-state-is-not-colour-alone").holds(

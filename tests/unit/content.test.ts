@@ -6,6 +6,7 @@ import {
   ENTRIES,
   entriesInCategory,
   findDanglingRelatedSlugs,
+  isPublishedEntry,
 } from "../../src/content/technique/index.ts";
 import {
   ARTICLES,
@@ -99,6 +100,18 @@ describe("the three-entry gate on category pages", () => {
       assert.equal(journalCategoryCount(category.slug), published);
     }
   });
+
+  it("counts signed-off technique entries only", () => {
+    // The same reasoning as the Journal: a draft entry is noindex and
+    // unlisted until a person signs it off, so it cannot be one of the three
+    // that open its category page.
+    for (const category of CATEGORIES) {
+      const published = ENTRIES.filter(
+        (e) => e.category === category.slug && isPublishedEntry(e),
+      ).length;
+      assert.equal(techniqueCategoryCount(category.slug), published);
+    }
+  });
 });
 
 describe("cross-section links", () => {
@@ -182,7 +195,9 @@ describe("technique library integrity", () => {
     );
   });
 
-  it("gives every category at least one entry", () => {
+  it("gives every category at least one published entry", () => {
+    // entriesInCategory lists signed-off entries only, so a category whose
+    // one entry is an unsigned draft is empty here — and empty on the page.
     const empty = CATEGORIES.filter(
       (category) => entriesInCategory(category.slug).length === 0,
     ).map((category) => category.slug);

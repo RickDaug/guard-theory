@@ -41,35 +41,22 @@ export function AnnouncementForm({ liveCount }: { liveCount: number }) {
         </span>
       </label>
 
-      <label className="flex flex-col gap-2">
-        <span className="display-plain text-sm text-steel">
-          Send one test copy to this address first
-        </span>
-        <input
-          name="testTo"
-          type="email"
-          placeholder="you@example.com"
-          className="min-h-6 border border-steel-dim bg-graphite px-4 py-3 text-chalk"
-        />
-        <span className="text-sm text-steel">
-          Fill this in and only that address is emailed. Empty it to send for real.
-        </span>
-      </label>
-
-      <label className="flex items-start gap-3">
-        {/* Never pre-checked. This is the control that turns a draft into
-            hundreds of emails that cannot be recalled. */}
-        <input name="confirm" type="checkbox" className="mt-1 min-h-6 min-w-6" />
-        <span className="display-plain text-sm text-steel">
-          {liveCount === 1
-            ? "Yes, email the one person on the list."
-            : `Yes, email all ${liveCount} people on the list. This cannot be undone.`}
-        </span>
-      </label>
+      {/* No test-send field and no "email everyone" box. This form checks a draft
+          against the voice rules and sends nothing: the announcement goes out
+          from scripts/mail/send-announcement.ts, which claims each address
+          before it sends. A control that looks like it emails {liveCount} people and
+          does not is worse than no control. */}
+      <p className="text-sm text-steel">
+        This checks the draft and sends nothing.{" "}
+        {liveCount === 1
+          ? "The one person on the list is emailed"
+          : `The ${liveCount} people on the list are emailed`}{" "}
+        from <code>scripts/mail/send-announcement.ts</code>, once each.
+      </p>
 
       <div>
         <Button type="submit" disabled={pending}>
-          {pending ? "Sending…" : "Send"}
+          {pending ? "Checking…" : "Check the draft"}
         </Button>
       </div>
     </form>

@@ -4,6 +4,7 @@ import { describe, it } from "node:test";
 import {
   metaDescriptionFor,
   metaTitleFor,
+  outcomeForLookup,
   tokenFromSearchParams,
   type UnsubscribeOutcome,
 } from "../../src/app/unsubscribe/copy.ts";
@@ -20,6 +21,7 @@ import {
 const OUTCOMES: UnsubscribeOutcome[] = [
   "unsubscribed",
   "already",
+  "confirm",
   "no-token",
   "unknown-token",
   "unavailable",
@@ -48,7 +50,7 @@ describe("metaTitleFor", () => {
     assert.equal(metaTitleFor("unsubscribed"), "Unsubscribed");
     assert.equal(metaTitleFor("already"), "Unsubscribed");
 
-    for (const outcome of ["no-token", "unknown-token", "unavailable"] as const) {
+    for (const outcome of ["confirm", "no-token", "unknown-token", "unavailable"] as const) {
       assert.notEqual(
         metaTitleFor(outcome),
         "Unsubscribed",
@@ -70,7 +72,7 @@ describe("metaDescriptionFor", () => {
       assert.match(metaDescriptionFor(outcome), /removed/i);
     }
 
-    for (const outcome of ["no-token", "unknown-token", "unavailable"] as const) {
+    for (const outcome of ["confirm", "no-token", "unknown-token", "unavailable"] as const) {
       assert.doesNotMatch(
         metaDescriptionFor(outcome),
         /has been removed/i,
@@ -83,5 +85,31 @@ describe("metaDescriptionFor", () => {
     for (const outcome of OUTCOMES) {
       assert.ok(metaDescriptionFor(outcome).length > 0, `${outcome} has no description`);
     }
+  });
+});
+
+/**
+ * The page is reached by GET, and mail scanners GET every link in a message.
+ * So no lookup result may ever render as "unsubscribed" unless the row already
+ * says so: a good token on a live subscription gets the button, not the deed.
+ */
+describe("outcomeForLookup", () => {
+  it("a live subscription gets the confirm step, never a success", () => {
+    assert.equal(outcomeForLookup("subscribed", false), "confirm");
+  });
+
+  it("only a row that is already unsubscribed reads as unsubscribed", () => {
+    assert.equal(outcomeForLookup("already", false), "already");
+    assert.equal(outcomeForLookup("already", true), "already", "a stale failed flag does not undo it");
+  });
+
+  it("a write that failed says so instead of offering the button again in silence", () => {
+    assert.equal(outcomeForLookup("subscribed", true), "unavailable");
+  });
+
+  it("passes the rest through", () => {
+    assert.equal(outcomeForLookup("no-token", false), "no-token");
+    assert.equal(outcomeForLookup("unknown-token", false), "unknown-token");
+    assert.equal(outcomeForLookup("unavailable", false), "unavailable");
   });
 });

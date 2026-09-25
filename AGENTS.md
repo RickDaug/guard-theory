@@ -202,6 +202,17 @@ are listed for the owner in `docs/owner-decisions.md` §13 instead.
   of headroom under parallel workers, not a database problem; and a script that
   calls `process.exit()` without `closePool()` wedges the socket for the *next*
   run, so the failure appears one command later than its cause.
+- **PGlite hangs up after any statement that errors, and the NEXT query pays
+  for it.** `select 1/0` fails as it should; the query after it gets
+  `ECONNRESET`, and the one after that is fine. Real Postgres does not do this.
+  A test that expects a constraint violation therefore has to absorb one query
+  afterwards (see the unique-index test in `tests/unit/announcement.test.ts`),
+  or its next assertion fails for a reason that has nothing to do with it. The
+  same one-connection limit means two database test files cannot run side by
+  side locally: `node --test --test-concurrency=1 "tests/unit/*.test.ts"`. And
+  under `next dev` a page and a route handler are separate bundles with a pool
+  each, so hitting both against PGlite makes the second one report
+  "unavailable". Restart `db:local` rather than debugging the route.
 - **The PGlite wedge was a leaked connection slot, and Playwright caused it.**
   pglite-socket 0.2.11 frees a slot only on its handler's `close` event, and its
   error path strips the socket's `close` listener first — so a client that dies

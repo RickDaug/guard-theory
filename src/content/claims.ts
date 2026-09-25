@@ -420,6 +420,8 @@ export const HOSTS_THAT_RECEIVE_NOTHING: Record<string, string> = {
     "the carrier's tracking page, linked from the shipped email and the order page; the buyer's browser requests it if they click, this site never does",
   evil: "an example in a comment of the spreadsheet formula the CSV export refuses; never requested",
   "evil.example": "an example in a comment of the redirect the sign-in return check refuses; never requested",
+  "guardtheory.net.example.com":
+    "an example in a comment of a site URL the announcement script refuses to send from; never requested",
 };
 
 /** Runtime dependencies, and why each does or does not move data off the site. */
@@ -510,19 +512,23 @@ function processorsMatchPolicy(context: ClaimContext): true | string {
  */
 export const LIST_MAIL = ["announcement"];
 export const TRANSACTIONAL_MAIL = ["orderConfirmation", "orderInProcess", "orderShipped"];
+/** Exported beside the templates, and not a message. */
+export const MAIL_HELPERS: Record<string, string> = {
+  oneClickUnsubscribeUrl: "builds the URL the announcement's List-Unsubscribe header names",
+};
 
 function listMailCarriesUnsubscribe(): true | string {
   const problems: string[] = [];
 
   for (const [name, template] of Object.entries(mailTemplates)) {
-    if (typeof template !== "function") continue;
+    if (typeof template !== "function" || name in MAIL_HELPERS) continue;
     if (LIST_MAIL.includes(name)) {
       if (!template.toString().includes("/unsubscribe?t=")) {
         problems.push(`the list template "${name}" no longer builds an unsubscribe link`);
       }
     } else if (!TRANSACTIONAL_MAIL.includes(name)) {
       problems.push(
-        `src/lib/mail/templates.ts now exports "${name}". Add it to LIST_MAIL or TRANSACTIONAL_MAIL in src/content/claims.ts`,
+        `src/lib/mail/templates.ts now exports "${name}". Add it to LIST_MAIL, TRANSACTIONAL_MAIL or MAIL_HELPERS in src/content/claims.ts`,
       );
     }
   }

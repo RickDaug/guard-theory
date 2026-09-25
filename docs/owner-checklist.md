@@ -31,7 +31,7 @@ go into Vercel and nowhere else.
   `/api/cron/reconcile` every fifteen minutes on the live deployment. Its
   first scheduled run has not been confirmed yet.
 - The nightly database backup has both of its GitHub secrets and has run by
-  hand once. A restore drill is underway (step 11).
+  hand once. The restore drill has not been run; it is yours (step 11).
 - On the domain: `/shop` lists the two products as drafts with no price,
   `/cart` works, `/crew` redirects to `/crew/sign-in`, which renders and
   refuses every password, and the waitlist form is intact.
@@ -239,8 +239,12 @@ Two things about it are yours.
    the repository private, which would take the backups off public download
    altogether.
 
-A restore drill against a scratch Neon branch is underway; its result goes in
-`docs/database-runbook.md`, which has the procedure. After that the drill is
+**The restore drill has not been run, and it is yours to run** — before the
+first real order. The assistant was refused it: restoring the dump puts
+customer data on this machine, which is exactly what the passphrase exists to
+prevent. `docs/database-runbook.md`, "Getting one back out", walks through
+downloading the artifact, decrypting it and restoring it to a scratch Neon
+branch; record the date and the result there. After that the drill is
 quarterly.
 
 `npm run db:backup` still exists for a dump on this machine, to `./backups`.
@@ -299,7 +303,7 @@ Do this before the live-mode cutover. It does not block a test-mode rehearsal.
 | — | Done 2026-09-24: PR #3 merged as `0dd9f49` and guardtheory.net serves it — `/shop` lists the two drafts, `/cart` works, `/crew` redirects to a sign-in page that refuses sign-in without `PORTAL_PASSWORD_HASH`, the waitlist form is intact. It went in ahead of steps 2–6, which is safe because every commerce path fails closed without its variable. |
 | 7 — prices | Nothing. You enter them in the portal and set the products active. |
 | 2 and 3 — registration added | Places a test order to a California address and asserts the tax is greater than zero. |
-| 11 — backups | Done 2026-09-24, all but the drill: both GitHub secrets set, the **Database backup** workflow run by hand once (run `36093297796`, 56 KB artifact). The restore drill against a scratch Neon branch is underway; its result goes in `docs/database-runbook.md`. Yours: move the passphrase file into your password manager. |
+| 11 — backups | Done 2026-09-24, all but the drill: both GitHub secrets set, the **Database backup** workflow run by hand once (run `36093297796`, 56 KB artifact). The restore drill is **not** the assistant's — it was refused, because a restore puts customer data on this machine — so it is yours, from `docs/database-runbook.md` "Getting one back out", before the first real order. Also yours: move the passphrase file into your password manager. |
 | 12 — live keys | Checks the portal banner shows live, and watches the first real order through the webhook. |
 | All of the above, and you have set the opening date | Applies PR #2's migration, merges PR #2 last (it is retargeted onto `main` and mergeable now), runs the announcement as a dry run, shows you the recipient count and the message, and sends only on your word. |
 

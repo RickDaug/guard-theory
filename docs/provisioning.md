@@ -33,7 +33,10 @@ where it does not.
 - GitHub secrets `BACKUP_DATABASE_URL` (Neon, unpooled) and
   `BACKUP_PASSPHRASE` set. The **Database backup** workflow was run by hand
   once: run `36093297796` succeeded, artifact `guard-theory-db-36093297796`,
-  56 KB. A restore drill against a scratch Neon branch is underway.
+  56 KB. The restore drill has **not** been run: the assistant was refused it
+  (a restore puts customer data on this machine), so it is the owner's next
+  step, from `docs/database-runbook.md` "Getting one back out", before the
+  first real order.
 - Seven stale Neon `preview/*` branches left by merged PRs were deleted, and
   Vercel preview deployments work again (see Tier 2, per-preview branching).
 - PR #2 (`feat/announcement-send`) retargeted onto `main`, mergeable, and left
@@ -124,7 +127,7 @@ Tier 1 is what makes taking payment permitted at all. Both are now done.
 | 5 — Shippo | USPS labels and tracking | $0 to 30 labels/mo | not started |
 | 6 — Crew Portal | Your own access to the portal | $0 | not started — the sign-in page is live and refuses everyone until `PORTAL_PASSWORD_HASH` exists |
 | — commerce code | The shop, cart, checkout hop, webhooks, portal | — | **live — PR #3 merged 2026-09-24** |
-| — nightly backup | Encrypted dump, 30 days, on GitHub Actions | $0 | **done 2026-09-24** — secrets set, run once by hand; restore drill underway |
+| — nightly backup | Encrypted dump, 30 days, on GitHub Actions | $0 | **done 2026-09-24** — secrets set, run once by hand; restore drill **not yet run** — the owner's, from the runbook |
 | — scheduled reconciler | Paid orders the webhook missed, every 15 min | — | `CRON_SECRET` set 2026-09-24; cron listed on the live deployment; first run not yet confirmed |
 
 Tiers 3, 5 and 6 are provisioned separately, and in that order. The code that
@@ -258,8 +261,10 @@ run by hand once the same day: run `36093297796` succeeded and left
 branch, which the workflow is now on. The passphrase was handed to the owner as
 a file, `~/guard-theory-BACKUP_PASSPHRASE.txt`, to move into a password
 manager. Getting a backup back out and the quarterly drill are in
-`docs/database-runbook.md`; a restore drill against a scratch Neon branch is
-underway, and its result goes there.
+`docs/database-runbook.md`. **The first restore drill has not been run.** The
+assistant was refused it, because restoring the dump puts customer data on
+this machine; it is the owner's to do, following "Getting one back out",
+before the first real order, and its date and result go in the runbook.
 
 **What's still ahead:** Tiers 3, 5 and 6 — the owner's accounts and keys — and
 then a test order. `0001` through `0004`, `0006` and `0007` are applied in

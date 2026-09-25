@@ -1,11 +1,13 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
+import { cache } from "react";
+import { metadata as notFoundMetadata } from "@/app/not-found";
 import { Breadcrumbs } from "@/components/site/Breadcrumbs";
 import { ButtonLink } from "@/components/ui/Button";
 import { BuyBox } from "@/components/product/BuyBox";
 import { GarmentFlat } from "@/components/product/GarmentFlat";
-import { PRODUCTS, STATUS_LABEL, getProduct } from "@/content/products";
+import { PRODUCTS, STATUS_LABEL } from "@/content/products";
 import {
   effectivePriceCents,
   getProductView,
@@ -20,26 +22,30 @@ import { serializeJsonLd } from "@/lib/json-ld";
 type Params = { params: Promise<{ slug: string }> };
 
 /*
- * No generateStaticParams here, on purpose.
+ * No generateStaticParams and no `dynamicParams = false` here, on purpose.
  *
- * Every other dynamic route lists its slugs at build time and sets
- * `dynamicParams = false`, so an unknown slug never reaches the page and the
- * router answers with the whole not-found document. This route cannot: its
+ * Every other dynamic route lists its slugs at build time and refuses the
+ * rest, so an unknown slug never reaches the page. This route cannot: its
  * products come from the database at request time, and a product the owner
- * creates in the portal after the build has no registry entry to list. It is
- * rendered per request instead (`dynamic` below), and an unknown slug throws
- * `notFound()` from an ordinary dynamic render, which is what makes Next
- * render not-found.tsx inside the root layout rather than its bare error
- * shell. Listing the registry's slugs as well would put an unknown slug on the
- * "not prerendered" path, and that path is the one that served
- * `<html id="__next_error__">`. tests/e2e/not-found.spec.ts holds this route
- * to the same standard as the others, with JavaScript off.
+ * creates in the portal after the build has no registry entry to list. So it
+ * is rendered per request (`dynamic` below), an unknown slug throws
+ * `notFound()` from inside the render, and not-found.tsx beside this file is
+ * what turns that into a whole 404 document rather than Next's empty shell —
+ * see the note there.
  */
+
+/**
+ * One read per request. generateMetadata and the page both need the product,
+ * and without this each would query the database for it.
+ */
+const loadProduct = cache((slug: string) => getProductView(slug));
 
 export async function generateMetadata({ params }: Params): Promise<Metadata> {
   const { slug } = await params;
-  const product = getProduct(slug);
-  if (!product) return {};
+  const product = await loadProduct(slug);
+  // The not-found boundary's own title, so a mistyped address is not titled
+  // as if it were the shop.
+  if (!product) return notFoundMetadata;
 
   return pageMetadata({
     title: `${product.name} — ${product.kind}`,
@@ -65,7 +71,7 @@ export const dynamic = "force-dynamic";
 
 export default async function ProductPage({ params }: Params) {
   const { slug } = await params;
-  const product = await getProductView(slug);
+  const product = await loadProduct(slug);
   if (!product) notFound();
 
   const availability = stockStatus(product);

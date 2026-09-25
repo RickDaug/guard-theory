@@ -19,9 +19,22 @@ import { serializeJsonLd } from "@/lib/json-ld";
 
 type Params = { params: Promise<{ slug: string }> };
 
-export function generateStaticParams() {
-  return PRODUCTS.map((product) => ({ slug: product.slug }));
-}
+/*
+ * No generateStaticParams here, on purpose.
+ *
+ * Every other dynamic route lists its slugs at build time and sets
+ * `dynamicParams = false`, so an unknown slug never reaches the page and the
+ * router answers with the whole not-found document. This route cannot: its
+ * products come from the database at request time, and a product the owner
+ * creates in the portal after the build has no registry entry to list. It is
+ * rendered per request instead (`dynamic` below), and an unknown slug throws
+ * `notFound()` from an ordinary dynamic render, which is what makes Next
+ * render not-found.tsx inside the root layout rather than its bare error
+ * shell. Listing the registry's slugs as well would put an unknown slug on the
+ * "not prerendered" path, and that path is the one that served
+ * `<html id="__next_error__">`. tests/e2e/not-found.spec.ts holds this route
+ * to the same standard as the others, with JavaScript off.
+ */
 
 export async function generateMetadata({ params }: Params): Promise<Metadata> {
   const { slug } = await params;

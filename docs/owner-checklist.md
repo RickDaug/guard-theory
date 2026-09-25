@@ -156,6 +156,11 @@ Ten required names to add: `STRIPE_SECRET_KEY`, `STRIPE_WEBHOOK_SECRET`,
 `PORTAL_PASSWORD_HASH`. `RESEND_API_KEY` and `RECEIPT_FROM_EMAIL` are already
 there.
 
+One optional name: **`REPLY_TO_EMAIL`**. `hello@guardtheory.net` sends every
+message, and unless a mailbox or forwarder exists for it at your mail host, a
+customer who replies gets a bounce. Set this to an address you read and every
+message carries it as its reply-to until the forwarder is in place.
+
 The merged code reads all of these, but a variable added here reaches the site
 only on the next deployment, not the running one. Until each is set, its path
 fails closed: checkout says it is unavailable, no label can be bought, the

@@ -1,11 +1,12 @@
 import assert from "node:assert/strict";
-import { describe, it } from "node:test";
+import { describe, it, mock } from "node:test";
 
 import {
   BANNED_CONSTRUCTIONS,
   BANNED_IN_EMAIL,
   findBannedConstructions,
 } from "../../src/content/editorial-voice.ts";
+import { readReplyTo, resendPayload } from "../../src/lib/mail/index.ts";
 import {
   announcement,
   orderConfirmation,
@@ -155,5 +156,40 @@ describe("order mail keeps the site's voice", () => {
     assert.match(body, /\$103\.92/, "the total must be the figure actually charged");
     assert.doesNotMatch(body, /\$103\.9(?!2)/, "a truncated total is a wrong total");
     assert.doesNotMatch(body, /NaN|undefined|\[object/, "a template hole reached the reader");
+  });
+});
+
+describe("replies can be routed somewhere that exists", () => {
+  // The from-address has no mailbox. Until a forwarder exists at the mail
+  // host, `REPLY_TO_EMAIL` is how a customer's reply reaches a person instead
+  // of bouncing. It is read through `readReplyTo` so each case here is one
+  // value in, one payload out, with no environment or network involved.
+  const FROM = "hello@guardtheory.net";
+
+  it("set: the header is present", () => {
+    const payload = resendPayload(FROM, readReplyTo("owner@example.com"), EMAIL);
+    assert.equal(payload.reply_to, "owner@example.com");
+  });
+
+  it("unset: the payload is exactly what it was before", () => {
+    assert.equal(readReplyTo(undefined), null);
+    assert.deepEqual(resendPayload(FROM, readReplyTo(""), EMAIL), {
+      from: FROM,
+      to: [EMAIL.to],
+      subject: EMAIL.subject,
+      text: EMAIL.body,
+    });
+  });
+
+  it("malformed: dropped with a warning, never a throw", () => {
+    const warn = mock.method(console, "warn", () => {});
+    try {
+      assert.equal(readReplyTo("not an address"), null);
+      assert.equal(warn.mock.callCount(), 1);
+      assert.match(String(warn.mock.calls[0]?.arguments[0]), /REPLY_TO_EMAIL/);
+      assert.ok(!("reply_to" in resendPayload(FROM, readReplyTo("not an address"), EMAIL)));
+    } finally {
+      warn.mock.restore();
+    }
   });
 });

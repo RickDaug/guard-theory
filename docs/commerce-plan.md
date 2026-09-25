@@ -795,6 +795,14 @@ Every email links the shipping and returns policies.
 All under `${PORTAL_PATH}`, none linked from any public page, none in the sitemap,
 all `robots: {index:false, follow:false}`, all added to `robots.ts` disallow.
 
+> **Correction (2026-09-24):** the portal is deliberately *not* in `robots.ts`.
+> robots.txt is public, and naming the path there would publish the one thing
+> `PORTAL_PATH` exists to keep out of scans; a disallowed URL is also never
+> fetched, so its `noindex` is never read. The portal stays out of crawls by
+> the three other means above. `src/app/robots.ts` says the same, and this
+> section's other two mentions of the disallow (Phase 3, and the cart's
+> checklist entry) are superseded by it.
+
 | Route | Screen | Note |
 |---|---|---|
 | `/` | Today | The landing screen answers one question: what needs doing. Needs-to-ship count, flagged count, new-orders count. Nothing else |

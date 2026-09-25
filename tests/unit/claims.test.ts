@@ -216,6 +216,20 @@ describe("the guard can fail", () => {
     assert.doesNotMatch("Every message to the list carries a one-click unsubscribe.", claim.says);
   });
 
+  it("objects when the FAQ names authors the published articles do not carry", () => {
+    const claim = byId("faq-journal-authors");
+    const sentence =
+      'a: "Nobody. Every published article carries a byline, a publication date and the sources';
+    const match = sentence.match(claim.says);
+    assert.ok(match, "the sentence no longer matches its own claim");
+    assert.match(String(claim.holds(contextFor(match))), /bylines on published articles are/);
+    // The old wording was made false by the first draft, and must not come back.
+    assert.doesNotMatch(
+      'a: "Rick R. Every article carries a byline, a publication date and the sources',
+      claim.says,
+    );
+  });
+
   it("objects when a connector changes colour and not weight", () => {
     const map = "src/components/notation/GuardSystemMap.tsx";
     const verdict = byId("active-state-is-not-colour-alone").holds(

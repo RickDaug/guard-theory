@@ -605,24 +605,25 @@ export const CLAIMS: Claim[] = [
   },
   {
     id: "faq-journal-authors",
-    says: /a: "([^"]+?)\. Every article carries a byline, a publication date and the sources/,
+    // "Every PUBLISHED article": a draft is readable at its address, on the
+    // index and in search, and by design carries no byline and no date until
+    // an author has read it. The sentence used to say "every article", which
+    // the first draft made false.
+    says: /a: "([^"]+?)\. Every published article carries a byline, a publication date and the sources/,
     kind: "stated",
     where: [FAQ],
     holds: ({ match }) => {
-      const unpublished = ARTICLES.filter((article) => !isPublished(article));
-      if (unpublished.length > 0) {
-        return `${unpublished.map((a) => a.slug).join(", ")} carries no byline or date`;
+      const published = ARTICLES.filter(isPublished);
+      const unattributed = published.filter((article) => !getAuthor(article.authorId));
+      if (unattributed.length > 0) {
+        return `${unattributed.map((a) => a.slug).join(", ")} is published under an author the registry does not have`;
       }
-      const unsourced = ARTICLES.filter((article) => article.sources.length === 0);
+      const unsourced = published.filter((article) => article.sources.length === 0);
       if (unsourced.length > 0) {
-        return `${unsourced.map((a) => a.slug).join(", ")} lists no sources`;
+        return `${unsourced.map((a) => a.slug).join(", ")} is published and lists no sources`;
       }
       const names = [
-        ...new Set(
-          ARTICLES.filter(isPublished).map(
-            (article) => getAuthor(article.authorId)?.name ?? `unknown author "${article.authorId}"`,
-          ),
-        ),
+        ...new Set(published.map((article) => getAuthor(article.authorId)?.name ?? "")),
       ].sort();
       const stated = (match?.[1] ?? "").split(/,\s*|\s+and\s+/).sort();
       return JSON.stringify(names) === JSON.stringify(stated)

@@ -186,6 +186,54 @@ export const CROSS_LINKS: CrossLink[] = [
     basis:
       "The article lists posture among what decides whether the angle is available.",
   },
+  {
+    a: journal("de-la-riva-and-the-guard-that-took-his-name"),
+    b: technique("de-la-riva-hook"),
+    basis:
+      "The article's second section is about what the outside hook controls, which is the entry's subject.",
+  },
+  {
+    a: journal("how-no-gi-rulesets-reshaped-technique-selection"),
+    b: technique("leg-entanglement-as-control"),
+    basis:
+      "The article's January 2021 section covers the heel hook and reaping rules the entry's safety note refers to.",
+  },
+  {
+    a: journal("guard-retention-as-a-system"),
+    b: technique("leg-entanglement-as-control"),
+    basis:
+      "The article's safety note names leg entanglements and rotational load on the knee.",
+  },
+  {
+    a: journal("submission-only-and-the-overtime-problem"),
+    b: technique("seat-belt-and-hooks"),
+    basis:
+      "The article names the entry as the control that back-start overtime begins from.",
+  },
+  {
+    a: journal("why-the-underhook-decides-half-guard"),
+    b: technique("knee-shield"),
+    basis:
+      "The article quotes the entry on what the shield does not stop, and uses its three exits.",
+  },
+  {
+    a: journal("why-the-underhook-decides-half-guard"),
+    b: technique("frames-versus-blocks"),
+    basis:
+      "The article treats the frame as the holding answer while the underhook is contested.",
+  },
+  {
+    a: journal("why-the-underhook-decides-half-guard"),
+    b: technique("knee-cut-pass"),
+    basis:
+      "The entry says whoever has the underhook decides whether it ends as a pass or a sweep.",
+  },
+  {
+    a: journal("why-the-underhook-decides-half-guard"),
+    b: technique("inside-position"),
+    basis:
+      "The article places the half guard underhook inside the general idea of inside control.",
+  },
 
   // ── Technique Library ↔ Figures ────────────────────────────────────────
   {

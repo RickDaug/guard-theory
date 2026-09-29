@@ -1,0 +1,58 @@
+name: Neon preview cleanup
+
+# Deletes a pull request's Neon preview branch when the pull request closes.
+#
+# The Vercel Marketplace integration makes a `preview/<git branch>` database
+# branch for every preview deployment, and only removes it when Vercel removes
+# the deployment, which by default is six months later. Neon Free allows ten
+# branches, so without this the previews start failing in 0 ms with "Resource
+# provisioning failed" (it has happened twice).
+#
+# Needs the NEON_API_KEY secret and the NEON_PROJECT_ID variable. A pull
+# request that never got a preview has no branch; that is a skip, not a failure.
+#
+# THIS REPOSITORY IS PUBLIC. The key is only ever sent as a header, and nothing
+# is printed but the branch name and what happened to it.
+
+on:
+  pull_request:
+    types: [closed]
+
+permissions: {}
+
+jobs:
+  delete-preview-branch:
+    # Secrets are not given to pull requests from forks, and a fork's branch
+    # name could collide with ours. Only clean up after our own branches.
+    if: github.event.pull_request.head.repo.full_name == github.repository
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+
+    steps:
+      - name: Delete preview/<branch> if it exists
+        env:
+          NEON_API_KEY: ${{ secrets.NEON_API_KEY }}
+          NEON_PROJECT_ID: ${{ vars.NEON_PROJECT_ID }}
+          # Through env, never interpolated into the script: a branch name is
+          # user-controlled text.
+          GIT_BRANCH: ${{ github.event.pull_request.head.ref }}
+        run: |
+          set -euo pipefail
+          if [ -z "${NEON_API_KEY}" ] || [ -z "${NEON_PROJECT_ID}" ]; then
+            echo "::error::NEON_API_KEY secret or NEON_PROJECT_ID variable is not set."
+            exit 1
+          fi
+          api="https://console.neon.tech/api/v2/projects/${NEON_PROJECT_ID}/branches"
+          name="preview/${GIT_BRANCH}"
+
+          id=$(curl -fsS -H "Authorization: Bearer ${NEON_API_KEY}" -H "Accept: application/json" "$api" \
+            | jq -r --arg n "$name" '[.branches[] | select(.name == $n and (.default | not))][0].id // empty')
+
+          if [ -z "$id" ]; then
+            echo "No Neon branch named ${name}; nothing to delete."
+            exit 0
+          fi
+
+          curl -fsS -X DELETE -H "Authorization: Bearer ${NEON_API_KEY}" -H "Accept: application/json" \
+            "$api/$id" > /dev/null
+          echo "Deleted Neon branch ${name}."

@@ -46,10 +46,10 @@ export const POLICIES: Policy[] = [
         id: "what-we-collect",
         heading: "What we collect",
         paragraphs: [
-          "If you join the First Edition list we collect your first name and email address, and — only if you choose to give them — how long you have been training, your preferred sleeve length, and which products interest you. We also record when you joined and that you agreed to be emailed, and when we email you we keep a record of which message was sent.",
+          "If you join the First Edition list we collect your first name and email address, and — only if you choose to give them — how long you have been training, your preferred sleeve length, and which products interest you. We also record when you joined, that you agreed to be emailed, and whether and when you confirmed your address from the link we email you. When we email you we keep a record of which message was sent.",
           "If you contact us we collect your name, email address and whatever you write to us.",
           "If you place an order we collect your email address, the name and postal address the parcel is going to, and a phone number for the shipping label. We keep those with a record of what you bought, what you paid, and each email we sent you about the order. Your card details are typed into our payment provider's page, not ours. They never reach us and we do not store them.",
-          "When you open your cart or go to pay, we count the requests coming from your network address, so that a script cannot flood either. We store a keyed hash of the address, never the address itself, and delete it after a day.",
+          "When you open your cart, go to pay, write to us or join the First Edition list, we count the requests coming from your network address, so that a script cannot flood any of them. We store a keyed hash of the address, never the address itself, and delete it after a day.",
           "That is the entire list. We do not ask for a date of birth, and we do not ask for an address or a phone number unless something is being posted to you.",
         ],
       },
@@ -66,15 +66,15 @@ export const POLICIES: Policy[] = [
         heading: "Who else handles it",
         paragraphs: [
           "Six companies each do one job for us, and each receives what that job needs.",
-          "Stripe takes payment and works out sales tax. You enter your card, email address, shipping address and phone number on Stripe's own page. Shippo buys the postage label, so it receives the name, address, phone number and email address for the parcel. Resend delivers our email, so it receives your email address and the message. Neon hosts the database all of this is stored in. Vercel hosts the site, so every request to it passes through Vercel. GitHub stores an encrypted copy of that database, taken each night and kept for thirty days, so that it can be restored if something is lost.",
+          "Stripe takes payment and works out sales tax. You enter your card, email address, shipping address and phone number on Stripe's own page. Shippo buys the postage label, so it receives the name, address, phone number and email address for the parcel. Resend delivers our email, so it receives your email address and the message. Neon hosts the database all of this is stored in. Vercel hosts the site, so every request to it passes through Vercel. GitHub stores an encrypted copy of that database, taken each night and kept for fourteen days, so that it can be restored if something is lost.",
         ],
       },
       {
         id: "how-long",
         heading: "How long we keep it",
         paragraphs: [
-          "Waitlist details are kept until the First Edition has been released and you have been told, or until you ask us to delete them. Messages sent through the contact form are kept while we deal with them and for as long afterwards as we need to answer a follow-up. Ask us to delete either and we will.",
-          "Our encrypted nightly backups are kept for thirty days, so something we delete can remain in a backup until that backup expires.",
+          "Waitlist details are kept until the First Edition has been released and you have been told, or until you ask us to delete them. An address that is never confirmed is not on the list, and it is deleted 30 days after we send the link. Messages sent through the contact form are kept while we deal with them and for as long afterwards as we need to answer a follow-up. Ask us to delete either and we will.",
+          "Our encrypted nightly backups are kept for fourteen days, so something we delete can remain in a backup until that backup expires.",
         ],
       },
       {

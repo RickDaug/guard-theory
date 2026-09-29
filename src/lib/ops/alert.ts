@@ -119,7 +119,7 @@ export async function collectStoredProblems(): Promise<Problem[]> {
     ),
     query<{ id: string }>(
       `select id from "order"
-        where flagged_reason in ('oversell', 'reconciled', 'duplicate-payment', 'mode-mismatch', 'delivery-problem')`,
+        where flagged_reason in ('oversell', 'reconciled', 'duplicate-payment', 'mode-mismatch', 'delivery-problem', 'amount-mismatch')`,
     ),
     // The latest attempt of each message per order. A failure followed by a
     // successful resend is not a problem; anything whose latest row is not

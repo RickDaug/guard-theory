@@ -7,6 +7,7 @@ import { numberWord } from "./section-descriptions.ts";
 import { ENTRIES } from "./technique/index.ts";
 import { buildSearchIndex } from "../lib/search/index.ts";
 import * as mailTemplates from "../lib/mail/templates.ts";
+import { PENDING_RETENTION_DAYS } from "../lib/waitlist/confirm.ts";
 
 /**
  * What the site says about itself, tied to the thing that makes it true.
@@ -102,6 +103,10 @@ export const STORED: Record<string, Record<string, Disclosure>> = {
     unsubscribed_at: { internal: "set when the reader unsubscribes; nothing is collected to set it" },
     unsubscribe_token: { internal: "a random token we generate for the unsubscribe link" },
     source: { internal: "which of our own code paths wrote the row" },
+    consent_state: { says: "whether and when you confirmed your address" },
+    confirmed_at: { says: "whether and when you confirmed your address" },
+    confirmation_sent_at: { internal: "when we last sent the confirmation link" },
+    confirmation_delivery: { internal: "whether that confirmation email was sent, failed, or only logged" },
   },
   contact_message: {
     id: { internal: "a random identifier we generate" },
@@ -536,7 +541,14 @@ function processorsMatchPolicy(context: ClaimContext): true | string {
  * sentence is retired below until there is no transactional mail.
  */
 export const LIST_MAIL = ["announcement"];
-export const TRANSACTIONAL_MAIL = ["orderConfirmation", "orderInProcess", "orderShipped"];
+export const TRANSACTIONAL_MAIL = [
+  "orderConfirmation",
+  "orderInProcess",
+  "orderShipped",
+  // Sent to an address that is not on the list yet, because someone asked for
+  // it to be. It says that ignoring it is enough, which is true.
+  "waitlistConfirmation",
+];
 
 function listMailCarriesUnsubscribe(): true | string {
   const problems: string[] = [];
@@ -546,6 +558,11 @@ function listMailCarriesUnsubscribe(): true | string {
     if (LIST_MAIL.includes(name)) {
       if (!template.toString().includes("/unsubscribe?t=")) {
         problems.push(`the list template "${name}" no longer builds an unsubscribe link`);
+      }
+      // "One-click": the body link opens a confirm page (a GET must not write),
+      // so the one click is RFC 8058's — the mail client's own button.
+      if (!template.toString().includes("List-Unsubscribe=One-Click")) {
+        problems.push(`the list template "${name}" no longer sends List-Unsubscribe-Post (RFC 8058 one-click)`);
       }
     } else if (!TRANSACTIONAL_MAIL.includes(name)) {
       problems.push(
@@ -744,8 +761,8 @@ export const CLAIMS: Claim[] = [
     holds: processorsMatchPolicy,
   },
   {
-    id: "privacy-backups-kept-thirty-days",
-    says: /encrypted nightly backups are kept for thirty days/,
+    id: "privacy-backups-kept-fourteen-days",
+    says: /encrypted nightly backups are kept for fourteen days/,
     kind: "stated",
     where: [POLICIES],
     holds: (context) => {
@@ -753,9 +770,9 @@ export const CLAIMS: Claim[] = [
       if (!workflow) return `${BACKUP_WORKFLOW} no longer dumps the database and uploads it to GitHub`;
       if (!/cron: "\d+ \d+ \* \* \*"/.test(workflow)) return `${BACKUP_WORKFLOW} no longer runs once a day`;
       const days = workflow.match(/retention-days: (\d+)/)?.[1];
-      return days === "30"
+      return days === "14"
         ? true
-        : `${BACKUP_WORKFLOW} keeps the artifact for ${days ?? "an unstated number of"} days, not thirty`;
+        : `${BACKUP_WORKFLOW} keeps the artifact for ${days ?? "an unstated number of"} days, not fourteen`;
     },
   },
   {
@@ -911,5 +928,23 @@ export const CLAIMS: Claim[] = [
       (columnsByTable(context).waitlist_signup ?? []).some((column) => /size/i.test(column))
         ? true
         : "the waitlist has not asked for a size since 2026-08; there is no field and no column",
+  },
+  {
+    id: "privacy-unconfirmed-deleted",
+    says: /An address that is never confirmed is not on the list, and it is deleted (\d+) days after we send the link/,
+    kind: "stated",
+    where: [POLICIES],
+    holds: ({ match, read }) => {
+      if (match?.[1] !== String(PENDING_RETENTION_DAYS)) {
+        return `the policy says ${match?.[1]} days and PENDING_RETENTION_DAYS in src/lib/waitlist/confirm.ts is ${PENDING_RETENTION_DAYS}`;
+      }
+      if (!read("src/app/first-edition/actions.ts").includes("purgeUnconfirmed(")) {
+        return "nothing calls purgeUnconfirmed any more, so unconfirmed addresses are kept indefinitely";
+      }
+      if (!read("src/app/crew/list/actions.ts").includes("consent_state in ('confirmed', 'legacy')")) {
+        return "the announcement no longer limits itself to confirmed (and legacy) addresses, so an unconfirmed one is on the list after all";
+      }
+      return true;
+    },
   },
 ];

@@ -143,6 +143,11 @@ export function orderShipped(
  * the list carries a working one-click link, which is what the privacy policy
  * promises and what the law requires. It points at `?t=`, which is the
  * parameter `src/app/unsubscribe/page.tsx` actually reads.
+ *
+ * The body link opens a confirm page (a GET must not write: mail scanners
+ * follow every link). The headers are the one-click path: RFC 8058's
+ * `List-Unsubscribe-Post` tells the mail client to POST to /api/unsubscribe,
+ * which acts at once. Gmail and Yahoo require both headers from bulk senders.
  */
 export function announcement(
   to: string,
@@ -150,9 +155,15 @@ export function announcement(
   subject: string,
   body: string,
 ): Email {
+  const oneClick = `${SITE_URL}/api/unsubscribe?t=${encodeURIComponent(unsubscribeToken)}`;
+
   return {
     to,
     subject,
+    headers: {
+      "List-Unsubscribe": `<${oneClick}>`,
+      "List-Unsubscribe-Post": "List-Unsubscribe=One-Click",
+    },
     body: [
       body.trim(),
       "",
@@ -160,6 +171,43 @@ export function announcement(
       "",
       "You are on the Guard Theory First Edition list because you asked to be.",
       `Unsubscribe: ${SITE_URL}/unsubscribe?t=${unsubscribeToken}`,
+      "",
+      "Guard Theory",
+    ].join("\n"),
+  };
+}
+
+/**
+ * The double opt-in message: one link, to a page with a Confirm button.
+ *
+ * Transactional, not list mail. It goes to an address that is not on the list
+ * yet, because someone asked for it to be, and the list's mail never reaches
+ * that address unless the button is pressed. So it carries no unsubscribe
+ * link; it says instead that ignoring it is enough, which is true — an
+ * unconfirmed address is never sent the announcement and is deleted after
+ * `retentionDays`.
+ *
+ * `token` is from src/lib/waitlist/confirm.ts. `?t=` is the parameter
+ * src/app/first-edition/confirm/page.tsx reads.
+ */
+export function waitlistConfirmation(
+  to: string,
+  firstName: string,
+  token: string,
+  expiresInHours = 72,
+  retentionDays = 30,
+): Email {
+  return {
+    to,
+    subject: "Confirm your address for the Guard Theory First Edition list",
+    body: [
+      `${firstName.trim() || "Hello"},`,
+      "",
+      "Someone, probably you, asked for this address to be told when the Guard Theory First Edition is released. Open this link and press Confirm to join the list:",
+      "",
+      `${SITE_URL}/first-edition/confirm?t=${token}`,
+      "",
+      `The link works for ${expiresInHours} hours. If you did not ask, ignore this message: the address is not on the list, it will not be sent the announcement, and it is deleted after ${retentionDays} days.`,
       "",
       "Guard Theory",
     ].join("\n"),

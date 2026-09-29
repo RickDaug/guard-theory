@@ -35,7 +35,9 @@ describe("the cart's rate limit, statically", () => {
   it("starting a checkout is counted before Stripe is asked for anything", () => {
     const source = readFileSync("src/app/cart/actions.ts", "utf8");
     const body = source.slice(source.indexOf("export async function startCheckoutAction"));
-    const gate = body.indexOf("takeRateLimit(CHECKOUT_BUCKET");
+    // Per caller, strictly (src/lib/public-limits.ts). The all-callers limit is
+    // a circuit breaker now; tests/unit/public-actions.test.ts covers it.
+    const gate = body.indexOf("takeRateLimit(CHECKOUT_CALLER_BUCKET");
     assert.ok(gate !== -1, "startCheckoutAction must take the checkout rate limit");
     assert.ok(gate < body.indexOf("startCheckout(intentId)"), "and take it first");
   });

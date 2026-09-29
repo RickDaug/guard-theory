@@ -7,7 +7,8 @@
  */
 
 /**
- * Three order messages, the list announcement, and "test".
+ * Three order messages, the list announcement, the waitlist's double opt-in
+ * confirmation, and "test".
  *
  * "test" is what `scripts/mail/test-send.ts` logs under. It must not be
  * "announcement": the send path skips anyone `email_log` says already has the
@@ -19,6 +20,7 @@ export type EmailTemplate =
   | "order-in-process"
   | "order-shipped"
   | "announcement"
+  | "waitlist-confirmation"
   | "test";
 
 export type Email = {
@@ -34,6 +36,11 @@ export type Email = {
    * deliberate resend from the portal, which is meant to go again.
    */
   idempotencyKey?: string;
+  /**
+   * Extra message headers, sent as Resend's `headers`. Used for
+   * `List-Unsubscribe` and `List-Unsubscribe-Post` on list mail (RFC 8058).
+   */
+  headers?: Record<string, string>;
 };
 
 /**

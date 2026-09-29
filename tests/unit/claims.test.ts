@@ -208,10 +208,10 @@ describe("the guard can fail", () => {
     );
     assert.match(String(unnamed), /GitHub handles reader data/);
 
-    const longer = byId("privacy-backups-kept-thirty-days").holds(
-      contextFor(null, { [workflow]: raw(workflow).replace("retention-days: 30", "retention-days: 90") }),
+    const longer = byId("privacy-backups-kept-fourteen-days").holds(
+      contextFor(null, { [workflow]: raw(workflow).replace("retention-days: 14", "retention-days: 90") }),
     );
-    assert.match(String(longer), /keeps the artifact for 90 days, not thirty/);
+    assert.match(String(longer), /keeps the artifact for 90 days, not fourteen/);
   });
 
   it("objects when the cart limiter keeps its rows longer, or keeps the address", () => {

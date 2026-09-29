@@ -12,6 +12,7 @@ import type { PublishedArticle } from "../types.ts";
 export const theArmbarFromClosedGuard: PublishedArticle = {
   status: "published",
   publishedAt: "2026-08-04",
+  updatedAt: "2026-09-29",
   authorId: "guard-theory-editorial",
   slug: "the-armbar-from-closed-guard",
   category: "technique-notes",
@@ -23,7 +24,7 @@ export const theArmbarFromClosedGuard: PublishedArticle = {
       id: "the-move-is-mostly-over-before-it-starts",
       heading: "The move is mostly over before it starts",
       paragraphs: [
-        "Ask somebody to show you an armbar from closed guard and they will almost certainly start with the leg. It goes over the head, the hips lift, the arm straightens. That sequence is real and it is also the last third of the technique, which is why it is the third that fails least often and teaches least.",
+        "Ask somebody to show you an armbar from closed guard and they will almost certainly start with the leg. It goes over the head, the hips lift, the arm straightens. That sequence is real and it is also the last third of the technique, and it is rarely where the attempt was lost.",
         "What decides the outcome happens earlier, while both of your legs are still crossed behind your opponent's back. One of their arms has to become unavailable to them. Not gripped, not merely touched, but committed to a place where withdrawing it costs more than leaving it. Everything after that is a matter of getting your body perpendicular to theirs and extending.",
         "This piece is about that earlier part. It takes the position as closed guard specifically, because closed guard sets a particular problem: you have both legs on them and neither leg is free, and the technique requires one of them to travel a long way past their head. That travel takes time. Time is exactly what a defender needs to take an arm back.",
         "Nothing here should be read as a claim that this is the correct armbar, or the best entry, or that it works at any given rate. No study has measured how often an armbar from closed guard finishes against a resisting opponent, and this article does not pretend otherwise.",
@@ -36,17 +37,17 @@ export const theArmbarFromClosedGuard: PublishedArticle = {
         "Isolation means two separate things and they are often confused. The first is that you control the arm at a point where the defender's strength is low, which in practice means at or above the elbow rather than at the wrist alone. The second, and the one people skip, is that their shoulder cannot travel back toward their own centre line.",
         "A defender recovers an arm by pulling the elbow to the ribs and turning the shoulder in. If you have a grip but their shoulder is still free to rotate, you have a handle on something that is already leaving. This is the reason experienced players spend so long on the posture exchange before anything that looks like an attack: the arm becomes takeable when the opponent's posture is broken forward, because a broken posture puts their shoulders in front of their hips and removes the line the elbow would have travelled back along.",
         "The other half of isolation is deciding which arm. From closed guard both are available in principle and only one is available in fact, because your opponent's posture, their base and the direction of their pressure all favour one side. The arm that is posting or gripping heavily is the arm that is already committed. The arm that is loose is the arm you will chase and not catch.",
-        "There is an unglamorous consequence. If your grip is correct and the shoulder is still free, the answer is not to hurry the leg. It is to break the posture again. Rushing the swing with an unisolated arm is the single most common way this attack turns into a guard pass against you, because both of your legs leave the position at once and you have handed over your best structure in exchange for a grip they were always going to strip.",
+        "There is an unglamorous consequence. If your grip is correct and the shoulder is still free, the answer is not to hurry the leg. It is to break the posture again. Rushing the swing with an unisolated arm is a common way this attack turns into a guard pass against you, because both of your legs leave the position at once and you have handed over your best structure in exchange for a grip they were always going to strip.",
       ],
     },
     {
       id: "the-angle-comes-from-the-hips",
       heading: "The angle comes from the hips",
       paragraphs: [
-        "The finished position is roughly perpendicular. Your spine crosses theirs, your hips are underneath their shoulder, and both of your legs are on the far side of their trunk. Getting there is a hip movement, not a leg movement, and describing it as swinging the leg over misplaces the effort by about a metre.",
+        "The finished position is roughly perpendicular. Your spine crosses theirs, your hips are tight under their shoulder, one leg is over their head and the other lies across their chest, with the trapped arm between your thighs. Getting there is a hip movement, not a leg movement, and describing it as swinging the leg over misplaces the effort.",
         "What actually happens is that you move your hips out from directly underneath them and then back in on an angle, so that the shoulder you are attacking sits above your own hip line. Once that relationship exists, the leg crossing the head has almost no work to do; it is closing a door that is already nearly shut. Where the hips have not moved, the same leg has to travel around the outside of a defender who has a free hand and a reason to use it.",
         "The angle also settles a question people argue about, which is whether the second leg should come off the back before or after the first leg passes the head. Framed as a rule it is unanswerable. Framed as a consequence of the hip position, it is straightforward: whichever order leaves you least time with neither leg doing anything is the order that suits the entry you are using.",
-        "One practical marker. If, at the moment your leg crosses their head, you can feel their shoulder pinned between your thigh and the mat, the angle was made. If you can feel their shoulder rolling away from you, it was not, and the extension that follows will be a race you are unlikely to win.",
+        "One practical marker. If, at the moment your leg crosses their head, their shoulder is clamped tight against your hip by the back of your thigh, the angle was made. If you can feel their shoulder rolling away from you, it was not, and the extension that follows will be a race you are unlikely to win.",
       ],
     },
     {
@@ -56,7 +57,7 @@ export const theArmbarFromClosedGuard: PublishedArticle = {
         "The finish is an extension of the hips against a joint that is held at two points. That is the whole mechanism, and the important property of it is not how much force it can produce but how little distance separates a controlled position from an uncontrolled one. The elbow does not have far to go before it is past where it goes.",
         "This is the specific injury risk in this technique, and it should be stated plainly rather than left as a general caution: the joint reaches the end of its travel before the person attached to it has finished deciding what to do, and the hips can deliver more movement in a fraction of a second than the arms can. The two situations where that gap closes fastest are a fast, dropping entry, and a finish applied by arching the whole body rather than by extending gradually.",
         "So the finish is slow, deliberately, and it is not slow because slow is polite. It is slow because the useful information arrives from your partner, and a movement that fast does not leave time to receive it. Apply the extension in stages. Stop at the first tap, verbal or physical, and release completely rather than easing off. There is no version of this where the last small squeeze after the tap is anything other than a mistake.",
-        "The other half of the same rule sits with the person receiving it. An arm that is straight and controlled is finished; deciding to try the escape anyway is a decision about somebody else's elbow as well as your own. Tap early. Train the escapes from earlier positions, where they are actually escapes, rather than from the last position, where they are gambles.",
+        "The other half of the same rule sits with the person receiving it. An arm that is straight and controlled is as good as finished; deciding to try the escape anyway is a decision about somebody else's elbow as well as your own. Tap early. Train the escapes from earlier positions, where they are actually escapes, rather than from the last position, where they are gambles.",
         "None of this belongs in a first session learned from a page. This is a technique to be introduced by a qualified coach, drilled with a cooperative partner before it is ever applied with resistance, and practised in a room where somebody is watching.",
       ],
     },
@@ -65,7 +66,7 @@ export const theArmbarFromClosedGuard: PublishedArticle = {
       heading: "What the rule books permit",
       paragraphs: [
         "Straight armlocks are broadly legal in the rulesets that govern submission grappling, and the exceptions are informative. The ADCC rules list any arm bar, shoulder lock or wrist lock among legal techniques. The Unified Rules of MMA, in defining small joint manipulation as a foul, state explicitly that fingers and toes are small joints while wrists, ankles, knees, shoulders and elbows are all large joints, which is the same line drawn from the other direction.",
-        "Judo draws it more narrowly. The International Judo Federation's Sport and Organisation Rules describe the sport as one where, apart from the elbow joint, where the rules leave the opponent the possibility of quitting, techniques are executed in the sense of the articulation and never in hyperextension. The elbow is the exception the whole rest of the joint-lock policy is written around.",
+        "Judo draws it more narrowly. The International Judo Federation's refereeing rules for 2014 to 2016 listed applying kansetsu-waza anywhere other than the elbow joint among the grave infringements penalised by hansoku-make, and the statement of principles at the head of the current rules still sets the elbow apart: it is the joint where the opponent must be left the possibility of quitting, while every other technique is executed in the sense of the articulation and never in hyperextension.",
         "The IBJJF rule book restricts the entry rather than the lock. Jumping to closed guard on a standing opponent is a penalty in the under-15 division at all belts and in every white belt age group, and the rule names flying triangles and flying armbars specifically as attacks that fall under it. That prohibition is about the entry: a technique whose control is established during a fall through the air is a different proposition from the same technique built from the ground.",
         "The practical reading is that what varies between organisations is rarely the lock itself. It is the speed of the entry, the age and rank of the people doing it, and whether the finish stays on the joint it started on. Check the rule book for your own division rather than assuming the room's habits match it.",
       ],
@@ -75,8 +76,9 @@ export const theArmbarFromClosedGuard: PublishedArticle = {
       heading: "What is not known",
       paragraphs: [
         "There is very little quantitative work on submissions in grappling, and none of it is about this one. Spanias, Kirk and Ovretveit's analysis of 26 no-gi submission-only matches found that time spent in dominant positions correlated with winning by an upper-body submission and did not correlate with winning by a lower-body one, and that the single most frequent finish in their sample was the heel hook. That is a small sample from two events under one format, and the authors present it as such.",
-        "What that finding supports is modest and worth having anyway: upper-body attacks in their sample arrived through position, and lower-body attacks did not. An armbar from closed guard is a positional attack in exactly that sense. It is the end of a sequence of small controls, not a thing that happens to be available.",
+        "What that finding supports is modest and worth having anyway: upper-body attacks in their sample arrived through position, and lower-body attacks did not. An armbar from closed guard is not from a dominant position in that study's sense, since closed guard is not among the positions it counted, but it is positional in a looser one: it is the end of a sequence of small controls, not a thing that happens to be available.",
         "What no source supports is any claim about how often this attack succeeds, at what level, or against whom. Rooms carry strong opinions about that and none of them are measurements. The reason to build the arm control first is mechanical and it stands on its own: the leg has a long way to travel, and an arm that is not committed will be gone before it arrives.",
+        "Correction, 29 September 2026: an earlier version of this article put both legs on the far side of the trunk in the finished position and the shoulder against the mat at the moment the leg crosses. In the finish one leg is over the head and the other across the chest, with the arm between the thighs, and from closed guard the shoulder is clamped against the hip rather than the mat. The judo paragraph now cites the IJF rule that made joint locks anywhere but the elbow a disqualifying foul.",
       ],
     },
   ],
@@ -97,10 +99,17 @@ export const theArmbarFromClosedGuard: PublishedArticle = {
     },
     {
       title:
-        "Sport and Organisation Rules of the International Judo Federation, version 12.03.2024, Appendix D: Referee Rules",
+        "Sport and Organisation Rules of the International Judo Federation, version 12.03.2024, Appendix D: Referee Rules, including the statement of principles on the elbow joint",
       publisher: "International Judo Federation",
       url: "https://78884ca60822a34fb0e6-082b8fd5551e97bc65e327988b444396.ssl.cf3.rackcdn.com/up/2024/04/IJF_SOR_version_12_03_2024_App-1712052995.pdf",
-      accessed: "2026-08-04",
+      accessed: "2026-09-29",
+    },
+    {
+      title:
+        "IJF Refereeing Rules 2014-2016: Hansoku-make item 2, applying kansetsu-waza anywhere other than to the elbow joint",
+      publisher: "International Judo Federation, via the Hong Kong Judo Association",
+      url: "http://www.hkjudo.org/statics/rules_refereeing20150328.pdf",
+      accessed: "2026-09-29",
     },
     {
       title:

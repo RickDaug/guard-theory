@@ -13,6 +13,7 @@ import type { PublishedArticle } from "../types.ts";
 export const theKimuraAsAControlBeforeItIsAFinish: PublishedArticle = {
   status: "published",
   publishedAt: "2026-08-04",
+  updatedAt: "2026-09-29",
   authorId: "guard-theory-editorial",
   slug: "the-kimura-as-a-control-before-it-is-a-finish",
   category: "technique-notes",
@@ -24,7 +25,7 @@ export const theKimuraAsAControlBeforeItIsAFinish: PublishedArticle = {
       id: "one-grip-several-names",
       heading: "One grip, several names",
       paragraphs: [
-        "The grip is simple to describe and awkward to do well. Your hand takes the opponent's wrist, your other arm threads under their upper arm and takes your own wrist, and the resulting figure encloses their arm at two points. The shoulder is the joint it acts on. The elbow is where it is held.",
+        "The grip is simple to describe and awkward to do well. Your hand takes the opponent's wrist, your other arm wraps behind their upper arm, comes through under their forearm, and takes your own wrist, and the resulting figure encloses their arm at two points. The shoulder is the joint it acts on. The elbow is where it is held.",
         "It has more names than most techniques. Judo's nomenclature places it in the ude-garami family, catch wrestling calls it a double wristlock, and most jiu-jitsu rooms call it a kimura. Where the last name came from is a story told confidently and told in several versions, and this article does not adjudicate between them. What matters here is that three traditions arrived at the same grip and used it differently, which is a hint about what it is for.",
         "What follows treats the grip as an object in its own right, appearing from half guard, from side control and from a front headlock. Those three positions share almost nothing. The grip is the same in all of them and does the same job in all of them, which is why it is worth learning as a unit rather than as three techniques that happen to look alike.",
       ],
@@ -43,8 +44,8 @@ export const theKimuraAsAControlBeforeItIsAFinish: PublishedArticle = {
       id: "from-half-guard",
       heading: "From half guard",
       paragraphs: [
-        "From the bottom of half guard the grip solves a specific problem. The top player's near arm is either underhooking you or posting to stop the sweep, and both of those are arms you can reach.",
-        "Take the figure-four on that arm and the top player's options collapse. They cannot post on it to stop being rolled, they cannot use it to flatten you, and if they try to pull it free they generally have to give up the pressure holding you down. In practice the grip is a sweep more often than it is a finish, because the moment they defend the arm, their base changes and the sweep is there.",
+        "From the bottom of half guard the grip solves a specific problem. The top player's arm on the side you are turning toward is either underhooking you or posting on the mat to stop the sweep, and both of those are arms you can reach.",
+        "Take the figure-four on that arm and the top player's options collapse. They cannot post on it to stop being rolled, they cannot use it to flatten you, and if they try to pull it free they generally have to give up the pressure holding you down. From half guard the grip often produces the sweep before it produces the finish, because the moment they defend the arm, their base changes and the sweep is there.",
         "There is a second, quieter effect. Half guard is a position where the top player's chest and your chest are fighting over an inch or two of space, and an arm trapped in a figure-four is an arm that is not contributing to that fight. Reclaiming the underhook while somebody's arm is tied is a different task from reclaiming it while both of their arms work.",
         "The risk in this set-up sits with the sweep rather than with the lock. Rolling somebody while you hold their arm in a figure-four means their arm arrives at the mat in a position they did not choose, and their body follows. Go slowly, particularly on the rotation as they turn, and let go of the grip if the roll is happening faster than you can control the arm through it.",
       ],
@@ -66,7 +67,7 @@ export const theKimuraAsAControlBeforeItIsAFinish: PublishedArticle = {
         "The third set-up is the one that most clearly shows the grip working as a control. When somebody shoots and you meet them with a front headlock, one of their arms is often inside, near your hip, and reachable.",
         "Taken there, the figure-four is rarely a finish and is frequently everything else. It stops them building back up to their feet on that side, because the arm they would post with is committed. It gives you a handle to rotate them with, which is how the grip becomes a route to the back or to a change of angle. And it is a stalling point that costs them more than it costs you: your two hands against their one arm, in a position where they need both.",
         "That is the pattern to notice across all three set-ups. The grip's value is not that it threatens a shoulder. It is that it converts a symmetric exchange into an asymmetric one, and then lets you choose what to do with the asymmetry.",
-        "It also generalises the safety rule. Anything that rotates a shoulder from a position where the other person cannot see it needs to be applied with less force than feels necessary, and abandoned rather than forced when the position moves. That applies more here than anywhere, because a front headlock is a scramble position and scrambles move.",
+        "It also generalises the safety rule. Anything that rotates a shoulder from a position where the other person cannot see it needs to be applied with less force than feels necessary, and abandoned rather than forced when the position moves. That applies especially here, because a front headlock is a scramble position and scrambles move.",
       ],
     },
     {
@@ -75,16 +76,17 @@ export const theKimuraAsAControlBeforeItIsAFinish: PublishedArticle = {
       paragraphs: [
         "Shoulder locks are broadly legal in adult submission grappling, and the shape of the exceptions is instructive. The ADCC rules list any arm bar, shoulder lock or wrist lock among legal techniques. The Unified Rules of MMA, defining small joint manipulation as a foul, state that fingers and toes are small joints while wrists, ankles, knees, shoulders and elbows are all large joints. United World Wrestling's grappling rules restrict guillotines, foot locks, calf and bicep slicers and knee bars in the under-13 and under-15 categories, and do not restrict shoulder locks there.",
         "The IBJJF's rule book takes the opposite approach to the same problem, listing prohibited holds in a table organised by age and belt division. The numbered items in that table include the omoplata and the wrist lock, which are the shoulder lock's near neighbours, along with a set of leg attacks and spinal locks. The table is a grid, the restrictions differ by division, and the only sensible instruction is to read the version that applies to you.",
-        "Judo restricts joint attacks more narrowly than any of them. The IJF's rules describe the sport as one where, apart from the elbow joint, techniques are executed in the sense of the articulation and never in hyperextension — a constraint on the direction a joint is loaded rather than a list of joints that may be attacked. The lock itself sits in judo's ude-garami family, which is a recognised kansetsu-waza. What changes between documents is how a technique may be applied, not whether the shape exists.",
+        "Judo restricts joint attacks more narrowly than any of them. The IJF's refereeing rules for 2014 to 2016 listed applying kansetsu-waza anywhere other than the elbow joint among the grave infringements penalised by hansoku-make, and the IJF's statement of principles, at the head of its current rules, still sets the elbow apart, describing all other techniques as executed in the sense of the joint and never in hyperextension. The shape sits in judo's ude-garami family, where it is classed with the other locks on the elbow. What changes between documents is how a technique may be applied, not whether the shape exists.",
       ],
     },
     {
       id: "what-can-and-cannot-be-claimed",
       heading: "What can and cannot be claimed",
       paragraphs: [
-        "Nothing in the research literature is about this grip. There is no measurement of how often a kimura control leads to a sweep, a back take or a finish, and no comparison between rooms that teach it as a control and rooms that teach it as a submission.",
+        "We found nothing in the research literature about this grip. There is no measurement of how often a kimura control leads to a sweep, a back take or a finish, and no comparison between rooms that teach it as a control and rooms that teach it as a submission.",
         "The nearest relevant finding is indirect. Spanias, Kirk and Ovretveit, analysing 26 no-gi submission-only matches, found that time spent in dominant positions correlated with winning by an upper-body submission and did not correlate with winning by a lower-body one. Upper-body attacks in that sample arrived through position. A grip that improves position and threatens a shoulder sits on the same side of that line, which is consistent with the argument here and is not evidence for it.",
         "So the case for treating the kimura as a control is mechanical and it is testable in your own training rather than in a citation. Take the grip in a positional round and forbid yourself the finish. Count what becomes available. If the answer is nothing, the argument is wrong for the way you play, and that is a more useful result than a statistic somebody assembled from a different sport under a different ruleset.",
+        "Correction, 29 September 2026: an earlier version of this article described the IJF's statement of principles as a rule, and said judo restricts the direction a joint is loaded rather than which joints may be attacked. The IJF's refereeing rules have made kansetsu-waza anywhere but the elbow a disqualifying foul, and the article now cites that rule. The description of the grip and of the half-guard post is now tied to named arms and sides.",
       ],
     },
   ],
@@ -119,10 +121,17 @@ export const theKimuraAsAControlBeforeItIsAFinish: PublishedArticle = {
     },
     {
       title:
-        "Sport and Organisation Rules of the International Judo Federation, version 12.03.2024, Appendix D: Referee Rules",
+        "Sport and Organisation Rules of the International Judo Federation, version 12.03.2024, Appendix D: Referee Rules, including the statement of principles on the elbow joint",
       publisher: "International Judo Federation",
       url: "https://78884ca60822a34fb0e6-082b8fd5551e97bc65e327988b444396.ssl.cf3.rackcdn.com/up/2024/04/IJF_SOR_version_12_03_2024_App-1712052995.pdf",
-      accessed: "2026-08-04",
+      accessed: "2026-09-29",
+    },
+    {
+      title:
+        "IJF Refereeing Rules 2014-2016: Hansoku-make item 2, applying kansetsu-waza anywhere other than to the elbow joint",
+      publisher: "International Judo Federation, via the Hong Kong Judo Association",
+      url: "http://www.hkjudo.org/statics/rules_refereeing20150328.pdf",
+      accessed: "2026-09-29",
     },
     {
       title:

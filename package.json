@@ -6,7 +6,7 @@
     "brand:build": "node scripts/brand/raster.mjs",
     "brand:promo": "node scripts/brand/promo.mjs",
     "brand:trace": "node scripts/brand/trace.mjs",
-    "build": "next build",
+    "build": "node scripts/build.mjs",
     "cls": "node scripts/cls.mjs",
     "cls:why": "node scripts/cls-explain.mjs",
     "db:backup": "node --env-file-if-exists=.env.local scripts/db/backup.mjs",

@@ -63,3 +63,6 @@ next-env.d.ts
 
 # Stray scratch files from ad-hoc HTML experiments.
 *.tmp.html
+
+# Inline-script hashes collected between the two build passes (scripts/build.mjs)
+/.csp-hashes.json

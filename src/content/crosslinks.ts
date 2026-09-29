@@ -211,6 +211,12 @@ export const CROSS_LINKS: CrossLink[] = [
       "The article names the entry as the control that back-start overtime begins from.",
   },
   {
+    a: journal("ufc-submissions-by-the-numbers"),
+    b: technique("seat-belt-and-hooks"),
+    basis:
+      "The article says the rear naked choke does not exist without the seat belt first; the entry says the back is most often lost while hunting that strangle.",
+  },
+  {
     a: journal("why-the-underhook-decides-half-guard"),
     b: technique("knee-shield"),
     basis:

@@ -340,11 +340,16 @@ describe("turning a paid session into an order", { skip: !HAS_DB && "no DATABASE
       const live = session({ client_reference_id: await makeIntent(1, 5), livemode: true });
       assert.equal((await fulfilCheckoutSession(live)).outcome, "created");
 
-      const liveRow = await query<{ stripe_mode: string }>(
-        `select stripe_mode from "order" where stripe_session_id = $1`,
+      const liveRow = await query<{ stripe_mode: string; flagged_reason: string | null }>(
+        `select stripe_mode, flagged_reason from "order" where stripe_session_id = $1`,
         [live.id],
       );
       assert.equal(liveRow[0]!.stripe_mode, "live", "a live payment is a live order, whatever the key says");
+      assert.equal(
+        liveRow[0]!.flagged_reason,
+        "mode-mismatch",
+        "and the order says so where the owner will see it, not only in a log (0011)",
+      );
       assert.ok(
         quiet.mock.calls.some((call) => String(call.arguments[0]).includes("mode-mismatch")),
         "the disagreement is said out loud",
@@ -359,11 +364,21 @@ describe("turning a paid session into an order", { skip: !HAS_DB && "no DATABASE
         const rehearsal = session({ client_reference_id: await makeIntent(1, 5), livemode: false });
         assert.equal((await fulfilCheckoutSession(rehearsal)).outcome, "created");
 
-        const testRow = await query<{ stripe_mode: string }>(
-          `select stripe_mode from "order" where stripe_session_id = $1`,
+        const testRow = await query<{ stripe_mode: string; flagged_reason: string | null }>(
+          `select stripe_mode, flagged_reason from "order" where stripe_session_id = $1`,
           [rehearsal.id],
         );
         assert.equal(testRow[0]!.stripe_mode, "test", "a test event must never be counted as revenue");
+        assert.equal(testRow[0]!.flagged_reason, "mode-mismatch");
+
+        // Key and event agree: nothing to flag.
+        const agreed = session({ client_reference_id: await makeIntent(1, 5), livemode: true });
+        assert.equal((await fulfilCheckoutSession(agreed)).outcome, "created");
+        const agreedRow = await query<{ flagged_reason: string | null }>(
+          `select flagged_reason from "order" where stripe_session_id = $1`,
+          [agreed.id],
+        );
+        assert.equal(agreedRow[0]!.flagged_reason, null);
       } finally {
         process.env.STRIPE_SECRET_KEY = savedKey;
       }
@@ -415,6 +430,14 @@ describe("turning a paid session into an order", { skip: !HAS_DB && "no DATABASE
       assert.equal(recorded.length, 1, "the portal lists it under Needs you");
       assert.match(recorded[0]!.reason, /^duplicate payment/);
       assert.equal(recorded[0]!.stripe_payment_intent, second.payment_intent);
+
+      // The first order carries the news too, so it is not shipped by someone
+      // who never opened Needs you (0011: the intent now remembers its order).
+      const firstRow = await query<{ flagged_reason: string | null }>(
+        `select flagged_reason from "order" where stripe_session_id = $1`,
+        [first.id],
+      );
+      assert.equal(firstRow[0]!.flagged_reason, "duplicate-payment");
 
       // A replay of the FIRST session is still just a replay.
       assert.equal((await fulfilCheckoutSession(first)).outcome, "already-recorded");

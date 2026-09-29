@@ -494,6 +494,32 @@ describe("ops against the database", { skip: !HAS_DB && "no DATABASE_URL" }, () 
     assert.ok(keys.has(`webhook:${event}`));
   });
 
+  it("counts chargebacks on their own, and every newer flag as flagged", async () => {
+    const open = await order({ dispute_status: "open", flagged_reason: "disputed" });
+    // Decided and cleared by the owner: no longer a problem.
+    const settled = await order({ dispute_status: "won" });
+    // Still open after the owner cleared the flag: still a problem.
+    const cleared = await order({ dispute_status: "open" });
+    const returned = await order({ flagged_reason: "delivery-problem" });
+    const twice = await order({ flagged_reason: "duplicate-payment" });
+    const swapped = await order({ flagged_reason: "mode-mismatch" });
+    const refunded = await order({ flagged_reason: "refunded" });
+
+    const keys = new Set((await collectStoredProblems()).map((p) => p.key));
+
+    assert.ok(keys.has(`disputed:${open}:open`));
+    assert.ok(keys.has(`disputed:${cleared}:open`));
+    assert.ok(![...keys].some((key) => key.startsWith(`disputed:${settled}`)));
+    assert.ok(!keys.has(`flagged:${open}`), "a chargeback is said once, as a chargeback");
+    for (const id of [returned, twice, swapped]) assert.ok(keys.has(`flagged:${id}`), id);
+    assert.ok(!keys.has(`flagged:${refunded}`), "a refund is bookkeeping, not an alert");
+
+    // The outcome of a dispute already reported as open is news: a new key.
+    await query(`update "order" set dispute_status = 'lost' where id = $1`, [open]);
+    const decided = new Set((await collectStoredProblems()).map((p) => p.key));
+    assert.ok(decided.has(`disputed:${open}:lost`));
+  });
+
   it("sends a confirmation for a paid order that has no email_log row at all, once", async () => {
     const orphan = await order({ placed_at: ago(25) });
     const young = await order({ placed_at: ago(1) });

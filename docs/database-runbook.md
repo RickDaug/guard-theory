@@ -250,7 +250,7 @@ somebody presses **Run workflow** on it. It:
    the result with the original;
 5. runs a separate guard that reads the first bytes of every file about to be
    uploaded and **refuses anything that is not a gpg-encrypted file**;
-6. uploads it as a workflow artifact with `retention-days: 30`.
+6. uploads it as a workflow artifact with `retention-days: 14`.
 
 It never prints the connection string, and an error from `pg_dump` is printed
 with the host and any URL removed.
@@ -264,7 +264,14 @@ must be 32 characters or more, and why it must never be reused from anywhere
 else. Making the repository private would take the files off public download;
 that is the owner's call.
 
-Thirty days is a request. A repository's own retention limit wins when it is
+Fourteen days, down from thirty on 2026-09-29 (security audit S3-7): every
+dump still held is one more that a leaked passphrase opens, and two weeks
+still covers noticing a problem well after Neon Free's six-hour restore window
+has closed. The stronger fix is **owner-only**: upload to private storage (a
+Cloudflare R2 or S3 bucket with its own credentials) instead of a public
+artifact, or make the repository private. Neither is done.
+
+Fourteen days is a request. A repository's own retention limit wins when it is
 lower; this one's was 90 days when checked on 2026-09-18:
 
 ```

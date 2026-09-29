@@ -1,6 +1,6 @@
 import { SITE_NAME, SITE_URL } from "../site.ts";
 import { formatMoney } from "../money.ts";
-import { DISPATCH_WITHIN, TRACE_AFTER } from "../../content/policies/shipping-terms.ts";
+import { DISPATCH_WITHIN } from "../../content/policies/shipping-terms.ts";
 import { listUnsubscribeHeaders } from "./list-unsubscribe.ts";
 import type { Email } from "./types.ts";
 
@@ -164,8 +164,8 @@ export function orderShipped(
       `Tracking number: ${tracking.number}`,
       ...(trackingUrl ? [`Track it: ${trackingUrl}`] : []),
       "",
-      `Carrier estimates are estimates. If tracking has not moved for ${TRACE_AFTER},`,
-      "write to us and we will open a trace — you do not need to chase it yourself.",
+      "If tracking stops moving or the parcel arrives damaged, write to us with the",
+      "order number and we will work it out with the carrier.",
       footer(),
     ].join("\n"),
   };
@@ -178,8 +178,8 @@ export function orderShipped(
  * refund has been made rather than that it will be. `refundedCents` is what
  * this cancel refunded; `earlierRefundCents` is anything refunded before it, so
  * the message accounts for the whole payment without the buyer doing sums.
- * How long a card refund takes to appear is the card issuer's, not ours; the
- * 5 to 10 business days is Stripe's published figure for card refunds.
+ * How long a card refund takes to appear is the card issuer's, not ours, and
+ * no policy of ours states a figure, so the message gives none.
  */
 export function orderCancelled(
   order: OrderForEmail,

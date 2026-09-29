@@ -1,10 +1,10 @@
--- 0018_order_refunded_at.sql
+-- 0019_order_refunded_at.sql
 --
 -- When a refund was last recorded on an order.
 --
--- Numbered 0018 rather than 0017: 0017 is taken on an open branch
--- (feat/announcement-campaign). The runner applies in filename order and does
--- not mind a gap.
+-- Numbered 0019: 0017 is taken on an open branch (feat/announcement-campaign)
+-- and 0018 on another (feat/contact-forward). The runner applies in filename
+-- order and does not mind a gap.
 --
 -- The sales records export (/crew/orders/export) prints a refund's amount AND
 -- its date, and nothing stored the date: refunded_cents is a running figure

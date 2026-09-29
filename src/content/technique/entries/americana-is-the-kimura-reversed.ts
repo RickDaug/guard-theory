@@ -5,7 +5,7 @@ export const americanaIsTheKimuraReversed: TechniqueEntry = {
   category: "submissions",
   title: "Americana and kimura: one grip, two turns",
   summary:
-    "The americana and the kimura close the same figure-four on a bent arm and turn the shoulder in opposite directions, and the americana only works while a top pin holds the wrist and shoulder to the mat.",
+    "The americana and the kimura close the same figure-four on a bent arm and turn the shoulder in opposite directions, and the americana depends on a top pin holding the wrist and shoulder to the mat.",
   metaDescription:
     "Americana vs kimura: the shared figure-four grip, which way each turns the shoulder, why the americana is taken from mount and side control, and how it fails.",
   difficulty: "Foundational",

@@ -245,7 +245,7 @@ export const POLICIES: Policy[] = [
         heading: "What this site sets",
         paragraphs: [
           "Nothing, for a reader. There is no analytics, no advertising pixel and no consent banner, because there is nothing to consent to.",
-          "The one cookie this site sets is the sign-in session for our own portal. It is set only when one of us signs in there, it expires on its own, and a reader is never given one.",
+          "The only cookies this site sets are for our own portal: the sign-in session for our own portal, and a signed note that a browser has signed in there before, which lets that browser still sign in while someone else is guessing passwords. Both are set only when one of us signs in there, both expire on their own, and a reader is never given either.",
           "That is a design decision rather than an oversight. If we ever need a cookie for readers, this page will say what it is and what it does, and it will not be set before you agree.",
         ],
       },

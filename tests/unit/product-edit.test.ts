@@ -304,6 +304,11 @@ describe("creating and editing against the database", { skip: !HAS_DB && "no DAT
     assert.deepEqual(await problems(id, 8900), []);
   });
 
+  it("a draft made in the portal has no page on the storefront", async () => {
+    const { slug } = await newDraft();
+    assert.equal(await getProductView(slug), undefined);
+  });
+
   it("shows the portal's specification on the storefront", async () => {
     const { id, slug } = await newDraft();
     await makeWhole(id);

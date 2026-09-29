@@ -164,6 +164,13 @@ export async function getProductView(slug: string): Promise<ProductView | undefi
       return product ? contentOnly(product) : undefined;
     }
 
+    // A product the portal made has no page until it is live or sold out —
+    // the same rule the listing applies. Without this a draft was unlisted but
+    // still rendered at its address, half-made, to anyone who guessed it.
+    if (!product && (row.status === "draft" || row.status === "archived")) {
+      return undefined;
+    }
+
     const [variants, images, specs] = await Promise.all([
       query<VariantRow>(
         "select * from variant where product_id = $1 order by sort_index, size_label",

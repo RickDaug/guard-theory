@@ -1,11 +1,22 @@
--- 0005 — the announcement is claimed before it is sent, and the database is
+-- 0017 — the announcement is claimed before it is sent, and the database is
 -- what enforces "once".
 --
--- Numbered 0005 with no 0003 or 0004 beside it on this branch. Those two belong
--- to the commerce re-land (`0003_commerce`, `0004_admin_session`), which merges
--- first. The runner applies whatever is unapplied in filename order and does
--- not care about gaps, and nothing here depends on anything in them.
+-- Written as 0005_email_log_claim.sql on PR #2, and renumbered when the
+-- 2026-09 backend wave landed first (0016 is PR #48's cancel_and_restock).
+-- Two reasons, both about email_log's status check, which
+-- 0008_email_not_delivered.sql also rewrites:
 --
+--   1. Filename order. On a fresh database the runner would apply 0005 before
+--      0008, and 0008's check ('sent', 'failed', 'not-delivered') would then
+--      forbid 'pending' and 'unknown' — every announcement claim would fail.
+--   2. Production order. 0008 is applied when its PR merges; a later 0005 is
+--      still unapplied, so the runner applies it, and its check would forbid
+--      'not-delivered' — every order confirmation logged while no provider is
+--      connected would fail to record, or the migration itself would fail on
+--      the rows 0008 made legal.
+--
+-- As 0017 it runs after 0008 in both, and its check is the union of the two.
+
 -- WHAT WAS WRONG
 --
 -- The send read `email_log`, called the provider, then wrote `email_log`. A
@@ -36,12 +47,13 @@
 -- Other templates are untouched by the index. An order confirmation may be
 -- sent twice deliberately, from the portal's resend button.
 
--- The inline check in 0002 was never named, so it carries Postgres's default.
+-- 0002's inline check was never named, so it carries Postgres's default name;
+-- 0008 dropped and re-added it under the same one.
 alter table email_log drop constraint email_log_status_check;
 
 alter table email_log
   add constraint email_log_status_check
-  check (status in ('pending', 'sent', 'failed', 'unknown'));
+  check (status in ('pending', 'sent', 'failed', 'unknown', 'not-delivered'));
 
 -- Fails, loudly, if the table already holds two such rows for one address.
 -- That would mean a double send has already happened, and it should not be

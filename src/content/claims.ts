@@ -2,11 +2,13 @@ import { getAuthor } from "./authors.ts";
 import { FIGURES } from "./figures/index.ts";
 import { ARTICLES, isPublished } from "./journal/index.ts";
 import { PRODUCTS } from "./products/index.ts";
+import { PUBLISHED_SPECIFICATIONS } from "./products/published-specs.ts";
 import { SIZE_CHART } from "./products/size-chart.ts";
 import { numberWord } from "./section-descriptions.ts";
 import { ENTRIES } from "./technique/index.ts";
 import { buildSearchIndex } from "../lib/search/index.ts";
 import * as mailTemplates from "../lib/mail/templates.ts";
+import { PENDING_RETENTION_DAYS } from "../lib/waitlist/confirm.ts";
 
 /**
  * What the site says about itself, tied to the thing that makes it true.
@@ -102,6 +104,10 @@ export const STORED: Record<string, Record<string, Disclosure>> = {
     unsubscribed_at: { internal: "set when the reader unsubscribes; nothing is collected to set it" },
     unsubscribe_token: { internal: "a random token we generate for the unsubscribe link" },
     source: { internal: "which of our own code paths wrote the row" },
+    consent_state: { says: "whether and when you confirmed your address" },
+    confirmed_at: { says: "whether and when you confirmed your address" },
+    confirmation_sent_at: { internal: "when we last sent the confirmation link" },
+    confirmation_delivery: { internal: "whether that confirmation email was sent, failed, or only logged" },
   },
   contact_message: {
     id: { internal: "a random identifier we generate" },
@@ -147,7 +153,10 @@ export const STORED: Record<string, Record<string, Disclosure>> = {
   product_spec: internal(["product_id", "position", "label", "value"], "the catalogue: a specification row"),
   product_construction_point: internal(["product_id", "code", "label", "note"], "the catalogue: a construction callout"),
   product_image: internal(["id", "product_id", "blob_url", "alt", "width", "height", "sort_index"], "the catalogue: a product image"),
-  variant: internal(["id", "product_id", "size_label", "sku", "stock", "sort_index"], "the catalogue: a size and its stock"),
+  variant: internal(
+    ["id", "product_id", "size_label", "sku", "stock", "sort_index", "shipping_weight_oz"],
+    "the catalogue: a size, its stock and its shipping weight",
+  ),
 
   /* An order, and the copy of the cart it was priced from. */
   order: {
@@ -174,6 +183,9 @@ export const STORED: Record<string, Record<string, Disclosure>> = {
     stripe_mode: { internal: "whether the Stripe key that took the payment was test or live" },
     refund_status: { internal: "whether any of the payment has been refunded; derived from Stripe's events" },
     refunded_cents: { internal: "how much has been refunded; derived from Stripe's events" },
+    dispute_status: {
+      internal: "whether the payment has been disputed with the card issuer, and how that ended; derived from Stripe's events",
+    },
     tracking_carrier: { internal: "the carrier for the parcel; from the postage label, not from the buyer" },
     tracking_number: { internal: "the parcel's tracking number; from the postage label, not from the buyer" },
     tracking_url: { internal: "the carrier's tracking page for that number" },
@@ -184,6 +196,7 @@ export const STORED: Record<string, Record<string, Disclosure>> = {
     in_process_at: { internal: "when the owner started on it" },
     shipped_at: { internal: "when it was dispatched" },
     delivered_at: { internal: "when the carrier reported delivery" },
+    cancelled_at: { internal: "when the order was cancelled and refunded" },
   },
   order_item: {
     id: { internal: "a random identifier we generate" },
@@ -195,9 +208,11 @@ export const STORED: Record<string, Record<string, Disclosure>> = {
     sku: { says: "what you bought" },
     unit_cents: { says: "what you paid" },
     quantity: { says: "what you bought" },
+    stock_taken: { internal: "how many of the line were taken from stock when it was paid for" },
+    restocked_quantity: { internal: "how many of the line have been put back in stock after a cancel or a return" },
   },
   checkout_intent: internal(
-    ["id", "lines_json", "subtotal_cents", "shipping_cents", "created_at", "consumed_at"],
+    ["id", "lines_json", "subtotal_cents", "shipping_cents", "created_at", "consumed_at", "order_id"],
     "the cart's sizes, quantities and totals as we priced them before sending the buyer to Stripe; nothing about who is buying, and swept after a week if never paid",
   ),
   webhook_event: internal(["id", "source", "type", "received_at", "processed_at"], "a ledger of which provider events have been handled, so none is handled twice"),
@@ -224,6 +239,12 @@ export const STORED: Record<string, Record<string, Disclosure>> = {
   login_attempt: internal(
     ["id", "key_hash", "succeeded", "attempted_at"],
     "the portal's sign-in limiter: a keyed hash of the attempt's address, never the address, deleted after a day",
+  ),
+
+  /* The cart's abuse limiter. About a request, never a person. */
+  rate_limit: internal(
+    ["bucket", "key_hash", "window_start", "hits"],
+    "the cart's rate limiter: a count of requests per keyed hash of the address, never the address, deleted after a day",
   ),
 };
 
@@ -421,7 +442,25 @@ export const PROCESSORS: Array<{
     evidence: "src/lib/shipping/shippo.ts posts the parcel's address to api.goshippo.com",
     present: (context) => externalHosts(context).includes("api.goshippo.com"),
   },
+  {
+    name: "GitHub",
+    evidence:
+      ".github/workflows/db-backup.yml dumps the production database each night and uploads it, encrypted, as a GitHub Actions artifact",
+    present: (context) => nightlyBackup(context) !== null,
+  },
 ];
+
+const BACKUP_WORKFLOW = ".github/workflows/db-backup.yml";
+
+/**
+ * The nightly backup workflow, as text, when it still dumps the database and
+ * uploads the result to GitHub. Null when it is gone or no longer does both.
+ */
+function nightlyBackup(context: ClaimContext): string | null {
+  if (!context.list(".github/workflows").includes(BACKUP_WORKFLOW)) return null;
+  const workflow = context.read(BACKUP_WORKFLOW);
+  return workflow.includes("actions/upload-artifact") && workflow.includes("pg_dump") ? workflow : null;
+}
 
 /** Hosts that appear in code and receive nothing about a reader. */
 export const HOSTS_THAT_RECEIVE_NOTHING: Record<string, string> = {
@@ -526,24 +565,41 @@ function processorsMatchPolicy(context: ClaimContext): true | string {
  * sentence is retired below until there is no transactional mail.
  */
 export const LIST_MAIL = ["announcement"];
-export const TRANSACTIONAL_MAIL = ["orderConfirmation", "orderInProcess", "orderShipped"];
-/** Exported beside the templates, and not a message. */
-export const MAIL_HELPERS: Record<string, string> = {
-  oneClickUnsubscribeUrl: "builds the URL the announcement's List-Unsubscribe header names",
-};
+export const TRANSACTIONAL_MAIL = [
+  "orderConfirmation",
+  "orderInProcess",
+  "orderShipped",
+  "orderCancelled",
+  // Sent to an address that is not on the list yet, because someone asked for
+  // it to be. It says that ignoring it is enough, which is true.
+  "waitlistConfirmation",
+];
 
 function listMailCarriesUnsubscribe(): true | string {
   const problems: string[] = [];
 
   for (const [name, template] of Object.entries(mailTemplates)) {
-    if (typeof template !== "function" || name in MAIL_HELPERS) continue;
+    if (typeof template !== "function") continue;
     if (LIST_MAIL.includes(name)) {
       if (!template.toString().includes("/unsubscribe?t=")) {
         problems.push(`the list template "${name}" no longer builds an unsubscribe link`);
       }
+      // "One-click": the body link opens a confirm page (a GET must not write),
+      // so the one click is RFC 8058's — the mail client's own button. Checked
+      // on a built message, not the source: the headers come from
+      // src/lib/mail/list-unsubscribe.ts.
+      const built = (template as (...args: string[]) => { headers?: Record<string, string> })(
+        "someone@example.com",
+        "claims-check-token",
+        "Subject",
+        "Body",
+      );
+      if (built.headers?.["List-Unsubscribe-Post"] !== "List-Unsubscribe=One-Click") {
+        problems.push(`the list template "${name}" no longer sends List-Unsubscribe-Post (RFC 8058 one-click)`);
+      }
     } else if (!TRANSACTIONAL_MAIL.includes(name)) {
       problems.push(
-        `src/lib/mail/templates.ts now exports "${name}". Add it to LIST_MAIL, TRANSACTIONAL_MAIL or MAIL_HELPERS in src/content/claims.ts`,
+        `src/lib/mail/templates.ts now exports "${name}". Add it to LIST_MAIL or TRANSACTIONAL_MAIL in src/content/claims.ts`,
       );
     }
   }
@@ -559,6 +615,7 @@ function listMailCarriesUnsubscribe(): true | string {
  */
 export const OWN_COOKIES: Record<string, string> = {
   "src/lib/portal/session.ts": "the sign-in session for our own portal",
+  "src/app/crew/sign-in/actions.ts": "a browser has signed in there before",
 };
 
 /* ------------------------------------------------------------------------ */
@@ -568,13 +625,6 @@ export const OWN_COOKIES: Record<string, string> = {
 const productHas = (pattern: RegExp) =>
   PRODUCTS.length > 0 &&
   PRODUCTS.every((product) => Object.keys(product).some((key) => pattern.test(key)));
-
-const PUBLISHED_SPECIFICATIONS = [
-  "Fabric weight",
-  "Fabric composition",
-  "Seam construction",
-  "Print method",
-];
 
 function specificationsArePublished(): true | string {
   const missing = PRODUCTS.flatMap((product) =>
@@ -590,6 +640,7 @@ function specificationsArePublished(): true | string {
 /* ------------------------------------------------------------------------ */
 
 const FAQ = "src/app/faq/page.tsx";
+const RATE_LIMITER = "src/lib/rate-limit-db.ts";
 const POLICIES = "src/content/policies/index.ts";
 
 export const CLAIMS: Claim[] = [
@@ -737,6 +788,40 @@ export const CLAIMS: Claim[] = [
     holds: processorsMatchPolicy,
   },
   {
+    id: "privacy-backups-kept-fourteen-days",
+    says: /encrypted nightly backups are kept for fourteen days/,
+    kind: "stated",
+    where: [POLICIES],
+    holds: (context) => {
+      const workflow = nightlyBackup(context);
+      if (!workflow) return `${BACKUP_WORKFLOW} no longer dumps the database and uploads it to GitHub`;
+      if (!/cron: "\d+ \d+ \* \* \*"/.test(workflow)) return `${BACKUP_WORKFLOW} no longer runs once a day`;
+      const days = workflow.match(/retention-days: (\d+)/)?.[1];
+      return days === "14"
+        ? true
+        : `${BACKUP_WORKFLOW} keeps the artifact for ${days ?? "an unstated number of"} days, not fourteen`;
+    },
+  },
+  {
+    id: "privacy-rate-limit-hash-kept-a-day",
+    says: /a keyed hash of the address, never the address itself, and delete it after a day/,
+    kind: "stated",
+    where: [POLICIES],
+    holds: (context) => {
+      const limiter = context.read(RATE_LIMITER);
+      if (!limiter.includes("RATE_LIMIT_RETENTION_HOURS = 24;")) {
+        return `${RATE_LIMITER} no longer deletes its rows after 24 hours`;
+      }
+      if (!limiter.includes("addressKey(")) {
+        return `${RATE_LIMITER} no longer keys its rows on addressKey, the keyed hash of the address`;
+      }
+      const columns = columnsByTable(context).rate_limit ?? [];
+      return columns.some((column) => /^(ip|addr|address)$/i.test(column))
+        ? `rate_limit now has a column that looks like it holds the address itself: ${columns.join(", ")}`
+        : true;
+    },
+  },
+  {
     id: "no-cookies-no-tracking",
     says: /This site sets no cookies of its own|sets no analytics cookies and loads no third-party tracking scripts/,
     kind: "stated",
@@ -870,5 +955,27 @@ export const CLAIMS: Claim[] = [
       (columnsByTable(context).waitlist_signup ?? []).some((column) => /size/i.test(column))
         ? true
         : "the waitlist has not asked for a size since 2026-08; there is no field and no column",
+  },
+  {
+    id: "privacy-unconfirmed-deleted",
+    says: /An address that is never confirmed is not on the list, and it is deleted (\d+) days after we send the link/,
+    kind: "stated",
+    where: [POLICIES],
+    holds: ({ match, read }) => {
+      if (match?.[1] !== String(PENDING_RETENTION_DAYS)) {
+        return `the policy says ${match?.[1]} days and PENDING_RETENTION_DAYS in src/lib/waitlist/confirm.ts is ${PENDING_RETENTION_DAYS}`;
+      }
+      if (!read("src/app/first-edition/actions.ts").includes("purgeUnconfirmed(")) {
+        return "nothing calls purgeUnconfirmed any more, so unconfirmed addresses are kept indefinitely";
+      }
+      const announcement = read("src/lib/mail/announcement.ts");
+      if (
+        !announcement.includes(`ON_THE_LIST = "consent_state in ('confirmed', 'legacy')"`) ||
+        (announcement.match(/and \$\{ON_THE_LIST\}/g) ?? []).length < 3
+      ) {
+        return "the announcement no longer limits itself to confirmed (and legacy) addresses, so an unconfirmed one is on the list after all";
+      }
+      return true;
+    },
   },
 ];

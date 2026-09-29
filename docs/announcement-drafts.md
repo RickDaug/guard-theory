@@ -33,7 +33,7 @@ and `[1]` pass.
 
 ## Before the first real send
 
-- Migration `0005_email_log_claim.sql` must be applied to the database being
+- Migration `0017_announcement_campaign.sql` must be applied to the database being
   sent from. Without it the first claim fails its status check and the run
   stops before anything is sent.
 - `NEXT_PUBLIC_SITE_URL` must be exactly `https://guardtheory.net`. The

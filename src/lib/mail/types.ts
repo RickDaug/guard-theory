@@ -7,7 +7,8 @@
  */
 
 /**
- * Three order messages, the list announcement, and "test".
+ * Four order messages, the list announcement, the waitlist's double opt-in
+ * confirmation, and "test".
  *
  * "test" is what `scripts/mail/test-send.ts` logs under. It must not be
  * "announcement": the send path skips anyone `email_log` says already has the
@@ -18,7 +19,9 @@ export type EmailTemplate =
   | "order-confirmation"
   | "order-in-process"
   | "order-shipped"
+  | "order-cancelled"
   | "announcement"
+  | "waitlist-confirmation"
   | "test";
 
 export type Email = {
@@ -27,19 +30,43 @@ export type Email = {
   /** Plain text. There is no HTML version, and that is a decision — see below. */
   body: string;
   /**
-   * Extra message headers — `List-Unsubscribe` and its companion, for list
-   * mail. Optional, because a test send has nobody to unsubscribe.
-   */
-  headers?: Record<string, string>;
-  /**
-   * Sent to the provider as `Idempotency-Key`. The same key twice is one
-   * message, not two — for as long as the provider remembers it, which for
-   * Resend is 24 hours (checked 2026-09-18 against
-   * resend.com/docs/dashboard/emails/idempotency-keys; 256 characters at
-   * most). A second line of defence, never the first: see `announcement.ts`.
+   * Sent to the provider as `Idempotency-Key`: the same key with the same body
+   * inside 24 hours returns the first send instead of sending again (Resend,
+   * checked 2026-09-18 against resend.com/docs/dashboard/emails/idempotency-keys;
+   * 256 characters at most). For messages that must go at most once whoever
+   * asks — the order confirmation, which the webhook, a Stripe retry and the
+   * cron reconcile can all reach, and each announcement (a second line of
+   * defence there, never the first: see `announcement.ts`). Never on a
+   * deliberate resend from the portal, which is meant to go again.
    */
   idempotencyKey?: string;
+  /**
+   * Extra message headers, sent as Resend's `headers`. List mail only: the
+   * announcement sets List-Unsubscribe and List-Unsubscribe-Post here (RFC
+   * 8058), and no order message may carry either (see
+   * src/lib/mail/list-unsubscribe.ts). Optional, because a test send has
+   * nobody to unsubscribe.
+   */
+  headers?: Record<string, string>;
 };
+
+/**
+ * What the ordinary send path writes to `email_log.status`
+ * (0002_email_log.sql, 0008_email_not_delivered.sql).
+ *
+ * "not-delivered" is the log-only provider: nothing failed, and nothing went.
+ * It is not "sent", so the confirmation path does not treat it as done and a
+ * later send, once a provider is connected, can find it and try again.
+ */
+export type EmailStatus = "sent" | "failed" | "not-delivered";
+
+/**
+ * Everything `email_log.status` may hold: the above, plus the announcement's
+ * claim ("pending", written before the provider is called) and "unknown" (the
+ * provider never answered). 0017_announcement_campaign.sql is the other half
+ * of this.
+ */
+export type EmailLogStatus = EmailStatus | "pending" | "unknown";
 
 /**
  * A failure is one of two different things, and the difference is whether it
@@ -63,9 +90,6 @@ export type SendResult =
        */
       retryAfterMs?: number;
     };
-
-/** What `email_log.status` may hold. Migration 0005 is the other half of this. */
-export type EmailLogStatus = "pending" | "sent" | "failed" | "unknown";
 
 export interface MailProvider {
   readonly name: string;

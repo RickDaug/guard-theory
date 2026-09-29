@@ -14,6 +14,8 @@ type Row = {
   submitted_at: Date;
   unsubscribed_at: Date | null;
   source: string;
+  consent_state: string;
+  confirmed_at: Date | null;
 };
 
 /**
@@ -37,7 +39,8 @@ export async function GET(): Promise<Response> {
 
   const rows = await query<Row>(
     `select email, first_name, training_experience, sleeve_preference,
-            product_interest, submitted_at, unsubscribed_at, source
+            product_interest, submitted_at, unsubscribed_at, source,
+            consent_state, confirmed_at
        from waitlist_signup
       order by submitted_at asc`,
   );
@@ -55,6 +58,14 @@ export async function GET(): Promise<Response> {
       literal: true,
     },
     { header: "source", value: (r) => r.source },
+    // pending: never confirmed, not on the list. legacy: joined before
+    // confirmation existed. confirmed: pressed the link's Confirm button.
+    { header: "consent", value: (r) => r.consent_state },
+    {
+      header: "confirmed",
+      value: (r) => r.confirmed_at?.toISOString() ?? "",
+      literal: true,
+    },
   ]);
 
   const stamp = new Date().toISOString().slice(0, 10);

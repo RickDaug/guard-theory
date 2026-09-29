@@ -542,7 +542,7 @@ describe("what the provider's answer means", () => {
     assert.equal(headers["Idempotency-Key"], idempotencyKeyFor("reader@real.dev"));
 
     const body = JSON.parse(String(seen!.init.body)) as { headers: Record<string, string> };
-    assert.match(body.headers["List-Unsubscribe"]!, /^<https?:\/\/[^>]+\/unsubscribe\/one-click\?t=[^>]+>$/);
+    assert.match(body.headers["List-Unsubscribe"]!, /^<https?:\/\/[^>]+\/api\/unsubscribe\?t=[^>]+>$/);
     assert.equal(body.headers["List-Unsubscribe-Post"], "List-Unsubscribe=One-Click");
   });
 
@@ -660,12 +660,28 @@ describe("the queries, against a real database", { skip: !configured }, () => {
     await closePool();
   });
 
-  async function signup(email: string, extra: { unsubscribed?: boolean; consent?: boolean } = {}) {
+  async function signup(
+    email: string,
+    extra: {
+      unsubscribed?: boolean;
+      consent?: boolean;
+      state?: "pending" | "confirmed" | "legacy";
+    } = {},
+  ) {
+    // consent_state defaults to 'pending' for new rows (0013); a subscriber
+    // here is a confirmed one unless the test says otherwise.
     await query(
       `insert into waitlist_signup
-         (id, email, first_name, consent, submitted_at, unsubscribed_at, unsubscribe_token)
-       values ($1, $2, 'Pat', $3, now(), $4, $5)`,
-      [randomUUID(), email, extra.consent ?? true, extra.unsubscribed ? new Date() : null, randomUUID()],
+         (id, email, first_name, consent, submitted_at, unsubscribed_at, unsubscribe_token, consent_state)
+       values ($1, $2, 'Pat', $3, now(), $4, $5, $6)`,
+      [
+        randomUUID(),
+        email,
+        extra.consent ?? true,
+        extra.unsubscribed ? new Date() : null,
+        randomUUID(),
+        extra.state ?? "confirmed",
+      ],
     );
   }
 
@@ -689,9 +705,15 @@ describe("the queries, against a real database", { skip: !configured }, () => {
     await signup(addr("active"));
     await signup(addr("gone"), { unsubscribed: true });
     await signup(addr("noconsent"), { consent: false });
+    await signup(addr("legacy"), { state: "legacy" });
+    await signup(addr("unconfirmed"), { state: "pending" });
 
+    // Double opt-in (0013): a pending address was never confirmed by its
+    // owner and is not on the list; a legacy one joined before confirmation
+    // existed and is.
     const mine = (await loadSubscribers()).filter((s) => s.email.includes(tag)).map((s) => s.email);
-    assert.deepEqual(mine, [addr("active")]);
+    assert.deepEqual(mine, [addr("active"), addr("legacy")]);
+    assert.equal(await claimRecipient(addr("unconfirmed")), "unsubscribed", "a pending address is never claimed");
   });
 
   it("sent, pending and unknown all count as done; only failed is retried", async () => {

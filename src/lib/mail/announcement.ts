@@ -26,7 +26,7 @@ import type { Email, SendResult } from "./types.ts";
  *
  * `email_log` is the ledger, and the ledger is written FIRST. Before the
  * provider is called, the address is claimed: a `pending` row, guarded by a
- * partial unique index (migration 0005) that allows one pending, sent or
+ * partial unique index (migration 0017) that allows one pending, sent or
  * unknown announcement row per address. Whoever inserts it owns the send. A
  * second run — concurrent, or tomorrow's — gets a conflict instead of a row
  * and moves on. After the call the row becomes `sent`, `failed` or `unknown`.
@@ -286,13 +286,30 @@ export function planAnnouncement(input: {
   };
 }
 
-/** Everyone still on the list who said yes, oldest signup first. */
+/**
+ * The double opt-in half of "on the list": confirmed by the address's owner,
+ * or joined before confirmation existed. A literal, never a parameter.
+ */
+export const ON_THE_LIST = "consent_state in ('confirmed', 'legacy')";
+
+/**
+ * Everyone still on the list who said yes, oldest signup first.
+ *
+ * "On the list" includes consent_state (0013_waitlist_double_opt_in.sql). A
+ * 'pending' address was typed into the form by someone and never confirmed by
+ * its owner, so it is not on the list and is never sent this. 'legacy' rows
+ * joined before confirmation existed and are sent to as they always were —
+ * whether to ask them to re-confirm first is the owner's decision, and
+ * changing it is deleting 'legacy' from ON_THE_LIST. claimRecipient re-reads
+ * the same condition immediately before each send.
+ */
 export async function loadSubscribers(): Promise<Subscriber[]> {
   const rows = await query<{ email: string; unsubscribe_token: string }>(
     `select email, unsubscribe_token
        from waitlist_signup
       where unsubscribed_at is null
         and consent = true
+        and ${ON_THE_LIST}
       order by submitted_at asc, id asc`,
   );
   return rows.map((row) => ({ email: row.email, unsubscribeToken: row.unsubscribe_token }));
@@ -301,7 +318,7 @@ export async function loadSubscribers(): Promise<Subscriber[]> {
 /**
  * The statuses that mean "do not send to this address again".
  *
- * The same three the partial unique index in migration 0005 covers, and they
+ * The same three the partial unique index in migration 0017 covers, and they
  * must stay the same three: this list is what the plan skips, the index is
  * what the claim collides with, and a status in one and not the other is
  * either a double send or an address nobody ever reaches.
@@ -398,6 +415,7 @@ export async function claimRecipient(email: string): Promise<Claim> {
       where lower(email) = lower($2)
         and unsubscribed_at is null
         and consent = true
+        and ${ON_THE_LIST}
      on conflict do nothing
      returning id`,
     [id, email, TEMPLATE],
@@ -413,7 +431,8 @@ export async function claimRecipient(email: string): Promise<Claim> {
        from waitlist_signup
       where lower(email) = lower($1)
         and unsubscribed_at is null
-        and consent = true`,
+        and consent = true
+        and ${ON_THE_LIST}`,
     [email],
   );
   return (wanted[0]?.n ?? 0) > 0 ? "claimed" : "unsubscribed";

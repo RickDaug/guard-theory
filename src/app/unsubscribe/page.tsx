@@ -1,35 +1,31 @@
 import type { Metadata } from "next";
-import { cache } from "react";
-import Link from "next/link";
 import { UtilityPage } from "@/components/site/UtilityPage";
-import { Button } from "@/components/ui/Button";
-import { lookupUnsubscribeToken } from "@/lib/waitlist";
-import { confirmUnsubscribe } from "./actions";
+import { ConfirmForm } from "./ConfirmForm";
 import {
   metaDescriptionFor,
   metaTitleFor,
-  outcomeForLookup,
   tokenFromSearchParams,
-  type UnsubscribeOutcome,
+  type UnsubscribePageState,
 } from "./copy";
+import { copyFor } from "./outcome";
 
 /**
- * This page used to assert an outcome with nothing behind it: a static sheet
- * telling the reader their address had been removed, while nothing removed it.
- * It now honours a real token — and the `<title>` honours it too, so a tab or
- * a screen reader's document title cannot claim success on a link that did
- * nothing.
+ * The link at the foot of every list email.
  *
- * A GET CHANGES NOTHING. This page used to unsubscribe whoever's link was
- * opened, and the first thing to open a link in an email is often not its
- * reader: mail scanners and prefetchers follow every URL in a message, and each
- * one was an unsubscribe nobody asked for. So the link lands on a button, and
- * the button is a same-origin POST (the CSP's `form-action 'self'` allows
- * exactly that). The privacy policy's "one-click unsubscribe" is kept where
- * one click is safe — the `List-Unsubscribe-Post` header every list message
- * carries, which the mail client POSTs to `./one-click/route.ts`.
+ * GET CHANGES NOTHING. It used to: one click on the link was the whole
+ * interaction. But email security scanners (Outlook Safe Links, Mimecast and
+ * the rest) fetch every link in a message before the reader sees it, so a GET
+ * that wrote took people off the list silently (security audit 2026-09-29,
+ * S3-3). A link with a token now shows a confirm button, and the POST behind
+ * it does the write — see ConfirmForm and actions.ts.
  *
- * It is dynamic because what it shows depends on the row the token names.
+ * One click still exists where it belongs: each list email carries
+ * `List-Unsubscribe` and `List-Unsubscribe-Post: List-Unsubscribe=One-Click`
+ * (RFC 8058), and a mail client's own Unsubscribe button POSTs to
+ * /api/unsubscribe, which acts at once. RFC 8058 requires POST for exactly the
+ * scanner reason above.
+ *
+ * The `<title>` never claims an outcome: on GET nothing has happened yet.
  *
  * Reaching it with no token at all is not an error. The links crawl fetches
  * this route directly, and a person can arrive here from a bookmark; both get
@@ -37,25 +33,10 @@ import {
  */
 export const dynamic = "force-dynamic";
 
-type SearchParams = Promise<{ t?: string | string[]; failed?: string | string[] }>;
+type SearchParams = Promise<{ t?: string | string[] }>;
 
-/**
- * `generateMetadata` and the page component both need the outcome. The lookup
- * only reads, so asking twice would be harmless; `cache()` makes it once.
- */
-const lookup = cache(async (token: string) => (token ? lookupUnsubscribeToken(token) : "no-token"));
-
-async function resolve(
-  searchParams: SearchParams,
-): Promise<{ outcome: UnsubscribeOutcome; token: string }> {
-  const params = await searchParams;
-  const token = tokenFromSearchParams(params.t);
-  const failed = tokenFromSearchParams(params.failed) !== "";
-  return { outcome: outcomeForLookup(await lookup(token), failed), token };
-}
-
-async function outcomeFor(searchParams: SearchParams): Promise<UnsubscribeOutcome> {
-  return (await resolve(searchParams)).outcome;
+async function readToken(searchParams: SearchParams): Promise<string> {
+  return tokenFromSearchParams((await searchParams).t);
 }
 
 export async function generateMetadata({
@@ -63,167 +44,16 @@ export async function generateMetadata({
 }: {
   searchParams: SearchParams;
 }): Promise<Metadata> {
-  const outcome = await outcomeFor(searchParams);
+  const state: UnsubscribePageState = (await readToken(searchParams)) ? "confirm" : "no-token";
 
   return {
-    title: metaTitleFor(outcome),
-    description: metaDescriptionFor(outcome),
+    title: metaTitleFor(state),
+    description: metaDescriptionFor(state),
     robots: { index: false, follow: false },
+    // The token is a bearer credential for one address. Keep it out of the
+    // Referer sent to anything this page links to.
+    referrer: "no-referrer",
   };
-}
-
-type Copy = {
-  title: React.ReactNode;
-  tone?: "neutral" | "alert";
-  body: React.ReactNode;
-};
-
-function copyFor(result: UnsubscribeOutcome): Copy {
-  switch (result) {
-    case "unsubscribed":
-    case "already":
-      return {
-        title: (
-          <>
-            You are{" "}
-            <br />
-            unsubscribed
-          </>
-        ),
-        body: (
-          <>
-            <p className="text-lg text-steel">
-              Your email address has been removed from the First Edition list. We
-              will not email you again.
-            </p>
-            <p className="text-base text-steel">
-              Nothing else was deleted automatically. If you would also like the
-              preferences you gave us removed,{" "}
-              <Link
-                href="/contact"
-                className="text-chalk underline decoration-steel-dim underline-offset-[5px] transition-colors duration-[140ms] ease-[var(--ease-control)] hover:decoration-signal-lift"
-              >
-                ask
-              </Link>{" "}
-              and we will delete them — you do not need to give a reason.
-            </p>
-            <p className="text-base text-steel">
-              If you did this by accident, you can join again at any time.
-              Nothing is held against the address.
-            </p>
-          </>
-        ),
-      };
-
-    case "confirm":
-      return {
-        title: (
-          <>
-            Leave the
-            <br />
-            list
-          </>
-        ),
-        body: (
-          <p className="text-lg text-steel">
-            This link belongs to an address on the First Edition list. Press the
-            button and we remove it, and we will not email it again.
-          </p>
-        ),
-      };
-
-    case "no-token":
-      return {
-        title: (
-          <>
-            Use the link{" "}
-            <br />
-            in the email
-          </>
-        ),
-        body: (
-          <>
-            <p className="text-lg text-steel">
-              This page removes an address from the First Edition list, and it
-              needs the link from one of our emails to know which address to
-              remove.
-            </p>
-            <p className="text-base text-steel">
-              Every email we send carries that link at the foot of it. If you
-              cannot find one,{" "}
-              <Link
-                href="/contact"
-                className="text-chalk underline decoration-steel-dim underline-offset-[5px] transition-colors duration-[140ms] ease-[var(--ease-control)] hover:decoration-signal-lift"
-              >
-                write to us
-              </Link>{" "}
-              and we will remove you by hand.
-            </p>
-          </>
-        ),
-      };
-
-    case "unknown-token":
-      return {
-        title: (
-          <>
-            That link{" "}
-            <br />
-            is not ours
-          </>
-        ),
-        body: (
-          <>
-            <p className="text-lg text-steel">
-              We could not match this link to an address on the list. It may have
-              been truncated by an email client, or the address may already have
-              been deleted outright.
-            </p>
-            <p className="text-base text-steel">
-              <Link
-                href="/contact"
-                className="text-chalk underline decoration-steel-dim underline-offset-[5px] transition-colors duration-[140ms] ease-[var(--ease-control)] hover:decoration-signal-lift"
-              >
-                Write to us
-              </Link>{" "}
-              and we will make sure you are off the list. That is faster than
-              trying the link again.
-            </p>
-          </>
-        ),
-      };
-
-    case "unavailable":
-      return {
-        tone: "alert",
-        title: (
-          <>
-            We could not{" "}
-            <br />
-            do that just now
-          </>
-        ),
-        body: (
-          <>
-            <p className="text-lg text-steel">
-              Something on our side failed and your address has not been removed.
-              We would rather say so than show you a confirmation that means
-              nothing.
-            </p>
-            <p className="text-base text-steel">
-              Try the link again in a few minutes. If it fails twice,{" "}
-              <Link
-                href="/contact"
-                className="text-chalk underline decoration-steel-dim underline-offset-[5px] transition-colors duration-[140ms] ease-[var(--ease-control)] hover:decoration-signal-lift"
-              >
-                write to us
-              </Link>{" "}
-              and we will remove you by hand.
-            </p>
-          </>
-        ),
-      };
-  }
 }
 
 export default async function UnsubscribePage({
@@ -231,8 +61,13 @@ export default async function UnsubscribePage({
 }: {
   searchParams: SearchParams;
 }) {
-  const { outcome: result, token } = await resolve(searchParams);
-  const { title, body, tone } = copyFor(result);
+  const token = await readToken(searchParams);
+
+  if (token) {
+    return <ConfirmForm token={token} />;
+  }
+
+  const { title, body, tone } = copyFor("no-token");
 
   return (
     <UtilityPage
@@ -243,12 +78,6 @@ export default async function UnsubscribePage({
       secondary={{ href: "/journal", label: "Read the Journal" }}
     >
       {body}
-      {result === "confirm" ? (
-        <form action={confirmUnsubscribe}>
-          <input type="hidden" name="t" value={token} />
-          <Button type="submit">Unsubscribe</Button>
-        </form>
-      ) : null}
     </UtilityPage>
   );
 }

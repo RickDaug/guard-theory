@@ -31,7 +31,7 @@
  * The rules live in `src/lib/mail/announcement.ts`, where they are tested.
  *
  * Each address is claimed in `email_log` before its message is sent, under a
- * unique index (migration 0005). Two runs at once, or a run killed halfway,
+ * unique index (migration 0017). Two runs at once, or a run killed halfway,
  * therefore cannot send a second copy: the second claim is a conflict. Do not
  * run two at once anyway — it is safe, and it is confusing.
  *

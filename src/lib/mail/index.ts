@@ -1,6 +1,7 @@
 import { randomUUID } from "node:crypto";
 import { isDatabaseConfigured, query } from "../db/client.ts";
-import type { Email, EmailTemplate, MailProvider, SendResult } from "./types.ts";
+import { SITE_NAME } from "../site.ts";
+import type { Email, EmailStatus, EmailTemplate, MailProvider, SendResult } from "./types.ts";
 
 /**
  * Sending mail, and never letting it break an order.
@@ -52,11 +53,7 @@ class ResendProvider implements MailProvider {
     try {
       response = await fetch("https://api.resend.com/emails", {
         method: "POST",
-        headers: {
-          Authorization: `Bearer ${this.apiKey}`,
-          "Content-Type": "application/json",
-          ...(email.idempotencyKey ? { "Idempotency-Key": email.idempotencyKey } : {}),
-        },
+        headers: resendHeaders(this.apiKey, email),
         body: JSON.stringify(resendPayload(this.from, this.replyTo, email)),
         signal: AbortSignal.timeout(8_000),
       });
@@ -149,12 +146,39 @@ class LoggingProvider implements MailProvider {
  */
 export function resendPayload(from: string, replyTo: string | null, email: Email) {
   return {
-    from,
+    from: fromWithName(from),
     to: [email.to],
     subject: email.subject,
     text: email.body,
     ...(replyTo ? { reply_to: replyTo } : {}),
-    ...(email.headers ? { headers: email.headers } : {}),
+    // Message headers, only when the message has any (list mail), so every
+    // other send is the same bytes as before.
+    ...(email.headers && Object.keys(email.headers).length > 0 ? { headers: email.headers } : {}),
+  };
+}
+
+/**
+ * The From header, with a display name.
+ *
+ * `RECEIPT_FROM_EMAIL` is set as a bare address. Sent as-is, the inbox shows
+ * the local part or the whole address where the shop name belongs, and a
+ * receipt from a sender nobody recognises is the one that gets marked as spam.
+ * A value that already carries a name (`Name <addr>`) is left as written.
+ */
+export function fromWithName(from: string): string {
+  const value = from.trim();
+  return value.includes("<") ? value : `${SITE_NAME} <${value}>`;
+}
+
+/**
+ * The headers of Resend's POST. `Idempotency-Key` only when the message carries
+ * one, so every other send is byte-for-byte what it was.
+ */
+export function resendHeaders(apiKey: string, email: Email): Record<string, string> {
+  return {
+    Authorization: `Bearer ${apiKey}`,
+    "Content-Type": "application/json",
+    ...(email.idempotencyKey ? { "Idempotency-Key": email.idempotencyKey } : {}),
   };
 }
 
@@ -205,6 +229,27 @@ export function getMailProvider(): MailProvider {
 }
 
 /**
+ * Forgets the chosen provider so the next send reads the environment again.
+ * For tests that switch between "no provider" and a connected one in one
+ * process; nothing in the app changes its mail environment at runtime.
+ */
+export function resetMailProvider(): void {
+  provider = null;
+}
+
+/**
+ * What a send is recorded as. A provider that only logs reports success, and
+ * used to be recorded as "sent" — which the confirmation path read as done, so
+ * an order taken while mail was unconfigured never got its confirmation.
+ */
+export function logStatus(result: SendResult, delivers: boolean): EmailStatus {
+  if (!result.ok) {
+    return "failed";
+  }
+  return delivers ? "sent" : "not-delivered";
+}
+
+/**
  * Sends, records, and never throws.
  *
  * Returns whether it was delivered so a caller can report honestly, but no
@@ -227,8 +272,11 @@ export async function sendEmail(
  * `sendEmail`, returning the provider's result instead of a boolean.
  *
  * For a caller that needs to tell a refusal from a send nobody can vouch for
- * (`unknown`, logged under that status). Same contract otherwise — it never
- * throws, and it logs, against `orderId` when there is one.
+ * (`result.unknown`). Same contract otherwise — it never throws, and it logs,
+ * against `orderId` when there is one. The log row says "failed" for both
+ * (`logStatus`): everything this path sends may be sent again — the order
+ * confirmation carries an idempotency key — and the confirmation retry looks
+ * for "failed" and "not-delivered" rows (0008_email_not_delivered.sql).
  *
  * NOT FOR THE ANNOUNCEMENT, and it refuses it. This path sends first and
  * writes the log afterwards, which is right for a message that may be sent
@@ -268,7 +316,7 @@ export async function sendAndRecord(
           email.to.toLowerCase(),
           template,
           result.ok ? result.providerId : null,
-          result.ok ? "sent" : result.unknown ? "unknown" : "failed",
+          logStatus(result, mail.delivers),
           result.ok ? null : result.error.slice(0, 1000),
         ],
       );
@@ -285,4 +333,4 @@ export async function sendAndRecord(
   return result;
 }
 
-export type { Email, EmailTemplate, MailProvider, SendResult } from "./types.ts";
+export type { Email, EmailStatus, EmailTemplate, MailProvider, SendResult } from "./types.ts";

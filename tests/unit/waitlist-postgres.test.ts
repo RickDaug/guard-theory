@@ -7,7 +7,10 @@ import {
   lookupUnsubscribeToken,
   unsubscribeByToken,
 } from "../../src/lib/waitlist/index.ts";
-import { GET as oneClickGet, POST as oneClickPost } from "../../src/app/unsubscribe/one-click/route.ts";
+import {
+  handleOneClickGet as oneClickGet,
+  handleOneClickPost as oneClickPost,
+} from "../../src/lib/waitlist/one-click.ts";
 import { getContactStore } from "../../src/lib/contact/store.ts";
 import { closePool, isDatabaseConfigured, query } from "../../src/lib/db/client.ts";
 
@@ -41,7 +44,7 @@ describe("the Postgres stores, exercised against a real database", { skip: !conf
     await closePool();
   });
 
-  it("stores a signup and reports it as new", async () => {
+  it("stores a signup as pending and asks for it to be confirmed", async () => {
     const email = addr("new");
 
     const result = await getWaitlistStore().add({
@@ -53,13 +56,17 @@ describe("the Postgres stores, exercised against a real database", { skip: !conf
       submittedAt: new Date().toISOString(),
     });
 
-    assert.deepEqual(result, { ok: true, alreadyOnList: false });
+    assert.ok(result.ok);
+    assert.equal(result.alreadyOnList, false);
+    assert.equal(result.confirm?.email, email);
+    assert.equal(result.confirm?.firstName, "Pat");
 
-    const rows = await query<{ n: number }>(
-      "SELECT count(*)::int AS n FROM waitlist_signup WHERE email = $1",
+    const rows = await query<{ n: number; consent_state: string }>(
+      "SELECT count(*)::int AS n, min(consent_state) AS consent_state FROM waitlist_signup WHERE email = $1",
       [email],
     );
     assert.equal(rows[0]?.n, 1, "exactly one row should exist for the address");
+    assert.equal(rows[0]?.consent_state, "pending", "a new signup is not on the list until confirmed");
   });
 
   it("treats a repeat address as already-on-list, case-insensitively", async () => {
@@ -73,11 +80,12 @@ describe("the Postgres stores, exercised against a real database", { skip: !conf
     };
 
     await getWaitlistStore().add({ ...signup, email });
+    await query("UPDATE waitlist_signup SET consent_state = 'confirmed' WHERE email = $1", [email]);
     // The same person, shouting. A second row here would mean a duplicate mail
     // on announcement day, which is the failure a reader actually notices.
     const second = await getWaitlistStore().add({ ...signup, email: email.toUpperCase() });
 
-    assert.deepEqual(second, { ok: true, alreadyOnList: true });
+    assert.deepEqual(second, { ok: true, alreadyOnList: true, confirm: null });
 
     const rows = await query<{ n: number }>(
       "SELECT count(*)::int AS n FROM waitlist_signup WHERE lower(email) = lower($1)",
@@ -161,12 +169,12 @@ describe("the Postgres stores, exercised against a real database", { skip: !conf
 
   it("the one-click route unsubscribes on POST and only on POST", async () => {
     const { email, token } = await subscriber("oneclick");
-    const url = `https://guardtheory.net/unsubscribe/one-click?t=${token}`;
+    const url = `https://guardtheory.net/api/unsubscribe?t=${token}`;
 
     // A GET — a scanner, a prefetcher, a pasted URL — goes to the page.
-    const got = await oneClickGet(new Request(url));
+    const got = oneClickGet(new Request(url));
     assert.equal(got.status, 303);
-    assert.equal(got.headers.get("location"), `/unsubscribe?t=${token}`);
+    assert.equal(got.headers.get("location"), `https://guardtheory.net/unsubscribe?t=${token}`);
     assert.equal(await isUnsubscribed(email), false, "a GET must not unsubscribe anyone");
 
     // What a mail client sends, per RFC 8058.
@@ -185,7 +193,7 @@ describe("the Postgres stores, exercised against a real database", { skip: !conf
   });
 
   it("the one-click route does not claim success it did not have", async () => {
-    const base = "https://guardtheory.net/unsubscribe/one-click";
+    const base = "https://guardtheory.net/api/unsubscribe";
     assert.equal((await oneClickPost(new Request(base, { method: "POST" }))).status, 400);
     assert.equal(
       (await oneClickPost(new Request(`${base}?t=${randomUUID()}`, { method: "POST" }))).status,

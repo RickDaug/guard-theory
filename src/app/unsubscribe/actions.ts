@@ -1,30 +1,21 @@
 "use server";
 
-import { redirect } from "next/navigation";
 import { unsubscribeByToken } from "@/lib/waitlist";
+import { tokenFromSearchParams, type UnsubscribeOutcome } from "./copy";
 
 /**
- * The button on /unsubscribe.
+ * The confirm button on /unsubscribe. The only thing on the page that writes:
+ * a GET of the link shows the button and changes nothing, so a mail scanner
+ * that follows every link cannot take anyone off the list.
  *
- * Does the write, then sends the reader back to the page, which looks the
- * token up again and says what is now true of it — so a reload, or the back
- * button, shows the same answer rather than re-submitting a form. `failed` is
- * only set when the write did not happen; the page reads it as "unavailable".
+ * Public by design — the token is the authorisation, as it is in the link.
+ * Idempotent: `unsubscribeByToken` reports "already" on a second press.
  */
-export async function confirmUnsubscribe(formData: FormData): Promise<void> {
+export async function confirmUnsubscribe(
+  _previous: UnsubscribeOutcome | null,
+  formData: FormData,
+): Promise<UnsubscribeOutcome> {
   const raw = formData.get("t");
-  const token = typeof raw === "string" ? raw.trim() : "";
-
-  if (!token) {
-    redirect("/unsubscribe");
-  }
-
-  const result = await unsubscribeByToken(token);
-  const query = new URLSearchParams({ t: token });
-
-  if (result === "unavailable") {
-    query.set("failed", "1");
-  }
-
-  redirect(`/unsubscribe?${query.toString()}`);
+  const token = tokenFromSearchParams(typeof raw === "string" ? raw : undefined);
+  return token ? unsubscribeByToken(token) : "no-token";
 }

@@ -1,31 +1,16 @@
 "use server";
 
 import { headers } from "next/headers";
-import { checkRateLimit } from "@/lib/rate-limit";
+import { callerKey, takeRateLimit } from "@/lib/rate-limit-db";
+import { CONTACT_BUCKET } from "@/lib/public-limits";
 import { getContactStore } from "@/lib/contact/store";
-import {
-  TOPIC_VALUES,
-  type ContactFieldErrors,
-  type ContactFormState,
-  type ContactTopic,
-} from "@/lib/contact/form-state";
+import { parseContact } from "@/lib/contact/validate";
+import type { ContactFormState } from "@/lib/contact/form-state";
 
-const EMAIL = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-const MAX_MESSAGE = 4000;
-
-function readString(data: FormData, key: string): string {
-  const raw = data.get(key);
-  return typeof raw === "string" ? raw.trim() : "";
-}
-
-function sanitise(value: string): string {
-  return value.replace(/[\u0000-\u0008\u000B\u000C\u000E-\u001F\u007F]/g, "");
-}
-
+/** A keyed hash of the caller's address, for the Postgres limiter. */
 async function clientKey(): Promise<string> {
   const list = await headers();
-  const ip = list.get("x-forwarded-for")?.split(",")[0]?.trim();
-  return ip ? `contact:${ip}` : "contact:unknown";
+  return callerKey(list.get("x-forwarded-for")?.split(",")[0]?.trim());
 }
 
 export async function sendMessage(
@@ -33,14 +18,14 @@ export async function sendMessage(
   formData: FormData,
 ): Promise<ContactFormState> {
   // Honeypot. Reports success without storing, so a bot learns nothing.
-  if (readString(formData, "website") !== "") {
+  const honeypot = formData.get("website");
+  if (typeof honeypot === "string" && honeypot.trim() !== "") {
     return { status: "success", message: "Message received.", errors: {} };
   }
 
-  const limit = checkRateLimit(await clientKey(), {
-    limit: 3,
-    windowMs: 10 * 60 * 1000,
-  });
+  // Counted in Postgres, which every instance shares. The in-memory limiter it
+  // replaces was per instance and emptied by every cold start.
+  const limit = await takeRateLimit(CONTACT_BUCKET, await clientKey());
 
   if (!limit.allowed) {
     return {
@@ -50,50 +35,22 @@ export async function sendMessage(
     };
   }
 
-  const name = sanitise(readString(formData, "name"));
-  const email = sanitise(readString(formData, "email"));
-  const message = sanitise(readString(formData, "message"));
-  const topicRaw = readString(formData, "topic");
+  const parsed = parseContact(formData);
 
-  const errors: ContactFieldErrors = {};
-
-  if (!name) {
-    errors.name = "Enter your name so we know who we are replying to.";
-  }
-
-  if (!email) {
-    errors.email = "Enter an email address so we can reply.";
-  } else if (!EMAIL.test(email)) {
-    errors.email = "Enter an email address that includes an @ symbol and a domain.";
-  }
-
-  if (!message) {
-    errors.message = "Write your message. Even one line is enough.";
-  } else if (message.length > MAX_MESSAGE) {
-    errors.message = `Shorten your message to ${MAX_MESSAGE} characters or fewer. It is currently ${message.length}.`;
-  }
-
-  const topic = (TOPIC_VALUES as string[]).includes(topicRaw)
-    ? (topicRaw as ContactTopic)
-    : "other";
-
-  if (Object.keys(errors).length > 0) {
-    const count = Object.keys(errors).length;
+  if (!parsed.ok) {
+    const count = Object.keys(parsed.errors).length;
     return {
       status: "error",
       message:
         count === 1
           ? "There is one problem with the form."
           : `There are ${count} problems with the form.`,
-      errors,
+      errors: parsed.errors,
     };
   }
 
   const stored = await getContactStore().save({
-    name,
-    email,
-    topic,
-    message,
+    ...parsed.value,
     receivedAt: new Date().toISOString(),
   });
 

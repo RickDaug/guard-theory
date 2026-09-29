@@ -112,9 +112,10 @@ describe("campaigns, against a real database", { skip: !configured }, () => {
 
   async function signup(email: string, extra: { unsubscribed?: boolean } = {}) {
     await query(
+      // Confirmed: new rows default to 'pending' (0013), which is not on the list.
       `insert into waitlist_signup
-         (id, email, first_name, consent, submitted_at, unsubscribed_at, unsubscribe_token)
-       values ($1, $2, 'Pat', true, now(), $3, $4)`,
+         (id, email, first_name, consent, submitted_at, unsubscribed_at, unsubscribe_token, consent_state)
+       values ($1, $2, 'Pat', true, now(), $3, $4, 'confirmed')`,
       [randomUUID(), email, extra.unsubscribed ? new Date() : null, randomUUID()],
     );
   }

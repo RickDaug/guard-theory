@@ -5,13 +5,17 @@ import {
   type TechniqueReview,
 } from "./types.ts";
 import { armDrag } from "./entries/arm-drag.ts";
+import { backRetentionFollowingTheTurn } from "./entries/back-retention-following-the-turn.ts";
 import { bloodChokeVersusAirChoke } from "./entries/blood-choke-versus-air-choke.ts";
 import { butterflyHookAsLever } from "./entries/butterfly-hook-as-lever.ts";
 import { closedGuardPostureBattle } from "./entries/closed-guard-posture-battle.ts";
 import { connectionInOpenGuard } from "./entries/connection-in-open-guard.ts";
 import { deLaRivaBackTake } from "./entries/de-la-riva-back-take.ts";
 import { deLaRivaHook } from "./entries/de-la-riva-hook.ts";
+import { defendingTheGuillotine } from "./entries/defending-the-guillotine.ts";
 import { elbowKneeEscape } from "./entries/elbow-knee-escape.ts";
+import { escapingBackControl } from "./entries/escaping-back-control.ts";
+import { escapingSideControl } from "./entries/escaping-side-control.ts";
 import { framesVersusBlocks } from "./entries/frames-versus-blocks.ts";
 import { gettingHipsUnderneath } from "./entries/getting-hips-underneath.ts";
 import { heelHookIsRotation } from "./entries/heel-hook-is-rotation.ts";
@@ -20,6 +24,8 @@ import { kneeCutPass } from "./entries/knee-cut-pass.ts";
 import { kneeShield } from "./entries/knee-shield.ts";
 import { legEntanglementAsControl } from "./entries/leg-entanglement-as-control.ts";
 import { noGiGripsAreOnATimer } from "./entries/no-gi-grips-are-on-a-timer.ts";
+import { positionalHierarchy } from "./entries/positional-hierarchy.ts";
+import { rearNakedStrangle } from "./entries/rear-naked-strangle.ts";
 import { seatBeltAndHooks } from "./entries/seat-belt-and-hooks.ts";
 import { singleLegForJiuJitsu } from "./entries/single-leg-for-jiu-jitsu.ts";
 import { sweepingTowardTheMissingPost } from "./entries/sweeping-toward-the-missing-post.ts";
@@ -33,13 +39,17 @@ import { whizzerIsAnOverhookOnTheHip } from "./entries/whizzer-is-an-overhook-on
  */
 export const ENTRIES: TechniqueEntry[] = [
   armDrag,
+  backRetentionFollowingTheTurn,
   bloodChokeVersusAirChoke,
   butterflyHookAsLever,
   closedGuardPostureBattle,
   connectionInOpenGuard,
   deLaRivaBackTake,
   deLaRivaHook,
+  defendingTheGuillotine,
   elbowKneeEscape,
+  escapingBackControl,
+  escapingSideControl,
   framesVersusBlocks,
   gettingHipsUnderneath,
   heelHookIsRotation,
@@ -48,6 +58,8 @@ export const ENTRIES: TechniqueEntry[] = [
   kneeShield,
   legEntanglementAsControl,
   noGiGripsAreOnATimer,
+  positionalHierarchy,
+  rearNakedStrangle,
   seatBeltAndHooks,
   singleLegForJiuJitsu,
   sweepingTowardTheMissingPost,

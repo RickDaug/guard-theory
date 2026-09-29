@@ -228,4 +228,39 @@ test.describe("portal access", () => {
     expect(csv.type, "the export must be a file, not the sign-in page").toContain("text/csv");
     expect(csv.body).toContain("email");
   });
+  test("a product made in the portal starts as a draft and cannot go live half-made", async ({ page }) => {
+    test.skip(!configured, "no PORTAL_PASSWORD_HASH / PORTAL_TEST_PASSWORD / DATABASE_URL");
+
+    await page.goto("/crew/sign-in?next=/crew/products", { waitUntil: "load" });
+    await page.getByLabel(/password/i).fill(process.env.PORTAL_TEST_PASSWORD!);
+    await page.getByRole("button", { name: /^sign in$/i }).click();
+    await page.waitForURL(/\/crew\/products/);
+
+    const slug = `e2e-${Date.now().toString(36)}`;
+    const create = page.locator("form", { has: page.getByRole("heading", { name: "New product" }) });
+    await create.getByLabel("Name").fill("E2E Fixture");
+    await create.getByLabel(/^Kind/).fill("Fixture kind");
+    await create.getByLabel(/^Web address/).fill(slug);
+    await create.getByRole("button", { name: "Create as draft" }).click();
+    await expect(create.getByRole("status")).toContainText("saved as a draft");
+
+    // Its card: the status form, whose heading is the product's name.
+    const card = page.locator("form", { has: page.getByText(slug, { exact: true }) });
+    await expect(card.getByLabel("Status")).toHaveValue("draft");
+
+    // Priced, but no size and no specification: live is refused, with the reasons.
+    await card.getByLabel("Price", { exact: true }).fill("10");
+    await card.getByLabel("Status").selectOption("active");
+    await card.getByRole("button", { name: "Save" }).click();
+    const refusal = card.getByRole("alert");
+    await expect(refusal).toContainText("cannot go on the storefront yet");
+    await expect(refusal).toContainText("at least one size");
+    await expect(refusal).toContainText("fabric weight");
+
+    // And the storefront has never heard of it.
+    const response = await page.request.get(`/shop/${slug}`);
+    expect(response.status()).toBe(404);
+
+    await expect(page.getByText("Images: added by the developer for now.").first()).toBeVisible();
+  });
 });

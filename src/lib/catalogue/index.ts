@@ -41,6 +41,12 @@ type VariantRow = {
   stock: number;
 };
 
+type SpecRow = {
+  product_id: string;
+  label: string;
+  value: string | null;
+};
+
 type ImageRow = {
   product_id: string;
   blob_url: string;
@@ -80,6 +86,7 @@ function merge(
   row: ProductRow,
   variants: VariantRow[],
   images: ImageRow[],
+  specs: SpecRow[],
 ): ProductView | null {
   // A row with no registry entry must carry its own content — that is a product
   // created in the portal. One that carries neither is not renderable, and
@@ -99,7 +106,10 @@ function merge(
     metaDescription: product?.metaDescription,
     description: product?.description ?? row.description ?? "",
     constructionPoints: product?.constructionPoints ?? [],
-    specifications: product?.specifications ?? [],
+    // A registry product's specification is compiled in; a portal product's
+    // is its product_spec rows, which is what the portal editor writes.
+    specifications:
+      product?.specifications ?? specs.map((spec) => ({ label: spec.label, value: spec.value })),
     // Sizes come from the variants once they exist, because those are the sizes
     // that can actually be bought. The registry list is the fallback.
     sizeLabels:
@@ -154,7 +164,7 @@ export async function getProductView(slug: string): Promise<ProductView | undefi
       return product ? contentOnly(product) : undefined;
     }
 
-    const [variants, images] = await Promise.all([
+    const [variants, images, specs] = await Promise.all([
       query<VariantRow>(
         "select * from variant where product_id = $1 order by sort_index, size_label",
         [row.id],
@@ -163,9 +173,15 @@ export async function getProductView(slug: string): Promise<ProductView | undefi
         "select * from product_image where product_id = $1 order by sort_index",
         [row.id],
       ),
+      product
+        ? Promise.resolve([] as SpecRow[])
+        : query<SpecRow>(
+            "select product_id, label, value from product_spec where product_id = $1 order by position",
+            [row.id],
+          ),
     ]);
 
-    return merge(product, row, variants, images) ?? (product ? contentOnly(product) : undefined);
+    return merge(product, row, variants, images, specs) ?? (product ? contentOnly(product) : undefined);
   } catch (error) {
     // A database that is unreachable must not take the storefront down with it.
     // The page renders as content-only, which is honest — we genuinely do not
@@ -200,13 +216,17 @@ export async function listProductViews(): Promise<ProductView[]> {
 
     const ids = rows.map((r) => r.id);
 
-    const [variants, images] = await Promise.all([
+    const [variants, images, specs] = await Promise.all([
       query<VariantRow>(
         "select * from variant where product_id = any($1::text[]) order by sort_index, size_label",
         [ids],
       ),
       query<ImageRow>(
         "select * from product_image where product_id = any($1::text[]) order by sort_index",
+        [ids],
+      ),
+      query<SpecRow>(
+        "select product_id, label, value from product_spec where product_id = any($1::text[]) order by position",
         [ids],
       ),
     ]);
@@ -244,6 +264,7 @@ export async function listProductViews(): Promise<ProductView[]> {
         row,
         variants.filter((v) => v.product_id === row.id),
         images.filter((i) => i.product_id === row.id),
+        specs.filter((s) => s.product_id === row.id),
       );
 
       if (view) {

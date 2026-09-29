@@ -2,6 +2,7 @@ import { getAuthor } from "./authors.ts";
 import { FIGURES } from "./figures/index.ts";
 import { ARTICLES, isPublished } from "./journal/index.ts";
 import { PRODUCTS } from "./products/index.ts";
+import { PUBLISHED_SPECIFICATIONS } from "./products/published-specs.ts";
 import { SIZE_CHART } from "./products/size-chart.ts";
 import { numberWord } from "./section-descriptions.ts";
 import { ENTRIES } from "./technique/index.ts";
@@ -547,13 +548,6 @@ export const OWN_COOKIES: Record<string, string> = {
 const productHas = (pattern: RegExp) =>
   PRODUCTS.length > 0 &&
   PRODUCTS.every((product) => Object.keys(product).some((key) => pattern.test(key)));
-
-const PUBLISHED_SPECIFICATIONS = [
-  "Fabric weight",
-  "Fabric composition",
-  "Seam construction",
-  "Print method",
-];
 
 function specificationsArePublished(): true | string {
   const missing = PRODUCTS.flatMap((product) =>

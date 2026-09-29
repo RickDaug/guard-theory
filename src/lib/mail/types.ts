@@ -53,7 +53,16 @@ export type Email = {
  */
 export type SendResult =
   | { ok: true; providerId: string | null }
-  | { ok: false; error: string; unknown: boolean };
+  | {
+      ok: false;
+      error: string;
+      unknown: boolean;
+      /**
+       * How long the provider asked us to wait, from a 429's `Retry-After`.
+       * Absent when it did not say.
+       */
+      retryAfterMs?: number;
+    };
 
 /** What `email_log.status` may hold. Migration 0005 is the other half of this. */
 export type EmailLogStatus = "pending" | "sent" | "failed" | "unknown";

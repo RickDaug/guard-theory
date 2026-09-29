@@ -122,6 +122,21 @@ export const STORED: Record<string, Record<string, Disclosure>> = {
     created_at: { internal: "when the send was attempted" },
     order_id: { says: "each email we sent you about the order" },
   },
+  /* The announcement's send record: what we wrote, and how far its send got. */
+  announcement_campaign: internal(
+    ["id", "subject", "body", "status", "recipients", "last_stop", "created_at", "updated_at", "finished_at"],
+    "a message we wrote to the list and the progress of sending it; nothing in it is about a reader",
+  ),
+  announcement_delivery: {
+    campaign_id: { internal: "which of our messages the row belongs to" },
+    email: { says: "a record of which message was sent" },
+    position: { internal: "the order the list is sent in" },
+    status: { internal: "whether the send worked" },
+    attempts: { internal: "a retry counter" },
+    email_log_id: { internal: "the matching row in our own send log" },
+    error: { internal: "the provider's error text when it did not" },
+    updated_at: { internal: "when the send was attempted" },
+  },
 
   /* The catalogue. Nothing in these five tables is about a person. */
   category: internal(["id", "slug", "name", "active", "sort_index"], "the catalogue: a product category the owner edits in the portal"),

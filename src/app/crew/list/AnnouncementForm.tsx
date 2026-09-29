@@ -41,22 +41,34 @@ export function AnnouncementForm({ liveCount }: { liveCount: number }) {
         </span>
       </label>
 
-      {/* No test-send field and no "email everyone" box. This form checks a draft
-          against the voice rules and sends nothing: the announcement goes out
-          from scripts/mail/send-announcement.ts, which claims each address
-          before it sends. A control that looks like it emails {liveCount} people and
-          does not is worse than no control. */}
-      <p className="text-sm text-steel">
-        This checks the draft and sends nothing.{" "}
-        {liveCount === 1
-          ? "The one person on the list is emailed"
-          : `The ${liveCount} people on the list are emailed`}{" "}
-        from <code>scripts/mail/send-announcement.ts</code>, once each.
-      </p>
+      {/* A dry run unless the box is ticked AND the count is typed back: the
+          same two-step gate as scripts/mail/send-announcement.ts. */}
+      <fieldset className="flex flex-col gap-3 border border-steel-dim p-5">
+        <legend className="display-plain px-2 text-sm text-steel">Sending</legend>
+        <p className="text-sm text-steel">
+          Without this box ticked, the form checks the draft and reports who would receive it. Nothing
+          is sent.
+        </p>
+        <label className="flex min-h-6 items-center gap-3 text-base text-chalk">
+          <input type="checkbox" name="send" className="min-h-6 min-w-6" />
+          <span>Send it for real</span>
+        </label>
+        <label className="flex flex-col gap-2">
+          <span className="display-plain text-sm text-steel">
+            Type the number of recipients to confirm ({liveCount} on the list)
+          </span>
+          <input
+            name="confirm"
+            inputMode="numeric"
+            autoComplete="off"
+            className="min-h-6 border border-steel-dim bg-graphite px-4 py-3 text-chalk"
+          />
+        </label>
+      </fieldset>
 
       <div>
         <Button type="submit" disabled={pending}>
-          {pending ? "Checking…" : "Check the draft"}
+          {pending ? "Working…" : "Check, or send"}
         </Button>
       </div>
     </form>

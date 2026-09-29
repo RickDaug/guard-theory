@@ -453,10 +453,18 @@ export function idempotencyKeyFor(email: string): string {
   return `${TEMPLATE}:${hash}`;
 }
 
-export function renderFor(subscriber: Subscriber, message: AnnouncementMessage): Email {
+/**
+ * The message for one reader. `idempotencyKey` defaults to the per-address key
+ * the script uses; a campaign passes its own (see `campaign.ts`).
+ */
+export function renderFor(
+  subscriber: Subscriber,
+  message: AnnouncementMessage,
+  idempotencyKey: string = idempotencyKeyFor(subscriber.email),
+): Email {
   return {
     ...announcement(subscriber.email, subscriber.unsubscribeToken, message.subject, message.body),
-    idempotencyKey: idempotencyKeyFor(subscriber.email),
+    idempotencyKey,
   };
 }
 

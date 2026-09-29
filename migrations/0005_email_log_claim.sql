@@ -49,3 +49,55 @@ alter table email_log
 create unique index email_log_announcement_once_idx
   on email_log (lower(to_email))
   where template = 'announcement' and status in ('pending', 'sent', 'unknown');
+
+-- THE CAMPAIGN, AND ONE ROW PER RECIPIENT
+--
+-- The claim above makes a second copy impossible. It does not say how far a
+-- send got, and a send of the whole list does not fit in one function's
+-- lifetime: Resend's free tier takes two requests a second and a hundred a
+-- day, and a server action is killed long before a list of any size is done.
+--
+-- So a send is a campaign, written once when the owner confirms it, with a row
+-- per recipient written at the same moment. Each call — the portal's "Continue
+-- sending" button — takes the next few `queued` rows, sends them, and marks
+-- each one. A call that dies part-way leaves the rest `queued` for the next;
+-- a row it died holding stays `sending` until it is old enough to be settled
+-- against `email_log`, which is still what decides whether a message may go.
+--
+-- The message text is stored so a later call sends exactly what was
+-- confirmed, not whatever is in the form by then.
+
+create table announcement_campaign (
+  id          text        primary key,
+  subject     text        not null,
+  body        text        not null,
+  status      text        not null default 'open' check (status in ('open', 'done')),
+  recipients  integer     not null default 0,
+  last_stop   text,
+  created_at  timestamptz not null default now(),
+  updated_at  timestamptz not null default now(),
+  finished_at timestamptz
+);
+
+-- One open campaign at a time. A second press of "send", or a re-submitted
+-- form, collides here instead of queueing the list twice.
+create unique index announcement_campaign_one_open_idx
+  on announcement_campaign ((true))
+  where status = 'open';
+
+create table announcement_delivery (
+  campaign_id  text        not null references announcement_campaign (id) on delete cascade,
+  email        text        not null,
+  position     integer     not null,
+  status       text        not null default 'queued'
+               check (status in ('queued', 'sending', 'sent', 'failed', 'unknown', 'unsubscribed', 'skipped')),
+  attempts     integer     not null default 0,
+  email_log_id text,
+  error        text,
+  updated_at   timestamptz not null default now(),
+  primary key (campaign_id, email),
+  check (email = lower(email))
+);
+
+create index announcement_delivery_queue_idx
+  on announcement_delivery (campaign_id, status, position);

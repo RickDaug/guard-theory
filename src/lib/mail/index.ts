@@ -73,10 +73,12 @@ class ResendProvider implements MailProvider {
 
     if (!response.ok) {
       const detail = await response.text().catch(() => "");
+      const retryAfterMs = parseRetryAfter(response.headers.get("retry-after"));
       return {
         ok: false,
         unknown: isAmbiguousStatus(response.status),
         error: `${response.status}: ${detail.slice(0, 300)}`,
+        ...(retryAfterMs === null ? {} : { retryAfterMs }),
       };
     }
 
@@ -86,6 +88,19 @@ class ResendProvider implements MailProvider {
     const payload = (await response.json().catch(() => ({}))) as { id?: string };
     return { ok: true, providerId: payload.id ?? null };
   }
+}
+
+/**
+ * `Retry-After` as milliseconds: whole seconds only, which is what Resend sends
+ * on a 429. An HTTP date, a negative or anything unreadable is null — the
+ * caller's own backoff applies instead.
+ */
+export function parseRetryAfter(value: string | null): number | null {
+  const trimmed = value?.trim() ?? "";
+  if (!/^\d+(?:\.\d+)?$/.test(trimmed)) {
+    return null;
+  }
+  return Math.round(Number(trimmed) * 1000);
 }
 
 /**
@@ -228,7 +243,7 @@ export async function sendAndRecord(
   orderId: string | null = null,
 ): Promise<SendResult> {
   if (template === "announcement") {
-    const error = "the announcement is sent by scripts/mail/send-announcement.ts, which claims first";
+    const error = "the announcement is sent by scripts/mail/send-announcement.ts or a portal campaign, which claim first";
     console.error(`[guard-theory] refused to send ${template} to ${maskEmail(email.to)}: ${error}`);
     return { ok: false, unknown: false, error };
   }

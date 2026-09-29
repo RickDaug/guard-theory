@@ -164,6 +164,7 @@ export const STORED: Record<string, Record<string, Disclosure>> = {
     stripe_mode: { internal: "whether the Stripe key that took the payment was test or live" },
     refund_status: { internal: "whether any of the payment has been refunded; derived from Stripe's events" },
     refunded_cents: { internal: "how much has been refunded; derived from Stripe's events" },
+    refunded_at: { internal: "when a refund on the order was last recorded; derived from Stripe's events" },
     dispute_status: {
       internal: "whether the payment has been disputed with the card issuer, and how that ended; derived from Stripe's events",
     },

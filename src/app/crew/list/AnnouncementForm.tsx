@@ -45,7 +45,9 @@ export function AnnouncementForm({ liveCount }: { liveCount: number }) {
 
       {/* A dry run unless the box is ticked AND the count is typed back: the
           same two-step gate as scripts/mail/send-announcement.ts. */}
-      <fieldset className="flex flex-col gap-3 border border-steel-dim p-5">
+      {/* min-w-0: a fieldset defaults to min-inline-size: min-content, which
+          held it wider than a 320px viewport (SC 1.4.10). */}
+      <fieldset className="flex min-w-0 flex-col gap-3 border border-steel-dim p-5">
         <legend className="display-plain px-2 text-sm text-steel">Sending</legend>
         <p className="text-sm text-steel">
           Without this box ticked, the form checks the draft and reports who would receive it. Nothing

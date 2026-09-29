@@ -56,6 +56,6 @@ export const defendingTheGuillotine: TechniqueEntry = {
       "Fact audit, assisted (Claude Code agent), 2026-09-28, ledger built by the auditor (PR #23 comment): all rows hold, no changes required; Von Flue choke description checked and reported as terminology. Revision edits on 2026-09-28 were voice-only and add no new claim.",
     voiceAudit:
       "Voice audit, assisted (Claude Code agent), 2026-09-28: SEO-filler meta rewritten; pointer to the blood-choke entry cut, keeping only 'tapped to either way'; 'fails in seconds' changed to 'tires before the choke does'; safety note's 'lever on the spine' and 'get a coach' lines varied from sibling entries. Applied 2026-09-28.",
-    approvedBy: null,
+    approvedBy: { name: "Rick D.", date: "2026-09-29" },
   },
 };

@@ -56,6 +56,6 @@ export const backRetentionFollowingTheTurn: TechniqueEntry = {
       "Fact audit, assisted (Claude Code agent), 2026-09-28, ledger built by the auditor (PR #23 comment): 'wrestling rooms call it back mount' corrected to jiu-jitsu gyms; one superlative cut; a direction imperative contradicting its own next sentence rewritten. All three applied in revision on 2026-09-28.",
     voiceAudit:
       "Voice audit, assisted (Claude Code agent), 2026-09-28: 'in most rounds' line copied from the seat-belt closer reworded; frequency closer cut; stalled-triangle line kept in the safety note only; pointer to the seat belt entry cut; safety note reopened on the neck and the load. Applied 2026-09-28.",
-    approvedBy: null,
+    approvedBy: { name: "Rick D.", date: "2026-09-29" },
   },
 };

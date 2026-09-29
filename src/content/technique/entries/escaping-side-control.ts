@@ -58,6 +58,6 @@ export const escapingSideControl: TechniqueEntry = {
       "Fact audit, assisted (Claude Code agent), 2026-09-28, ledger built by the auditor (PR #23 comment): underhook-as-block contradiction with the second door resolved (an arm wrapping the back while flat is the block; the underhook taken as you turn is the door); jaw frame removed to match the head-frame error. Applied 2026-09-28.",
     voiceAudit:
       "Voice audit, assisted (Claude Code agent), 2026-09-28: filler triad cut to 'buck and shove'; 'weight problem, geometry problem' line cut; 'every side control escape' absolute and the 'sequence over strength' slogan cut; problem paragraph no longer restates the summary; 'tires in seconds' twice varied. Applied 2026-09-28.",
-    approvedBy: null,
+    approvedBy: { name: "Rick D.", date: "2026-09-29" },
   },
 };

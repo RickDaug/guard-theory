@@ -54,6 +54,6 @@ export const rearNakedStrangle: TechniqueEntry = {
       "Fact audit, assisted (Claude Code agent), 2026-09-28, ledger built by the auditor (PR #23 comment): 'air choke rarely finishes' cut as an unsourced frequency and safety-contrary; 'rear naked strangle is judo vocabulary' corrected (judo's name is hadaka-jime); 'never the throat' hedged to the standard finish. Applied 2026-09-28.",
     voiceAudit:
       "Voice audit, assisted (Claude Code agent), 2026-09-28: keyword line 'that is how a rear naked choke works' and 'the name matters less' cut; 'the same list read backwards' device and the pointer to the back-escape entry cut; terminology sentence copied from the blood-choke entry removed; safety opener and 'in seconds' varied. Applied 2026-09-28.",
-    approvedBy: null,
+    approvedBy: { name: "Rick D.", date: "2026-09-29" },
   },
 };

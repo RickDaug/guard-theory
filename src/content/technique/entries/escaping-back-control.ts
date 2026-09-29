@@ -57,6 +57,6 @@ export const escapingBackControl: TechniqueEntry = {
       "Fact audit, assisted (Claude Code agent), 2026-09-28, ledger built by the auditor (PR #23 comment): conflicting 'weak side / open side' label cut; one superlative hedged. In revision (2026-09-28) the turn is written by its outcome, the arm-side rule reported as what many coaches teach; the side itself awaits a coach's confirmation.",
     voiceAudit:
       "Voice audit, assisted (Claude Code agent), 2026-09-28: 'the direction is the whole decision' and the 'sequence over strength' slogan cut; 'the same task, described from either end' closer cut; unsourced 'fails most often' hedged; core no longer repeats the wrist-and-elbow and hook reasons given in the mechanics. Applied 2026-09-28.",
-    approvedBy: null,
+    approvedBy: { name: "Rick D.", date: "2026-09-29" },
   },
 };

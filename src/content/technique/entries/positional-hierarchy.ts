@@ -56,6 +56,6 @@ export const positionalHierarchy: TechniqueEntry = {
       "Fact audit, assisted (Claude Code agent), 2026-09-28, ledger built by the auditor (PR #23 comment): 'same ladder / time held' scoring claim corrected (IBJJF scores mount and back equally after a 3-second hold); 'every gym' hedged; back-escape outcome aligned with escaping-back-control. Applied 2026-09-28, with the escape mechanic reworded so it no longer contradicts its own example.",
     voiceAudit:
       "Voice audit, assisted (Claude Code agent), 2026-09-28: 'physics claim' title and meta changed to mechanics; 'everyone learns' and 'every gym' hedged; aphorism closer, pointer to the leg-entanglement entry and 'simply' cut; safety note's tap line and roll line varied from the sibling back entries. Applied 2026-09-28.",
-    approvedBy: null,
+    approvedBy: { name: "Rick D.", date: "2026-09-29" },
   },
 };

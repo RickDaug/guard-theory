@@ -5,6 +5,14 @@ import { randomUUID } from "node:crypto";
 import { query, queryOne, transaction } from "@/lib/db/client";
 import { requireSession } from "@/lib/portal/session";
 import type { PortalFormState } from "@/lib/portal/form-state";
+import {
+  applyStockEdits,
+  nextSeen,
+  readStockEdits,
+  stockMovedMessage,
+  type ProductFormState,
+  type StockEditResult,
+} from "@/lib/portal/stock-edit";
 
 /**
  * Product management.
@@ -50,18 +58,12 @@ function parsePriceToCents(raw: FormDataEntryValue | null): number | null | "inv
 }
 
 const MAX_PRICE_CENTS = 10_000_00;
-const MAX_STOCK = 100_000;
 
-/** "12" is stock. "12abc", "1e3", "-1", " 12 .5" and "" are not. */
-function parseStock(raw: string): number | null {
-  const trimmed = raw.trim();
-
-  if (!/^\d{1,6}$/.test(trimmed)) {
-    return null;
+/** Thrown inside the transaction to roll it back when stock moved underneath. */
+class StockMoved extends Error {
+  constructor(readonly result: StockEditResult) {
+    super("stock moved since the form was loaded");
   }
-
-  const stock = Number(trimmed);
-  return stock <= MAX_STOCK ? stock : null;
 }
 
 function text(formData: FormData, key: string): string {
@@ -70,9 +72,9 @@ function text(formData: FormData, key: string): string {
 }
 
 export async function saveProduct(
-  _previous: PortalFormState,
+  _previous: ProductFormState,
   formData: FormData,
-): Promise<PortalFormState> {
+): Promise<ProductFormState> {
   await requireSession();
 
   const id = text(formData, "id");
@@ -138,8 +140,18 @@ export async function saveProduct(
     };
   }
 
+  // Stock, one field per variant, named stock-<variantId>, each paired with the
+  // number the form was showing (seen-stock-<variantId>). See stock-edit.ts.
+  const stock = readStockEdits(formData);
+
+  if (!stock.ok) {
+    return { status: "error", message: stock.message };
+  }
+
+  let result: StockEditResult;
+
   try {
-    await transaction(async (client) => {
+    result = await transaction(async (client) => {
       await client.query(
         `update product
             set status = $2, price_cents = $3, sale_cents = $4, updated_at = now()
@@ -147,45 +159,39 @@ export async function saveProduct(
         [id, status, price, sale],
       );
 
-      // Stock, one field per variant, named stock-<variantId>.
-      for (const [key, value] of formData.entries()) {
-        if (!key.startsWith("stock-") || typeof value !== "string") {
-          continue;
-        }
+      const applied = await applyStockEdits(client, id, stock.edits);
 
-        const variantId = key.slice("stock-".length);
-        // parseInt("12abc") is 12. A typo must be a refusal, not a guess.
-        const stock = parseStock(value);
-
-        if (stock === null) {
-          throw new Error(`Stock has to be a whole number, zero or more.`);
-        }
-
-        await client.query("update variant set stock = $2 where id = $1 and product_id = $3", [
-          variantId,
-          stock,
-          id,
-        ]);
+      if (applied.moved.length > 0) {
+        throw new StockMoved(applied);
       }
+
+      return applied;
     });
   } catch (error) {
+    if (error instanceof StockMoved) {
+      return {
+        status: "error",
+        message: stockMovedMessage(error.result.moved),
+        seen: nextSeen(stock.edits, error.result),
+        moved: Object.fromEntries(error.result.moved.map((move) => [move.variantId, move.current])),
+      };
+    }
+
     console.error(
       "[guard-theory] could not save product:",
       error instanceof Error ? error.message : error,
     );
     return {
       status: "error",
-      message:
-        error instanceof Error && error.message.startsWith("Stock has to be")
-          ? error.message
-          : "We could not save that just now. Nothing has changed.",
+      message: "We could not save that just now. Nothing has changed.",
+      seen: nextSeen(stock.edits, null),
     };
   }
 
   revalidatePath("/shop");
   revalidatePath("/shop/[slug]", "page");
 
-  return { status: "success", message: "Saved." };
+  return { status: "success", message: "Saved.", seen: nextSeen(stock.edits, result) };
 }
 
 /**

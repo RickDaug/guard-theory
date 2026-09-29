@@ -1,8 +1,9 @@
 "use client";
 
-import { useActionState } from "react";
+import { useActionState, useState, useTransition, type FormEvent } from "react";
 import { saveProduct } from "./actions";
 import { PORTAL_INITIAL_STATE } from "@/lib/portal/form-state";
+import type { ProductFormState } from "@/lib/portal/stock-edit";
 import { Button } from "@/components/ui/Button";
 
 type Variant = { id: string; sizeLabel: string; stock: number };
@@ -30,10 +31,37 @@ const STATUSES = [
 ];
 
 export function ProductForm({ id, name, slug, status, priceCents, saleCents, variants }: Props) {
-  const [state, formAction, pending] = useActionState(saveProduct, PORTAL_INITIAL_STATE);
+  const [state, formAction, pending] = useActionState<ProductFormState, FormData>(
+    saveProduct,
+    PORTAL_INITIAL_STATE,
+  );
+  const [, startTransition] = useTransition();
+
+  // The stock each box is compared against when saving. Starts as what the page
+  // was rendered with; after a save, it is whatever the server says is now true
+  // for the numbers on screen. Kept across saves that do not report it (a price
+  // typo), so a refused save never sends the form back to the page-load numbers.
+  const [seen, setSeen] = useState<Record<string, number>>({});
+  const [lastState, setLastState] = useState(state);
+
+  if (state !== lastState) {
+    setLastState(state);
+    if (state.seen) {
+      setSeen({ ...seen, ...state.seen });
+    }
+  }
+
+  // Submitted by hand rather than through `action=` so React does not reset the
+  // form afterwards: a reset would put back the page-load numbers, which are
+  // exactly the stale ones, and throw away what the owner typed.
+  function submit(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    const data = new FormData(event.currentTarget);
+    startTransition(() => formAction(data));
+  }
 
   return (
-    <form action={formAction} className="flex flex-col gap-7 border border-steel-dim p-7">
+    <form onSubmit={submit} className="flex flex-col gap-7 border border-steel-dim p-7">
       <input type="hidden" name="id" value={id} />
 
       <div>
@@ -92,19 +120,37 @@ export function ProductForm({ id, name, slug, status, priceCents, saleCents, var
       <fieldset className="border-0 p-0">
         <legend className="display-plain mb-4 text-sm text-steel">Stock, by size</legend>
         <div className="grid gap-4 sm:grid-cols-6">
-          {variants.map((variant) => (
-            <label key={variant.id} className="flex flex-col gap-2">
-              <span className="notation text-2xs text-steel">{variant.sizeLabel}</span>
-              <input
-                name={`stock-${variant.id}`}
-                type="number"
-                min={0}
-                step={1}
-                defaultValue={variant.stock}
-                className="min-h-6 border border-steel-dim bg-graphite px-3 py-2 text-chalk tabular-nums"
-              />
-            </label>
-          ))}
+          {variants.map((variant) => {
+            const now = state.moved?.[variant.id];
+            const noteId = `stock-moved-${variant.id}`;
+
+            return (
+              <div key={variant.id} className="flex flex-col gap-2">
+                <label className="flex flex-col gap-2">
+                  <span className="notation text-2xs text-steel">{variant.sizeLabel}</span>
+                  <input
+                    name={`stock-${variant.id}`}
+                    type="number"
+                    min={0}
+                    step={1}
+                    defaultValue={variant.stock}
+                    aria-describedby={now === undefined ? undefined : noteId}
+                    className="min-h-6 border border-steel-dim bg-graphite px-3 py-2 text-chalk tabular-nums"
+                  />
+                </label>
+                <input
+                  type="hidden"
+                  name={`seen-stock-${variant.id}`}
+                  value={seen[variant.id] ?? variant.stock}
+                />
+                {now === undefined ? null : (
+                  <p id={noteId} className="border-l-2 border-signal-lift pl-2 text-2xs text-chalk">
+                    Now {now}
+                  </p>
+                )}
+              </div>
+            );
+          })}
         </div>
       </fieldset>
 

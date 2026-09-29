@@ -500,16 +500,30 @@ describe("turning a paid session into an order", { skip: !HAS_DB && "no DATABASE
         await other.query("begin");
         await other.query("update variant set stock = stock where id = $1", [low]);
 
-        const fulfilment = fulfilCheckoutSession(session({ client_reference_id: intentId }));
+        let settled: string | null = null;
+        const fulfilment = fulfilCheckoutSession(session({ client_reference_id: intentId })).then(
+          (result) => {
+            settled = `resolved ${result.outcome}`;
+            return result;
+          },
+          (error: unknown) => {
+            settled = `rejected: ${error instanceof Error ? error.message : String(error)}`;
+            throw error;
+          },
+        );
 
-        // Wait until the fulfilment is parked on a stock row lock.
+        // Wait until the fulfilment is parked behind the row this connection holds.
         for (let tries = 0; ; tries += 1) {
-          const waiting = await other.query<{ n: number }>(
-            `select count(*)::int as n from pg_stat_activity
-              where wait_event_type = 'Lock' and query like 'update variant set stock = stock - %'`,
+          const blocked = await other.query<{ n: number; queries: string | null }>(
+            `select count(*)::int as n, string_agg(query, ' | ') as queries
+               from pg_stat_activity
+              where pg_backend_pid() = any(pg_blocking_pids(pid))`,
           );
-          if (waiting.rows[0]!.n > 0) break;
-          assert.ok(tries < 200, "the fulfilment never reached the stock rows");
+          if (blocked.rows[0]!.n > 0) break;
+          assert.ok(
+            tries < 200 && settled === null,
+            `the fulfilment never queued behind the held row (${settled ?? "still running"})`,
+          );
           await new Promise((resolve) => setTimeout(resolve, 25));
         }
 

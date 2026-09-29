@@ -1,61 +1,93 @@
+import { existsSync, readFileSync } from "node:fs";
+import { join } from "node:path";
 import type { NextConfig } from "next";
+import {
+  HASH_MANIFEST_FILE,
+  buildPolicy,
+  developmentPolicy,
+  fallbackSource,
+  literalSource,
+  type CspHashManifest,
+} from "./src/lib/csp.ts";
+
+/**
+ * The per-page CSP rules.
+ *
+ * `npm run build` (scripts/build.mjs) runs `next build` twice. The first pass,
+ * GT_CSP_PASS=collect, emits no per-page rules; the script then hashes every
+ * inline script in the prerendered HTML into HASH_MANIFEST_FILE, and the second
+ * pass turns that into one rule per page. A plain `next build` without the
+ * manifest refuses to proceed rather than ship pages whose scripts are blocked.
+ *
+ * Order matters: when two rules set the same header, the later one wins, so the
+ * fallback comes first and each page's own rule overrides it.
+ */
+function contentSecurityPolicyRules(isDev: boolean) {
+  if (isDev) {
+    return [
+      {
+        source: fallbackSource(),
+        headers: [{ key: "Content-Security-Policy", value: developmentPolicy() }],
+      },
+    ];
+  }
+
+  const collecting = process.env.GT_CSP_PASS === "collect";
+  const manifestPath = join(process.cwd(), HASH_MANIFEST_FILE);
+
+  if (!collecting && !existsSync(manifestPath)) {
+    throw new Error(
+      `${HASH_MANIFEST_FILE} is missing. Build with \`npm run build\` (scripts/build.mjs), not \`next build\` directly: the CSP needs each page's script hashes.`,
+    );
+  }
+
+  const manifest: CspHashManifest = collecting
+    ? { pages: {}, fallback: [] }
+    : JSON.parse(readFileSync(manifestPath, "utf8"));
+
+  // A custom portal path is served by rewrite, which the proxy never sees, so
+  // it cannot get a nonce. Those pages keep the old 'unsafe-inline' policy —
+  // an explicit, portal-only exception rather than a broken portal.
+  const portal = (process.env.PORTAL_PATH ?? "").trim().replace(/^\/+|\/+$/g, "");
+  const customPortal = portal && portal !== "crew" ? portal : null;
+
+  const rules = [
+    {
+      source: fallbackSource(customPortal ? [customPortal] : []),
+      headers: [
+        { key: "Content-Security-Policy", value: buildPolicy(manifest.fallback) },
+      ],
+    },
+    ...Object.entries(manifest.pages).map(([pathname, hashes]) => ({
+      source: literalSource(pathname),
+      headers: [{ key: "Content-Security-Policy", value: buildPolicy(hashes) }],
+    })),
+  ];
+
+  if (customPortal) {
+    const legacy = buildPolicy(["'unsafe-inline'"]);
+    rules.push(
+      { source: `/${customPortal}`, headers: [{ key: "Content-Security-Policy", value: legacy }] },
+      {
+        source: `/${customPortal}/:path*`,
+        headers: [{ key: "Content-Security-Policy", value: legacy }],
+      },
+    );
+  }
+
+  return rules;
+}
+
 
 /**
  * Security headers.
  *
- * Everything here is enforcing, not report-only. The one deliberate compromise
- * is `script-src`, explained below — it is stated rather than hidden, because a
- * CSP that quietly permits what it claims to forbid is worse than none.
+ * Everything here is enforcing, not report-only. The Content-Security-Policy is
+ * not in this list: it differs per page and is assembled in `headers()` below
+ * from src/lib/csp.ts, which explains how `script-src` manages without
+ * 'unsafe-inline' while the content pages stay static.
  */
 const securityHeaders = [
-  {
-    key: "Content-Security-Policy",
-    value: [
-      "default-src 'self'",
-
-      // Fonts are self-hosted through next/font, so no font CDN is reachable.
-      "font-src 'self'",
-
-      // No third-party images, no tracking pixels. data: is needed for the
-      // inline SVG favicon Next serves.
-      "img-src 'self' data:",
-
-      // Tailwind emits a stylesheet; Next injects small inline style blocks for
-      // streaming, which cannot carry a hash without dynamic rendering.
-      "style-src 'self' 'unsafe-inline'",
-
-      // No XHR or WebSocket anywhere in the app. Same-origin only covers the
-      // App Router's own RSC payload requests.
-      "connect-src 'self'",
-
-      // Nothing on this site is embedded, and nothing embeds this site.
-      "frame-ancestors 'none'",
-      "frame-src 'none'",
-      "object-src 'none'",
-
-      // Forms post to server actions on this origin and nowhere else. This is
-      // what stops an injected form from exfiltrating a waitlist submission.
-      "form-action 'self'",
-
-      // Prevents a <base> tag injection retargeting every relative URL.
-      "base-uri 'self'",
-
-      // KNOWN COMPROMISE. Next's App Router injects inline bootstrap and
-      // hydration scripts. Removing 'unsafe-inline' requires either a
-      // per-request nonce from middleware — which forces every page to render
-      // dynamically and gives up the static prerendering the performance
-      // budget depends on — or build-time hashing of scripts Next generates.
-      //
-      // Note that <script type="application/ld+json"> is unaffected either way:
-      // CSP applies to executable script, and structured data is not executed.
-      //
-      // Tracked in docs/technical-architecture.md. Do not quietly delete this
-      // comment to make the policy look stricter than it is.
-      "script-src 'self' 'unsafe-inline'",
-
-      "upgrade-insecure-requests",
-    ].join("; "),
-  },
   {
     key: "Referrer-Policy",
     value: "strict-origin-when-cross-origin",
@@ -98,6 +130,11 @@ const securityHeaders = [
 
 const nextConfig: NextConfig = {
   poweredByHeader: false,
+
+  // Both build passes must produce byte-identical pages, or the hashes the first
+  // collects will not match what the second ships. The build ID is inside every
+  // page's RSC payload, so scripts/build.mjs fixes it for both passes.
+  generateBuildId: async () => process.env.GT_BUILD_ID || null,
 
   experimental: {
     // `next build`'s default type-check step runs inside a forked jest-worker
@@ -173,6 +210,7 @@ const nextConfig: NextConfig = {
           ? [...securityHeaders, { key: "X-Robots-Tag", value: "noindex" }]
           : securityHeaders,
       },
+      ...contentSecurityPolicyRules(process.env.NODE_ENV === "development"),
     ];
   },
 

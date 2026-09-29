@@ -1,0 +1,116 @@
+name: Database restore check
+
+# Once a week, proves the newest nightly backup restores.
+#
+# Downloads the newest artifact from "Database backup", decrypts it, restores
+# it into a scratch Neon branch made for the purpose, checks that every table
+# and every table's row count matches what the archive carries, and deletes
+# the branch. The script is scripts/db/restore-verify-ci.sh; what it replaces
+# and what still needs a person is in docs/database-runbook.md.
+#
+# THIS REPOSITORY IS PUBLIC, and so is this log. It prints counts and nothing
+# else: no rows, no connection string (masked the moment it is known), no host.
+# The decrypted dump never leaves the runner and is shredded when the step ends.
+#
+# It never touches the default branch. The scratch branch is named
+# restore-check/<run id>, and is checked by name, by id, by Neon's `default`
+# flag and by host before the first write. The cleanup deletes only
+# restore-check/* branches that are not the default.
+#
+# Needs BACKUP_PASSPHRASE and NEON_API_KEY (secrets) and NEON_PROJECT_ID
+# (variable). Neon Free allows ten branches; if all ten are taken this fails
+# and says so rather than waiting.
+#
+# GitHub only runs a `schedule` from the default branch.
+
+on:
+  schedule:
+    # Mondays 11:43 UTC: two hours after the nightly backup starts, off the hour.
+    - cron: "43 11 * * 1"
+  workflow_dispatch:
+
+concurrency:
+  group: db-restore-check
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+  # To list the backup workflow's runs and download its artifact.
+  actions: read
+
+jobs:
+  restore-check:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+
+    env:
+      NEON_API_KEY: ${{ secrets.NEON_API_KEY }}
+      NEON_PROJECT_ID: ${{ vars.NEON_PROJECT_ID }}
+
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+        with:
+          sparse-checkout: |
+            scripts/db/restore-verify-ci.sh
+            scripts/db/restore-verify-cleanup.sh
+            migrations/
+          sparse-checkout-cone-mode: false
+          persist-credentials: false
+
+      - name: Secrets and variable are set
+        env:
+          HAS_PASSPHRASE: ${{ secrets.BACKUP_PASSPHRASE != '' }}
+          HAS_NEON_KEY: ${{ secrets.NEON_API_KEY != '' }}
+          HAS_PROJECT: ${{ vars.NEON_PROJECT_ID != '' }}
+        run: |
+          missing=""
+          [ "$HAS_PASSPHRASE" = "true" ] || missing="$missing BACKUP_PASSPHRASE (secret)"
+          [ "$HAS_NEON_KEY" = "true" ] || missing="$missing NEON_API_KEY (secret)"
+          [ "$HAS_PROJECT" = "true" ] || missing="$missing NEON_PROJECT_ID (variable)"
+          if [ -n "$missing" ]; then
+            echo "::error::Not set:${missing}. Nothing was restored. See docs/database-runbook.md."
+            exit 1
+          fi
+
+      - name: Download the newest backup
+        env:
+          GH_TOKEN: ${{ github.token }}
+          REPO: ${{ github.repository }}
+          DEST: ${{ runner.temp }}/restore-in
+        run: |
+          set -euo pipefail
+          run_id=$(gh run list -R "$REPO" --workflow db-backup.yml --status success --limit 1 \
+            --json databaseId --jq '.[0].databaseId // empty')
+          if [ -z "$run_id" ]; then
+            echo "::error::There is no successful Database backup run to restore."
+            exit 1
+          fi
+          echo "Newest successful backup run: ${run_id}"
+          gh run download "$run_id" -R "$REPO" --pattern 'guard-theory-db-*' --dir "$DEST"
+          # One artifact, one directory; the script wants the files themselves.
+          dir=$(find "$DEST" -name 'guard-theory-*.pgc.gpg' -printf '%h\n' | head -n 1)
+          if [ -z "$dir" ]; then
+            echo "::error::Run ${run_id} has no encrypted backup file in its artifact."
+            exit 1
+          fi
+          echo "RESTORE_IN_DIR=${dir}" >> "$GITHUB_ENV"
+
+      # A run that died before its cleanup leaves a branch that counts against
+      # the ten. Clear those first. Only restore-check/* is ever deleted.
+      - name: Clear scratch branches left by earlier runs
+        run: bash scripts/db/restore-verify-cleanup.sh
+
+      - name: Restore into a scratch branch and compare
+        env:
+          BACKUP_PASSPHRASE: ${{ secrets.BACKUP_PASSPHRASE }}
+          RESTORE_BRANCH_NAME: restore-check/${{ github.run_id }}-${{ github.run_attempt }}
+          RESTORE_MIGRATIONS_DIR: migrations
+        run: bash scripts/db/restore-verify-ci.sh
+
+      - name: Delete the scratch branch
+        if: always()
+        run: bash scripts/db/restore-verify-cleanup.sh
+
+      - name: Remove the downloaded file
+        if: always()
+        run: rm -rf "${{ runner.temp }}/restore-in"

@@ -288,6 +288,16 @@ are listed for the owner in `docs/owner-decisions.md` §13 instead.
   curl -s https://guardtheory.net/unsubscribe | grep -oi "use the link"
   ```
 
+- **`npm run build` is two `next build` passes, and a bare `next build`
+  refuses to run.** The CSP lists each static page's inline-script hashes
+  (`src/lib/csp.ts`, `scripts/build.mjs`); the first pass collects them into the
+  gitignored `.csp-hashes.json`, the second ships them, and a check fails the
+  build if any page's scripts are not covered. If that check fails with "build
+  output changed between passes", something renders non-deterministically at
+  build time (a timestamp, a random ID) — fix that, do not loosen the policy. A
+  new page that renders per request must live under a `DYNAMIC_PREFIXES` path
+  (proxy nonce) or the build fails; add the prefix there and to the proxy
+  matcher together (a unit test keeps them equal).
 - **Write control-character regexes with escape sequences**, not literal bytes.
   A class written as backslash-u-0000 through backslash-u-001F is fine; typing
   the actual bytes makes the source file read as binary to `grep` and `git

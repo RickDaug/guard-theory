@@ -1,11 +1,11 @@
 name: Database backup
 
-# A nightly pg_dump of production, encrypted, kept for thirty days.
+# A nightly pg_dump of production, encrypted, kept for fourteen days.
 #
 # Neon Free keeps six hours of restore history. This is the copy that survives
 # noticing on Monday what broke on Friday. The procedure for getting one back
 # out — download, decrypt, restore into a scratch branch — is in
-# docs/database-runbook.md, and so is the quarterly drill that proves it works.
+# docs/database-runbook.md. db-restore-check.yml proves weekly that it works.
 #
 # THIS REPOSITORY IS PUBLIC. So are this workflow's logs, and its artifacts can
 # be downloaded by anyone signed in to GitHub. Two consequences, both enforced
@@ -38,7 +38,7 @@ jobs:
     timeout-minutes: 15
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
         with:
           # The two scripts and nothing else.
           sparse-checkout: |
@@ -75,14 +75,19 @@ jobs:
       - name: Refuse to upload anything that is not encrypted
         run: bash scripts/db/backup-ci-guard.sh "${{ runner.temp }}/backup-out"
 
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
         with:
           name: guard-theory-db-${{ github.run_id }}
           path: ${{ runner.temp }}/backup-out/
-          # Thirty days, if the repository allows it: the repository's own limit
-          # wins when it is lower. Check it with
+          # Fourteen days, down from thirty (security audit 2026-09-29, S3-7).
+          # This repository is public, so every artifact here is published
+          # ciphertext and the passphrase is its only protection; a leaked
+          # passphrase would open every dump still held. Fourteen still covers
+          # noticing on Monday what broke the Friday before last, and the
+          # weekly restore check only ever needs the newest. The repository's
+          # own limit wins when it is lower. Check it with
           #   gh api repos/{owner}/{repo}/actions/permissions/artifact-and-log-retention
-          retention-days: 30
+          retention-days: 14
           if-no-files-found: error
           # Already compressed by pg_dump, and ciphertext does not compress.
           compression-level: 0

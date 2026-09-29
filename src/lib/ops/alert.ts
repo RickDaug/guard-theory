@@ -4,6 +4,7 @@ import type { MailProvider } from "../mail/types.ts";
 import { LABEL_CLAIM_MINUTES } from "../orders/label.ts";
 import { isStripeConfigured } from "../stripe/client.ts";
 import { readCheckoutSurge, type CheckoutSurge } from "../public-limits.ts";
+import { checkStripeMode, type ModeCheck } from "../stripe/mode-check.ts";
 import { readLastReconcile, reconcileHealth, type LastReconcile } from "./health.ts";
 import { listMissingConfirmations } from "./sweep.ts";
 
@@ -50,6 +51,7 @@ const MAX_KEYS = 500;
 const STATE_KEY = "owner_alert";
 
 export type ProblemKind =
+  | "stripe-mode"
   | "reconcile-failed"
   | "reconcile-stale"
   | "refunds-failed"
@@ -67,6 +69,7 @@ export type Problem = { kind: ProblemKind; key: string; detail?: string };
 
 /** One line per kind, in the order the owner should deal with them. */
 export const PROBLEM_LABEL: Record<ProblemKind, string> = {
+  "stripe-mode": "Stripe disagrees with the key about test or live mode",
   "reconcile-failed": "The scheduled reconcile failed on its last run",
   "reconcile-stale": "The reconciler has not finished a run recently",
   "refunds-failed": "The reconciler could not read refunds from Stripe",
@@ -162,6 +165,18 @@ export function surgeProblems(surge: CheckoutSurge | null, now: Date): Problem[]
   const status = surgeStatus(surge, now);
   return status.recent
     ? [{ kind: "checkout-surge", key: `surge:${status.since.toISOString()}`, detail: status.text }]
+      : [];
+}
+
+/**
+ * A key whose prefix says one mode while Stripe reports the other. The key
+ * names both modes, so a different mismatch is news and the same one is not.
+ * An unreachable Stripe is not reported here: the reconcile's own failure says
+ * that, and a one-off timeout is not worth an email.
+ */
+export function modeProblems(check: ModeCheck): Problem[] {
+  return check.state === "mismatch"
+    ? [{ kind: "stripe-mode", key: `stripe-mode:${check.keyMode}:${check.stripeSays}` }]
     : [];
 }
 
@@ -278,7 +293,7 @@ export function composeDigest(problems: Problem[]): { subject: string; body: str
     if (detail) {
       return `- ${PROBLEM_LABEL[kind]}: ${detail}`;
     }
-    return n === 1 || kind.startsWith("reconcile") || kind === "refunds-failed"
+    return n === 1 || kind.startsWith("reconcile") || kind === "refunds-failed" || kind === "stripe-mode"
       ? `- ${PROBLEM_LABEL[kind]}`
       : `- ${PROBLEM_LABEL[kind]}: ${n}`;
   });
@@ -346,6 +361,7 @@ export type AlertDeps = {
   provider: () => MailProvider;
   stripeConfigured: () => boolean;
   lastReconcile: () => Promise<LastReconcile | null>;
+  modeCheck: () => Promise<ModeCheck>;
   stored: () => Promise<Problem[]>;
   readState: () => Promise<AlertState | null>;
   writeState: (state: AlertState | null) => Promise<void>;
@@ -357,6 +373,7 @@ const REAL: AlertDeps = {
   provider: getMailProvider,
   stripeConfigured: isStripeConfigured,
   lastReconcile: readLastReconcile,
+  modeCheck: () => checkStripeMode(),
   stored: collectStoredProblems,
   readState: readAlertState,
   writeState: writeAlertState,
@@ -379,6 +396,7 @@ export async function runOwnerAlert(
 
   const now = deps.now();
   const problems = [
+    ...modeProblems(await deps.modeCheck()),
     ...runProblems(context, await deps.lastReconcile(), now, deps.stripeConfigured()),
     ...(await deps.stored()),
   ];

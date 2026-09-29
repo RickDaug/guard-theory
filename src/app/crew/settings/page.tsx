@@ -2,6 +2,7 @@ import { requirePortalPage } from "@/lib/portal/guard";
 import { portalUrl } from "@/lib/portal/routes";
 import { isDatabaseConfigured } from "@/lib/db/client";
 import { stripeKeyRefusal, stripeMode } from "@/lib/stripe/client";
+import { checkStripeMode, describeModeCheck } from "@/lib/stripe/mode-check";
 import { isShippoConfigured, shippoMode } from "@/lib/shipping/shippo";
 import { getMailProvider, maskEmail } from "@/lib/mail";
 import { ownerAlertAddress, readAlertState, surgeStatus, type AlertState } from "@/lib/ops/alert";
@@ -96,6 +97,8 @@ export default async function SettingsPage() {
   const ownerAlert = ownerAlertAddress();
   const health = reconcileHealth(last, now);
   const checkoutSurge = surgeStatus(surge, now);
+  const modeCheck = await checkStripeMode();
+  const modeLine = describeModeCheck(modeCheck);
 
   const payments: Row[] = [
     {
@@ -108,6 +111,11 @@ export default async function SettingsPage() {
             ? "Test — no money moves"
             : "Not connected",
       problem: Boolean(refusal) || stripe === "unknown",
+    },
+    {
+      label: "Stripe's own answer",
+      value: modeLine.value,
+      problem: modeLine.problem,
     },
     {
       label: "Stripe webhook secret",

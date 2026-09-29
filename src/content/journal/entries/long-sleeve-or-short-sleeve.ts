@@ -18,7 +18,7 @@ import type { PublishedArticle } from "../types.ts";
 export const longSleeveOrShortSleeve: PublishedArticle = {
   status: "published",
   publishedAt: "2026-08-19",
-  authorId: "steven-p",
+  authorId: "guard-theory-editorial",
   slug: "long-sleeve-or-short-sleeve",
   category: "equipment-and-apparel",
   title: "Long sleeve or short sleeve",
@@ -86,7 +86,6 @@ export const longSleeveOrShortSleeve: PublishedArticle = {
       paragraphs: [
         "Guard Theory makes both lengths, which is a disclosure rather than a recommendation: we have an interest in you concluding that the question is genuine. It is also why this piece leans as hard as it does on the primary documents. The most useful thing we can do with the question is publish the reasoning and let you disagree with it.",
         "What we will not do is settle it with a claim we cannot support. Both lengths are legal under both rulesets we have read. The thermal literature is thin and mixed and does not cover grappling. The protective argument is a medical one and is not ours to make. The one difference we are confident about is what your forearm presents to a grip, and you can test that yourself this week.",
-        "The specification for both garments is published in full on each product page — fabric, weight, seam construction, print method — because that is what you are actually choosing between once the sleeve question stops being a rule and starts being a preference.",
       ],
     },
   ],

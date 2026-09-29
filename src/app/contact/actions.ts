@@ -1,8 +1,10 @@
 "use server";
 
 import { headers } from "next/headers";
+import { after } from "next/server";
 import { callerKey, takeRateLimit } from "@/lib/rate-limit-db";
 import { CONTACT_BUCKET } from "@/lib/public-limits";
+import { forwardContactMessage } from "@/lib/contact/forward";
 import { getContactStore } from "@/lib/contact/store";
 import { parseContact } from "@/lib/contact/validate";
 import type { ContactFormState } from "@/lib/contact/form-state";
@@ -49,10 +51,8 @@ export async function sendMessage(
     };
   }
 
-  const stored = await getContactStore().save({
-    ...parsed.value,
-    receivedAt: new Date().toISOString(),
-  });
+  const message = { ...parsed.value, receivedAt: new Date().toISOString() };
+  const stored = await getContactStore().save(message);
 
   if (!stored) {
     return {
@@ -62,6 +62,11 @@ export async function sendMessage(
       errors: {},
     };
   }
+
+  // Email it to the owner once the reader has their answer. After the
+  // response, so a slow or failing provider cannot hold or fail the form;
+  // forwardContactMessage does not throw, and records what happened on the row.
+  after(() => forwardContactMessage({ id: stored, ...message }));
 
   return { status: "success", message: "Message received.", errors: {} };
 }

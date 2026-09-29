@@ -214,6 +214,14 @@ figures. The two sections do not overlap.)
 | g | "The list is told first, and told once" / "Once, when the First Edition opens" / "One message when it opens, and nothing else" | `src/app/faq/page.tsx:17`, `:29`; `src/app/first-edition/page.tsx:67`; `src/components/waitlist/WaitlistForm.tsx:126-127`; `src/app/shop/[slug]/page.tsx:110` | Nothing sends on `main`. The draft announcement send (PR #2) skips anyone `email_log` says already has it, which is what would enforce "once" — if a second, different message is ever wanted, these sentences forbid it. | confirm one message is the promise |
 | h | Tape "comes first" among accessories; spats and shorts follow the rash guards | `src/app/faq/page.tsx:57`; `src/app/shop/page.tsx:18-26` | §11 above still lists the accessory order as undecided. | answer §11, and the copy follows |
 
+**2026-09-29, row d (`feat/contact-forward`):** every saved contact message is
+now emailed, plain text, to `OWNER_ALERT_EMAIL` (else `REPLY_TO_EMAIL`) with the
+sender as Reply-To, and the portal's Messages screen lists them newest first
+with an answered flag. With neither address set nothing is sent and the row
+records `not-delivered`. What is still yours: set one of the two addresses, and
+read what arrives. Row c's retention is unchanged — answering a message deletes
+nothing.
+
 Also found, and not an owner question: `/email-confirmed` tells a visitor "that
 address is confirmed". No confirmation step exists, nothing links to the page,
 and it is excluded from robots and the sitemap — it is unreachable except by

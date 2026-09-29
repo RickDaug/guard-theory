@@ -12,7 +12,7 @@ import type { PublishedArticle } from "../types.ts";
 export const theGuillotineFromTheFrontHeadlock: PublishedArticle = {
   status: "published",
   publishedAt: "2026-08-04",
-  authorId: "steven-p",
+  authorId: "guard-theory-editorial",
   slug: "the-guillotine-from-the-front-headlock",
   category: "technique-notes",
   title: "The guillotine from the front headlock",

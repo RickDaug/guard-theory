@@ -135,8 +135,13 @@ tables="$(printf '%s\n' "$toc" | grep -c ' TABLE DATA ' || true)"
 
 [ "$tables" -ge 1 ] || fail "the archive lists no table data at all."
 
+# A here-string, never `printf | grep -q`: grep -q exits at its first match,
+# and under pipefail the printf still writing the rest of the listing can die
+# of SIGPIPE, which fails the pipeline — a table that IS there reported as
+# missing. Production's listing is long, so the nightly run is the likelier
+# victim; the test's three-line listing lost the race once in CI.
 for required in _migration waitlist_signup; do
-  printf '%s\n' "$toc" | grep -q " TABLE DATA public ${required} " ||
+  grep -q " TABLE DATA public ${required} " <<<"$toc" ||
     fail "the archive has no data entry for \"${required}\". This is not the production database, or not all of it."
 done
 

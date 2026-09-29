@@ -2,11 +2,12 @@ import { getAuthor } from "./authors.ts";
 import { FIGURES } from "./figures/index.ts";
 import { ARTICLES, isPublished } from "./journal/index.ts";
 import { PRODUCTS } from "./products/index.ts";
-import { SIZE_CHART } from "./products/size-chart.ts";
+import { SIZE_CHART, SIZE_CHART_SOURCE } from "./products/size-chart.ts";
 import { numberWord } from "./section-descriptions.ts";
 import { ENTRIES } from "./technique/index.ts";
 import { buildSearchIndex } from "../lib/search/index.ts";
 import * as mailTemplates from "../lib/mail/templates.ts";
+import { PENDING_RETENTION_DAYS } from "../lib/waitlist/confirm.ts";
 
 /**
  * What the site says about itself, tied to the thing that makes it true.
@@ -102,6 +103,10 @@ export const STORED: Record<string, Record<string, Disclosure>> = {
     unsubscribed_at: { internal: "set when the reader unsubscribes; nothing is collected to set it" },
     unsubscribe_token: { internal: "a random token we generate for the unsubscribe link" },
     source: { internal: "which of our own code paths wrote the row" },
+    consent_state: { says: "whether and when you confirmed your address" },
+    confirmed_at: { says: "whether and when you confirmed your address" },
+    confirmation_sent_at: { internal: "when we last sent the confirmation link" },
+    confirmation_delivery: { internal: "whether that confirmation email was sent, failed, or only logged" },
   },
   contact_message: {
     id: { internal: "a random identifier we generate" },
@@ -159,6 +164,9 @@ export const STORED: Record<string, Record<string, Disclosure>> = {
     stripe_mode: { internal: "whether the Stripe key that took the payment was test or live" },
     refund_status: { internal: "whether any of the payment has been refunded; derived from Stripe's events" },
     refunded_cents: { internal: "how much has been refunded; derived from Stripe's events" },
+    dispute_status: {
+      internal: "whether the payment has been disputed with the card issuer, and how that ended; derived from Stripe's events",
+    },
     tracking_carrier: { internal: "the carrier for the parcel; from the postage label, not from the buyer" },
     tracking_number: { internal: "the parcel's tracking number; from the postage label, not from the buyer" },
     tracking_url: { internal: "the carrier's tracking page for that number" },
@@ -182,7 +190,7 @@ export const STORED: Record<string, Record<string, Disclosure>> = {
     quantity: { says: "what you bought" },
   },
   checkout_intent: internal(
-    ["id", "lines_json", "subtotal_cents", "shipping_cents", "created_at", "consumed_at"],
+    ["id", "lines_json", "subtotal_cents", "shipping_cents", "created_at", "consumed_at", "order_id"],
     "the cart's sizes, quantities and totals as we priced them before sending the buyer to Stripe; nothing about who is buying, and swept after a week if never paid",
   ),
   webhook_event: internal(["id", "source", "type", "received_at", "processed_at"], "a ledger of which provider events have been handled, so none is handled twice"),
@@ -209,6 +217,12 @@ export const STORED: Record<string, Record<string, Disclosure>> = {
   login_attempt: internal(
     ["id", "key_hash", "succeeded", "attempted_at"],
     "the portal's sign-in limiter: a keyed hash of the attempt's address, never the address, deleted after a day",
+  ),
+
+  /* The cart's abuse limiter. About a request, never a person. */
+  rate_limit: internal(
+    ["bucket", "key_hash", "window_start", "hits"],
+    "the cart's rate limiter: a count of requests per keyed hash of the address, never the address, deleted after a day",
   ),
 };
 
@@ -406,7 +420,25 @@ export const PROCESSORS: Array<{
     evidence: "src/lib/shipping/shippo.ts posts the parcel's address to api.goshippo.com",
     present: (context) => externalHosts(context).includes("api.goshippo.com"),
   },
+  {
+    name: "GitHub",
+    evidence:
+      ".github/workflows/db-backup.yml dumps the production database each night and uploads it, encrypted, as a GitHub Actions artifact",
+    present: (context) => nightlyBackup(context) !== null,
+  },
 ];
+
+const BACKUP_WORKFLOW = ".github/workflows/db-backup.yml";
+
+/**
+ * The nightly backup workflow, as text, when it still dumps the database and
+ * uploads the result to GitHub. Null when it is gone or no longer does both.
+ */
+function nightlyBackup(context: ClaimContext): string | null {
+  if (!context.list(".github/workflows").includes(BACKUP_WORKFLOW)) return null;
+  const workflow = context.read(BACKUP_WORKFLOW);
+  return workflow.includes("actions/upload-artifact") && workflow.includes("pg_dump") ? workflow : null;
+}
 
 /** Hosts that appear in code and receive nothing about a reader. */
 export const HOSTS_THAT_RECEIVE_NOTHING: Record<string, string> = {
@@ -509,7 +541,14 @@ function processorsMatchPolicy(context: ClaimContext): true | string {
  * sentence is retired below until there is no transactional mail.
  */
 export const LIST_MAIL = ["announcement"];
-export const TRANSACTIONAL_MAIL = ["orderConfirmation", "orderInProcess", "orderShipped"];
+export const TRANSACTIONAL_MAIL = [
+  "orderConfirmation",
+  "orderInProcess",
+  "orderShipped",
+  // Sent to an address that is not on the list yet, because someone asked for
+  // it to be. It says that ignoring it is enough, which is true.
+  "waitlistConfirmation",
+];
 
 function listMailCarriesUnsubscribe(): true | string {
   const problems: string[] = [];
@@ -519,6 +558,11 @@ function listMailCarriesUnsubscribe(): true | string {
     if (LIST_MAIL.includes(name)) {
       if (!template.toString().includes("/unsubscribe?t=")) {
         problems.push(`the list template "${name}" no longer builds an unsubscribe link`);
+      }
+      // "One-click": the body link opens a confirm page (a GET must not write),
+      // so the one click is RFC 8058's — the mail client's own button.
+      if (!template.toString().includes("List-Unsubscribe=One-Click")) {
+        problems.push(`the list template "${name}" no longer sends List-Unsubscribe-Post (RFC 8058 one-click)`);
       }
     } else if (!TRANSACTIONAL_MAIL.includes(name)) {
       problems.push(
@@ -555,7 +599,25 @@ const PUBLISHED_SPECIFICATIONS = [
   "Print method",
 ];
 
+/**
+ * Specification values and chart rows count only when the owner supplied them.
+ * On 2026-09-29 the owner confirmed that the composition, GSM, seam type, print
+ * method and the six-size chart published since 2026-08-04 came from nobody —
+ * so "is there a value?" is not the question; "did the owner give us it?" is.
+ */
+function sizeChartIsSupplied(): true | string {
+  if (SIZE_CHART_SOURCE !== "owner") {
+    return "the size chart was not supplied by the owner (SIZE_CHART_SOURCE is not \"owner\")";
+  }
+  if (SIZE_CHART.length === 0) return "the size chart has no rows";
+  return true;
+}
+
 function specificationsArePublished(): true | string {
+  const unsourced = PRODUCTS.filter((product) => product.specSource !== "owner");
+  if (unsourced.length > 0) {
+    return `${unsourced.map((p) => p.slug).join(", ")} has no owner-supplied specification (specSource is not "owner")`;
+  }
   const missing = PRODUCTS.flatMap((product) =>
     PUBLISHED_SPECIFICATIONS.filter(
       (label) => !product.specifications.some((spec) => spec.label === label && spec.value),
@@ -569,22 +631,72 @@ function specificationsArePublished(): true | string {
 /* ------------------------------------------------------------------------ */
 
 const FAQ = "src/app/faq/page.tsx";
+const RATE_LIMITER = "src/lib/rate-limit-db.ts";
 const POLICIES = "src/content/policies/index.ts";
+const ORDER_CONFIRMED = "src/app/order/confirmed/page.tsx";
+const MAIL_TEMPLATES = "src/lib/mail/templates.ts";
+const SIZE_AND_FIT = "src/app/size-and-fit/page.tsx";
+
+/**
+ * The buyer-facing terms the owner supplied on 2026-09-29
+ * (docs/owner-decisions.md §12). Every figure the storefront prints about
+ * dispatch and returns must be one of these. Change a value here only with a
+ * new owner decision recorded there — never to make a sentence pass.
+ */
+export const OWNER_TERMS = {
+  decided: "2026-09-29",
+  dispatchWithin: "seven business days",
+  returnWindow: "thirty days",
+} as const;
+
+/**
+ * Journal articles the owner has confirmed a named person wrote, or read and
+ * agreed to put their name to: slug → author id. Empty, because on 2026-09-29
+ * no article had any record of it; every published piece carries the editorial
+ * byline. Add a slug here only on the owner's word, then change its authorId.
+ */
+export const OWNER_CONFIRMED_PERSON_BYLINES: Record<string, string> = {};
+
+/** Every "<verb> within <n> <unit>" figure in the files, as printed. */
+function figuresIn(read: (path: string) => string, files: string[], pattern: RegExp): string[] {
+  return files.flatMap((file) => [...read(file).matchAll(pattern)].map((m) => m[1] ?? ""));
+}
 
 export const CLAIMS: Claim[] = [
   {
+    // Retired 2026-09-29: printed on /first-edition, /shop and in the sleeve
+    // article while every one of those values was invented.
     id: "specifications-published",
-    says: /(Fabric weight, composition, seam construction and print method are stated on the product page|fabric, weight, seam construction(,| and) print method)/,
-    kind: "stated",
-    where: ["src/app/first-edition/page.tsx", "src/app/shop/page.tsx"],
+    says: /(Fabric weight, composition, seam construction and print method are stated on the product page|fabric, weight, seam construction(,| and) print method|specification (for both garments )?is published in full)/i,
+    kind: "retired",
+    where: [
+      "src/app/first-edition/page.tsx",
+      "src/app/shop/page.tsx",
+      "src/content/journal/entries/long-sleeve-or-short-sleeve.ts",
+      "src/content/products/entries/theory-01-short-sleeve.ts",
+    ],
     holds: specificationsArePublished,
   },
   {
+    // Retired 2026-09-29 with the specification: the figures themselves may
+    // not reappear in copy until the owner has supplied them. Articles about
+    // rash guards in general name fibres and weights freely; what this catches
+    // is a percentage split or a GSM, which only ever describes one garment.
+    id: "retired-invented-fabric-figures",
+    says: /\b\d{2,3} ?gsm\b|\b\d{1,2}% (recycled )?(polyester|elastane|spandex|nylon|polyamide)\b|four-thread flatlock|flatlock, four-thread|dyed into the fibre/i,
+    kind: "retired",
+    where: ["src/content/products/entries/theory-01-long-sleeve.ts", "src/content/products/entries/theory-01-short-sleeve.ts"],
+    holds: specificationsArePublished,
+  },
+  {
+    // Retired 2026-09-29: the chart it pointed at was invented.
     id: "faq-size-chart",
-    says: /The size and fit guide has the full chart/,
-    kind: "stated",
-    where: [FAQ],
+    says: /(The size and fit guide has the full chart|does not match (those|our published) measurements|answer with actual measurements)/,
+    kind: "retired",
+    where: [FAQ, POLICIES, "src/app/contact/page.tsx"],
     holds: ({ list }) => {
+      const supplied = sizeChartIsSupplied();
+      if (supplied !== true) return supplied;
       if (!list("src/app/size-and-fit").some((file) => file.endsWith("page.tsx"))) {
         return "there is no /size-and-fit route";
       }
@@ -623,6 +735,55 @@ export const CLAIMS: Claim[] = [
       return JSON.stringify(names) === JSON.stringify(stated)
         ? true
         : `the bylines on published articles are ${names.join(", ")}`;
+    },
+  },
+  {
+    // Owner decision 2026-09-29 (docs/owner-decisions.md §2): an article
+    // drafted with AI assistance carries the publication's byline, never a
+    // person's. Person bylines are allowed only where the owner confirmed one.
+    id: "journal-bylines-are-editorial",
+    says: /carry the Guard Theory editorial byline rather than a person's name/,
+    kind: "stated",
+    where: [POLICIES],
+    holds: () => {
+      const wrong = ARTICLES.filter(isPublished).filter((article) => {
+        const author = getAuthor(article.authorId);
+        if (!author) return true;
+        if (author.kind === "organization") return false;
+        return OWNER_CONFIRMED_PERSON_BYLINES[article.slug] !== article.authorId;
+      });
+      return wrong.length === 0
+        ? true
+        : `${wrong.map((a) => `${a.slug} (${a.authorId})`).join(", ")} carries a person's byline the owner has not confirmed`;
+    },
+  },
+  {
+    // Owner decision 2026-09-29 (docs/owner-decisions.md §12a): replaced the
+    // unconfirmed "two business days".
+    id: "dispatch-time-is-the-owners",
+    says: /dispatched within seven business days/,
+    kind: "stated",
+    where: [POLICIES, ORDER_CONFIRMED, MAIL_TEMPLATES],
+    holds: ({ read }) => {
+      const printed = figuresIn(read, [POLICIES, ORDER_CONFIRMED, MAIL_TEMPLATES], /dispatched within ([\w-]+ (?:business |working )?days)/gi);
+      const wrong = printed.filter((figure) => figure !== OWNER_TERMS.dispatchWithin);
+      return wrong.length === 0
+        ? true
+        : `the copy promises dispatch within ${wrong.join(", ")}; the owner's figure is ${OWNER_TERMS.dispatchWithin}`;
+    },
+  },
+  {
+    // Owner decision 2026-09-29 (docs/owner-decisions.md §12g).
+    id: "return-window-is-the-owners",
+    says: /within thirty days of delivery/,
+    kind: "stated",
+    where: [POLICIES, SIZE_AND_FIT],
+    holds: ({ read }) => {
+      const printed = figuresIn(read, [POLICIES, SIZE_AND_FIT], /within ([\w-]+ days) of delivery/gi);
+      const wrong = printed.filter((figure) => figure !== OWNER_TERMS.returnWindow);
+      return wrong.length === 0
+        ? true
+        : `the copy gives a return window of ${wrong.join(", ")}; the owner's is ${OWNER_TERMS.returnWindow}`;
     },
   },
   {
@@ -716,6 +877,40 @@ export const CLAIMS: Claim[] = [
     holds: processorsMatchPolicy,
   },
   {
+    id: "privacy-backups-kept-fourteen-days",
+    says: /encrypted nightly backups are kept for fourteen days/,
+    kind: "stated",
+    where: [POLICIES],
+    holds: (context) => {
+      const workflow = nightlyBackup(context);
+      if (!workflow) return `${BACKUP_WORKFLOW} no longer dumps the database and uploads it to GitHub`;
+      if (!/cron: "\d+ \d+ \* \* \*"/.test(workflow)) return `${BACKUP_WORKFLOW} no longer runs once a day`;
+      const days = workflow.match(/retention-days: (\d+)/)?.[1];
+      return days === "14"
+        ? true
+        : `${BACKUP_WORKFLOW} keeps the artifact for ${days ?? "an unstated number of"} days, not fourteen`;
+    },
+  },
+  {
+    id: "privacy-rate-limit-hash-kept-a-day",
+    says: /a keyed hash of the address, never the address itself, and delete it after a day/,
+    kind: "stated",
+    where: [POLICIES],
+    holds: (context) => {
+      const limiter = context.read(RATE_LIMITER);
+      if (!limiter.includes("RATE_LIMIT_RETENTION_HOURS = 24;")) {
+        return `${RATE_LIMITER} no longer deletes its rows after 24 hours`;
+      }
+      if (!limiter.includes("addressKey(")) {
+        return `${RATE_LIMITER} no longer keys its rows on addressKey, the keyed hash of the address`;
+      }
+      const columns = columnsByTable(context).rate_limit ?? [];
+      return columns.some((column) => /^(ip|addr|address)$/i.test(column))
+        ? `rate_limit now has a column that looks like it holds the address itself: ${columns.join(", ")}`
+        : true;
+    },
+  },
+  {
     id: "no-cookies-no-tracking",
     says: /This site sets no cookies of its own|sets no analytics cookies and loads no third-party tracking scripts/,
     kind: "stated",
@@ -796,6 +991,8 @@ export const CLAIMS: Claim[] = [
     kind: "retired",
     where: [FAQ, "src/app/shop/[slug]/page.tsx", "src/app/size-and-fit/page.tsx"],
     holds: () => {
+      const supplied = sizeChartIsSupplied();
+      if (supplied !== true) return supplied;
       const keys = Object.keys(SIZE_CHART[0] ?? {});
       const metricOnly = keys.filter(
         (key) => key.endsWith("Cm") && !keys.includes(`${key.slice(0, -2)}In`),
@@ -841,6 +1038,27 @@ export const CLAIMS: Claim[] = [
         : `order mail (${TRANSACTIONAL_MAIL.join(", ")}) carries no unsubscribe link; only the list's does`,
   },
   {
+    // Invented in 4364d22 and live from 2026-09-24. On 2026-09-29 the owner
+    // set seven business days for dispatch and a 30-day return window with no
+    // prepaid label, no day count on refunds, exchanges shipped when the return
+    // arrives, no open-ended fault warranty, and no numbered lost or damaged
+    // parcel promise (docs/owner-decisions.md §12). None of these may return
+    // without a new owner decision; there is nothing in the build to check.
+    id: "retired-unconfirmed-buyer-terms",
+    says: /dispatched within two business days|within five business days of the return|send (you )?a return label|repair, replace or refund|no delivery after twenty-one days|not ask you to return the damaged|return is scanned|scans your return|(has not|not) moved for seven days|Faults after thirty days|we pay both ways/i,
+    kind: "retired",
+    where: [POLICIES, ORDER_CONFIRMED, MAIL_TEMPLATES, SIZE_AND_FIT, FAQ],
+    holds: () => `the owner did not agree it; the terms decided on ${OWNER_TERMS.decided} replace it`,
+  },
+  {
+    id: "retired-person-bylines-on-ai-drafted-articles",
+    says: /Journal is written by the same people|a piece nobody will put their name to/i,
+    kind: "retired",
+    where: [POLICIES, FAQ],
+    holds: () =>
+      "the Journal is drafted with AI assistance and carries the editorial byline, not the names of the people who make the apparel",
+  },
+  {
     id: "retired-waitlist-collects-a-size",
     says: /size you (would )?expect to wear|between sizes and sleeve lengths/i,
     kind: "retired",
@@ -849,5 +1067,23 @@ export const CLAIMS: Claim[] = [
       (columnsByTable(context).waitlist_signup ?? []).some((column) => /size/i.test(column))
         ? true
         : "the waitlist has not asked for a size since 2026-08; there is no field and no column",
+  },
+  {
+    id: "privacy-unconfirmed-deleted",
+    says: /An address that is never confirmed is not on the list, and it is deleted (\d+) days after we send the link/,
+    kind: "stated",
+    where: [POLICIES],
+    holds: ({ match, read }) => {
+      if (match?.[1] !== String(PENDING_RETENTION_DAYS)) {
+        return `the policy says ${match?.[1]} days and PENDING_RETENTION_DAYS in src/lib/waitlist/confirm.ts is ${PENDING_RETENTION_DAYS}`;
+      }
+      if (!read("src/app/first-edition/actions.ts").includes("purgeUnconfirmed(")) {
+        return "nothing calls purgeUnconfirmed any more, so unconfirmed addresses are kept indefinitely";
+      }
+      if (!read("src/app/crew/list/actions.ts").includes("consent_state in ('confirmed', 'legacy')")) {
+        return "the announcement no longer limits itself to confirmed (and legacy) addresses, so an unconfirmed one is on the list after all";
+      }
+      return true;
+    },
   },
 ];

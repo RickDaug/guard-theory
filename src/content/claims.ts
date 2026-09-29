@@ -2,7 +2,7 @@ import { getAuthor } from "./authors.ts";
 import { FIGURES } from "./figures/index.ts";
 import { ARTICLES, isPublished } from "./journal/index.ts";
 import { PRODUCTS } from "./products/index.ts";
-import { SIZE_CHART } from "./products/size-chart.ts";
+import { SIZE_CHART, SIZE_CHART_SOURCE } from "./products/size-chart.ts";
 import { numberWord } from "./section-descriptions.ts";
 import { ENTRIES } from "./technique/index.ts";
 import { buildSearchIndex } from "../lib/search/index.ts";
@@ -555,7 +555,25 @@ const PUBLISHED_SPECIFICATIONS = [
   "Print method",
 ];
 
+/**
+ * Specification values and chart rows count only when the owner supplied them.
+ * On 2026-09-29 the owner confirmed that the composition, GSM, seam type, print
+ * method and the six-size chart published since 2026-08-04 came from nobody —
+ * so "is there a value?" is not the question; "did the owner give us it?" is.
+ */
+function sizeChartIsSupplied(): true | string {
+  if (SIZE_CHART_SOURCE !== "owner") {
+    return "the size chart was not supplied by the owner (SIZE_CHART_SOURCE is not \"owner\")";
+  }
+  if (SIZE_CHART.length === 0) return "the size chart has no rows";
+  return true;
+}
+
 function specificationsArePublished(): true | string {
+  const unsourced = PRODUCTS.filter((product) => product.specSource !== "owner");
+  if (unsourced.length > 0) {
+    return `${unsourced.map((p) => p.slug).join(", ")} has no owner-supplied specification (specSource is not "owner")`;
+  }
   const missing = PRODUCTS.flatMap((product) =>
     PUBLISHED_SPECIFICATIONS.filter(
       (label) => !product.specifications.some((spec) => spec.label === label && spec.value),
@@ -573,18 +591,39 @@ const POLICIES = "src/content/policies/index.ts";
 
 export const CLAIMS: Claim[] = [
   {
+    // Retired 2026-09-29: printed on /first-edition, /shop and in the sleeve
+    // article while every one of those values was invented.
     id: "specifications-published",
-    says: /(Fabric weight, composition, seam construction and print method are stated on the product page|fabric, weight, seam construction(,| and) print method)/,
-    kind: "stated",
-    where: ["src/app/first-edition/page.tsx", "src/app/shop/page.tsx"],
+    says: /(Fabric weight, composition, seam construction and print method are stated on the product page|fabric, weight, seam construction(,| and) print method|specification (for both garments )?is published in full)/i,
+    kind: "retired",
+    where: [
+      "src/app/first-edition/page.tsx",
+      "src/app/shop/page.tsx",
+      "src/content/journal/entries/long-sleeve-or-short-sleeve.ts",
+      "src/content/products/entries/theory-01-short-sleeve.ts",
+    ],
     holds: specificationsArePublished,
   },
   {
+    // Retired 2026-09-29 with the specification: the figures themselves may
+    // not reappear in copy until the owner has supplied them. Articles about
+    // rash guards in general name fibres and weights freely; what this catches
+    // is a percentage split or a GSM, which only ever describes one garment.
+    id: "retired-invented-fabric-figures",
+    says: /d{2,3} ?gsm|d{1,2}% (recycled )?(polyester|elastane|spandex|nylon|polyamide)|four-thread flatlock|flatlock, four-thread|dyed into the fibre/i,
+    kind: "retired",
+    where: ["src/content/products/entries/theory-01-long-sleeve.ts", "src/content/products/entries/theory-01-short-sleeve.ts"],
+    holds: specificationsArePublished,
+  },
+  {
+    // Retired 2026-09-29: the chart it pointed at was invented.
     id: "faq-size-chart",
-    says: /The size and fit guide has the full chart/,
-    kind: "stated",
-    where: [FAQ],
+    says: /(The size and fit guide has the full chart|does not match (those|our published) measurements|answer with actual measurements)/,
+    kind: "retired",
+    where: [FAQ, POLICIES, "src/app/contact/page.tsx"],
     holds: ({ list }) => {
+      const supplied = sizeChartIsSupplied();
+      if (supplied !== true) return supplied;
       if (!list("src/app/size-and-fit").some((file) => file.endsWith("page.tsx"))) {
         return "there is no /size-and-fit route";
       }
@@ -796,6 +835,8 @@ export const CLAIMS: Claim[] = [
     kind: "retired",
     where: [FAQ, "src/app/shop/[slug]/page.tsx", "src/app/size-and-fit/page.tsx"],
     holds: () => {
+      const supplied = sizeChartIsSupplied();
+      if (supplied !== true) return supplied;
       const keys = Object.keys(SIZE_CHART[0] ?? {});
       const metricOnly = keys.filter(
         (key) => key.endsWith("Cm") && !keys.includes(`${key.slice(0, -2)}In`),

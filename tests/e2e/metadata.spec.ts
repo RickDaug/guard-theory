@@ -223,6 +223,13 @@ test("structured data parses and claims nothing untrue", async ({ page }) => {
           continue;
         }
 
+        // Material and size facts need an owner source (docs/owner-decisions.md
+        // §3), and the invented ones removed on 2026-09-29 must not resurface
+        // in structured data either.
+        for (const key of ["material", "size", "additionalProperty", "weight"]) {
+          expect(record[key], `${path} emits a Product with a "${key}"`).toBeUndefined();
+        }
+
         const offer = record.offers as Record<string, unknown> | undefined;
 
         expect(offer, `${path} emits a Product with no Offer`).toBeTruthy();

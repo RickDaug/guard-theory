@@ -31,15 +31,11 @@ const FAQS = [
   },
   {
     q: "Why are there drawings instead of photographs?",
-    a: "Because a production flat states how a garment is built and a photograph only shows how it looks. These are the drawings a factory is given — seam construction, sleeve geometry, hem.",
+    a: "Because a drawing shows how a garment is built, and a photograph only shows how it looks.",
   },
   {
     q: "How do I know what size I am?",
-    a: "The size and fit guide has the full chart, plus what to check when you try one on. If a garment does not match those measurements, return postage is ours both ways.",
-  },
-  {
-    q: "Will the rash guards be competition legal?",
-    a: "That is the design constraint we started from rather than one we work around.",
+    a: "The size and fit guide covers what to check when you try one on, and the returns policy covers exchanging a size.",
   },
   {
     q: "Is the Technique Library a substitute for classes?",

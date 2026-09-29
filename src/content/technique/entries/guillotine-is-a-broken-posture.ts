@@ -57,6 +57,6 @@ export const guillotineIsABrokenPosture: TechniqueEntry = {
       "Fact audit, assisted (Claude Code agent), 2026-09-28: mechanics checked against the ledger; one frequency superlative hedged (closed-guard 'most people reach for first'); the 'every guillotine' front-headlock claim scoped to standing and sprawl, with broken posture as the closed-guard control. Revised the same day by a separate writer agent, both fixes applied verbatim; also removed the illustrative 'half a minute' duration.",
     voiceAudit:
       "Voice audit, assisted (Claude Code agent), 2026-09-28: REVISE on batch repetition. Revised the same day: title changed to 'needs a broken posture'; core opener rewritten off the 'X before Y' frame; doubled 'usually' hedged; grip beat, blood/air-choke pointer sentence and 'Know the defence' opener cut; progression steps 2, 5 and 6 and the safety note rewritten away from wording shared with the other four entries.",
-    approvedBy: null,
+    approvedBy: { name: "Rick D.", date: "2026-09-29" },
   },
 };

@@ -57,6 +57,6 @@ export const triangleClosesAtTheShoulder: TechniqueEntry = {
       "Fact audit, assisted (Claude Code agent), 2026-09-28: angle and third-wall mechanics confirmed; no-arm-triangle legality claim rewritten as mechanics plus 'check your ruleset'; judo name corrected to sankaku-jime; one frequency comparison cut ('just as often' from mount). Revised the same day by a separate writer agent, all three fixes applied in the auditor's wording.",
     voiceAudit:
       "Voice audit, assisted (Claude Code agent), 2026-09-28: REVISE (2) plus batch items. Revised the same day: the wry 'sensation' error rewritten plainly; 'almost everybody' hedged to 'most guard players'; the 'one control that precedes every triangle' closer, the blood/air-choke pointer sentence and the 'Know what' opener cut; progression 2, 3 and 5 and the safety note reworded away from lines shared across the batch.",
-    approvedBy: null,
+    approvedBy: { name: "Rick D.", date: "2026-09-29" },
   },
 };

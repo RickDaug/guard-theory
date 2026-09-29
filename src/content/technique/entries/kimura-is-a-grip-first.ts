@@ -57,6 +57,6 @@ export const kimuraIsAGripFirst: TechniqueEntry = {
       "Fact audit, assisted (Claude Code agent), 2026-09-28: all ledger rows checked, no changes; name lineage (ude garami, double wrist lock) confirmed; safety note meets structure/load/who standard. Revised the same day by a separate writer agent for voice only; the 'most failed kimuras' line was hedged further to 'usually', and no mechanic was added or changed.",
     voiceAudit:
       "Voice audit, assisted (Claude Code agent), 2026-09-28: REVISE (3). Revised the same day: title changed to 'Kimura grip: control first, then the lock' so it no longer mirrors the Journal article; 'Most failed kimuras' hedged; the grip beat and the 'Know what' opener cut; progression 2, 3, 5 and 6 and the safety note reworded away from lines shared across the batch.",
-    approvedBy: null,
+    approvedBy: { name: "Rick D.", date: "2026-09-29" },
   },
 };

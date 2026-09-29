@@ -57,6 +57,6 @@ export const headAndArmStrangles: TechniqueEntry = {
       "Fact audit, assisted (Claude Code agent), 2026-09-28: threading directions of d'arce and anaconda confirmed; kata-gatame usage confirmed (judo pin that also strangles); defence list hedged as common rather than universal. Revised the same day by a separate writer agent: the shoulder shrug and chin turn kept as common defences; the hand-behind-the-head defence cut rather than assigned to particular strangles, pending a coach's confirmation.",
     voiceAudit:
       "Voice audit, assisted (Claude Code agent), 2026-09-28: REVISE (3). Revised the same day: 'vs' changed to 'versus' in the prose (kept in the meta description); the 'question hides the fact' clause cut; the grip beat, the blood/air-choke pointer sentence and the 'one control that precedes all three' formula removed; the guillotine contrast reworded so it no longer repeats the guillotine entry; safety note varied from the batch.",
-    approvedBy: null,
+    approvedBy: { name: "Rick D.", date: "2026-09-29" },
   },
 };

@@ -56,6 +56,6 @@ export const armbarIsHipToShoulderDistance: TechniqueEntry = {
       "Fact audit, assisted (Claude Code agent), 2026-09-28: lever and escape mechanics confirmed; juji gatame name confirmed; two absolutes hedged ('will always find the bend', 'none of them work'). Revised the same day by a separate writer agent: both hedges applied; 'lost this way at every level' cut rather than hedged, per the voice audit; 'every escape' narrowed to 'the standard escapes'; optional muscle-contest wording taken.",
     voiceAudit:
       "Voice audit, assisted (Claude Code agent), 2026-09-28: REVISE (3). Revised the same day: 'always' hedged to 'usually', the wry 'every level' closer cut, the safety-note elbow line reworded; also cut 'first lever anyone learns' (echoed the guillotine), replaced the 'one control shared by both' closer, and rewrote progression 2 and 3 and the safety note away from wording shared across the batch.",
-    approvedBy: null,
+    approvedBy: { name: "Rick D.", date: "2026-09-29" },
   },
 };

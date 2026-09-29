@@ -66,6 +66,19 @@ try {
     await client.query(
       `update product set status = 'active', price_cents = 1111, currency = 'USD', updated_at = now()`,
     );
+    // The registry carries no size range (none has been supplied — see
+    // docs/owner-decisions.md §3), so the real seed creates no variants. Give
+    // each product three fixture sizes, named so they cannot pass for a real
+    // range: T1, T2, T3.
+    await client.query(`
+      insert into variant (id, product_id, size_label, sku, stock, sort_index)
+      select gen_random_uuid()::text, p.id, s.label,
+             upper(regexp_replace(p.slug || '-' || s.label, '[^A-Za-z0-9]+', '-', 'g')),
+             0, s.idx
+        from product p
+       cross join (values ('T1', 0), ('T2', 1), ('T3', 2)) as s(label, idx)
+       where not exists (select 1 from variant v where v.product_id = p.id)
+    `);
     await client.query("update variant set stock = 5");
 
     // One size deliberately at zero, so the sold-out-but-visible branch is
@@ -79,6 +92,9 @@ try {
     // password per run locks itself out on the fifth local run in a quarter of
     // an hour. This script only ever touches a loopback database.
     await client.query("delete from login_attempt");
+    // The same for the cart's limiter (0010): every cart page in the suite prices
+    // a fresh browser's cart, and each of those is a new intent to count.
+    await client.query("delete from rate_limit");
 
     await client.query("COMMIT");
 

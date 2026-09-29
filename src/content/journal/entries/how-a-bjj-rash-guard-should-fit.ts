@@ -8,7 +8,7 @@ import type { PublishedArticle } from "../types.ts";
 export const howABjjRashGuardShouldFit: PublishedArticle = {
   status: "published",
   publishedAt: "2026-08-04",
-  authorId: "steven-p",
+  authorId: "guard-theory-editorial",
   slug: "how-a-bjj-rash-guard-should-fit",
   category: "equipment-and-apparel",
   title: "How a BJJ rash guard should fit",

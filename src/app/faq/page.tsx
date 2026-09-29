@@ -43,7 +43,7 @@ const FAQS = [
   },
   {
     q: "Who writes the Journal?",
-    a: "Rick R and Steven P. Every published article carries a byline, a publication date and the sources it was built from, because a piece nobody will put their name to is not worth reading. A piece with no byline is a draft that nobody has yet put their name to.",
+    a: "Guard Theory editorial. Every published article carries a byline, a publication date and the sources it was built from. The articles are researched and drafted with AI assistance, which is why the byline names the publication rather than a person; the editorial policy explains how they are sourced.",
   },
   {
     q: "Do you take sponsored posts or affiliate commission?",

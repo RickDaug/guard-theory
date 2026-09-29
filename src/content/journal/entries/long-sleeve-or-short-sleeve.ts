@@ -18,7 +18,7 @@ import type { PublishedArticle } from "../types.ts";
 export const longSleeveOrShortSleeve: PublishedArticle = {
   status: "published",
   publishedAt: "2026-08-19",
-  authorId: "steven-p",
+  authorId: "guard-theory-editorial",
   slug: "long-sleeve-or-short-sleeve",
   category: "equipment-and-apparel",
   title: "Long sleeve or short sleeve",

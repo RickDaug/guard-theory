@@ -13,7 +13,7 @@ import type { PublishedArticle } from "../types.ts";
 export const theTriangleAndTheAngle: PublishedArticle = {
   status: "published",
   publishedAt: "2026-08-04",
-  authorId: "steven-p",
+  authorId: "guard-theory-editorial",
   slug: "the-triangle-and-the-angle",
   category: "technique-notes",
   title: "The triangle, and why the angle matters more than the squeeze",

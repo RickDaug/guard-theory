@@ -179,6 +179,8 @@ describe("replies can be routed somewhere that exists", () => {
       to: [EMAIL.to],
       subject: EMAIL.subject,
       text: EMAIL.body,
+      // List mail's own RFC 8058 headers (unsubscribe-post.test.ts); not a reply-to.
+      headers: EMAIL.headers,
     });
   });
 

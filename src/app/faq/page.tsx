@@ -31,15 +31,11 @@ const FAQS = [
   },
   {
     q: "Why are there drawings instead of photographs?",
-    a: "Because a production flat states how a garment is built and a photograph only shows how it looks. These are the drawings a factory is given — seam construction, sleeve geometry, hem.",
+    a: "Because a drawing shows how a garment is built, and a photograph only shows how it looks.",
   },
   {
     q: "How do I know what size I am?",
-    a: "The size and fit guide has the full chart, plus what to check when you try one on. If a garment does not match those measurements, return postage is ours both ways.",
-  },
-  {
-    q: "Will the rash guards be competition legal?",
-    a: "That is the design constraint we started from rather than one we work around.",
+    a: "The size and fit guide covers what to check when you try one on, and the returns policy covers exchanging a size.",
   },
   {
     q: "Is the Technique Library a substitute for classes?",
@@ -47,7 +43,7 @@ const FAQS = [
   },
   {
     q: "Who writes the Journal?",
-    a: "Rick R and Steven P. Every published article carries a byline, a publication date and the sources it was built from, because a piece nobody will put their name to is not worth reading. A piece with no byline is a draft that nobody has yet put their name to.",
+    a: "Guard Theory editorial. Every published article carries a byline, a publication date and the sources it was built from. The articles are researched and drafted with AI assistance, which is why the byline names the publication rather than a person; the editorial policy explains how they are sourced.",
   },
   {
     q: "Do you take sponsored posts or affiliate commission?",

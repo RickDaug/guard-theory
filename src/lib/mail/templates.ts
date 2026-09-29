@@ -84,7 +84,7 @@ export function orderConfirmation(order: OrderForEmail): Email {
       "",
       totals(order),
       "",
-      "It is packed and dispatched within two business days. You will get a second",
+      "It is packed and dispatched within seven business days. You will get a second",
       "message with a tracking number when the parcel leaves us.",
       "",
       `Order number: ${order.number}. Quote it if you write to us about this.`,
@@ -124,8 +124,8 @@ export function orderShipped(
       `Tracking number: ${tracking.number}`,
       ...(tracking.url ? [`Track it: ${tracking.url}`] : []),
       "",
-      "Carrier estimates are estimates. If tracking has not moved for seven days,",
-      "write to us and we will open a trace — you do not need to chase it yourself.",
+      "If tracking stops moving or the parcel arrives damaged, write to us with the",
+      "order number and we will work it out with the carrier.",
       footer(),
     ].join("\n"),
   };
@@ -143,6 +143,11 @@ export function orderShipped(
  * the list carries a working one-click link, which is what the privacy policy
  * promises and what the law requires. It points at `?t=`, which is the
  * parameter `src/app/unsubscribe/page.tsx` actually reads.
+ *
+ * The body link opens a confirm page (a GET must not write: mail scanners
+ * follow every link). The headers are the one-click path: RFC 8058's
+ * `List-Unsubscribe-Post` tells the mail client to POST to /api/unsubscribe,
+ * which acts at once. Gmail and Yahoo require both headers from bulk senders.
  */
 export function announcement(
   to: string,
@@ -150,9 +155,15 @@ export function announcement(
   subject: string,
   body: string,
 ): Email {
+  const oneClick = `${SITE_URL}/api/unsubscribe?t=${encodeURIComponent(unsubscribeToken)}`;
+
   return {
     to,
     subject,
+    headers: {
+      "List-Unsubscribe": `<${oneClick}>`,
+      "List-Unsubscribe-Post": "List-Unsubscribe=One-Click",
+    },
     body: [
       body.trim(),
       "",

@@ -2,6 +2,7 @@ import { createHash, randomInt } from "node:crypto";
 import { readFileSync } from "node:fs";
 import path from "node:path";
 import pg from "pg";
+import AxeBuilder from "@axe-core/playwright";
 import {
   expect,
   test,
@@ -41,6 +42,8 @@ const PORTAL_PAGES = [
   ["/crew/products", /products/i],
   ["/crew/categories", /categories/i],
   ["/crew/orders", /orders/i],
+  ["/crew/orders/ship", /to ship/i],
+  ["/crew/settings", /settings/i],
   ["/crew/list", /first edition/i],
   ["/crew/learn", /learn/i],
 ] as const;
@@ -215,6 +218,31 @@ test.describe.serial("a signed-in session", () => {
       await page.goto(route, { waitUntil: "load" });
       await expect(page.getByRole("heading", { level: 1, name: heading })).toBeVisible();
       expect(await page.locator("h1").count(), `${route} has more than one h1`).toBe(1);
+    }
+
+    // The ops screens are new, so they get the public site's axe pass as well:
+    // status text on graphite is exactly where a colour that clears on ink fails.
+    for (const route of ["/crew", "/crew/orders/ship", "/crew/settings"]) {
+      await page.goto(route, { waitUntil: "load" });
+      const results = await new AxeBuilder({ page })
+        .withTags(["wcag2a", "wcag2aa", "wcag21a", "wcag21aa", "wcag22aa"])
+        .analyze();
+      const summary = results.violations.map(
+        (violation) => `${violation.id} on ${violation.nodes.length} node(s): ${violation.help}`,
+      );
+      expect(summary, [route, ...summary].join("
+")).toEqual([]);
+    }
+
+    // Settings names variables and never prints one. The database URL and the
+    // password hash are the two values certainly present in this run.
+    await page.goto("/crew/settings", { waitUntil: "load" });
+    const settingsText = (await page.locator("main").textContent()) ?? "";
+    for (const name of ["DATABASE_URL", "PORTAL_PASSWORD_HASH"]) {
+      const value = process.env[name];
+      if (value) {
+        expect(settingsText.includes(value), `${name}'s value is on the page`).toBe(false);
+      }
     }
 
     // The list export is a real file, not a page.

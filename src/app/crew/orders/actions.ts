@@ -13,7 +13,8 @@ import {
 import type { OrderStatus } from "@/lib/orders/manage";
 import { refundOrder } from "@/lib/orders/refund";
 import { reconcileStripeSessions, recordReconcileRun } from "@/lib/orders/reconcile";
-import { sendEmail } from "@/lib/mail";
+import { getMailProvider, sendEmail } from "@/lib/mail";
+import { resendOutcome } from "@/lib/portal/email-status";
 import {
   orderConfirmation,
   orderInProcess,
@@ -251,9 +252,9 @@ export async function resendEmail(
 
   revalidateOrders(order.id);
 
-  return sent
-    ? { status: "success", message: "Sent." }
-    : { status: "error", message: "It did not send. The reason is on the order, under Messages." };
+  // sendEmail reports true for the log-only provider as well, so "Sent." is
+  // only said when a provider that delivers is connected.
+  return resendOutcome(sent, getMailProvider().delivers);
 }
 
 /** Clears a flag once the owner has dealt with whatever it was for. */

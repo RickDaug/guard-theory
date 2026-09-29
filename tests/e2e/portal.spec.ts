@@ -23,6 +23,8 @@ test.describe("portal access", () => {
       "/crew/products",
       "/crew/categories",
       "/crew/orders",
+      "/crew/orders/ship",
+      "/crew/settings",
       "/crew/list",
       "/crew/learn",
     ]) {

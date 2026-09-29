@@ -79,6 +79,9 @@ try {
     // password per run locks itself out on the fifth local run in a quarter of
     // an hour. This script only ever touches a loopback database.
     await client.query("delete from login_attempt");
+    // The same for the cart's limiter (0010): every cart page in the suite prices
+    // a fresh browser's cart, and each of those is a new intent to count.
+    await client.query("delete from rate_limit");
 
     await client.query("COMMIT");
 

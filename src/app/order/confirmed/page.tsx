@@ -66,8 +66,9 @@ export default async function OrderConfirmedPage({
 
   // "We have sent a confirmation" is only said when one was: a provider that
   // actually delivers, and a row in email_log saying it went. With no provider
-  // connected every message is logged rather than sent, and the log row still
-  // reads "sent".
+  // connected a message is logged rather than sent and recorded as
+  // 'not-delivered' (0008_email_not_delivered.sql); rows written before that
+  // migration read 'sent' either way, which is why the provider is asked too.
   const mailDelivers = getMailProvider().delivers;
   let confirmationSent = false;
 

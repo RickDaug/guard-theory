@@ -5,7 +5,7 @@ name: Database backup
 # Neon Free keeps six hours of restore history. This is the copy that survives
 # noticing on Monday what broke on Friday. The procedure for getting one back
 # out — download, decrypt, restore into a scratch branch — is in
-# docs/database-runbook.md, and so is the quarterly drill that proves it works.
+# docs/database-runbook.md. db-restore-check.yml proves weekly that it works.
 #
 # THIS REPOSITORY IS PUBLIC. So are this workflow's logs, and its artifacts can
 # be downloaded by anyone signed in to GitHub. Two consequences, both enforced

@@ -3,6 +3,7 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
+    "activation:check": "node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON scripts/activation-check.mjs",
     "brand:build": "node scripts/brand/raster.mjs",
     "brand:promo": "node scripts/brand/promo.mjs",
     "brand:trace": "node scripts/brand/trace.mjs",
@@ -14,8 +15,8 @@
     "db:migrate": "node --env-file-if-exists=.env.local scripts/db/migrate.mjs",
     "db:migrate:production": "node --env-file-if-exists=.env.local scripts/db/migrate.mjs --production",
     "db:seed": "node --env-file-if-exists=.env.local scripts/db/seed-products.mjs",
-    "db:seed:production": "node --env-file-if-exists=.env.local scripts/db/seed-products.mjs --production",
     "db:seed-e2e": "node --env-file-if-exists=.env.local scripts/db/seed-e2e-fixtures.mjs",
+    "db:seed:production": "node --env-file-if-exists=.env.local scripts/db/seed-products.mjs --production",
     "db:status": "node --env-file-if-exists=.env.local scripts/db/migrate.mjs --status",
     "db:status:production": "node --env-file-if-exists=.env.local scripts/db/migrate.mjs --status --production",
     "dev": "next dev",

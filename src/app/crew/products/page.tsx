@@ -27,6 +27,7 @@ type VariantRow = {
   size_label: string;
   sku: string;
   stock: number;
+  shipping_weight_oz: string | null;
 };
 
 type SpecRow = { product_id: string; label: string; value: string | null };
@@ -62,7 +63,7 @@ export default async function ProductsPage() {
   );
 
   const variants = await query<VariantRow>(
-    "select id, product_id, size_label, sku, stock from variant order by sort_index, size_label",
+    "select id, product_id, size_label, sku, stock, shipping_weight_oz from variant order by sort_index, size_label",
   );
 
   const specs = await query<SpecRow>(
@@ -118,6 +119,7 @@ export default async function ProductsPage() {
                       id: variant.id,
                       sizeLabel: variant.size_label,
                       sku: variant.sku,
+                      weightOz: variant.shipping_weight_oz,
                     }))}
                   />
 

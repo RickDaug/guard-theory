@@ -20,6 +20,7 @@ import {
   TrackingControl,
 } from "./OrderControls";
 import { isShippoConfigured } from "@/lib/shipping/shippo";
+import { orderParcelWeight, weightWarning } from "@/lib/shipping/weight";
 
 export const dynamic = "force-dynamic";
 
@@ -61,7 +62,12 @@ export default async function OrderPage({ params }: { params: Promise<{ id: stri
     notFound();
   }
 
-  const [items, emails] = await Promise.all([getOrderItems(order.id), orderEmails(order.id)]);
+  const labelDue = (order.status === "new" || order.status === "in_process") && !order.tracking_number;
+  const [items, emails, weight] = await Promise.all([
+    getOrderItems(order.id),
+    orderEmails(order.id),
+    labelDue ? orderParcelWeight(order.id) : Promise.resolve(null),
+  ]);
   const remaining = order.total_cents - order.refunded_cents;
   const next = ALLOWED_TRANSITIONS[order.status];
 
@@ -189,6 +195,8 @@ export default async function OrderPage({ params }: { params: Promise<{ id: stri
                   id={order.id}
                   labelUrl={order.label_url}
                   configured={isShippoConfigured()}
+                  weightOz={weight?.weightOz ?? null}
+                  weightWarning={weight ? weightWarning(weight) : null}
                 />
                 {order.label_claimed_at && !order.tracking_number ? (
                   <form action={releaseLabel} className="flex flex-col items-start gap-3">

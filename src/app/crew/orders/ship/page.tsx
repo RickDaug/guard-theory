@@ -3,6 +3,7 @@ import { requirePortalPage } from "@/lib/portal/guard";
 import { portalUrl } from "@/lib/portal/routes";
 import { isDatabaseConfigured } from "@/lib/db/client";
 import { listShipQueue } from "@/lib/ops/ship-queue";
+import { FLAG_SHIP_WARNING, isFlagReason } from "@/lib/orders/flags";
 import { describeAge } from "@/lib/ops/health";
 
 export const dynamic = "force-dynamic";
@@ -34,11 +35,13 @@ export default async function ShipQueuePage() {
               // Things to read before buying postage, in the live-state colour;
               // plain facts about the order, in steel.
               const warnings = [
-                order.flagged_reason === "oversell"
-                  ? "Oversold — check before shipping"
-                  : order.flagged_reason === "reconciled"
-                    ? "Recovered — check the address"
-                    : null,
+                isFlagReason(order.flagged_reason)
+                  ? (FLAG_SHIP_WARNING[order.flagged_reason] ?? null)
+                  : null,
+                // A cleared flag does not end a chargeback.
+                order.dispute_status === "open" && order.flagged_reason !== "disputed"
+                  ? "Disputed — do not ship yet"
+                  : null,
                 order.label_claimed_at ? "Label purchase started" : null,
               ].filter((note): note is string => note !== null);
               const facts = [

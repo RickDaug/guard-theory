@@ -92,8 +92,11 @@ Leave the dashboard in **Test mode** for all of this.
 
 2. **Webhook.** Developers → Webhooks → Add endpoint.
    - URL: `https://guardtheory.net/api/webhooks/stripe`
-   - Events, exactly these three: `checkout.session.completed`,
-     `checkout.session.async_payment_succeeded`, `charge.refunded`
+   - Events, exactly these five: `checkout.session.completed`,
+     `checkout.session.async_payment_succeeded`, `charge.refunded`,
+     `charge.dispute.created`, `charge.dispute.closed`. On an endpoint that
+     already exists, add the two dispute events: without them a chargeback
+     never reaches the order, and it can be shipped while it is being disputed.
    - **API version: `2026-07-29.dahlia`.** On an older version the shipping
      address arrives somewhere the code does not look, and the failure shows up
      days later as a label that cannot be bought.

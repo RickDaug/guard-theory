@@ -306,8 +306,10 @@ enter a price in the portal.
    `https://guardtheory.net/api/webhooks/stripe`, subscribed to
    `checkout.session.completed`,
    `checkout.session.async_payment_succeeded`,
-   `charge.refunded`.
-   Those three are everything the handler acts on
+   `charge.refunded`,
+   `charge.dispute.created`,
+   `charge.dispute.closed`.
+   Those five are everything the handler acts on
    (`src/app/api/webhooks/stripe/route.ts`). Any other event is answered 200 and
    ignored.
    **Set the endpoint's API version to `2026-07-29.dahlia`.** That is the

@@ -1,20 +1,16 @@
 # Owner checklist — what only you can do, in order
 
-**As of 2026-09-24.** Two things are waiting on this list: merging commerce
-(`feat/commerce-reland`, draft PR #3) and sending the First Edition announcement
-(`feat/announcement-send`, draft PR #2). Everything here needs an account, a
-card, a signature or a decision, which is why none of it can be done for you.
+**As of 2026-09-24, evening.** Commerce is merged and live. PR #3
+(`feat/commerce-reland`) went into `main` as `0dd9f49` tonight, after #10
+(which carried #12's claims guard), #9 and #11. guardtheory.net now serves the
+shop, the cart and the Crew Portal sign-in page. Nothing is purchasable and
+nobody can sign in — that is the designed state until the steps below are
+done. Every one of them needs an account, a card, a signature or a decision,
+which is why none of it can be done for you.
 
-**Merge order.** Four PRs go in ahead of commerce, and the order is fixed:
-#12 (`fix/claims-drift-guard`) → #10 (`fix/reaudit-2026-09`) → #9
-(`content/technique-batch-2`) → #11 (`content/journal-batch-3`) → #3 → #2.
-On 2026-09-24 each branch was merged into the one after it, so every step
-merges cleanly once the one before it has landed, and #3 and #2 were tested
-against that whole stack. Nothing on this list changes because of the four —
-they are copy, SEO and accessibility, and #12's claims guard, which now runs
-on the commerce branch too. After each merge, check the domain is serving the
-new build (AGENTS.md, "A Ready production deployment is not the same as the
-domain serving it").
+One PR is still open: the First Edition announcement (`feat/announcement-send`,
+PR #2), retargeted onto `main` and mergeable. It stays open until the First
+Edition actually opens.
 
 `docs/provisioning.md` has the reasoning behind each step. This is the same
 ground as a list.
@@ -23,9 +19,30 @@ Each step says where to click and the **name** of the environment variable it
 produces. No value belongs in this file, in a commit, or in a chat message. They
 go into Vercel and nowhere else.
 
-**Already done:** Neon Postgres is live in production. Resend's domain is
-verified, and `RESEND_API_KEY` and `RECEIPT_FROM_EMAIL` are set in Vercel
-Production. The Vercel team is on Pro — step 1, kept below for the record.
+**Already done, checked against production tonight:**
+
+- The Vercel team is on Pro (2026-09-18, step 1).
+- Neon Postgres is live. Migrations `0003`, `0004`, `0006` and `0007` are
+  applied, and `theory-01-long-sleeve` and `theory-01-short-sleeve` are seeded
+  as drafts with no price and no stock.
+- Resend's domain is verified; `RESEND_API_KEY` and `RECEIPT_FROM_EMAIL` are
+  set in Vercel Production, and the code that reads them is merged.
+- `CRON_SECRET` is set in Vercel Production, and the project's cron list shows
+  `/api/cron/reconcile` every fifteen minutes on the live deployment. Its
+  first scheduled run has not been confirmed yet.
+- The nightly database backup has both of its GitHub secrets and has run by
+  hand once. The restore drill has not been run; it is yours (step 11).
+- On the domain: `/shop` lists the two products as drafts with no price,
+  `/cart` works, `/crew` redirects to `/crew/sign-in`, which renders and
+  refuses every password, and the waitlist form is intact.
+
+**What is actually next**, in order: the seller's permit (step 2), because it
+is the slow one; then Stripe (3), Shippo (4) and the portal password (5); then
+the variables into Vercel (6). A test order needs 3, 4, 5 and 6 done and a
+price entered (7). The decisions in part two do not block the test order but do
+block going live. Also open, and blocking nothing yet: a mailbox or forwarder
+for `hello@guardtheory.net`, whether to make the repository private (step 11),
+and `docs/owner-decisions.md` §14.
 
 ---
 
@@ -114,7 +131,7 @@ Stripe script. Do not create a `NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY`.
 
 ### 5. Set the Crew Portal password
 
-From a checkout of `feat/commerce-reland` — the script is not on `main`:
+From a checkout of `main`:
 
 ```
 node scripts/hash-password.mjs
@@ -139,12 +156,22 @@ Ten required names to add: `STRIPE_SECRET_KEY`, `STRIPE_WEBHOOK_SECRET`,
 `PORTAL_PASSWORD_HASH`. `RESEND_API_KEY` and `RECEIPT_FROM_EMAIL` are already
 there.
 
-Nothing changes on the site when you do this. No merged code reads these yet.
+One optional name: **`REPLY_TO_EMAIL`**. `hello@guardtheory.net` sends every
+message, and unless a mailbox or forwarder exists for it at your mail host, a
+customer who replies gets a bounce. Set this to an address you read and every
+message carries it as its reply-to until the forwarder is in place.
 
-One more name, `CRON_SECRET`, is **not yours to do**. It is a random string with
-no account behind it — it lets Vercel's scheduler, and nobody else, run the
-every-fifteen-minutes check for paid orders the webhook missed. The assistant
-generates it and sets it when it merges PR #3.
+The merged code reads all of these, but a variable added here reaches the site
+only on the next deployment, not the running one. Until each is set, its path
+fails closed: checkout says it is unavailable, no label can be bought, the
+portal refuses sign-in.
+
+One more name, `CRON_SECRET`, was never yours to do, and it is done: set in
+Production on 2026-09-24, marked Sensitive. It is a random string with no
+account behind it — it lets Vercel's scheduler, and nobody else, run the
+every-fifteen-minutes check for paid orders the webhook missed. Vercel's cron
+list shows `/api/cron/reconcile` bound to the live deployment; whether its
+first scheduled run answered 200 has not been checked yet.
 
 ---
 
@@ -154,10 +181,11 @@ None of these has a default the code should be trusted to make for you.
 
 ### 7. Product prices
 
-The code and the seed contain no price. Products arrive in the portal as drafts
-with no price, and a product cannot be set active without one. You enter the
-price and the stock per size in the portal, under Products, after the merge.
-USD, exclusive of tax. Decide the figures before then.
+The code and the seed contain no price. The two products are in the portal now
+as drafts with no price and no stock, and a product cannot be set active
+without a price. You enter the price and the stock per size in the portal,
+under Products — which needs step 5 first, since the portal refuses sign-in
+until the hash is set. USD, exclusive of tax.
 
 ### 8. The flat shipping amount
 
@@ -194,27 +222,35 @@ figure in `docs/database-runbook.md`; check it against Neon's current pricing
 page before relying on it. Six hours does not cover noticing on Monday what
 broke on Friday.
 
-PR #3 adds a nightly backup that runs on GitHub: it dumps the database,
+The nightly backup from PR #3 is on `main` and running: it dumps the database,
 encrypts it, and keeps the last **30 days** as downloadable files on the
-repository's Actions page. Two things about it are yours.
+repository's Actions page. Both GitHub secrets are set — `BACKUP_DATABASE_URL`
+(Neon's *unpooled* string, copied across without being displayed) and
+`BACKUP_PASSPHRASE` (generated). The workflow was run by hand once on
+2026-09-24: run `36093297796` succeeded and left the artifact
+`guard-theory-db-36093297796`, 56 KB. From here it runs nightly on its own.
+Two things about it are yours.
 
 1. **The passphrase.** The repository is public, so anyone signed in to GitHub
    can download the encrypted file; the passphrase is the only thing between
-   them and your customers' addresses. The assistant generates it and sets it as
-   a GitHub secret, and GitHub will never show it again — to anyone. **It is
-   handed to you once, as a file. Put it in your password manager, under a name
-   you will recognise in two years.** A backup whose passphrase is lost is not a
-   backup. → GitHub secret **`BACKUP_PASSPHRASE`**
+   them and your customers' addresses. GitHub will never show it again — to
+   anyone. **It is on this machine as `~/guard-theory-BACKUP_PASSPHRASE.txt`.
+   Put it in your password manager, under a name you will recognise in two
+   years, then delete the file.** A backup whose passphrase is lost is not a
+   backup. → GitHub secret **`BACKUP_PASSPHRASE`** (set)
 2. **Whether thirty days and one location is enough.** Still open: moving Neon
    to Launch (usage-billed, roughly $6–19 a month on the figures in
    `docs/provisioning.md`) for a seven-day restore window, and whether to make
    the repository private, which would take the backups off public download
    altogether.
 
-The other secret, **`BACKUP_DATABASE_URL`**, is Neon's *unpooled* connection
-string; the assistant copies it across without displaying it. Then a restore is
-rehearsed once before the first real order, and every quarter after that —
-`docs/database-runbook.md` has the drill.
+**The restore drill has not been run, and it is yours to run** — before the
+first real order. The assistant was refused it: restoring the dump puts
+customer data on this machine, which is exactly what the passphrase exists to
+prevent. `docs/database-runbook.md`, "Getting one back out", walks through
+downloading the artifact, decrypting it and restoring it to a scratch Neon
+branch; record the date and the result there. After that the drill is
+quarterly.
 
 `npm run db:backup` still exists for a dump on this machine, to `./backups`.
 
@@ -263,18 +299,18 @@ Do this before the live-mode cutover. It does not block a test-mode rehearsal.
 |---|---|
 | 1 — Vercel Pro | Done: the team's plan read `pro` on 2026-09-18. |
 | 3, 4, 5, 6 — variables in Vercel | Runs `vercel env ls production` and checks every required **name** is present. It cannot read the values and does not need to. |
-| — | Done: `feat/mail` merged as #8 on 2026-09-18. Next in line are #12, #10, #9 and #11, in that order, each followed by a check that the domain serves the new build. |
-| 6 complete | Applies migrations `0003`, `0004`, `0006` and `0007` to production (`0005` belongs to PR #2 and is independent of them), then seeds the two Theory 01 products as drafts. Both happen **before** the merge; the running site does not read the new tables. |
+| — | Done: `feat/mail` merged as #8 (2026-09-18); #10 with #12's guard (`ed9ad56`), #9 (`687d85d`), #11 (`a7576c0`) and #3 (`0dd9f49`) merged 2026-09-24, and the domain was checked to be serving the commerce build. |
+| — | Done 2026-09-24, before the merge: migrations `0003`, `0004`, `0006` and `0007` applied to production and the two Theory 01 products seeded as drafts. `0005` belongs to PR #2 and is still to come. |
 | 8 — shipping figure | Updates `setting.shipping_flat_cents`. |
 | 9 — tax code | Nothing, unless you chose a non-default code, in which case it checks the name is set. |
 | 10 — specs | Corrects or removes whatever you flag. |
-| 6 complete | Generates `CRON_SECRET` (32 random bytes, never printed) and adds it to Vercel Production, so the scheduled reconciler in `vercel.json` is allowed to run from the first deploy. After the merge, checks Vercel → Settings → Cron Jobs lists `/api/cron/reconcile` and that its first run answered 200. |
-| 2–6 and 8–10, and #12, #10, #9 and #11 merged | Takes PR #3 out of draft, merges it, and checks guardtheory.net is serving it — the portal sign-in page answers, the shop still renders. |
+| — | Done 2026-09-24: `CRON_SECRET` set in Vercel Production, and the cron list shows `/api/cron/reconcile` every fifteen minutes on the live deployment. Still to check: that its first scheduled run answered 200. |
+| — | Done 2026-09-24: PR #3 merged as `0dd9f49` and guardtheory.net serves it — `/shop` lists the two drafts, `/cart` works, `/crew` redirects to a sign-in page that refuses sign-in without `PORTAL_PASSWORD_HASH`, the waitlist form is intact. It went in ahead of steps 2–6, which is safe because every commerce path fails closed without its variable. |
 | 7 — prices | Nothing. You enter them in the portal and set the products active. |
 | 2 and 3 — registration added | Places a test order to a California address and asserts the tax is greater than zero. |
-| 11 — backups | Sets the GitHub secrets `BACKUP_DATABASE_URL` (from Neon, unpooled, never displayed) and `BACKUP_PASSPHRASE` (generated, handed to you once for your password manager), runs the **Database backup** workflow by hand once, then does the restore drill against a scratch Neon branch and records the result in `docs/database-runbook.md`. |
+| 11 — backups | Done 2026-09-24, all but the drill: both GitHub secrets set, the **Database backup** workflow run by hand once (run `36093297796`, 56 KB artifact). The restore drill is **not** the assistant's — it was refused, because a restore puts customer data on this machine — so it is yours, from `docs/database-runbook.md` "Getting one back out", before the first real order. Also yours: move the passphrase file into your password manager. |
 | 12 — live keys | Checks the portal banner shows live, and watches the first real order through the webhook. |
-| All of the above, and you have set the opening date | Applies PR #2's migration, merges PR #2 last, runs the announcement as a dry run, shows you the recipient count and the message, and sends only on your word. |
+| All of the above, and you have set the opening date | Applies PR #2's migration, merges PR #2 last (it is retargeted onto `main` and mergeable now), runs the announcement as a dry run, shows you the recipient count and the message, and sends only on your word. |
 
 The announcement is last because the site has promised the waitlist one email,
 when the First Edition opens. It is sent once, and it cannot be unsent.

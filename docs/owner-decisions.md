@@ -189,6 +189,8 @@ basket" in a cookie (the cart is local storage on our own origin).
 **Needed:** an answer per row. Line numbers are as of the commit that added this
 section; search for the quoted words if they have drifted.
 **Interim behaviour:** the figures stand as published.
+**2026-09-24:** commerce merged (PR #3), so every figure in this table and every
+promise in §13 is now live on guardtheory.net as written — `docs/owner-checklist.md` step 13.
 
 ## 13. Promises about process that nothing in the build carries out
 

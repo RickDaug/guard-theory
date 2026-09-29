@@ -9,7 +9,7 @@ import type { PublishedArticle } from "../types.ts";
 export const howNoGiRulesetsReshapedTechniqueSelection: PublishedArticle = {
   status: "published",
   publishedAt: "2026-08-04",
-  authorId: "steven-p",
+  authorId: "guard-theory-editorial",
   slug: "how-no-gi-rulesets-reshaped-technique-selection",
   category: "competition-analysis",
   title: "How no-gi rulesets reshaped technique selection",

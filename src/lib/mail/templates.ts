@@ -1,6 +1,6 @@
 import { SITE_NAME, SITE_URL } from "../site.ts";
 import { formatMoney } from "../money.ts";
-import { DISPATCH_WITHIN, TRACE_AFTER } from "../../content/policies/shipping-terms.ts";
+import { DISPATCH_WITHIN } from "../../content/policies/shipping-terms.ts";
 import { listUnsubscribeHeaders } from "./list-unsubscribe.ts";
 import type { Email } from "./types.ts";
 
@@ -164,8 +164,8 @@ export function orderShipped(
       `Tracking number: ${tracking.number}`,
       ...(trackingUrl ? [`Track it: ${trackingUrl}`] : []),
       "",
-      `Carrier estimates are estimates. If tracking has not moved for ${TRACE_AFTER},`,
-      "write to us and we will open a trace — you do not need to chase it yourself.",
+      "If tracking stops moving or the parcel arrives damaged, write to us with the",
+      "order number and we will work it out with the carrier.",
       footer(),
     ].join("\n"),
   };

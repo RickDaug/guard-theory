@@ -9,7 +9,7 @@ import type { PublishedArticle } from "../types.ts";
 export const whatTheEarlyUfcTournamentsDemonstrated: PublishedArticle = {
   status: "published",
   publishedAt: "2026-08-04",
-  authorId: "rick-r",
+  authorId: "guard-theory-editorial",
   slug: "what-the-early-ufc-tournaments-demonstrated",
   category: "mma-and-jiu-jitsu",
   title: "What the early UFC tournaments actually demonstrated",

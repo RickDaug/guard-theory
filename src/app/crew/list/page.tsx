@@ -1,7 +1,6 @@
 import { requirePortalPage } from "@/lib/portal/guard";
 import { portalUrl } from "@/lib/portal/routes";
 import { isDatabaseConfigured, query } from "@/lib/db/client";
-import { getMailProvider } from "@/lib/mail";
 import { AnnouncementForm } from "./AnnouncementForm";
 import { ButtonAnchor } from "@/components/ui/Button";
 
@@ -31,7 +30,6 @@ export default async function ListPage() {
   );
 
   const counts = rows[0] ?? { total: 0, live: 0, gone: 0 };
-  const provider = getMailProvider();
 
   return (
     <main id="main" className="px-6 py-16 md:px-12">
@@ -67,17 +65,10 @@ export default async function ListPage() {
           </ButtonAnchor>
         </div>
 
-        {!provider.delivers ? (
-          <p className="mb-10 border-l-2 border-signal-lift bg-graphite px-5 py-4 text-base text-chalk">
-            No mail provider is connected, so nothing here will actually send. Messages are
-            written to the log instead. Set RESEND_API_KEY and RECEIPT_FROM_EMAIL.
-          </p>
-        ) : null}
-
         <h2 className="display-condensed mb-3 text-xl text-chalk">Write to the list</h2>
         <p className="mb-8 max-w-[46rem] text-base text-steel">
-          People who have unsubscribed are never included. Send a test to yourself first —
-          this cannot be recalled.
+          Draft it here and it is held to the same voice rules as the Journal. People who have
+          unsubscribed are never included when it is sent.
         </p>
 
         <AnnouncementForm liveCount={counts.live} />

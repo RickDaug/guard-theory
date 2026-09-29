@@ -178,7 +178,11 @@ describe("replies can be routed somewhere that exists", () => {
       to: [EMAIL.to],
       subject: EMAIL.subject,
       text: EMAIL.body,
+      // The fixture is a list message, so its unsubscribe headers ride along
+      // exactly as they did before reply-to existed.
+      headers: EMAIL.headers,
     });
+    assert.ok(EMAIL.headers?.["List-Unsubscribe"], "the fixture carries List-Unsubscribe");
   });
 
   it("malformed: dropped with a warning, never a throw", () => {

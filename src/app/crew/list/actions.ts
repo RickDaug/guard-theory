@@ -1,9 +1,6 @@
 "use server";
 
 import { requireSession } from "@/lib/portal/session";
-import { query } from "@/lib/db/client";
-import { sendEmail, getMailProvider } from "@/lib/mail";
-import { announcement } from "@/lib/mail/templates";
 import { findBannedConstructions, BANNED_IN_EMAIL } from "@/content/editorial-voice";
 import type { PortalFormState } from "@/lib/portal/form-state";
 
@@ -17,8 +14,6 @@ import type { PortalFormState } from "@/lib/portal/form-state";
  * eventually sends twenty.
  */
 
-type Recipient = { email: string; unsubscribe_token: string };
-
 export async function sendAnnouncement(
   _previous: PortalFormState,
   formData: FormData,
@@ -27,8 +22,6 @@ export async function sendAnnouncement(
 
   const subject = String(formData.get("subject") ?? "").trim();
   const body = String(formData.get("body") ?? "").trim();
-  const confirm = formData.get("confirm") === "on";
-  const testTo = String(formData.get("testTo") ?? "").trim();
 
   if (!subject) {
     return { status: "error", message: "Give it a subject line." };
@@ -51,70 +44,22 @@ export async function sendAnnouncement(
     };
   }
 
-  // A test send goes to one address and touches nobody on the list.
-  if (testTo) {
-    const sent = await sendEmail(
-      "announcement",
-      announcement(testTo, "test-token-not-a-real-unsubscribe", subject, body),
-      null,
-    );
-
-    return sent
-      ? { status: "success", message: `Test sent to ${testTo}. Nobody on the list was emailed.` }
-      : { status: "error", message: "The test did not send. Check the logs." };
-  }
-
-  if (!confirm) {
-    return {
-      status: "error",
-      message: "Tick the box to confirm you mean to email the whole list.",
-    };
-  }
-
-  const recipients = await query<Recipient>(
-    // unsubscribed_at is null is the whole safety mechanism. Someone who left
-    // the list must not receive this, and the check belongs in the query
-    // rather than in a filter someone can forget.
-    `select email, unsubscribe_token
-       from waitlist_signup
-      where unsubscribed_at is null
-      order by submitted_at asc`,
-  );
-
-  if (recipients.length === 0) {
-    return { status: "error", message: "There is nobody on the list to email." };
-  }
-
-  let sent = 0;
-  let failed = 0;
-
-  for (const recipient of recipients) {
-    const ok = await sendEmail(
-      "announcement",
-      announcement(recipient.email, recipient.unsubscribe_token, subject, body),
-      null,
-    );
-
-    if (ok) {
-      sent += 1;
-    } else {
-      failed += 1;
-    }
-  }
-
-  const provider = getMailProvider();
-
-  if (!provider.delivers) {
-    return {
-      status: "error",
-      message: `Nothing was actually sent — no mail provider is connected. ${sent} message${sent === 1 ? "" : "s"} were written to the log instead.`,
-    };
-  }
-
-  return failed === 0
-    ? { status: "success", message: `Sent to ${sent}.` }
-    : {
-        status: "error",
-        message: `Sent to ${sent}. ${failed} failed — the reasons are in the logs. Do not send again, or the first ${sent} get it twice.`,
-      };
+  // This form used to send: a test to one address, or a loop over the whole
+  // list through `sendEmail`. That path sends first and logs afterwards, so a
+  // second press, a retry after a timeout, or a run of the script alongside it
+  // sends second copies — and the First Edition page promises one message.
+  // `sendAndRecord` now refuses the announcement for exactly that reason, so
+  // the loop would report "0 sent, N failed" for a list nobody had emailed.
+  //
+  // The announcement has one way out: scripts/mail/send-announcement.ts, which
+  // claims each address in email_log before the provider is called, paces
+  // itself, caps the day, and is a dry run unless told otherwise. Whether the
+  // portal should drive that same loop is the owner's call and is not made
+  // here. Until it is, this says what is true instead of pretending to send.
+  return {
+    status: "error",
+    message:
+      "Nothing was sent. The draft passes the voice check, but the announcement does not go out from this form — " +
+      "it is sent with scripts/mail/send-announcement.ts, which records each address before sending so that nobody can get it twice.",
+  };
 }

@@ -129,3 +129,39 @@ export async function unsubscribeByToken(token: string): Promise<UnsubscribeResu
     return "unavailable";
   }
 }
+
+export type UnsubscribeLookup = "subscribed" | "already" | "unknown-token" | "unavailable";
+
+/**
+ * What a token refers to, without changing anything.
+ *
+ * The unsubscribe PAGE is reached by GET, and a GET is not a decision: mail
+ * scanners and link prefetchers open every URL in a message before its reader
+ * does. So the page only looks, and `unsubscribeByToken` runs from a POST.
+ */
+export async function lookupUnsubscribeToken(token: string): Promise<UnsubscribeLookup> {
+  if (!token) {
+    return "unknown-token";
+  }
+
+  try {
+    const row = await queryOne<{ unsubscribed: boolean }>(
+      `select unsubscribed_at is not null as unsubscribed
+         from waitlist_signup
+        where unsubscribe_token = $1`,
+      [token],
+    );
+
+    if (!row) {
+      return "unknown-token";
+    }
+
+    return row.unsubscribed ? "already" : "subscribed";
+  } catch (error) {
+    console.error(
+      "[guard-theory] failed to look up an unsubscribe token:",
+      error instanceof Error ? error.message : error,
+    );
+    return "unavailable";
+  }
+}

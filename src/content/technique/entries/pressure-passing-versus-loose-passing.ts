@@ -58,6 +58,6 @@ export const pressurePassingVersusLoosePassing: TechniqueEntry = {
       "Fact audit, assisted (Claude Code agent), 2026-09-28: all ledger rows checked, no changes; toreando/bullfighter naming and leg-drag knee load confirmed. Revision softened 'every guard pass' and 'every pass finishes' to claims about the three families.",
     voiceAudit:
       "Voice audit, assisted (Claude Code agent), 2026-09-28, revised the same day: setup-and-payoff 'large thing to own / small one' cadence cut; the 'price/currency' metaphor no longer stated twice across summary and coreConcept; last step relabelled 'Live rounds'.",
-    approvedBy: null,
+    approvedBy: { name: "Rick D.", date: "2026-09-29" },
   },
 };

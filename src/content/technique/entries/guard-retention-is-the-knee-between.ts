@@ -55,6 +55,6 @@ export const guardRetentionIsTheKneeBetween: TechniqueEntry = {
       "Fact audit, assisted (Claude Code agent), 2026-09-28: all ledger rows checked, no changes; knee-line definition consistent with getting-hips-underneath and leg-entanglement-as-control.",
     voiceAudit:
       "Voice audit, assisted (Claude Code agent), 2026-09-28, revised the same day: search narration and the 'There is one.' reveal cut; meta reworded; 'Read the line honestly' key mechanic and the matching common error cut as duplicates of the retention-ladder entry; 'one contest read from either side' cut; 'Passers,' address rewritten; 'Live rounds' label.",
-    approvedBy: null,
+    approvedBy: { name: "Rick D.", date: "2026-09-29" },
   },
 };

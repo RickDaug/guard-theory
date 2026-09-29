@@ -58,6 +58,6 @@ export const butterflyGuardUnderPressure: TechniqueEntry = {
       "Fact audit, assisted (Claude Code agent), 2026-09-28: seat, tripod and leg-entanglement-tendency mechanics confirmed; an unsourced 'most passes' claim hedged (positionAndProblem); the remove-hooks-on-stand rule scoped to allow elevation entries (keyMechanics, commonErrors); the rear hand post reported as common coaching, not a rule.",
     voiceAudit:
       "Voice audit, assisted (Claude Code agent), 2026-09-28, revised the same day: search-narration sentence rewritten as a plain statement; 'exactly as long as' softened; 'second exposure' safety device rewritten; last step relabelled 'Live rounds'. No banned constructions or em-dashes found.",
-    approvedBy: null,
+    approvedBy: { name: "Rick D.", date: "2026-09-29" },
   },
 };

@@ -56,6 +56,6 @@ export const retentionLadderFrameAngleInvertRecover: TechniqueEntry = {
       "Fact audit, assisted (Claude Code agent), 2026-09-28: all ledger rows checked, no changes; inversion neck-load safety note confirmed as structure/load/who. Revision removed the unhedged teaching-practice observation from positionAndProblem.",
     voiceAudit:
       "Voice audit, assisted (Claude Code agent), 2026-09-28, revised the same day: forced keyword sentence replaced without repeating the knee-between entry's 'usually taught' claim; 'the ladder chooses for you' closer cut; 'Passers,' address and the 'other exposure' device rewritten; duplicated 'exactly where it was' varied; 'Live rounds' label.",
-    approvedBy: null,
+    approvedBy: { name: "Rick D.", date: "2026-09-29" },
   },
 };

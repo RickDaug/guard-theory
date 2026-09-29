@@ -56,6 +56,6 @@ export const mountIsAHipPin: TechniqueEntry = {
       "Fact audit, assisted (Claude Code agent), 2026-09-28: pin and escape mechanics confirmed; an unverifiable claim about other answers cut (positionAndProblem); low mount / high mount terminology made explicit (coreConcept). Revision also cut the unsourced 'about four seconds' and hedged 'most of the skill'.",
     voiceAudit:
       "Voice audit, assisted (Claude Code agent), 2026-09-28, revised the same day: search-narration sentence and the 'hands were never the problem' beat cut; 'one problem seen from either end' pair folded into a plain statement; 'The structure under load' safety opener and the 'second exposure' device rewritten; last step relabelled 'Live rounds'.",
-    approvedBy: null,
+    approvedBy: { name: "Rick D.", date: "2026-09-29" },
   },
 };

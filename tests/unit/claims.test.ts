@@ -236,12 +236,21 @@ describe("the guard can fail", () => {
 
   it("objects when the dispatch time drifts from the owner's figure", () => {
     const claim = byId("dispatch-time-is-the-owners");
-    const verdict = claim.holds(
+    // The constant every copy file renders from…
+    const terms = "src/content/policies/shipping-terms.ts";
+    const viaConstant = claim.holds(
       contextFor(null, {
-        [MAIL]: raw(MAIL).replace("dispatched within seven business days", "dispatched within two business days"),
+        [terms]: raw(terms).replace('"seven business days"', '"two business days"'),
       }),
     );
-    assert.match(String(verdict), /promises dispatch within two business days/);
+    assert.match(String(viaConstant), /promises dispatch within two business days/);
+    // …and a figure typed straight into the copy instead of the constant.
+    const typed = claim.holds(
+      contextFor(null, {
+        [MAIL]: raw(MAIL).replace("dispatched within ${DISPATCH_WITHIN}", "dispatched within two business days"),
+      }),
+    );
+    assert.match(String(typed), /promises dispatch within two business days/);
   });
 
   it("objects when the return window drifts from the owner's figure", () => {

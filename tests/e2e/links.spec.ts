@@ -65,6 +65,7 @@ test("every internal link resolves", async ({ page, request, baseURL }) => {
   for (const orphan of [
     "/maintenance",
     "/unsubscribe",
+    "/first-edition/confirm",
     "/email-confirmed",
     "/form-success",
     "/form-error",

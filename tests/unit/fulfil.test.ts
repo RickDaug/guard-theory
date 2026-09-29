@@ -187,11 +187,12 @@ describe("turning a paid session into an order", { skip: !HAS_DB && "no DATABASE
     ]);
     assert.equal(stock[0]!.stock, 3, "five minus two");
 
-    const items = await query<{ quantity: number; unit_cents: number }>(
-      "select quantity, unit_cents from order_item where order_id = $1",
+    const items = await query<{ quantity: number; unit_cents: number; stock_taken: number | null }>(
+      "select quantity, unit_cents, stock_taken from order_item where order_id = $1",
       [result.outcome === "created" ? result.orderId : ""],
     );
     assert.equal(items[0]!.quantity, 2);
+    assert.equal(items[0]!.stock_taken, 2, "a cancel puts back what this line took: both");
     assert.equal(items[0]!.unit_cents, 8900, "the price comes from our snapshot, not the client");
   });
 
@@ -301,6 +302,14 @@ describe("turning a paid session into an order", { skip: !HAS_DB && "no DATABASE
       variantId,
     ]);
     assert.equal(stock[0]!.stock, 1, "a failed decrement must leave stock untouched, never negative");
+
+    // Nothing was taken off the shelf for this line, so a cancel must put
+    // nothing back — or it would invent stock that never existed.
+    const taken = await query<{ stock_taken: number | null }>(
+      `select stock_taken from order_item where order_id = $1`,
+      [result.outcome === "created" ? result.orderId : ""],
+    );
+    assert.equal(taken[0]!.stock_taken, 0);
   });
 
   it("two buyers racing for the last unit resolve to one winner", async () => {

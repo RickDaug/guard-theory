@@ -238,7 +238,7 @@ test.describe("portal access", () => {
 
     const slug = `e2e-${Date.now().toString(36)}`;
     const create = page.locator("form", { has: page.getByRole("heading", { name: "New product" }) });
-    await create.getByLabel("Name").fill("E2E Fixture");
+    await create.getByLabel("Name", { exact: true }).fill("E2E Fixture");
     await create.getByLabel(/^Kind/).fill("Fixture kind");
     await create.getByLabel(/^Web address/).fill(slug);
     await create.getByRole("button", { name: "Create as draft" }).click();

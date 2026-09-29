@@ -27,11 +27,6 @@ export default function ContactPage() {
               </p>
 
               <p className="text-base text-steel">
-                Sizing questions get an answer with actual measurements rather
-                than a guess.
-              </p>
-
-              <p className="text-base text-steel">
                 If something on this site does not work for you — a control you
                 cannot reach by keyboard, text you cannot read — that is a bug,
                 and we would rather hear about it than not.

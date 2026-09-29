@@ -15,7 +15,7 @@ export const snapDownToFrontHeadlock: TechniqueEntry = {
   objective:
     "Bring their head below their hips, move your own hips back out of their reach, and hold the head and one arm until you go behind them or choose a finish.",
   coreConcept:
-    "Posture is the head above the hips, and the snap down takes it by moving the head rather than the body. A person whose head is below their hips cannot drive forward or shoot, and has to spend their hands on the mat to stay up, so the front headlock is less a hold than a posture you refuse to give back. That makes the hips more important than the arms. Once the head is down, your hips go back and low as in a sprawl, and your chest rests on their head and upper back. The distance between your hips and their head is what keeps them there: if they cannot reach your legs, their only way up is to lift the weight you are putting on them. From that position three branches open. Circling behind them, usually called the go-behind, arrives at their back. The neck attacks, the guillotine, the d'arce and the anaconda, all close from the grips you already have, and each is a separate finish with its own mechanics. The turnovers from wrestling, one of which many rooms call the cow catcher, put them on their back instead. Which branch you take usually depends on how they try to get up, since each way of rebuilding posture moves a limb and opens one of the others.",
+    "Posture is the head above the hips, and the snap down takes it by moving the head rather than the body. A person whose head is below their hips has little to drive forward or shoot with, and has to spend their hands on the mat to stay up, so the front headlock is less a hold than a posture you refuse to give back. That makes the hips more important than the arms. Once the head is down, your hips go back and low as in a sprawl, and your chest rests on their head and upper back. The distance between your hips and their head is what keeps them there: if they cannot reach your legs, their only way up is to lift the weight you are putting on them. From that position three branches open. Circling behind them, usually called the go-behind, arrives at their back. The neck attacks, the guillotine, the d'arce and the anaconda, all start from this position, and each is a separate finish with its own mechanics. The turnovers from wrestling, the cow catcher among them, put them on their back instead. Which branch you take usually depends on how they try to get up, since each way of rebuilding posture moves a limb and opens one of the others.",
   keyMechanics: [
     "Snap on a reaction, when their weight is already coming toward you. A head pulled down against a braced neck barely moves, while a head pulled in the direction it was travelling goes below the hips.",
     "Step back as you pull, so the snap moves your hips away from them. Pulling with the arms from a fixed stance brings their head down onto your shins, where their hands find your legs.",
@@ -52,8 +52,10 @@ export const snapDownToFrontHeadlock: TechniqueEntry = {
   review: {
     drafted:
       "assisted draft, 2026-09-29, from technique batch 2 target list (C), snap-down-to-front-headlock; written by a Claude Code agent from the target brief and the house style fingerprint.",
-    factAudit: "Pending: independent fact-and-mechanics audit not yet run.",
-    voiceAudit: "Pending: independent voice audit not yet run.",
+    factAudit:
+      "Fact audit, assisted (Claude Code agent), 2026-09-29: snap, hip-distance and go-behind mechanics confirmed; flagged go-behind side (the held arm) confirmed against published front-headlock instruction; fixes applied: 'cannot shoot' hedged; neck attacks said to start from the position, not the existing grips.",
+    voiceAudit:
+      "Voice audit, assisted (Claude Code agent), 2026-09-29: no changes required; mechanics clean (title 31, meta 152, no dashes or banned constructions), no cross-entry repetition found against the 43 other entries; 'many rooms call' attribution varied as part of the batch pattern.",
     approvedBy: null,
   },
 };

@@ -11,7 +11,7 @@ export const wrestlingUpTechnicalStandUp: TechniqueEntry = {
   difficulty: "Foundational",
   relevance: "Gi and no-gi",
   positionAndProblem:
-    "After a failed sweep, a scramble, or a guard pull the opponent chose not to follow, you are sitting on the mat and they are standing a step away. Getting up the way people get up from a floor, by rolling forward onto the knees or pushing up on both hands, either turns your back to them or lowers your head in front of them, and both invite the attack you were trying to avoid. The technical stand-up, which some gyms call standing up in base, gets you from the mat to your feet while keeping them in front of you and a limb between you and them. From a seated guard the same movement becomes the wrestle-up, where you come up into the opponent and take a leg instead of backing away.",
+    "After a failed sweep, a scramble, or a guard pull the opponent chose not to follow, you are sitting on the mat and they are standing a step away. Getting up the way people get up from a floor, by rolling forward onto the knees or pushing up on both hands, either turns your back to them or lowers your head in front of them, and both invite the attack you were trying to avoid. The technical stand-up, also known as standing up in base, gets you from the mat to your feet while keeping them in front of you and a limb between you and them. From a seated guard the same movement becomes the wrestle-up, where you come up into the opponent and take a leg instead of backing away.",
   objective:
     "Rise from sitting to a staggered stance on a hand-and-foot base, keeping a frame on the opponent until you are up, or rise into them with a leg in your arms.",
   coreConcept:
@@ -33,7 +33,7 @@ export const wrestlingUpTechnicalStandUp: TechniqueEntry = {
     "Wrestling up with the head down and in front of them, which puts the neck under their chest as the arm reaches for the leg.",
   ],
   safetyNote:
-    "Your posted wrist carries much of your weight while the hips are off the mat, so post on a flat palm with the arm close to straight under the shoulder, and come off the post rather than forcing through it if the wrist starts to fold back. The head is exposed only in the wrestle-up: coming up into a standing opponent with the head low and in front of them puts the neck where a guillotine closes, so the head goes to the side of their hip before the arm reaches for the leg. The raised leg is a frame against the hip or knee. In sport training it holds distance and does not kick, and a partner stepping in should expect it to push rather than strike. With those three points handled the movement carries little risk, which makes it a good solo drill to repeat until the base is automatic.",
+    "Your posted wrist carries much of your weight while the hips are off the mat, so post on a flat palm with the arm close to straight under the shoulder, and come off the post rather than forcing through it if the wrist starts to fold back. The head is exposed mainly in the wrestle-up: coming up into a standing opponent with the head low and in front of them puts the neck where a guillotine closes, so the head goes to the side of their hip before the arm reaches for the leg. The raised leg is a frame against the hip or knee. In sport training it holds distance and does not kick, and a partner stepping in should expect it to push rather than strike.",
   trainingProgression: [
     "Static, solo: sit, post, plant, lift the hips and hold them up before the leg moves. Lower and repeat on both sides.",
     "Solo, full movement: stand up in base on alternating sides and land in a staggered stance with the hands up. Check that the hips lifted before the leg swung.",
@@ -41,7 +41,7 @@ export const wrestlingUpTechnicalStandUp: TechniqueEntry = {
     "Constrained: partner tries to touch your head as you rise. You may use the frame and the forearm to keep them off, but you may not stay seated.",
     "Wrestle-up drill: partner stands in front of your seated guard; as the hips lift you reach for the near leg and finish the rise with the head on their hip and the leg wrapped.",
     "Positional sparring from seated guard against a standing passer: you score by standing up or by coming up on a leg, and they score by passing or wrapping the head.",
-    "Live rounds: after each stand-up, notice whether you arrived with a leg in your arms or with nothing in your hands.",
+    "Live rounds: count the stand-ups that ended with a leg in your arms against those that ended with empty hands.",
   ],
   relatedSlugs: [
     "connection-in-open-guard",
@@ -53,8 +53,10 @@ export const wrestlingUpTechnicalStandUp: TechniqueEntry = {
   review: {
     drafted:
       "assisted draft, 2026-09-29, from technique batch 2 target list (C), wrestling-up-technical-stand-up; written by a Claude Code agent from the target brief and the house style fingerprint.",
-    factAudit: "Pending: independent fact-and-mechanics audit not yet run.",
-    voiceAudit: "Pending: independent voice audit not yet run.",
+    factAudit:
+      "Fact audit, assisted (Claude Code agent), 2026-09-29: all ledger rows checked, no changes required; base geometry, hip-first rise and wrestle-up confirmed; safety note names wrist, neck and frame exposures.",
+    voiceAudit:
+      "Voice audit, assisted (Claude Code agent), 2026-09-29: mechanics clean (title 36, meta 145); fixes applied: reassuring 'carries little risk' closer cut from the safety note; one absolute ('only') hedged to 'mainly'; 'some gyms call' attribution and the fixed 'notice whether' last step varied.",
     approvedBy: null,
   },
 };

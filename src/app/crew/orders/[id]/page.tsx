@@ -20,6 +20,9 @@ import {
   TrackingControl,
 } from "./OrderControls";
 import { isShippoConfigured } from "@/lib/shipping/shippo";
+import { orderParcelWeight, weightWarning } from "@/lib/shipping/weight";
+import { emailStatusView } from "@/lib/portal/email-status";
+import { DISPUTE_LABEL, FLAG_EXPLANATION, isFlagReason, type DisputeStatus } from "@/lib/orders/flags";
 
 export const dynamic = "force-dynamic";
 
@@ -30,14 +33,6 @@ export const dynamic = "force-dynamic";
  * means nothing at 7am; "payment succeeded after the last one had already been
  * sold" tells you what happened and what you owe someone.
  */
-const FLAG_EXPLANATION: Record<string, string> = {
-  oversell:
-    "Payment succeeded after the last one had already been sold. The money was taken, so this person is owed either the garment or a refund. Yours to decide.",
-  reconciled:
-    "Recovered from Stripe because the webhook never delivered it. Check the items and the address read correctly before shipping.",
-  refunded: "Money has gone back to this customer. Left flagged so it is easy to find again.",
-};
-
 const TEMPLATE_LABEL: Record<string, string> = {
   "order-confirmation": "Confirmation",
   "order-in-process": "Being prepared",
@@ -61,7 +56,12 @@ export default async function OrderPage({ params }: { params: Promise<{ id: stri
     notFound();
   }
 
-  const [items, emails] = await Promise.all([getOrderItems(order.id), orderEmails(order.id)]);
+  const labelDue = (order.status === "new" || order.status === "in_process") && !order.tracking_number;
+  const [items, emails, weight] = await Promise.all([
+    getOrderItems(order.id),
+    orderEmails(order.id),
+    labelDue ? orderParcelWeight(order.id) : Promise.resolve(null),
+  ]);
   const remaining = order.total_cents - order.refunded_cents;
   const next = ALLOWED_TRANSITIONS[order.status];
 
@@ -84,10 +84,20 @@ export default async function OrderPage({ params }: { params: Promise<{ id: stri
           }`}
         </p>
 
+        {order.dispute_status && order.dispute_status in DISPUTE_LABEL ? (
+          // Said on its own, outside the flag: the flag is cleared once read,
+          // and a chargeback's outcome is still true after that.
+          <p className="display-plain mb-6 text-base text-chalk">
+            {DISPUTE_LABEL[order.dispute_status as DisputeStatus]}
+          </p>
+        ) : null}
+
         {order.flagged_reason ? (
           <div className="mb-12 border-l-2 border-signal-lift bg-graphite px-6 py-5">
             <p className="text-base text-chalk">
-              {FLAG_EXPLANATION[order.flagged_reason] ?? "This order needs a look."}
+              {isFlagReason(order.flagged_reason)
+                ? FLAG_EXPLANATION[order.flagged_reason]
+                : "This order needs a look."}
             </p>
             <form action={clearFlag} className="mt-4">
               <input type="hidden" name="id" value={order.id} />
@@ -189,6 +199,8 @@ export default async function OrderPage({ params }: { params: Promise<{ id: stri
                   id={order.id}
                   labelUrl={order.label_url}
                   configured={isShippoConfigured()}
+                  weightOz={weight?.weightOz ?? null}
+                  weightWarning={weight ? weightWarning(weight) : null}
                 />
                 {order.label_claimed_at && !order.tracking_number ? (
                   <form action={releaseLabel} className="flex flex-col items-start gap-3">
@@ -248,17 +260,18 @@ export default async function OrderPage({ params }: { params: Promise<{ id: stri
             <p className="text-base text-steel">Nothing has been sent yet.</p>
           ) : (
             <ul className="m-0 flex list-none flex-col gap-4 p-0">
-              {emails.map((email) => (
+              {emails.map((email) => {
+                const view = emailStatusView(email.status);
+
+                return (
                 <li key={email.id} className="flex flex-wrap items-baseline gap-x-6 gap-y-2">
                   <span className="text-base text-chalk">
                     {TEMPLATE_LABEL[email.template] ?? email.template}
-                  </span>
+                  </span>{" "}
                   <span
-                    className={`notation text-2xs ${
-                      email.status === "sent" ? "text-steel" : "text-signal-lift"
-                    }`}
+                    className={`notation text-2xs ${view.problem ? "text-signal-lift" : "text-steel"}`}
                   >
-                    {email.status === "sent" ? "Sent" : "Failed"}
+                    {view.label}
                   </span>
                   {email.error ? (
                     <span className="text-sm text-steel">{email.error.slice(0, 120)}</span>
@@ -267,7 +280,8 @@ export default async function OrderPage({ params }: { params: Promise<{ id: stri
                     <ResendControl id={order.id} template={email.template} />
                   </span>
                 </li>
-              ))}
+                );
+              })}
             </ul>
           )}
         </section>

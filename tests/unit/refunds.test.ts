@@ -3,7 +3,9 @@ import { randomUUID } from "node:crypto";
 import { after, describe, it } from "node:test";
 
 import {
+  applyRefundFromCharge,
   refundOrder,
+  REFUND_OUTCOME_UNKNOWN,
   syncRefundFromCharge,
   type CreateRefund,
 } from "../../src/lib/orders/refund.ts";
@@ -54,6 +56,11 @@ function recorder() {
     calls.push(input);
   };
   return { calls, createRefund };
+}
+
+/** Shaped as the Stripe SDK's errors are: the class name on `type`. */
+function stripeError(type: string, message: string): Error {
+  return Object.assign(new Error(message), { type });
 }
 
 describe("refunds", { skip: !HAS_DB && "no DATABASE_URL" }, () => {
@@ -118,15 +125,66 @@ describe("refunds", { skip: !HAS_DB && "no DATABASE_URL" }, () => {
     const { id } = await makeOrder();
     const result = await refundOrder(id, 2000, {
       createRefund: async () => {
-        throw new Error("charge_already_refunded");
+        throw stripeError("StripeInvalidRequestError", "charge_already_refunded");
       },
     });
     assert.equal(result.ok, false);
+    assert.match(!result.ok ? result.reason : "", /Nothing has been refunded/);
     assert.deepEqual(await state(id), {
       refunded_cents: 0,
       refund_status: "none",
       flagged_reason: null,
     });
+  });
+
+  it("a request with no answer is reported as unknown — never as 'nothing refunded'", async () => {
+    // B5: a timeout after Stripe accepted the refund used to read "Nothing has
+    // been refunded", which invited a second refund from the dashboard.
+    for (const error of [
+      stripeError("StripeConnectionError", "Request timed out"),
+      stripeError("StripeAPIError", "An unknown error occurred"),
+      stripeError("StripeIdempotencyError", "another in-progress request uses this key"),
+      new Error("socket hang up"),
+    ]) {
+      const { id } = await makeOrder();
+      const result = await refundOrder(id, 2000, {
+        createRefund: async () => {
+          throw error;
+        },
+      });
+
+      assert.deepEqual(result, { ok: false, reason: REFUND_OUTCOME_UNKNOWN }, error.message);
+      assert.match(REFUND_OUTCOME_UNKNOWN, /may or may not have gone through/);
+      assert.match(REFUND_OUTCOME_UNKNOWN, /check .*Stripe .*before trying again/i);
+      assert.doesNotMatch(REFUND_OUTCOME_UNKNOWN, /nothing has been refunded/i);
+      assert.equal((await state(id)).refunded_cents, 0, "an unknown outcome writes nothing");
+    }
+  });
+
+  it("the retry after an unknown outcome is the same Stripe request, so it cannot refund twice", async () => {
+    const { id } = await makeOrder();
+    const keys: string[] = [];
+
+    const timedOut = await refundOrder(id, 2000, {
+      expectedRefundedCents: 0,
+      createRefund: async (input) => {
+        keys.push(input.idempotencyKey);
+        throw stripeError("StripeConnectionError", "Request timed out");
+      },
+    });
+    assert.equal(timedOut.ok, false);
+
+    // The owner presses the button again from the same page.
+    const retried = await refundOrder(id, 2000, {
+      expectedRefundedCents: 0,
+      createRefund: async (input) => {
+        keys.push(input.idempotencyKey);
+      },
+    });
+
+    assert.deepEqual(retried, { ok: true, refundedCents: 2000, status: "partial" });
+    assert.equal(keys.length, 2);
+    assert.equal(keys[0], keys[1], "Stripe dedupes on the key: one refund, answered twice");
   });
 
   it("charge.refunded events arriving out of order never lower the figure", async () => {
@@ -149,6 +207,59 @@ describe("refunds", { skip: !HAS_DB && "no DATABASE_URL" }, () => {
 
     await assert.rejects(() => syncRefundFromCharge(pi, -1));
     await assert.rejects(() => syncRefundFromCharge(pi, 1.5));
+  });
+
+  it("a refund for a payment with no order is NOT swallowed: it throws so Stripe retries", async () => {
+    // B4: 0 rows used to be success, the webhook marked the event processed,
+    // and the order the reconciler created later never learned of the refund.
+    const pi = `pi_${randomUUID()}`;
+
+    await assert.rejects(() => syncRefundFromCharge(pi, 3000), /no order/);
+    assert.equal(await applyRefundFromCharge(pi, 3000), "no-match");
+
+    // The retry, after the order exists, lands.
+    const id = randomUUID();
+    created.push(id);
+    await query(
+      `insert into "order" (
+         id, email, ship_name, ship_line1, ship_city, ship_state, ship_postal,
+         subtotal_cents, shipping_cents, tax_cents, total_cents,
+         stripe_session_id, stripe_payment_intent, stripe_mode
+       ) values ($1, 'buyer@example.com', 'Sam Fadda', '1 Test Street', 'Los Angeles', 'CA', '90015',
+                 8900, 700, 0, 9600, $2, $3, 'test')`,
+      [id, `cs_test_${randomUUID()}`, pi],
+    );
+
+    await syncRefundFromCharge(pi, 3000);
+    assert.deepEqual(await state(id), {
+      refunded_cents: 3000,
+      refund_status: "partial",
+      flagged_reason: "refunded",
+    });
+  });
+
+  it("a refund of money that never became an order is noted on the unfulfilled payment", async () => {
+    const pi = `pi_${randomUUID()}`;
+    const rowId = randomUUID();
+    await query(
+      `insert into unfulfilled_payment (id, stripe_session_id, stripe_payment_intent, stripe_mode,
+                                        reason, amount_total_cents, currency)
+       values ($1, $2, $3, 'test', 'no shipping address', 9600, 'USD')`,
+      [rowId, `cs_test_${randomUUID()}`, pi],
+    );
+
+    try {
+      await syncRefundFromCharge(pi, 2500);
+      await syncRefundFromCharge(pi, 9600);
+
+      const [row] = await query<{ reason: string }>(
+        "select reason from unfulfilled_payment where id = $1",
+        [rowId],
+      );
+      assert.equal(row!.reason, "no shipping address — Stripe shows refunded: 96.00 USD");
+    } finally {
+      await query("delete from unfulfilled_payment where id = $1", [rowId]);
+    }
   });
 });
 

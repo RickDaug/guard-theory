@@ -9,7 +9,7 @@ import type { PublishedArticle } from "../types.ts";
 export const maedaAndTheArrivalOfJudoInBrazil: PublishedArticle = {
   status: "published",
   publishedAt: "2026-08-04",
-  authorId: "rick-r",
+  authorId: "guard-theory-editorial",
   slug: "maeda-and-the-arrival-of-judo-in-brazil",
   category: "bjj-history",
   title: "Maeda, and the arrival of judo in Brazil",

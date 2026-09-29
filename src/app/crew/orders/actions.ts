@@ -13,7 +13,8 @@ import {
 import type { OrderStatus } from "@/lib/orders/manage";
 import { refundOrder } from "@/lib/orders/refund";
 import { reconcileStripeSessions, recordReconcileRun } from "@/lib/orders/reconcile";
-import { sendEmail } from "@/lib/mail";
+import { getMailProvider, sendEmail } from "@/lib/mail";
+import { resendOutcome } from "@/lib/portal/email-status";
 import {
   orderConfirmation,
   orderInProcess,
@@ -25,8 +26,15 @@ import {
   isShippoConfigured,
   refreshLabelUrl,
   ShippoError,
+  shippoMode,
 } from "@/lib/shipping/shippo";
-import { claimLabelPurchase, releaseLabelClaim } from "@/lib/orders/label";
+import {
+  claimLabelPurchase,
+  labelRefusal,
+  recordBoughtLabel,
+  releaseLabelClaim,
+} from "@/lib/orders/label";
+import { orderParcelWeight, weightWarning } from "@/lib/shipping/weight";
 import type { PortalFormState } from "@/lib/portal/form-state";
 
 /** Every action authorises itself. A proxy matcher is not a boundary for these. */
@@ -251,9 +259,9 @@ export async function resendEmail(
 
   revalidateOrders(order.id);
 
-  return sent
-    ? { status: "success", message: "Sent." }
-    : { status: "error", message: "It did not send. The reason is on the order, under Messages." };
+  // sendEmail reports true for the log-only provider as well, so "Sent." is
+  // only said when a provider that delivers is connected.
+  return resendOutcome(sent, getMailProvider().delivers);
 }
 
 /** Clears a flag once the owner has dealt with whatever it was for. */
@@ -329,6 +337,14 @@ export async function buyLabel(
     return { status: "error", message: "That order no longer exists." };
   }
 
+  // Before anything is claimed or bought: the wrong mode, or an order that is
+  // not going anywhere, spends money on a label nobody will use.
+  const refusal = labelRefusal(order, shippoMode());
+
+  if (refusal) {
+    return { status: "error", message: refusal };
+  }
+
   // Buying a second label for the same parcel is real money and two barcodes
   // on one box. The claim is one atomic UPDATE, taken BEFORE Shippo is called:
   // of two simultaneous clicks, exactly one gets past this line.
@@ -339,6 +355,8 @@ export async function buyLabel(
       gone: "That order no longer exists.",
       "has-tracking":
         "This order already has a tracking number. Clear it first if the label was wrong.",
+      "not-shippable":
+        "This order was cancelled or refunded in full while you were looking at it. No label was bought.",
       "in-progress": "A label is already being bought for this order. Give it a moment, then reload.",
       abandoned:
         "A label purchase for this order was started and never finished, so it may have gone through. " +
@@ -349,6 +367,21 @@ export async function buyLabel(
   }
 
   let label;
+  let weight;
+
+  try {
+    // Summed from the sizes' weights; the fixed weight, and a sentence saying
+    // so, when any line has none. Read inside the try: a failure here is
+    // before Shippo, so the claim is released below like any refusal.
+    weight = await orderParcelWeight(order.id);
+  } catch (error) {
+    console.error(
+      "[guard-theory] could not read the parcel weight:",
+      error instanceof Error ? error.message : error,
+    );
+    await releaseLabelClaim(order.id).catch(() => {});
+    return { status: "error", message: "We could not read this order's weights. Nothing has been bought." };
+  }
 
   try {
     label = await buyUspsLabel(
@@ -364,6 +397,7 @@ export async function buyLabel(
         email: order.email,
       },
       order.id,
+      weight.weightOz,
     );
   } catch (error) {
     console.error(
@@ -385,26 +419,20 @@ export async function buyLabel(
     };
   }
 
-  await query(
-    `update "order"
-        set tracking_number = $2, tracking_carrier = $3, tracking_url = $4,
-            label_url = $5, shippo_transaction_id = $6
-      where id = $1`,
-    [
-      order.id,
-      label.trackingNumber,
-      label.carrier,
-      label.trackingUrl,
-      label.labelUrl,
-      label.transactionId,
-    ],
-  );
+  // Paid for from here on. A failed save keeps the claim and says what was bought.
+  const saved = await recordBoughtLabel(order.id, label);
 
   revalidateOrders(order.id);
 
+  if (!saved.ok) {
+    return { status: "error", message: saved.message };
+  }
+
   return {
     status: "success",
-    message: `Label bought, ${label.amount} ${label.currency}. Print it, then mark this shipped.`,
+    message: weight.measured
+      ? `Label bought for ${weight.weightOz} oz, ${label.amount} ${label.currency}. Print it, then mark this shipped.`
+      : `Label bought, ${label.amount} ${label.currency}. ${weightWarning(weight)} Print it, then mark this shipped.`,
   };
 }
 

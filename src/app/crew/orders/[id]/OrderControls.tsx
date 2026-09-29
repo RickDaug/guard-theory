@@ -159,10 +159,16 @@ export function LabelControl({
   id,
   labelUrl,
   configured,
+  weightOz,
+  weightWarning,
 }: {
   id: string;
   labelUrl: string | null;
   configured: boolean;
+  /** What the label will declare, when no label has been bought yet. */
+  weightOz: string | null;
+  /** Set when any line has no weight and the label falls back to the fixed one. */
+  weightWarning: string | null;
 }) {
   const [state, formAction, pending] = useActionState(buyLabel, PORTAL_INITIAL_STATE);
 
@@ -195,6 +201,14 @@ export function LabelControl({
           Shippo is not connected. Buy the label wherever you normally do and paste the
           tracking number above.
         </p>
+      ) : null}
+
+      {weightWarning ? (
+        <p role="note" className="max-w-[46rem] border-l-2 border-signal-lift bg-graphite px-5 py-4 text-sm text-chalk">
+          {weightWarning}
+        </p>
+      ) : weightOz ? (
+        <p className="text-sm text-steel">{`The label will declare ${weightOz} oz, from the sizes in this order and the packaging.`}</p>
       ) : null}
 
       <Feedback state={state} />

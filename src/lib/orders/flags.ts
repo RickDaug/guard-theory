@@ -2,7 +2,7 @@
  * Why an order needs the owner, in one place.
  *
  * `order.flagged_reason` is constrained by the database (0003, widened by
- * 0011_order_flags_and_tracking.sql). The list here must be exactly the list
+ * 0011_order_flags_and_tracking.sql and 0014_order_amount_mismatch_flag.sql). The list here must be exactly the list
  * the constraint allows — tests/unit/money-path.test.ts reads the migration and
  * fails if the two drift — so a flag the code can write is always one the
  * portal can explain, and never one the database will refuse.
@@ -16,6 +16,7 @@ export const FLAG_REASONS = [
   "mode-mismatch",
   "disputed",
   "delivery-problem",
+  "amount-mismatch",
 ] as const;
 
 export type FlagReason = (typeof FLAG_REASONS)[number];
@@ -29,6 +30,7 @@ export const FLAG_SHORT: Record<FlagReason, string> = {
   "mode-mismatch": "Mode mismatch",
   disputed: "Disputed",
   "delivery-problem": "Not delivered",
+  "amount-mismatch": "Amount mismatch",
 };
 
 /** A sentence, for the order page: what happened, and what is owed. */
@@ -46,6 +48,8 @@ export const FLAG_EXPLANATION: Record<FlagReason, string> = {
     "The buyer's bank has disputed this payment (a chargeback). Stripe has taken the money back while it is decided. Answer the dispute in the Stripe dashboard before its deadline, and do not ship until you have read it.",
   "delivery-problem":
     "The carrier reports this parcel as returned to sender or undeliverable. Check the tracking page and the address, then contact the buyer.",
+  "amount-mismatch":
+    "What Stripe charged does not match the cart this order was priced from — a different subtotal, a currency other than US dollars, or no payment taken at all. Compare the payment in the Stripe dashboard with the items here before shipping, and refund or correct it if they disagree.",
 };
 
 /** Before buying postage: what the To ship queue warns about. */
@@ -55,6 +59,7 @@ export const FLAG_SHIP_WARNING: Partial<Record<FlagReason, string>> = {
   "duplicate-payment": "Paid twice — refund the second payment",
   "mode-mismatch": "Mode mismatch — check before shipping",
   disputed: "Disputed — do not ship yet",
+  "amount-mismatch": "Amount mismatch — check the payment before shipping",
 };
 
 export function isFlagReason(value: unknown): value is FlagReason {
@@ -84,12 +89,22 @@ export const DISPUTE_LABEL: Record<DisputeStatus, string> = {
 export const FLAG_PRECEDENCE: readonly FlagReason[] = [
   "disputed",
   "duplicate-payment",
+  "amount-mismatch",
   "oversell",
   "delivery-problem",
   "mode-mismatch",
   "reconciled",
   "refunded",
 ];
+
+/** Of several reasons that apply at once, the one FLAG_PRECEDENCE ranks highest. */
+export function strongestFlag(...reasons: (FlagReason | null | undefined)[]): FlagReason | null {
+  const present = reasons.filter((r): r is FlagReason => Boolean(r));
+  if (present.length === 0) return null;
+  return present.reduce((best, r) =>
+    FLAG_PRECEDENCE.indexOf(r) < FLAG_PRECEDENCE.indexOf(best) ? r : best,
+  );
+}
 
 /**
  * The SET expression that raises `flagged_reason` to `param` (a SQL

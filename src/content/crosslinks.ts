@@ -246,6 +246,12 @@ export const CROSS_LINKS: CrossLink[] = [
       "The article uses the entry's ordering, chest connection before hooks, for the end of the chain.",
   },
   {
+    a: journal("ufc-submissions-by-the-numbers"),
+    b: technique("seat-belt-and-hooks"),
+    basis:
+      "The article says the rear naked choke does not exist without the seat belt first; the entry says the back is most often lost while hunting that strangle.",
+  },
+  {
     a: journal("why-the-underhook-decides-half-guard"),
     b: technique("knee-shield"),
     basis:

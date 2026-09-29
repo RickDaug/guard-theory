@@ -7,7 +7,7 @@ import { GuardSystemMap } from "@/components/notation/GuardSystemMap";
 export const metadata: Metadata = pageMetadata({
   title: `${SITE_NAME} — No-gi grappling apparel`,
   description:
-    "No-gi grappling apparel and a technical study of the guard. Garments designed inside competition rulesets, and the reasoning published alongside them.",
+    "No-gi grappling apparel and a technical study of the guard: the First Edition rash guards, a sourced Journal and a Technique Library.",
   path: "/",
 });
 
@@ -52,7 +52,7 @@ export default function HomePage() {
               <div className="mt-12 flex flex-wrap items-center gap-x-8 gap-y-4">
                 <Link
                   href="/first-edition"
-                  className="display-plain bg-signal px-7 py-3.5 text-sm text-chalk no-underline transition-opacity duration-[140ms] ease-[var(--ease-control)] hover:opacity-85"
+                  className="display-plain bg-signal px-7 py-3.5 text-sm text-chalk no-underline transition-colors duration-[140ms] ease-[var(--ease-control)] hover:bg-signal-dim"
                 >
                   Join the First Edition list
                 </Link>

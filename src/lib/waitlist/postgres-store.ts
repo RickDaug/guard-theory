@@ -21,6 +21,7 @@ export function newUnsubscribeToken(): string {
 
 type SignupRow = {
   id: string;
+  email: string;
   unsubscribed_at: Date | null;
 };
 
@@ -34,22 +35,34 @@ export class PostgresWaitlistStore implements WaitlistStore {
       // two rows or a lost update. The unique index on email is the arbiter,
       // not a read-then-write check that has a race in the middle of it.
       //
-      // A resubscribe is an update: it clears unsubscribed_at and refreshes the
-      // details, because someone rejoining the list has plainly consented again.
-      const rows = await query<SignupRow & { inserted: boolean }>(
+      // Every new row is 'pending' until the address confirms (0013). An
+      // existing row is only touched when it is not on the list — pending, or
+      // unsubscribed — and then it is made pending again: anyone can type any
+      // address into this form, so rejoining is a request to be asked, not
+      // consent. unsubscribed_at stays set until the address confirms.
+      //
+      // A confirmed or legacy row that is subscribed matches no update, the
+      // statement returns nothing, and nothing about it changes: a stranger
+      // cannot rewrite someone's details by submitting their address.
+      const rows = await query<SignupRow & { inserted: boolean; first_name: string }>(
         `
         insert into waitlist_signup (
           id, email, first_name, training_experience, sleeve_preference,
-          product_interest, consent, submitted_at, unsubscribe_token, source
+          product_interest, consent, submitted_at, unsubscribe_token, source,
+          consent_state
         )
-        values ($1, $2, $3, $4, $5, $6, $7, $8, $9, 'form')
+        values ($1, $2, $3, $4, $5, $6, $7, $8, $9, 'form', 'pending')
         on conflict (email) do update set
           first_name          = excluded.first_name,
           training_experience = excluded.training_experience,
           sleeve_preference   = excluded.sleeve_preference,
           product_interest    = excluded.product_interest,
-          unsubscribed_at     = null
-        returning id, unsubscribed_at, (xmax = 0) as inserted
+          consent             = excluded.consent,
+          consent_state       = 'pending',
+          confirmed_at        = null
+        where waitlist_signup.consent_state = 'pending'
+           or waitlist_signup.unsubscribed_at is not null
+        returning id, email, first_name, unsubscribed_at, (xmax = 0) as inserted
         `,
         [
           randomUUID(),
@@ -67,13 +80,16 @@ export class PostgresWaitlistStore implements WaitlistStore {
       const row = rows[0];
 
       if (!row) {
-        // An insert that returns nothing is not a case Postgres produces here;
-        // if it ever does, it is a failure, not a quiet success.
-        console.error("[guard-theory] waitlist insert returned no row");
-        return { ok: false, reason: "storage-unavailable" };
+        // The conflict matched a subscribed, confirmed (or legacy) row and the
+        // update's condition kept it as it was.
+        return { ok: true, alreadyOnList: true, confirm: null };
       }
 
-      return { ok: true, alreadyOnList: !row.inserted };
+      return {
+        ok: true,
+        alreadyOnList: false,
+        confirm: { id: row.id, email: row.email, firstName: row.first_name },
+      };
     } catch (error) {
       console.error(
         "[guard-theory] failed to store waitlist signup:",
@@ -124,6 +140,42 @@ export async function unsubscribeByToken(token: string): Promise<UnsubscribeResu
   } catch (error) {
     console.error(
       "[guard-theory] failed to process unsubscribe:",
+      error instanceof Error ? error.message : error,
+    );
+    return "unavailable";
+  }
+}
+
+export type UnsubscribeLookup = "subscribed" | "already" | "unknown-token" | "unavailable";
+
+/**
+ * What a token refers to, without changing anything.
+ *
+ * The unsubscribe PAGE is reached by GET, and a GET is not a decision: mail
+ * scanners and link prefetchers open every URL in a message before its reader
+ * does. So the page only looks, and `unsubscribeByToken` runs from a POST.
+ */
+export async function lookupUnsubscribeToken(token: string): Promise<UnsubscribeLookup> {
+  if (!token) {
+    return "unknown-token";
+  }
+
+  try {
+    const row = await queryOne<{ unsubscribed: boolean }>(
+      `select unsubscribed_at is not null as unsubscribed
+         from waitlist_signup
+        where unsubscribe_token = $1`,
+      [token],
+    );
+
+    if (!row) {
+      return "unknown-token";
+    }
+
+    return row.unsubscribed ? "already" : "subscribed";
+  } catch (error) {
+    console.error(
+      "[guard-theory] failed to look up an unsubscribe token:",
       error instanceof Error ? error.message : error,
     );
     return "unavailable";

@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, useSyncExternalStore, useTransition } from "react";
+import { useEffect, useRef, useState, useSyncExternalStore, useTransition } from "react";
 import { priceCartAction, startCheckoutAction } from "@/app/cart/actions";
 import {
   getCartSnapshot,
@@ -42,6 +42,7 @@ const PROBLEMS: Record<CheckoutProblem, string> = {
   "cart-changed":
     "Something in your cart changed while it was open — a price, or how many are left. Nothing has been charged. The figures below are the current ones; check them and carry on when ready.",
   "no-intent": "That checkout was incomplete. Start again from here.",
+  busy: "Checkout has been started several times in a short while. Nothing has been charged. Try again in a few minutes.",
 };
 
 function DroppedNotice({ cart }: { cart: PricedCart }) {
@@ -77,6 +78,41 @@ export function CartView() {
   // Bumped to price the cart again without the cart itself having changed.
   const [repriced, setRepriced] = useState(0);
   const [leaving, startLeaving] = useTransition();
+  // The intent this browser was last given. Sent back when re-pricing, so an
+  // unchanged cart keeps its intent instead of writing a new one each render.
+  const lastIntent = useRef<string | null>(null);
+  // Removing a line removes the button that had focus. Where focus goes next
+  // is decided here, once the re-priced cart has drawn: the Remove button that
+  // took the removed line's place, or the way back to the shop when nothing is
+  // left — never <body>, which sends a keyboard user back to the top of the
+  // page (SC 2.4.3).
+  const pendingFocus = useRef<{ variantId: string; index: number } | null>(null);
+  const removeButtons = useRef(new Map<string, HTMLButtonElement>());
+  const backToShop = useRef<HTMLAnchorElement>(null);
+  const [announcement, setAnnouncement] = useState("");
+
+  function remove(variantId: string, index: number, description: string) {
+    pendingFocus.current = { variantId, index };
+    setAnnouncement(`${description} removed from your cart.`);
+    removeFromCart(variantId);
+  }
+
+  useEffect(() => {
+    const pending = pendingFocus.current;
+    if (!pending || !cart) return;
+    // Still the pre-removal figures: wait for the re-price to land.
+    if (cart.lines.some((line) => line.variantId === pending.variantId)) return;
+
+    pendingFocus.current = null;
+
+    if (cart.lines.length === 0) {
+      backToShop.current?.focus();
+      return;
+    }
+
+    const next = cart.lines[Math.min(pending.index, cart.lines.length - 1)];
+    removeButtons.current.get(next.variantId)?.focus();
+  }, [cart]);
 
   function checkout(intentId: string) {
     setProblem(null);
@@ -112,8 +148,9 @@ export function CartView() {
     // body — a synchronous setState here cascades a render on every change to
     // the cart. While a re-price is in flight the previous figures stay on
     // screen, which is also the calmer thing to look at.
-    priceCartAction(lines)
+    priceCartAction(lines, lastIntent.current)
       .then((priced) => {
+        lastIntent.current = priced.intentId;
         if (!cancelled) {
           setCart(priced);
           setFailed(false);
@@ -153,6 +190,12 @@ export function CartView() {
 
   return (
     <div className="flex flex-col gap-10">
+      {/* Out of flow, so it adds no gap; in the DOM from the start, so what it
+          says is announced. */}
+      <p role="status" data-cart-status className="sr-only">
+        {announcement}
+      </p>
+
       {problem ? (
         <p role="alert" className="border-l-2 border-signal-lift bg-graphite px-5 py-4 text-base text-chalk">
           {PROBLEMS[problem]}
@@ -165,7 +208,7 @@ export function CartView() {
         <div className="flex flex-col gap-6">
           <p className="text-lg text-steel">Your cart is empty.</p>
           <div>
-            <ButtonLink href="/shop" intent="outline">
+            <ButtonLink href="/shop" intent="outline" ref={backToShop}>
               Back to the shop
             </ButtonLink>
           </div>
@@ -173,7 +216,7 @@ export function CartView() {
       ) : (
         <>
           <ul className="flex flex-col gap-0 border-t border-steel-dim/40">
-            {cart!.lines.map((line) => (
+            {cart!.lines.map((line, index) => (
               <li
                 key={line.variantId}
                 className="flex flex-col gap-4 border-b border-steel-dim/40 py-6 sm:flex-row sm:items-baseline sm:justify-between"
@@ -190,11 +233,13 @@ export function CartView() {
                   ) : null}
                 </div>
 
-                <div className="flex items-center gap-6">
+                <div className="flex flex-wrap items-center gap-x-6 gap-y-3">
                   <label className="flex items-center gap-3 text-base text-steel">
                     <span>Quantity</span>
                     <select
-                      className="min-h-6 border border-steel-dim bg-graphite px-3 py-2 text-chalk"
+                      // steel-mid: the border is how the control is found, and
+                      // steel-dim is 1.7:1 on graphite (SC 1.4.11).
+                      className="min-h-6 border border-steel-mid bg-graphite px-3 py-2 text-chalk"
                       value={line.quantity}
                       aria-label={`Quantity of ${line.productName}, size ${line.sizeLabel}`}
                       onChange={(event) =>
@@ -218,7 +263,17 @@ export function CartView() {
 
                   <Button
                     intent="quiet"
-                    onClick={() => removeFromCart(line.variantId)}
+                    ref={(node) => {
+                      if (node) removeButtons.current.set(line.variantId, node);
+                      else removeButtons.current.delete(line.variantId);
+                    }}
+                    onClick={() =>
+                      remove(
+                        line.variantId,
+                        index,
+                        `${line.productName}, size ${line.sizeLabel},`,
+                      )
+                    }
                     aria-label={`Remove ${line.productName}, size ${line.sizeLabel}`}
                   >
                     Remove

@@ -139,6 +139,11 @@ Ten required names to add: `STRIPE_SECRET_KEY`, `STRIPE_WEBHOOK_SECRET`,
 `PORTAL_PASSWORD_HASH`. `RESEND_API_KEY` and `RECEIPT_FROM_EMAIL` are already
 there.
 
+One optional name: **`REPLY_TO_EMAIL`**. `hello@guardtheory.net` sends every
+message, and unless a mailbox or forwarder exists for it at your mail host, a
+customer who replies gets a bounce. Set this to an address you read and every
+message carries it as its reply-to until the forwarder is in place.
+
 Nothing changes on the site when you do this. No merged code reads these yet.
 
 One more name, `CRON_SECRET`, is **not yours to do**. It is a random string with

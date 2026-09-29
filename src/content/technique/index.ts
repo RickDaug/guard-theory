@@ -6,6 +6,7 @@ import {
 } from "./types.ts";
 import { armDrag } from "./entries/arm-drag.ts";
 import { bloodChokeVersusAirChoke } from "./entries/blood-choke-versus-air-choke.ts";
+import { bodyLockPassLocksTheHips } from "./entries/body-lock-pass-locks-the-hips.ts";
 import { butterflyHookAsLever } from "./entries/butterfly-hook-as-lever.ts";
 import { closedGuardPostureBattle } from "./entries/closed-guard-posture-battle.ts";
 import { connectionInOpenGuard } from "./entries/connection-in-open-guard.ts";
@@ -17,9 +18,13 @@ import { hipBumpSweep } from "./entries/hip-bump-sweep.ts";
 import { insidePosition } from "./entries/inside-position.ts";
 import { kneeCutPass } from "./entries/knee-cut-pass.ts";
 import { kneeShield } from "./entries/knee-shield.ts";
+import { legDragTurnsTheHips } from "./entries/leg-drag-turns-the-hips.ts";
 import { legEntanglementAsControl } from "./entries/leg-entanglement-as-control.ts";
+import { lockdownStretchesTheBase } from "./entries/lockdown-stretches-the-base.ts";
+import { passingHalfGuardFromTheHead } from "./entries/passing-half-guard-from-the-head.ts";
 import { reverseDeLaRiva } from "./entries/reverse-de-la-riva.ts";
 import { seatBeltAndHooks } from "./entries/seat-belt-and-hooks.ts";
+import { sideControlPinsTwoEscapes } from "./entries/side-control-pins-two-escapes.ts";
 import { singleLegXGuard } from "./entries/single-leg-x-guard.ts";
 import { sweepingTowardTheMissingPost } from "./entries/sweeping-toward-the-missing-post.ts";
 import { triangleDefencePosture } from "./entries/triangle-defence-posture.ts";
@@ -33,6 +38,7 @@ import { underhookHalfGuard } from "./entries/underhook-half-guard.ts";
 export const ENTRIES: TechniqueEntry[] = [
   armDrag,
   bloodChokeVersusAirChoke,
+  bodyLockPassLocksTheHips,
   butterflyHookAsLever,
   closedGuardPostureBattle,
   connectionInOpenGuard,
@@ -44,9 +50,13 @@ export const ENTRIES: TechniqueEntry[] = [
   insidePosition,
   kneeCutPass,
   kneeShield,
+  legDragTurnsTheHips,
   legEntanglementAsControl,
+  lockdownStretchesTheBase,
+  passingHalfGuardFromTheHead,
   reverseDeLaRiva,
   seatBeltAndHooks,
+  sideControlPinsTwoEscapes,
   singleLegXGuard,
   sweepingTowardTheMissingPost,
   triangleDefencePosture,

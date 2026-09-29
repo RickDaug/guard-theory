@@ -212,7 +212,7 @@ describe("the Postgres stores, exercised against a real database", { skip: !conf
       receivedAt: new Date().toISOString(),
     });
 
-    assert.equal(saved, true);
+    assert.equal(typeof saved, "string", "a saved message returns its id");
 
     const rows = await query<{ n: number }>(
       "SELECT count(*)::int AS n FROM contact_message WHERE email = $1",

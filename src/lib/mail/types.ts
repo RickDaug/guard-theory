@@ -8,7 +8,7 @@
 
 /**
  * Four order messages, the list announcement, the waitlist's double opt-in
- * confirmation, and "test".
+ * confirmation, a contact-form message forwarded to the owner, and "test".
  *
  * "test" is what `scripts/mail/test-send.ts` logs under. It must not be
  * "announcement": the send path skips anyone `email_log` says already has the
@@ -22,6 +22,7 @@ export type EmailTemplate =
   | "order-cancelled"
   | "announcement"
   | "waitlist-confirmation"
+  | "contact-forward"
   | "test";
 
 export type Email = {
@@ -48,6 +49,12 @@ export type Email = {
    * nobody to unsubscribe.
    */
   headers?: Record<string, string>;
+  /**
+   * Where a reply goes, for this message only. Set on the contact forward so the
+   * owner answers the sender straight from their inbox; everything else leaves
+   * it unset and gets the deployment's `REPLY_TO_EMAIL`, if any.
+   */
+  replyTo?: string;
 };
 
 /**

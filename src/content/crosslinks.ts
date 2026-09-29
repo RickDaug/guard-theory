@@ -114,8 +114,20 @@ export const CROSS_LINKS: CrossLink[] = [
     b: figure("kyra-gracie"),
     basis: "Her profile cites the closed guard as her recorded favourite position.",
   },
+  {
+    a: journal("oswaldo-fadda-and-the-lineage-outside-the-family"),
+    b: figure("oswaldo-fadda"),
+    basis:
+      "The article is about Fadda's academy, his challenge to the Gracie academy and the dispute over his teacher's lineage.",
+  },
 
   // ── Journal ↔ Technique Library ────────────────────────────────────────
+  {
+    a: journal("how-the-guard-reorganised-around-leg-entanglements"),
+    b: technique("leg-entanglement-as-control"),
+    basis:
+      "The article cites the entry's argument that an entanglement is a pin on one leg, worth winning before any submission; the entry names knee reaping and the 2021 IBJJF permission.",
+  },
   {
     a: journal("the-rear-naked-strangle-from-back-control"),
     b: technique("seat-belt-and-hooks"),

@@ -1,6 +1,8 @@
-import { SITE_URL } from "../site.ts";
+import { SITE_NAME, SITE_URL } from "../site.ts";
 import { formatMoney } from "../money.ts";
 import { TOPICS } from "../contact/form-state.ts";
+import { DISPATCH_WITHIN } from "../../content/policies/shipping-terms.ts";
+import { listUnsubscribeHeaders } from "./list-unsubscribe.ts";
 import type { Email } from "./types.ts";
 
 /**
@@ -15,6 +17,20 @@ import type { Email } from "./types.ts";
  * Every order message links the shipping and returns policies, because the
  * questions a person has after ordering are "when does it arrive" and "what if
  * it does not fit", and making them go looking is a support ticket.
+ *
+ * Plain text only, on purpose (see src/lib/mail/index.ts): no HTML part means
+ * no images, so no alt text to forget, no dark-mode inversion to break, and no
+ * tracking pixel — the site promises no third-party requests, and a message
+ * that fetches nothing cannot break that. Every link is absolute, built from
+ * SITE_URL, because a relative link in an email goes nowhere.
+ *
+ * Timescales are never typed here. What the shipping policy promises is
+ * rendered from src/content/policies/shipping-terms.ts, the same constants the
+ * policy page renders from, so an email cannot promise a figure the policy
+ * does not.
+ *
+ * Only templates are exported: src/content/claims.ts classifies every export
+ * of this file as list or transactional mail, so helpers stay unexported.
  */
 
 export type OrderLine = {
@@ -45,19 +61,40 @@ function itemLines(order: OrderForEmail): string {
   return order.items
     .map((item) => {
       const label = `${item.productName} — ${item.productKind}, size ${item.sizeLabel}`;
-      const count = item.quantity > 1 ? ` × ${item.quantity}` : "";
+      const count =
+        item.quantity > 1
+          ? ` × ${item.quantity} at ${formatMoney(item.unitCents, order.currency)} each`
+          : "";
       return `  ${label}${count}\n  ${formatMoney(item.unitCents * item.quantity, order.currency)}`;
     })
     .join("\n\n");
 }
 
+/**
+ * The figures, as Stripe recorded them. `Total` is what was charged, always.
+ *
+ * Checkout has no discounts today and tax is exclusive, so subtotal + shipping
+ * + tax is the total. If that ever stops being true — a promotion code, a
+ * Stripe-side adjustment — the difference is printed as a line of its own
+ * rather than sending a receipt whose lines do not add up to the figure on the
+ * reader's card statement.
+ */
 function totals(order: OrderForEmail): string {
+  const money = (cents: number) => formatMoney(cents, order.currency);
+  const adjustment =
+    order.totalCents - (order.subtotalCents + order.shippingCents + order.taxCents);
   return [
-    `  Subtotal   ${formatMoney(order.subtotalCents, order.currency)}`,
-    `  Shipping   ${formatMoney(order.shippingCents, order.currency)}`,
-    `  Tax        ${formatMoney(order.taxCents, order.currency)}`,
-    `  Total      ${formatMoney(order.totalCents, order.currency)}`,
+    `  Subtotal     ${money(order.subtotalCents)}`,
+    `  Shipping     ${money(order.shippingCents)}`,
+    `  Tax          ${money(order.taxCents)}`,
+    ...(adjustment !== 0 ? [`  Adjustment   ${money(adjustment)}`] : []),
+    `  Total        ${money(order.totalCents)}`,
   ].join("\n");
+}
+
+/** A carrier link is printed only when it is a plain https URL. */
+function safeTrackingUrl(url: string | null): string | null {
+  return url && /^https:\/\/\S+$/.test(url) ? url : null;
 }
 
 function footer(): string {
@@ -68,14 +105,14 @@ function footer(): string {
     `Shipping policy: ${SITE_URL}/policies/shipping`,
     `Returns policy:  ${SITE_URL}/policies/returns`,
     "",
-    "Guard Theory",
+    SITE_NAME,
   ].join("\n");
 }
 
 export function orderConfirmation(order: OrderForEmail): Email {
   return {
     to: order.email,
-    subject: `Order ${order.number}`,
+    subject: `${SITE_NAME} order ${order.number} confirmed`,
     body: [
       `${firstName(order.shipName)},`,
       "",
@@ -85,7 +122,7 @@ export function orderConfirmation(order: OrderForEmail): Email {
       "",
       totals(order),
       "",
-      "It is packed and dispatched within two business days. You will get a second",
+      `It is packed and dispatched within ${DISPATCH_WITHIN}. You will get a second`,
       "message with a tracking number when the parcel leaves us.",
       "",
       `Order number: ${order.number}. Quote it if you write to us about this.`,
@@ -97,7 +134,7 @@ export function orderConfirmation(order: OrderForEmail): Email {
 export function orderInProcess(order: OrderForEmail): Email {
   return {
     to: order.email,
-    subject: `Order ${order.number} is being prepared`,
+    subject: `${SITE_NAME} order ${order.number} is being prepared`,
     body: [
       `${firstName(order.shipName)},`,
       "",
@@ -114,19 +151,72 @@ export function orderShipped(
   order: OrderForEmail,
   tracking: { number: string; url: string | null; carrier: string | null },
 ): Email {
+  const trackingUrl = safeTrackingUrl(tracking.url);
   return {
     to: order.email,
-    subject: `Order ${order.number} has shipped`,
+    subject: `${SITE_NAME} order ${order.number} has shipped`,
     body: [
       `${firstName(order.shipName)},`,
       "",
-      `Order ${order.number} left us today${tracking.carrier ? ` with ${tracking.carrier}` : ""}.`,
+      // "has left us", not "left us today": the portal can resend this days
+      // after the parcel went, and "today" would then be false.
+      `Order ${order.number} has left us${tracking.carrier ? ` with ${tracking.carrier}` : ""}.`,
       "",
       `Tracking number: ${tracking.number}`,
-      ...(tracking.url ? [`Track it: ${tracking.url}`] : []),
+      ...(trackingUrl ? [`Track it: ${trackingUrl}`] : []),
       "",
-      "Carrier estimates are estimates. If tracking has not moved for seven days,",
-      "write to us and we will open a trace — you do not need to chase it yourself.",
+      "If tracking stops moving or the parcel arrives damaged, write to us with the",
+      "order number and we will work it out with the carrier.",
+      footer(),
+    ].join("\n"),
+  };
+}
+
+/**
+ * The order was cancelled before it shipped, and the money has gone back.
+ *
+ * Sent only after the refund has been accepted by Stripe, so it can say the
+ * refund has been made rather than that it will be. `refundedCents` is what
+ * this cancel refunded; `earlierRefundCents` is anything refunded before it, so
+ * the message accounts for the whole payment without the buyer doing sums.
+ * How long a card refund takes to appear is the card issuer's, not ours, and
+ * no policy of ours states a figure, so the message gives none.
+ */
+export function orderCancelled(
+  order: OrderForEmail,
+  refund: { refundedCents: number; earlierRefundCents: number },
+): Email {
+  const refundLines =
+    refund.refundedCents > 0
+      ? [
+          `We have refunded ${formatMoney(refund.refundedCents, order.currency)} to the card you paid with.`,
+          ...(refund.earlierRefundCents > 0
+            ? [
+                `With the ${formatMoney(refund.earlierRefundCents, order.currency)} refunded earlier, that is all of`,
+                `the ${formatMoney(order.totalCents, order.currency)} you paid.`,
+              ]
+            : []),
+          // No figure: how long a card refund takes to show is the bank's, and
+          // no policy of ours states one (email.test.ts rejects a timescale
+          // typed into this file).
+          "When it shows on your statement is up to your bank, not us.",
+        ]
+      : [
+          `The ${formatMoney(order.totalCents, order.currency)} you paid had already been refunded in full,`,
+          "so there is nothing further to come back to you.",
+        ];
+
+  return {
+    to: order.email,
+    subject: `${SITE_NAME} order ${order.number} has been cancelled`,
+    body: [
+      `${firstName(order.shipName)},`,
+      "",
+      `Order ${order.number} has been cancelled and will not be sent.`,
+      "",
+      ...refundLines,
+      "",
+      "If you did not expect this, write to us and quote the order number.",
       footer(),
     ].join("\n"),
   };
@@ -144,6 +234,12 @@ export function orderShipped(
  * the list carries a working one-click link, which is what the privacy policy
  * promises and what the law requires. It points at `?t=`, which is the
  * parameter `src/app/unsubscribe/page.tsx` actually reads.
+ *
+ * The body link opens a confirm page (a GET must not write: mail scanners
+ * follow every link). The headers are the one-click path: RFC 8058's
+ * `List-Unsubscribe-Post` tells the mail client to POST to /api/unsubscribe,
+ * which acts at once (list-unsubscribe.ts builds them). Gmail and Yahoo
+ * require both headers from bulk senders. No order message may carry them.
  */
 export function announcement(
   to: string,
@@ -154,6 +250,7 @@ export function announcement(
   return {
     to,
     subject,
+    headers: listUnsubscribeHeaders(unsubscribeToken),
     body: [
       body.trim(),
       "",
@@ -162,7 +259,7 @@ export function announcement(
       "You are on the Guard Theory First Edition list because you asked to be.",
       `Unsubscribe: ${SITE_URL}/unsubscribe?t=${unsubscribeToken}`,
       "",
-      "Guard Theory",
+      SITE_NAME,
     ].join("\n"),
   };
 }

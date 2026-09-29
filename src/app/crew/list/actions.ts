@@ -31,11 +31,11 @@ export async function sendAnnouncement(
   const testTo = String(formData.get("testTo") ?? "").trim();
 
   if (!subject) {
-    return { status: "error", message: "Give it a subject line." };
+    return { status: "error", message: "Give it a subject line.", field: "subject" };
   }
 
   if (body.length < 20) {
-    return { status: "error", message: "Write the message first." };
+    return { status: "error", message: "Write the message first.", field: "body" };
   }
 
   // The same voice rules the Journal is held to, checked before it goes out
@@ -59,6 +59,13 @@ export async function sendAnnouncement(
       null,
     );
 
+    if (sent && !getMailProvider().delivers) {
+      return {
+        status: "error",
+        message: "The test was not sent — no mail provider is connected, so it was written to the log instead.",
+      };
+    }
+
     return sent
       ? { status: "success", message: `Test sent to ${testTo}. Nobody on the list was emailed.` }
       : { status: "error", message: "The test did not send. Check the logs." };
@@ -68,6 +75,7 @@ export async function sendAnnouncement(
     return {
       status: "error",
       message: "Tick the box to confirm you mean to email the whole list.",
+      field: "confirm",
     };
   }
 

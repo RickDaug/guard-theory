@@ -45,7 +45,7 @@ export async function signIn(
   const password = formData.get("password");
 
   if (typeof password !== "string" || password === "") {
-    return { status: "error", message: "Enter the password." };
+    return { status: "error", message: "Enter the password.", field: "password" };
   }
 
   // The limiter lives in Postgres, so every instance counts against the same
@@ -81,7 +81,7 @@ export async function signIn(
     // One message for a wrong password and for anything else that failed. There
     // is one account, so there is nothing to enumerate, and nothing to gain by
     // being more specific.
-    return { status: "error", message: "That password is not right." };
+    return { status: "error", message: "That password is not right.", field: "password" };
   }
 
   await markAttemptSucceeded(gate.attemptId).catch(() => {});

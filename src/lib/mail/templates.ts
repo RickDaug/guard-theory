@@ -178,8 +178,8 @@ export function orderShipped(
  * refund has been made rather than that it will be. `refundedCents` is what
  * this cancel refunded; `earlierRefundCents` is anything refunded before it, so
  * the message accounts for the whole payment without the buyer doing sums.
- * How long a card refund takes to appear is the card issuer's, not ours; the
- * 5 to 10 business days is Stripe's published figure for card refunds.
+ * How long a card refund takes to appear is the card issuer's, not ours, and
+ * no policy of ours states a figure, so the message gives none.
  */
 export function orderCancelled(
   order: OrderForEmail,

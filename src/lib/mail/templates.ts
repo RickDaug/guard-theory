@@ -132,6 +132,54 @@ export function orderShipped(
 }
 
 /**
+ * The order was cancelled before it shipped, and the money has gone back.
+ *
+ * Sent only after the refund has been accepted by Stripe, so it can say the
+ * refund has been made rather than that it will be. `refundedCents` is what
+ * this cancel refunded; `earlierRefundCents` is anything refunded before it, so
+ * the message accounts for the whole payment without the buyer doing sums.
+ * How long a card refund takes to appear is the card issuer's, not ours; the
+ * 5 to 10 business days is Stripe's published figure for card refunds.
+ */
+export function orderCancelled(
+  order: OrderForEmail,
+  refund: { refundedCents: number; earlierRefundCents: number },
+): Email {
+  const refundLines =
+    refund.refundedCents > 0
+      ? [
+          `We have refunded ${formatMoney(refund.refundedCents, order.currency)} to the card you paid with.`,
+          ...(refund.earlierRefundCents > 0
+            ? [
+                `With the ${formatMoney(refund.earlierRefundCents, order.currency)} refunded earlier, that is all of`,
+                `the ${formatMoney(order.totalCents, order.currency)} you paid.`,
+              ]
+            : []),
+          "Card refunds usually appear within 5 to 10 business days; the timing is",
+          "your bank's, not ours.",
+        ]
+      : [
+          `The ${formatMoney(order.totalCents, order.currency)} you paid had already been refunded in full,`,
+          "so there is nothing further to come back to you.",
+        ];
+
+  return {
+    to: order.email,
+    subject: `Order ${order.number} has been cancelled`,
+    body: [
+      `${firstName(order.shipName)},`,
+      "",
+      `Order ${order.number} has been cancelled and will not be sent.`,
+      "",
+      ...refundLines,
+      "",
+      "If you did not expect this, write to us and quote the order number.",
+      footer(),
+    ].join("\n"),
+  };
+}
+
+/**
  * The one message the First Edition list was collected for.
  *
  * The subject and body are passed in rather than written here. This template

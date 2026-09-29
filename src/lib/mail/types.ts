@@ -7,7 +7,7 @@
  */
 
 /**
- * Three order messages, the list announcement, and "test".
+ * Four order messages, the list announcement, and "test".
  *
  * "test" is what `scripts/mail/test-send.ts` logs under. It must not be
  * "announcement": the send path skips anyone `email_log` says already has the
@@ -18,6 +18,7 @@ export type EmailTemplate =
   | "order-confirmation"
   | "order-in-process"
   | "order-shipped"
+  | "order-cancelled"
   | "announcement"
   | "test";
 

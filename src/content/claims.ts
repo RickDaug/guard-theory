@@ -172,6 +172,7 @@ export const STORED: Record<string, Record<string, Disclosure>> = {
     in_process_at: { internal: "when the owner started on it" },
     shipped_at: { internal: "when it was dispatched" },
     delivered_at: { internal: "when the carrier reported delivery" },
+    cancelled_at: { internal: "when the order was cancelled and refunded" },
   },
   order_item: {
     id: { internal: "a random identifier we generate" },
@@ -183,6 +184,8 @@ export const STORED: Record<string, Record<string, Disclosure>> = {
     sku: { says: "what you bought" },
     unit_cents: { says: "what you paid" },
     quantity: { says: "what you bought" },
+    stock_taken: { internal: "how many of the line were taken from stock when it was paid for" },
+    restocked_quantity: { internal: "how many of the line have been put back in stock after a cancel or a return" },
   },
   checkout_intent: internal(
     ["id", "lines_json", "subtotal_cents", "shipping_cents", "created_at", "consumed_at", "order_id"],
@@ -518,7 +521,7 @@ function processorsMatchPolicy(context: ClaimContext): true | string {
  * sentence is retired below until there is no transactional mail.
  */
 export const LIST_MAIL = ["announcement"];
-export const TRANSACTIONAL_MAIL = ["orderConfirmation", "orderInProcess", "orderShipped"];
+export const TRANSACTIONAL_MAIL = ["orderConfirmation", "orderInProcess", "orderShipped", "orderCancelled"];
 
 function listMailCarriesUnsubscribe(): true | string {
   const problems: string[] = [];

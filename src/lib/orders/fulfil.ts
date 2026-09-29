@@ -431,17 +431,25 @@ export async function fulfilCheckoutSession(
       return { outcome: "already-recorded" as const, orderId: winner.rows[0]!.id };
     }
 
+    // Each line's id is kept so the decrement below can record against it how
+    // many units it actually took (0016): a cancel puts back exactly that, and
+    // an oversold line, which took nothing, puts back nothing.
+    const itemIds = new Map<PricedLine, string>();
+
     for (const line of lines) {
+      const itemId = randomUUID();
+      itemIds.set(line, itemId);
+
       await client.query(
         `
         insert into order_item (
           id, order_id, variant_id, product_name, product_kind,
-          size_label, sku, unit_cents, quantity
+          size_label, sku, unit_cents, quantity, stock_taken
         )
-        values ($1, $2, $3, $4, $5, $6, $7, $8, $9)
+        values ($1, $2, $3, $4, $5, $6, $7, $8, $9, 0)
         `,
         [
-          randomUUID(),
+          itemId,
           orderId,
           line.variantId,
           line.productName,
@@ -467,7 +475,11 @@ export async function fulfilCheckoutSession(
     for (const line of byVariant) {
       const decremented = await decrementStock(client, line.variantId, line.quantity);
 
-      if (!decremented) {
+      if (decremented) {
+        await client.query(`update order_item set stock_taken = quantity where id = $1`, [
+          itemIds.get(line),
+        ]);
+      } else {
         // Payment succeeded after stock hit zero. The order still exists,
         // because money was taken and the buyer is owed either the goods or a
         // refund — and which of those is the owner's judgement, not the code's.

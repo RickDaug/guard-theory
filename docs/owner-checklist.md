@@ -269,7 +269,9 @@ quarterly.
 ### 12. Live-mode cutover
 
 Only after a test-mode order has gone the whole way: paid, confirmed by email,
-labelled, marked delivered, refunded.
+labelled, marked delivered, refunded — and a second one cancelled before it
+ships, to see the refund, the stock going back and the cancellation email
+together (`docs/owner-decisions.md` §15).
 
 - Stripe: switch to live mode. Create a **new** restricted key (`rk_live_`) and
   a **new** webhook endpoint — same URL, same three events, same API version.

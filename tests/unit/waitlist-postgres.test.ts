@@ -36,7 +36,7 @@ describe("the Postgres stores, exercised against a real database", { skip: !conf
     await closePool();
   });
 
-  it("stores a signup and reports it as new", async () => {
+  it("stores a signup as pending and asks for it to be confirmed", async () => {
     const email = addr("new");
 
     const result = await getWaitlistStore().add({
@@ -48,13 +48,17 @@ describe("the Postgres stores, exercised against a real database", { skip: !conf
       submittedAt: new Date().toISOString(),
     });
 
-    assert.deepEqual(result, { ok: true, alreadyOnList: false });
+    assert.ok(result.ok);
+    assert.equal(result.alreadyOnList, false);
+    assert.equal(result.confirm?.email, email);
+    assert.equal(result.confirm?.firstName, "Pat");
 
-    const rows = await query<{ n: number }>(
-      "SELECT count(*)::int AS n FROM waitlist_signup WHERE email = $1",
+    const rows = await query<{ n: number; consent_state: string }>(
+      "SELECT count(*)::int AS n, min(consent_state) AS consent_state FROM waitlist_signup WHERE email = $1",
       [email],
     );
     assert.equal(rows[0]?.n, 1, "exactly one row should exist for the address");
+    assert.equal(rows[0]?.consent_state, "pending", "a new signup is not on the list until confirmed");
   });
 
   it("treats a repeat address as already-on-list, case-insensitively", async () => {
@@ -68,11 +72,12 @@ describe("the Postgres stores, exercised against a real database", { skip: !conf
     };
 
     await getWaitlistStore().add({ ...signup, email });
+    await query("UPDATE waitlist_signup SET consent_state = 'confirmed' WHERE email = $1", [email]);
     // The same person, shouting. A second row here would mean a duplicate mail
     // on announcement day, which is the failure a reader actually notices.
     const second = await getWaitlistStore().add({ ...signup, email: email.toUpperCase() });
 
-    assert.deepEqual(second, { ok: true, alreadyOnList: true });
+    assert.deepEqual(second, { ok: true, alreadyOnList: true, confirm: null });
 
     const rows = await query<{ n: number }>(
       "SELECT count(*)::int AS n FROM waitlist_signup WHERE lower(email) = lower($1)",

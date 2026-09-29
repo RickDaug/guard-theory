@@ -7,6 +7,7 @@ import { numberWord } from "./section-descriptions.ts";
 import { ENTRIES } from "./technique/index.ts";
 import { buildSearchIndex } from "../lib/search/index.ts";
 import * as mailTemplates from "../lib/mail/templates.ts";
+import { PENDING_RETENTION_DAYS } from "../lib/waitlist/confirm.ts";
 
 /**
  * What the site says about itself, tied to the thing that makes it true.
@@ -102,6 +103,10 @@ export const STORED: Record<string, Record<string, Disclosure>> = {
     unsubscribed_at: { internal: "set when the reader unsubscribes; nothing is collected to set it" },
     unsubscribe_token: { internal: "a random token we generate for the unsubscribe link" },
     source: { internal: "which of our own code paths wrote the row" },
+    consent_state: { says: "whether and when you confirmed your address" },
+    confirmed_at: { says: "whether and when you confirmed your address" },
+    confirmation_sent_at: { internal: "when we last sent the confirmation link" },
+    confirmation_delivery: { internal: "whether that confirmation email was sent, failed, or only logged" },
   },
   contact_message: {
     id: { internal: "a random identifier we generate" },
@@ -521,7 +526,15 @@ function processorsMatchPolicy(context: ClaimContext): true | string {
  * sentence is retired below until there is no transactional mail.
  */
 export const LIST_MAIL = ["announcement"];
-export const TRANSACTIONAL_MAIL = ["orderConfirmation", "orderInProcess", "orderShipped", "orderCancelled"];
+export const TRANSACTIONAL_MAIL = [
+  "orderConfirmation",
+  "orderInProcess",
+  "orderShipped",
+  "orderCancelled",
+  // Sent to an address that is not on the list yet, because someone asked for
+  // it to be. It says that ignoring it is enough, which is true.
+  "waitlistConfirmation",
+];
 
 function listMailCarriesUnsubscribe(): true | string {
   const problems: string[] = [];
@@ -861,5 +874,23 @@ export const CLAIMS: Claim[] = [
       (columnsByTable(context).waitlist_signup ?? []).some((column) => /size/i.test(column))
         ? true
         : "the waitlist has not asked for a size since 2026-08; there is no field and no column",
+  },
+  {
+    id: "privacy-unconfirmed-deleted",
+    says: /An address that is never confirmed is not on the list, and it is deleted (\d+) days after we send the link/,
+    kind: "stated",
+    where: [POLICIES],
+    holds: ({ match, read }) => {
+      if (match?.[1] !== String(PENDING_RETENTION_DAYS)) {
+        return `the policy says ${match?.[1]} days and PENDING_RETENTION_DAYS in src/lib/waitlist/confirm.ts is ${PENDING_RETENTION_DAYS}`;
+      }
+      if (!read("src/app/first-edition/actions.ts").includes("purgeUnconfirmed(")) {
+        return "nothing calls purgeUnconfirmed any more, so unconfirmed addresses are kept indefinitely";
+      }
+      if (!read("src/app/crew/list/actions.ts").includes("consent_state in ('confirmed', 'legacy')")) {
+        return "the announcement no longer limits itself to confirmed (and legacy) addresses, so an unconfirmed one is on the list after all";
+      }
+      return true;
+    },
   },
 ];

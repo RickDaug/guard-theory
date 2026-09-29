@@ -160,6 +160,28 @@ describe("mail that was only logged is not recorded as sent", { skip: !HAS_DB &&
     assert.ok(keys.includes(`order-confirmation/${failed}`));
     assert.equal(await retryUndeliveredConfirmations(), 0, "a second sweep has nothing left");
   });
+
+  it("the sweep leaves cancelled and fully refunded orders alone", async () => {
+    // A confirmation that arrives after the order was undone tells the buyer
+    // they were charged. The cron runs this sweep, so it has to know.
+    noProvider();
+    const cancelled = await makeOrder();
+    const refunded = await makeOrder();
+    await ensureOrderConfirmationSent(cancelled);
+    await ensureOrderConfirmationSent(refunded);
+    await query(`update "order" set status = 'cancelled' where id = $1`, [cancelled]);
+    await query(
+      `update "order" set refund_status = 'full', refunded_cents = total_cents where id = $1`,
+      [refunded],
+    );
+
+    const requests = resendThatRecords();
+    await retryUndeliveredConfirmations();
+
+    const keys = requests.map((r) => r.headers["Idempotency-Key"]);
+    assert.ok(!keys.includes(`order-confirmation/${cancelled}`), "a cancelled order was confirmed");
+    assert.ok(!keys.includes(`order-confirmation/${refunded}`), "a refunded order was confirmed");
+  });
 });
 
 describe("pricing a cart when the rate cannot be read", { skip: !HAS_DB && "no DATABASE_URL" }, () => {

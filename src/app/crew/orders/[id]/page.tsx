@@ -20,6 +20,7 @@ import {
   TrackingControl,
 } from "./OrderControls";
 import { isShippoConfigured } from "@/lib/shipping/shippo";
+import { emailStatusView } from "@/lib/portal/email-status";
 
 export const dynamic = "force-dynamic";
 
@@ -248,17 +249,18 @@ export default async function OrderPage({ params }: { params: Promise<{ id: stri
             <p className="text-base text-steel">Nothing has been sent yet.</p>
           ) : (
             <ul className="m-0 flex list-none flex-col gap-4 p-0">
-              {emails.map((email) => (
+              {emails.map((email) => {
+                const view = emailStatusView(email.status);
+
+                return (
                 <li key={email.id} className="flex flex-wrap items-baseline gap-x-6 gap-y-2">
                   <span className="text-base text-chalk">
                     {TEMPLATE_LABEL[email.template] ?? email.template}
-                  </span>
+                  </span>{" "}
                   <span
-                    className={`notation text-2xs ${
-                      email.status === "sent" ? "text-steel" : "text-signal-lift"
-                    }`}
+                    className={`notation text-2xs ${view.problem ? "text-signal-lift" : "text-steel"}`}
                   >
-                    {email.status === "sent" ? "Sent" : "Failed"}
+                    {view.label}
                   </span>
                   {email.error ? (
                     <span className="text-sm text-steel">{email.error.slice(0, 120)}</span>
@@ -267,7 +269,8 @@ export default async function OrderPage({ params }: { params: Promise<{ id: stri
                     <ResendControl id={order.id} template={email.template} />
                   </span>
                 </li>
-              ))}
+                );
+              })}
             </ul>
           )}
         </section>

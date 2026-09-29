@@ -5,7 +5,7 @@ import {
   metaDescriptionFor,
   metaTitleFor,
   tokenFromSearchParams,
-  type UnsubscribeOutcome,
+  type UnsubscribePageState,
 } from "../../src/app/unsubscribe/copy.ts";
 
 /**
@@ -17,7 +17,8 @@ import {
  * database, unlike the page component itself.
  */
 
-const OUTCOMES: UnsubscribeOutcome[] = [
+const OUTCOMES: UnsubscribePageState[] = [
+  "confirm",
   "unsubscribed",
   "already",
   "no-token",
@@ -48,7 +49,7 @@ describe("metaTitleFor", () => {
     assert.equal(metaTitleFor("unsubscribed"), "Unsubscribed");
     assert.equal(metaTitleFor("already"), "Unsubscribed");
 
-    for (const outcome of ["no-token", "unknown-token", "unavailable"] as const) {
+    for (const outcome of ["confirm", "no-token", "unknown-token", "unavailable"] as const) {
       assert.notEqual(
         metaTitleFor(outcome),
         "Unsubscribed",
@@ -70,7 +71,7 @@ describe("metaDescriptionFor", () => {
       assert.match(metaDescriptionFor(outcome), /removed/i);
     }
 
-    for (const outcome of ["no-token", "unknown-token", "unavailable"] as const) {
+    for (const outcome of ["confirm", "no-token", "unknown-token", "unavailable"] as const) {
       assert.doesNotMatch(
         metaDescriptionFor(outcome),
         /has been removed/i,

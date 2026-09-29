@@ -159,6 +159,9 @@ export const STORED: Record<string, Record<string, Disclosure>> = {
     stripe_mode: { internal: "whether the Stripe key that took the payment was test or live" },
     refund_status: { internal: "whether any of the payment has been refunded; derived from Stripe's events" },
     refunded_cents: { internal: "how much has been refunded; derived from Stripe's events" },
+    dispute_status: {
+      internal: "whether the payment has been disputed with the card issuer, and how that ended; derived from Stripe's events",
+    },
     tracking_carrier: { internal: "the carrier for the parcel; from the postage label, not from the buyer" },
     tracking_number: { internal: "the parcel's tracking number; from the postage label, not from the buyer" },
     tracking_url: { internal: "the carrier's tracking page for that number" },
@@ -182,7 +185,7 @@ export const STORED: Record<string, Record<string, Disclosure>> = {
     quantity: { says: "what you bought" },
   },
   checkout_intent: internal(
-    ["id", "lines_json", "subtotal_cents", "shipping_cents", "created_at", "consumed_at"],
+    ["id", "lines_json", "subtotal_cents", "shipping_cents", "created_at", "consumed_at", "order_id"],
     "the cart's sizes, quantities and totals as we priced them before sending the buyer to Stripe; nothing about who is buying, and swept after a week if never paid",
   ),
   webhook_event: internal(["id", "source", "type", "received_at", "processed_at"], "a ledger of which provider events have been handled, so none is handled twice"),
@@ -209,6 +212,12 @@ export const STORED: Record<string, Record<string, Disclosure>> = {
   login_attempt: internal(
     ["id", "key_hash", "succeeded", "attempted_at"],
     "the portal's sign-in limiter: a keyed hash of the attempt's address, never the address, deleted after a day",
+  ),
+
+  /* The cart's abuse limiter. About a request, never a person. */
+  rate_limit: internal(
+    ["bucket", "key_hash", "window_start", "hits"],
+    "the cart's rate limiter: a count of requests per keyed hash of the address, never the address, deleted after a day",
   ),
 };
 
@@ -519,6 +528,11 @@ function listMailCarriesUnsubscribe(): true | string {
     if (LIST_MAIL.includes(name)) {
       if (!template.toString().includes("/unsubscribe?t=")) {
         problems.push(`the list template "${name}" no longer builds an unsubscribe link`);
+      }
+      // "One-click": the body link opens a confirm page (a GET must not write),
+      // so the one click is RFC 8058's — the mail client's own button.
+      if (!template.toString().includes("List-Unsubscribe=One-Click")) {
+        problems.push(`the list template "${name}" no longer sends List-Unsubscribe-Post (RFC 8058 one-click)`);
       }
     } else if (!TRANSACTIONAL_MAIL.includes(name)) {
       problems.push(

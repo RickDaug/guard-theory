@@ -1,0 +1,12 @@
+# Keeps the SHA-pinned GitHub Actions current (security audit 2026-09-29,
+# S3-8). Dependabot rewrites both the SHA and the `# vX.Y.Z` comment beside it.
+# Actions only: npm updates are chosen by hand.
+version: 2
+updates:
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: weekly
+    groups:
+      actions:
+        patterns: ["*"]

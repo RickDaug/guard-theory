@@ -12,6 +12,9 @@ import {
   REMIND_HOURS,
   runOwnerAlert,
   runProblems,
+  SURGE_ALERT_HOURS,
+  surgeProblems,
+  surgeStatus,
 } from "../../src/lib/ops/alert.ts";
 import {
   envPresence,
@@ -244,6 +247,98 @@ describe("the owner alert, end to end with a stand-in provider", () => {
     const failing = harness({ ok: false });
     assert.equal(await failing.run(), "failed");
     assert.equal(failing.writes.length, 0, "a failed send is tried again next run");
+  });
+});
+
+describe("the checkout surge in the digest and on Settings", () => {
+  const surge = (since: Date, last: Date, calls: number) => ({
+    since: since.toISOString(),
+    last: last.toISOString(),
+    calls,
+  });
+  const hoursAfter = (hours: number) => minutesAfter(hours * 60);
+
+  it("is a problem while its last call is recent, saying when and how many", () => {
+    const recorded = surge(minutesAfter(-40), minutesAfter(-10), 37);
+    const problems = surgeProblems(recorded, NOW);
+
+    assert.equal(problems.length, 1);
+    assert.equal(problems[0]!.kind, "checkout-surge");
+    assert.equal(problems[0]!.key, `surge:${minutesAfter(-40).toISOString()}`);
+
+    const { body } = composeDigest(problems);
+    assert.match(body, /Checkout went past its limit/);
+    assert.match(body, /37 calls over the cap between 2026-09-28 11:20 UTC and 2026-09-28 11:50 UTC/);
+
+    const status = surgeStatus(recorded, NOW);
+    assert.equal(status.recent, true);
+  });
+
+  it("says one call at one time", () => {
+    const at = minutesAfter(-5);
+    assert.match(surgeStatus(surge(at, at, 1), NOW).text, /^1 call over the cap at 2026-09-28 11:55 UTC$/);
+  });
+
+  it("drops out once old, and reads nothing from a missing or broken row", () => {
+    const old = surge(hoursAfter(-30), hoursAfter(-SURGE_ALERT_HOURS), 5);
+    assert.deepEqual(surgeProblems(old, NOW), []);
+    assert.equal(surgeStatus(old, NOW).recent, false);
+    assert.match(surgeStatus(old, NOW).text, /None in the last/);
+
+    assert.deepEqual(surgeProblems(null, NOW), []);
+    assert.deepEqual(surgeProblems({ since: "nope", last: "nope", calls: 3 }, NOW), []);
+    assert.deepEqual(surgeProblems(surge(NOW, NOW, 0), NOW), []);
+    assert.equal(surgeStatus(null, NOW).text, "None recorded");
+  });
+
+  it("follows the digest's news, reminder and clear rules", async () => {
+    let now = NOW;
+    let recorded = surge(minutesAfter(-20), minutesAfter(-1), 4);
+    let state: AlertState | null = null;
+    const sent: string[] = [];
+    const mail: MailProvider = {
+      name: "fake",
+      delivers: true,
+      async send(email) {
+        sent.push(email.body);
+        return { ok: true, providerId: null };
+      },
+    };
+    const run = () =>
+      runOwnerAlert(
+        { runFailed: null, refundsFailed: null },
+        {
+          env: env({ OWNER_ALERT_EMAIL: "owner@example.com" }),
+          now: () => now,
+          provider: () => mail,
+          stripeConfigured: () => false,
+          lastReconcile: async () => null,
+          stored: async () => surgeProblems(recorded, now),
+          readState: async () => state,
+          writeState: async (value) => {
+            state = value;
+          },
+        },
+      );
+
+    assert.equal(await run(), "sent");
+    assert.match(sent[0]!, /4 calls over the cap/);
+
+    // More calls in the same episode are not news.
+    now = minutesAfter(90);
+    recorded = surge(minutesAfter(-20), minutesAfter(80), 60);
+    assert.equal(await run(), "already-told");
+
+    // A new episode is.
+    now = minutesAfter(300);
+    recorded = surge(minutesAfter(290), minutesAfter(295), 9);
+    assert.equal(await run(), "sent");
+    assert.match(sent[1]!, /9 calls over the cap/);
+
+    // Once it is old, the digest clears.
+    now = new Date(minutesAfter(295).getTime() + SURGE_ALERT_HOURS * 3_600_000);
+    assert.equal(await run(), "none");
+    assert.equal(state, null);
   });
 });
 

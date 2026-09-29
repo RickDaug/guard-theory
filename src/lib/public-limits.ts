@@ -141,9 +141,10 @@ export type CheckoutSurge = {
  *
  * One `setting` row, `checkout_surge`, holding `{ since, last, calls }` as
  * JSON. A call more than SURGE_EPISODE_MINUTES after the previous one starts a
- * new episode. The owner alert (src/lib/ops/alert.ts, on its own branch) reads
- * it: a `last` newer than its previous digest is news. Nothing here clears it;
- * an old episode is simply old.
+ * new episode. The owner alert (src/lib/ops/alert.ts, surgeProblems) reads
+ * it: a new episode is news, and an episode whose `last` is older than
+ * SURGE_ALERT_HOURS drops out of the digest. The portal's Settings shows it
+ * too. Nothing here clears it; an old episode is simply old.
  *
  * Never throws. A failure to record is logged, and the buyer is not the one
  * who pays for it.

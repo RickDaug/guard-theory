@@ -398,7 +398,12 @@ test.describe("crew portal, signed in", () => {
     await expectNoViolations(page, "/crew/categories with an error");
 
     await page.goto("/crew/products", { waitUntil: "load" });
-    const form = page.getByRole("form").first();
+    // The new-product form comes first and has no price; take the first
+    // product's own form.
+    const form = page
+      .getByRole("form")
+      .filter({ has: page.getByRole("textbox", { name: /^price$/i }) })
+      .first();
     await form.getByRole("textbox", { name: /^price$/i }).fill("abc");
     await form.getByRole("button", { name: /^save/i }).click();
     await expect(form.getByRole("alert").filter({ hasText: /\S/ })).toBeVisible();

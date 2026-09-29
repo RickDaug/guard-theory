@@ -36,10 +36,10 @@ export const oswaldoFaddaAndTheLineageOutsideTheFamily: DraftArticle = {
   status: "draft",
   slug: "oswaldo-fadda-and-the-lineage-outside-the-family",
   category: "influential-practitioners",
-  title: "Oswaldo Fadda, and the lineage that grew outside the family",
-  metaTitle: "Oswaldo Fadda, the lineage outside the family",
+  title: "Oswaldo Fadda, and the lineage called non-Gracie",
+  metaTitle: "Oswaldo Fadda and the 'non-Gracie' lineage",
   standfirst:
-    "The best-known teaching line in Brazilian jiu-jitsu that does not run through the Gracie academy is usually told in three facts: a suburb, a challenge and a foot lock. Three pages of one Rio newspaper from January 1955 confirm the first two, move the date and report a result the legend reverses; the third has no contemporary source we could find.",
+    "The best-known teaching line in Brazilian jiu-jitsu said to run outside the Gracie academy is usually told in three facts: a suburb, a challenge and a foot lock. Three pages of one Rio newspaper from January 1955 confirm the first two, move the date and report a result the legend reverses; the third has no contemporary source we could find.",
   metaDescription:
     "Oswaldo Fadda's jiu-jitsu line, read from 1955 Rio newspaper pages and the sources that retell it: what is documented, what is dated wrongly, and what is not.",
   sections: [
@@ -198,7 +198,7 @@ export const oswaldoFaddaAndTheLineageOutsideTheFamily: DraftArticle = {
     "Helio Gracie's remark that there had to be a Fadda is dated 1955 by GracieMag and 1954 by the same blog, both in Revista dos Esportes. Neither the magazine nor its date was checked against an original, and the blog's own text, which has Fadda in jiu-jitsu for more than twenty years, fits a later interview than either.",
     "Whether Luiz Franca learned from Mitsuyo Maeda is unresolved. BJJ Heroes tells it, while calling the Maeda link 'alleged' in its own opening line, with Satake and Geo Omori as further teachers, citing a Brazilian book series; Robert Drysdale says no evidence for it has been found; BJJ Heroes' editor argues that the absence of records is expected for the period.",
     "Whether the line is outside the Gracie family at all is itself questioned. Drysdale's 2019 article cites a 1938 newspaper listing Franca for the Gracie academy and a 1956 one calling him one of Helio Gracie's best students, and says the evidence available suggests Franca was a Gracie academy student; neither newspaper was read for this piece.",
-    "The result of the challenge is disputed. The only contemporary report read (Diario da Noite, 24 January 1955) gives the Gracie academy 7 wins, 3 losses and 4 draws, with Fadda as referee. BJJ Heroes, citing Reila Gracie's biography of Carlos Gracie, and the judo blog both say Fadda's team won. English Wikipedia reports a second meeting the following year that Fadda's team won; that claim was not checked here. The association of Fadda's school with foot locks rests, in the sources read here, on BJJ Heroes; the biography was not read.",
+    "The result of the challenge is disputed. The only contemporary report read (Diario da Noite, 24 January 1955) gives the Gracie academy 7 wins, 3 losses and 4 draws, with Fadda as referee. BJJ Heroes, citing Reila Gracie's biography of Carlos Gracie, and the judo blog both say Fadda's team won. The association of Fadda's school with foot locks rests, in the sources read here, on BJJ Heroes; the biography was not read.",
     "A caption in the BJJ Eastern Europe article says the academy has been in its building since 1947. Both profiles date the academy to January 1950. The two may describe the building and the academy respectively; the piece uses 1950.",
   ],
 };

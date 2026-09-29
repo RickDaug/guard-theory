@@ -72,6 +72,23 @@ export const CROSS_LINKS: CrossLink[] = [
     basis: "Named in the article as the room the guard was developed in.",
   },
   {
+    a: journal("the-arm-drag-as-a-system"),
+    b: figure("marcelo-garcia"),
+    basis: "The article is about the arm-drag-to-back chain his game was built on.",
+  },
+  {
+    a: journal("where-the-guard-came-from"),
+    b: figure("helio-gracie"),
+    basis:
+      "The article sets out three accounts of his role in the guard in the 1930s and credits none.",
+  },
+  {
+    a: journal("where-the-guard-came-from"),
+    b: figure("mitsuyo-maeda"),
+    basis:
+      "The article reports Pedreira's account that Maeda considered his own groundwork weak.",
+  },
+  {
     a: journal("what-the-early-ufc-tournaments-demonstrated"),
     b: figure("royce-gracie"),
     basis:
@@ -209,6 +226,30 @@ export const CROSS_LINKS: CrossLink[] = [
     b: technique("seat-belt-and-hooks"),
     basis:
       "The article names the entry as the control that back-start overtime begins from.",
+  },
+  {
+    a: journal("the-arm-drag-as-a-system"),
+    b: technique("arm-drag"),
+    basis:
+      "The article quotes the entry's description of the drag as a redirection of an arm already extended.",
+  },
+  {
+    a: journal("the-arm-drag-as-a-system"),
+    b: technique("butterfly-hook-as-lever"),
+    basis:
+      "The article uses the entry's point that a hook only lifts once the opponent's weight is loaded onto it.",
+  },
+  {
+    a: journal("the-arm-drag-as-a-system"),
+    b: technique("seat-belt-and-hooks"),
+    basis:
+      "The article uses the entry's ordering, chest connection before hooks, for the end of the chain.",
+  },
+  {
+    a: journal("ufc-submissions-by-the-numbers"),
+    b: technique("seat-belt-and-hooks"),
+    basis:
+      "The article says the rear naked choke does not exist without the seat belt first; the entry says the back is most often lost while hunting that strangle.",
   },
   {
     a: journal("why-the-underhook-decides-half-guard"),

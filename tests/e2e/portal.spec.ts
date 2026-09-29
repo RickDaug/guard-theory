@@ -85,16 +85,23 @@ test.describe("portal access", () => {
     // stranger can find them; what must hold is that calling one gets nowhere.
     const manifest = JSON.parse(
       readFileSync(path.join(process.cwd(), ".next", "server", "server-reference-manifest.json"), "utf8"),
-    ) as { node: Record<string, { workers: Record<string, { filename?: string }> }> };
+    ) as {
+      node: Record<string, { filename?: string; workers: Record<string, { filename?: string }> }>;
+    };
 
     // The portal layout's sign-out form puts signIn and signOut on this page
     // too. Neither needs a session — signing out without one is harmless — so
     // they are not what this test is about; the order actions are.
+    //
+    // Next 16.2 writes each action's filename on its workers; 16.3 moved it up
+    // to the entry. Read either, or on 16.3 the sign-in actions stop being
+    // excluded and signOut's harmless redirect fails the forged-cookie check.
     const ids = Object.entries(manifest.node)
       .filter(([, entry]) =>
         Object.entries(entry.workers).some(
           ([worker, meta]) =>
-            worker.includes("/crew/orders") && !meta.filename?.includes("crew/sign-in/"),
+            worker.includes("/crew/orders") &&
+            !(meta.filename ?? entry.filename)?.includes("crew/sign-in/"),
         ),
       )
       .map(([id]) => id);

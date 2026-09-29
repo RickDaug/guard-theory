@@ -1,9 +1,11 @@
 import { timingSafeEqual } from "node:crypto";
 import { query } from "../db/client.ts";
 import { shippoMode } from "./shippo.ts";
+import { raiseFlagSql } from "../orders/flags.ts";
 
 /**
- * Shippo tracking, so an order marks itself Delivered. The route is
+ * Shippo tracking, so an order marks itself Delivered — or is flagged when the
+ * parcel comes back. The route is
  * src/app/api/webhooks/shippo/[token]/route.ts; the handler lives here so it
  * can be tested with a real Request, like the Stripe webhook next door.
  *
@@ -22,7 +24,8 @@ import { shippoMode } from "./shippo.ts";
  * and rotating SHIPPO_WEBHOOK_TOKEN whenever someone leaves the Vercel team.
  *
  * That is proportionate rather than lax. The worst a forged request here can do
- * is mark an order Delivered early. No money moves, nothing ships, and nothing
+ * is mark an order Delivered early, or flag one as returned that was not —
+ * which only asks the owner to look. No money moves, nothing ships, and nothing
  * is refunded. Compare the Stripe webhook next door, which is signature-checked
  * because a forged request there would invent an order.
  *
@@ -87,6 +90,63 @@ type TrackingPayload = {
 };
 
 /**
+ * The tracking statuses that change anything here. TRANSIT and PRE_TRANSIT
+ * are the parcel doing what it should, and UNKNOWN says nothing.
+ */
+const ACTED_ON = new Set(["DELIVERED", "RETURNED", "FAILURE"]);
+
+/**
+ * What a tracking status does to the order carrying that tracking number.
+ * Exported for the database tests; the handler is the only caller.
+ *
+ * - DELIVERED moves it forward, and only from `shipped`: that WHERE clause is
+ *   what stops a late or duplicated event resurrecting a cancelled order or
+ *   re-stamping one already delivered.
+ * - RETURNED (back to sender) and FAILURE (the carrier could not deliver) flag
+ *   it `delivery-problem`. They used to be answered 200 and dropped, so a
+ *   returned parcel was invisible until the buyer wrote in. The status is not
+ *   changed — nothing about the order's money or stock is different — and a
+ *   cancelled order is left alone. A flag the owner has not cleared that
+ *   matters more (a chargeback) is not replaced.
+ *
+ * Returns how many orders it changed: 0 for a number that is not ours.
+ */
+export async function applyTrackingStatus(trackingNumber: string, status: string): Promise<number> {
+  if (status === "DELIVERED") {
+    const rows = await query<{ id: string }>(
+      `update "order"
+          set status = 'delivered', delivered_at = now()
+        where tracking_number = $1
+          and status = 'shipped'
+        returning id`,
+      [trackingNumber],
+    );
+    return rows.length;
+  }
+
+  if (status === "RETURNED" || status === "FAILURE") {
+    const rows = await query<{ id: string }>(
+      `update "order"
+          set ${raiseFlagSql("$2")}
+        where tracking_number = $1
+          and status <> 'cancelled'
+        returning id`,
+      [trackingNumber, "delivery-problem"],
+    );
+
+    if (rows.length > 0) {
+      console.error(
+        `[guard-theory] Shippo reports tracking ${trackingNumber} as ${status}; the order is flagged.`,
+      );
+    }
+
+    return rows.length;
+  }
+
+  return 0;
+}
+
+/**
  * The answer for anyone who does not hold the secret: 404, not 401. An endpoint
  * that answers differently to a wrong secret is an endpoint that confirms the
  * right one exists. The route gives this to every method other than POST as
@@ -134,21 +194,12 @@ export async function handleShippoWebhook(request: Request, token: string): Prom
   const status = payload.data?.tracking_status?.status;
   const trackingNumber = payload.data?.tracking_number;
 
-  if (status !== "DELIVERED" || !trackingNumber) {
+  if (!trackingNumber || !status || !ACTED_ON.has(status)) {
     return new Response("ok", { status: 200 });
   }
 
   try {
-    // Advance-only and idempotent. `status = 'shipped'` in the WHERE clause is
-    // what stops a late or duplicated event resurrecting a cancelled order or
-    // re-stamping one that is already delivered.
-    await query(
-      `update "order"
-          set status = 'delivered', delivered_at = now()
-        where tracking_number = $1
-          and status = 'shipped'`,
-      [trackingNumber],
-    );
+    await applyTrackingStatus(trackingNumber, status);
   } catch (error) {
     console.error(
       "[guard-theory] could not apply a Shippo tracking update:",

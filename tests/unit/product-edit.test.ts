@@ -22,6 +22,7 @@ import {
 } from "../../src/lib/portal/product-edit.ts";
 import { PUBLISHED_SPECIFICATIONS } from "../../src/content/products/published-specs.ts";
 import { PRODUCTS } from "../../src/content/products/index.ts";
+import { SIZE_CHART } from "../../src/content/products/size-chart.ts";
 import { getProductView } from "../../src/lib/catalogue/index.ts";
 import { closePool, isDatabaseConfigured, query, transaction } from "../../src/lib/db/client.ts";
 
@@ -153,25 +154,39 @@ describe("what a product needs before the storefront", () => {
     }
   });
 
-  it("refuses a size the size and fit guide has no row for", () => {
-    // Every product page links to the guide for "full measurements".
-    const problems = storefrontProblems({ ...WHOLE, sizeLabels: ["M", "3XL"] });
+  it("once the owner supplies a size chart, refuses a size it has no row for", () => {
+    // A fixture chart: the registry chart is empty until the owner supplies one.
+    const problems = storefrontProblems({ ...WHOLE, sizeLabels: ["M", "3XL"] }, ["S", "M", "L"]);
     assert.equal(problems.length, 1);
     assert.match(problems[0]!, /not 3XL/);
   });
 
-  it("holds the registry garments to the same rule they already meet", () => {
+  it("with no size chart, does not refuse every size", () => {
+    // #64 emptied SIZE_CHART. The guide then makes no claim about any size,
+    // so there is nothing for a size label to contradict.
+    assert.equal(SIZE_CHART.length, 0, "a chart is back: the test above covers it");
+    assert.deepEqual(storefrontProblems({ ...WHOLE, sizeLabels: ["M", "3XL"] }), []);
+  });
+
+  it("holds the registry garments to the same rule, and blocks the ones with no owner specification", () => {
     for (const product of PRODUCTS) {
-      assert.deepEqual(
-        storefrontProblems({
-          ...product,
-          priceCents: 100,
-          specs: product.specifications,
-          sizeLabels: product.sizeLabels,
-        }),
-        [],
-        product.slug,
-      );
+      const problems = storefrontProblems({
+        ...product,
+        priceCents: 100,
+        specs: product.specifications,
+        sizeLabels: product.sizeLabels.length > 0 ? product.sizeLabels : ["M"],
+      });
+      if (product.specSource === "owner") {
+        assert.deepEqual(problems, [], product.slug);
+      } else {
+        // Invented specifications were removed on 2026-09-29; the garment
+        // cannot go live until the owner supplies them.
+        assert.deepEqual(
+          problems,
+          PUBLISHED_SPECIFICATIONS.map((label) => `a ${label.toLowerCase()}`),
+          product.slug,
+        );
+      }
     }
   });
 });

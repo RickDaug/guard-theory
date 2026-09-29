@@ -40,7 +40,7 @@ export const POLICIES: Policy[] = [
     title: "Privacy",
     summary: "What we collect, why, how long we keep it, and how to get it deleted.",
     metaDescription:
-      "What we hold if you join the list, write to us or place an order, and the five companies that handle it for us. No analytics, no tracking scripts.",
+      "What we hold if you join the list, write to us or place an order, and the six companies that handle it for us. No analytics, no tracking scripts.",
     sections: [
       {
         id: "what-we-collect",
@@ -49,6 +49,7 @@ export const POLICIES: Policy[] = [
           "If you join the First Edition list we collect your first name and email address, and — only if you choose to give them — how long you have been training, your preferred sleeve length, and which products interest you. We also record when you joined and that you agreed to be emailed, and when we email you we keep a record of which message was sent.",
           "If you contact us we collect your name, email address and whatever you write to us.",
           "If you place an order we collect your email address, the name and postal address the parcel is going to, and a phone number for the shipping label. We keep those with a record of what you bought, what you paid, and each email we sent you about the order. Your card details are typed into our payment provider's page, not ours. They never reach us and we do not store them.",
+          "When you open your cart or go to pay, we count the requests coming from your network address, so that a script cannot flood either. We store a keyed hash of the address, never the address itself, and delete it after a day.",
           "That is the entire list. We do not ask for a date of birth, and we do not ask for an address or a phone number unless something is being posted to you.",
         ],
       },
@@ -64,8 +65,8 @@ export const POLICIES: Policy[] = [
         id: "who-else",
         heading: "Who else handles it",
         paragraphs: [
-          "Five companies each do one job for us, and each receives what that job needs.",
-          "Stripe takes payment and works out sales tax. You enter your card, email address, shipping address and phone number on Stripe's own page. Shippo buys the postage label, so it receives the name, address, phone number and email address for the parcel. Resend delivers our email, so it receives your email address and the message. Neon hosts the database all of this is stored in. Vercel hosts the site, so every request to it passes through Vercel.",
+          "Six companies each do one job for us, and each receives what that job needs.",
+          "Stripe takes payment and works out sales tax. You enter your card, email address, shipping address and phone number on Stripe's own page. Shippo buys the postage label, so it receives the name, address, phone number and email address for the parcel. Resend delivers our email, so it receives your email address and the message. Neon hosts the database all of this is stored in. Vercel hosts the site, so every request to it passes through Vercel. GitHub stores an encrypted copy of that database, taken each night and kept for thirty days, so that it can be restored if something is lost.",
         ],
       },
       {
@@ -73,13 +74,14 @@ export const POLICIES: Policy[] = [
         heading: "How long we keep it",
         paragraphs: [
           "Waitlist details are kept until the First Edition has been released and you have been told, or until you ask us to delete them. Messages sent through the contact form are kept while we deal with them and for as long afterwards as we need to answer a follow-up. Ask us to delete either and we will.",
+          "Our encrypted nightly backups are kept for thirty days, so something we delete can remain in a backup until that backup expires.",
         ],
       },
       {
         id: "your-rights",
         heading: "Your data, and getting rid of it",
         paragraphs: [
-          "Ask and we will tell you exactly what we hold about you, correct it, or delete it. There is no form and no reason required. Every email we send to the First Edition list carries a one-click unsubscribe. Emails about an order — the confirmation, the dispatch notice — are sent because you placed that order. They are not a mailing list, and placing an order does not add you to one.",
+          "Ask and we will tell you exactly what we hold about you, correct it, or delete it. There is no form and no reason required. Every email we send to the First Edition list carries a one-click unsubscribe. Emails about an order — the confirmation, the note that it is being prepared, the dispatch notice — are sent because you placed that order. They are not a mailing list, and placing an order does not add you to one.",
           "If you are in the UK, EU or California, you have statutory rights to access, correction, deletion and portability. We apply the same standard to everyone regardless of where they live.",
         ],
       },

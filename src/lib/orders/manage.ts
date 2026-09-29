@@ -192,6 +192,108 @@ export function toEmailShape(order: OrderRow, items: OrderItemRow[]): OrderForEm
   };
 }
 
+/**
+ * WHAT MAY NOT MOVE TOWARD THE DOOR
+ *
+ * Three things mean an unshipped order must not be packed, given tracking or
+ * marked shipped, whatever the transition table says:
+ *
+ * - A full refund. On an unshipped order it also put the stock back
+ *   (refund.ts), so shipping it anyway sells the same unit twice: the shelf
+ *   says it is there, the parcel says it is gone, and the next buyer of that
+ *   size pays for nothing. The owner who refunded as a goodwill gesture and
+ *   still means to send it is told how to do that without phantom stock.
+ * - Any line put back in stock before shipping. Only a full refund or a cancel
+ *   does that today; the check is on the stock itself so a future path that
+ *   restocks early is caught too.
+ * - A lost chargeback. The bank has given the buyer the money back; shipping
+ *   sends the goods as well. The way out is Cancel, which no longer tries to
+ *   refund a payment the bank already returned (cancel.ts).
+ *
+ * The SQL twin is ANDed into every write that moves an order toward shipping,
+ * so a refund landing between the read and the write still wins.
+ */
+export type ShipGuardFacts = {
+  refund_status: string;
+  dispute_status: string | null;
+  /** True if any line has had units put back in stock. */
+  restocked: boolean;
+};
+
+export const SHIP_REFUSED_CHARGEBACK =
+  "The buyer's bank took this payment back through a chargeback, and the dispute was lost, so this order must not ship. Cancel it instead: nothing is refunded a second time, and the stock goes back on the shelf.";
+
+export const SHIP_REFUSED_RESTOCKED =
+  "This order was refunded in full and its stock is already back on the shelf, so the portal will not move it toward shipping: that would sell the same units twice. If the refund was a goodwill gesture and you are still sending the parcel, take the units back out of stock on the product page first, then send it outside the portal. Otherwise cancel it.";
+
+export const SHIP_REFUSED_REFUNDED =
+  "This order has been refunded in full, so the portal will not move it toward shipping. Cancel it to put its stock back on the shelf.";
+
+export function shipRefusal(order: ShipGuardFacts): string | null {
+  if (order.dispute_status === "lost") return SHIP_REFUSED_CHARGEBACK;
+  if (order.restocked) return SHIP_REFUSED_RESTOCKED;
+  if (order.refund_status === "full") return SHIP_REFUSED_REFUNDED;
+  return null;
+}
+
+/** The same rule, for a `where` on the "order" table. */
+export const SHIPPABLE_SQL = `(refund_status <> 'full'
+  and dispute_status is distinct from 'lost'
+  and not exists (select 1 from order_item i
+                   where i.order_id = "order".id and i.restocked_quantity > 0))`;
+
+/** Reads the facts shipRefusal needs. Undefined if the order does not exist. */
+export async function shipGuardFacts(orderId: string): Promise<ShipGuardFacts | undefined> {
+  return queryOne<ShipGuardFacts>(
+    `select refund_status, dispute_status,
+            exists (select 1 from order_item i
+                     where i.order_id = "order".id and i.restocked_quantity > 0) as restocked
+       from "order" where id = $1`,
+    [orderId],
+  );
+}
+
+export type TrackingResult = { ok: true } | { ok: false; reason: string };
+
+/**
+ * Tracking typed in by hand, for a label bought outside the portal. Only on an
+ * order that is still owed a parcel, and compare-and-set against the ship
+ * guard: a tracking number is the one thing Mark shipped needs.
+ */
+export async function saveTracking(
+  orderId: string,
+  tracking: { number: string; carrier: string; url: string | null },
+): Promise<TrackingResult> {
+  const facts = await shipGuardFacts(orderId);
+
+  if (!facts) {
+    return { ok: false, reason: "That order no longer exists." };
+  }
+
+  const refusal = shipRefusal(facts);
+
+  if (refusal) {
+    return { ok: false, reason: `Tracking not saved. ${refusal}` };
+  }
+
+  const rows = await query<{ id: string }>(
+    `update "order" set tracking_number = $2, tracking_carrier = $3, tracking_url = $4
+      where id = $1 and status in ('new', 'in_process') and ${SHIPPABLE_SQL}
+      returning id`,
+    [orderId, tracking.number, tracking.carrier, tracking.url],
+  );
+
+  if (rows.length === 0) {
+    return {
+      ok: false,
+      reason:
+        "Tracking not saved. This order is no longer waiting to ship — it was cancelled, shipped or refunded while you were looking at it. Reload to see where it is now.",
+    };
+  }
+
+  return { ok: true };
+}
+
 export type TransitionResult =
   | { ok: true; emailed: boolean }
   | { ok: false; reason: string };
@@ -252,6 +354,17 @@ export async function transitionOrder(
     };
   }
 
+  const headingOut = to === "in_process" || to === "shipped";
+
+  if (headingOut) {
+    const facts = await shipGuardFacts(orderId);
+    const refusal = facts ? shipRefusal(facts) : null;
+
+    if (refusal) {
+      return { ok: false, reason: refusal };
+    }
+  }
+
   const stamp =
     to === "in_process"
       ? "in_process_at"
@@ -267,6 +380,7 @@ export async function transitionOrder(
     `update "order" set status = $2${stamp ? `, ${stamp} = now()` : ""}
       where id = $1 and status = $3
         and ($2 <> 'shipped' or tracking_number is not null)
+        and ($2 not in ('in_process', 'shipped') or ${SHIPPABLE_SQL})
       returning *`,
     [orderId, to, order.status],
   );

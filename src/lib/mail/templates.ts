@@ -184,10 +184,19 @@ export function orderShipped(
  */
 export function orderCancelled(
   order: OrderForEmail,
-  refund: { refundedCents: number; earlierRefundCents: number },
+  refund: {
+    refundedCents: number;
+    earlierRefundCents: number;
+    /** The payment went back through a chargeback the shop lost, not a refund. */
+    chargeback?: boolean;
+  },
 ): Email {
-  const refundLines =
-    refund.refundedCents > 0
+  const refundLines = refund.chargeback
+    ? [
+        "Your bank has already returned your payment to you, through the dispute you raised",
+        "with them, so there is nothing further to come back from us.",
+      ]
+    : refund.refundedCents > 0
       ? [
           `We have refunded ${formatMoney(refund.refundedCents, order.currency)} to the card you paid with.`,
           ...(refund.earlierRefundCents > 0

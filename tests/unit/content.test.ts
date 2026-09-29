@@ -17,7 +17,12 @@ import {
 } from "../../src/content/journal/index.ts";
 import { FIGURES } from "../../src/content/figures/index.ts";
 import { POLICIES } from "../../src/content/policies/index.ts";
-import { PRODUCTS } from "../../src/content/products/index.ts";
+import { DRAWN_SPECIFICATION_LABELS, PRODUCTS } from "../../src/content/products/index.ts";
+import {
+  FIT_NOTES,
+  SIZE_CHART,
+  SIZE_CHART_SOURCE,
+} from "../../src/content/products/size-chart.ts";
 import {
   CROSS_LINKS,
   crossLinksFor,
@@ -30,6 +35,7 @@ import {
   journalCategoryCount,
   techniqueCategoryCount,
 } from "../../src/content/category-gate.ts";
+import { RULES_NOTES } from "../../src/content/technique/rules-notes.ts";
 
 /**
  * Content integrity. These are the failures that would otherwise reach a page
@@ -415,6 +421,85 @@ describe("editorial voice", () => {
       }
     }
   });
+
+  it("keeps banned constructions out of technique category copy and ruleset notes", () => {
+    for (const category of CATEGORIES) {
+      const note = RULES_NOTES[category.slug];
+      const text = [
+        category.name,
+        category.summary,
+        category.metaDescription,
+        ...(note
+          ? [note.heading, note.intro, note.closing, ...note.statements.map((s) => s.text)]
+          : []),
+      ].join(" ");
+      for (const pattern of BANNED) {
+        assert.ok(
+          !pattern.test(text),
+          `technique category ${category.slug} contains a banned construction matching ${pattern}`,
+        );
+      }
+    }
+  });
+});
+
+/**
+ * Ruleset notes (src/content/technique/rules-notes.ts). A legality statement
+ * with no rule document behind it is the invented fact AGENTS.md forbids, and
+ * one on a leg-lock page is also a safety problem. What a test can hold is the
+ * shape: every statement names a source that exists, every source parses, and
+ * the date it was read is a real day that has already happened.
+ */
+describe("ruleset notes on technique category pages", () => {
+  it("gives the leg-locks page one", () => {
+    assert.ok(RULES_NOTES["leg-locks"], "the leg-locks category has no ruleset note");
+  });
+
+  for (const [slug, note] of Object.entries(RULES_NOTES)) {
+    if (!note) continue;
+
+    it(`${slug}: files the note under a real category`, () => {
+      assert.ok(CATEGORIES.some((c) => c.slug === slug), `${slug} is not a category`);
+    });
+
+    it(`${slug}: sources every statement to a listed document`, () => {
+      const ids = new Set(note.sources.map((source) => source.id));
+      assert.equal(ids.size, note.sources.length, `${slug} repeats a source id`);
+      assert.ok(note.statements.length > 0, `${slug} has an empty ruleset note`);
+      for (const statement of note.statements) {
+        assert.ok(
+          ids.has(statement.source),
+          `${slug}: "${statement.text.slice(0, 60)}..." cites unknown source ${statement.source}`,
+        );
+      }
+      for (const source of note.sources) {
+        assert.ok(
+          note.statements.some((statement) => statement.source === source.id),
+          `${slug} lists ${source.id} but no statement cites it`,
+        );
+      }
+    });
+
+    it(`${slug}: lists sources with a real URL, a title and a locator`, () => {
+      for (const source of note.sources) {
+        assert.doesNotThrow(() => new URL(source.url), `${slug}: unparseable URL ${source.url}`);
+        assert.equal(new URL(source.url).protocol, "https:", `${slug}: ${source.url} is not https`);
+        assert.ok(source.title.length > 0 && source.locator.length > 0, `${slug}: ${source.id} is incomplete`);
+      }
+    });
+
+    it(`${slug}: dates the reading on a real day that has already happened`, () => {
+      assert.match(note.asOf, /^\d{4}-\d{2}-\d{2}$/, `${slug}: malformed asOf ${note.asOf}`);
+      const read = new Date(`${note.asOf}T00:00:00Z`);
+      assert.ok(!Number.isNaN(read.getTime()), `${slug}: impossible asOf ${note.asOf}`);
+      assert.equal(read.toISOString().slice(0, 10), note.asOf, `${slug}: impossible asOf ${note.asOf}`);
+      assert.ok(read.getTime() <= Date.now(), `${slug}: asOf ${note.asOf} is in the future`);
+    });
+
+    it(`${slug}: tells the reader to check their own event's rules`, () => {
+      assert.match(note.closing, /rules/i);
+    });
+  }
 });
 
 /**
@@ -569,5 +654,52 @@ describe("meta descriptions fit what search and social display", () => {
           `the copy on the page — if it is not changing anything, delete it`,
       );
     }
+  });
+});
+
+/**
+ * Product facts need a supplier.
+ *
+ * From 2026-08-04 to 2026-09-29 the product pages published a fabric
+ * composition, a GSM, a seam type, a print method, a fit and care line, and a
+ * six-size measurement chart that nobody supplied — the owner confirmed it.
+ * "Never invent a fact" was a rule; this makes it a check. A specification
+ * value (other than what the drawing itself shows) and a chart row can only
+ * exist when the registry records that the owner supplied them.
+ */
+describe("product facts come from the owner or not at all", () => {
+  for (const product of PRODUCTS) {
+    it(`${product.slug} states no specification, construction or size range the owner did not supply`, () => {
+      if (product.specSource === "owner") return;
+      const unsupplied = product.specifications.filter(
+        (spec) => spec.value !== null && !DRAWN_SPECIFICATION_LABELS.includes(spec.label),
+      );
+      assert.deepEqual(
+        unsupplied.map((spec) => `${spec.label}: ${spec.value}`),
+        [],
+        `${product.slug} carries specification values with specSource ${String(product.specSource)}. ` +
+          `Set them to null, or record that the owner supplied them (specSource: "owner"). ` +
+          `See docs/owner-decisions.md §3.`,
+      );
+      assert.deepEqual(
+        product.constructionPoints.map((point) => point.label),
+        [],
+        `${product.slug} asserts construction details with no owner source.`,
+      );
+      assert.deepEqual(
+        product.sizeLabels,
+        [],
+        `${product.slug} lists a size range with no owner source.`,
+      );
+    });
+  }
+
+  it("publishes no size chart the owner did not supply", () => {
+    if (SIZE_CHART_SOURCE === "owner") {
+      assert.ok(SIZE_CHART.length > 0, "SIZE_CHART_SOURCE is \"owner\" but the chart is empty");
+      return;
+    }
+    assert.deepEqual(SIZE_CHART, [], "size chart rows exist without SIZE_CHART_SOURCE: \"owner\"");
+    assert.deepEqual(FIT_NOTES, [], "fit notes describe a pattern nobody supplied");
   });
 });

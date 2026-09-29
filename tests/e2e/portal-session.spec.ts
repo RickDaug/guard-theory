@@ -230,8 +230,7 @@ test.describe.serial("a signed-in session", () => {
       const summary = results.violations.map(
         (violation) => `${violation.id} on ${violation.nodes.length} node(s): ${violation.help}`,
       );
-      expect(summary, [route, ...summary].join("
-")).toEqual([]);
+      expect(summary, [route, ...summary].join("\n")).toEqual([]);
     }
 
     // Settings names variables and never prints one. The database URL and the

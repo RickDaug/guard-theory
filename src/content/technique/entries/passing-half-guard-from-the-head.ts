@@ -21,7 +21,7 @@ export const passingHalfGuardFromTheHead: TechniqueEntry = {
     "Crossface with the other arm, shoulder under their jaw, so their face turns away from you. A head turned away cannot lead the body up onto its side.",
     "When they win the underhook first, wrap it with a whizzer and drop your weight onto it. The whizzer keeps the arm from reaching your back and drives their shoulder toward the mat, which starts the flattening again.",
     "Against a knee shield, bring the shin down instead of climbing over it: turn it flat under your hip or work an elbow inside it. The shield only holds distance while their hips stay on their side.",
-    "Against deep half guard, a common answer is to keep the weight back and their free leg wide, and avoid reaching forward for the head. Deep half sweeps tend to work by tipping a passer who is leaning over the bottom player's body.",
+    "Against deep half guard, a common answer is to keep your weight back and your free leg wide, and to avoid reaching forward for the head. Deep half sweeps tend to work by tipping a passer who is leaning over the bottom player's body.",
     "Keep the chest heavy and the hips low once they are flat. A flat player fighting your weight is framing from their back, and a frame from the back holds less than a frame from the side.",
     "Free the leg only once the shoulders are flat, by the knee slice or the backstep. The route matters less than the timing, because either one tends to work against a flat player and both struggle against a player on their side.",
     "Keep the crossface and the underhook on while the leg comes out. Letting go of the upper body to use a hand on the leg gives them the moment they need to turn back onto their side.",

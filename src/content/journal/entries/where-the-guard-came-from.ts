@@ -20,7 +20,10 @@ import type { DraftArticle } from "../types.ts";
  * accessed date, as for seated-guard-and-supine-guard), so no Kodokan document
  * is cited and the widely repeated 1925 date is in contestedNotes, unasserted.
  *
- * Draft: no author has read this piece, so it carries no byline and no date.
+ * Draft: no one has read and signed off this piece, so it carries no byline
+ * and no date. AI-assisted pieces are published under the "Guard Theory
+ * editorial" byline (authorId "guard-theory-editorial"; owner, 2026-09-29),
+ * once a person has reviewed them.
  */
 export const whereTheGuardCameFrom: DraftArticle = {
   status: "draft",

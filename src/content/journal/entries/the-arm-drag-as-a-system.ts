@@ -14,14 +14,17 @@ import type { DraftArticle } from "../types.ts";
  * Grapplearts says the drag came from wrestling, and the piece repeats that as
  * Grapplearts' statement. Nicknamed techniques are left out. A conditioning
  * section drawn from a systematic review (Andreato et al. 2017) was cut in
- * revision: the review measured gi grips, so it had nothing to say about this
- * game.
+ * revision: its discriminating grip tests were done on the gi, and it
+ * measured nothing specific to this game.
  *
  * BJJ Heroes' submission panel prints a percentage and then a count for each
  * technique (RNC "29 16" is 29 percent, 16 wins). The counts sum to the 55
  * submission wins the panel states, which is how the reading was checked.
  *
- * Draft: no author has read this piece, so it carries no byline and no date.
+ * Draft: no one has read and signed off this piece, so it carries no byline
+ * and no date. AI-assisted pieces are published under the "Guard Theory
+ * editorial" byline (authorId "guard-theory-editorial"; owner, 2026-09-29),
+ * once a person has reviewed them.
  */
 export const theArmDragAsASystem: DraftArticle = {
   status: "draft",
@@ -83,7 +86,7 @@ export const theArmDragAsASystem: DraftArticle = {
       paragraphs: [
         "The clearest evidence that this was a system and not a signature move is what happened when opponents learned it. Kesting writes that for a long time the arm drag to back take to choke was Garcia's staple, and then opponents stopped letting him take the back so easily, and he moved on to the north-south choke. When the X-guard spread and people learned to defend it, he moved to the single-leg X-guard.",
         "A move stops working when the opponent learns it. A system is built so that the opponent's defence is the next entry: turn in and you are swept, post a hand and you are dragged, and, on Kesting's account, shut the back and the attack moves to the north-south choke. The record does not show that Garcia invented any of its parts. A seated game also had costs: BJJ Heroes records that he lost at the 2003 Brazilian ADCC trials by a single point, which it attributes to a guard-pull penalty (its biography calls the bout the final; its record table lists it as a semi-final), under a rule set whose current version still charges for sitting down.",
-        "That is the contribution the sources support: techniques that already existed, put in an order where defending one opens the next, and carried on to the next link each time opponents learned to stop one.",
+        "That is the contribution the sources support: techniques that already existed, put in an order where defending one opens the next, and changed when opponents learned them: to the north-south choke when they stopped giving up the back, and to single-leg X when the X-guard spread.",
       ],
     },
   ],

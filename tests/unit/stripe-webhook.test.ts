@@ -172,6 +172,46 @@ describe("the Stripe webhook, with a valid signature", { skip: !HAS_DB && "no DA
     assert.equal((await ordersFor(session.id)).length, 1);
   });
 
+  it("answers Stripe before the confirmation is sent, and sends it after", async () => {
+    // Resend's timeout is 8s and the route's maxDuration is 15s. Mail awaited
+    // inside the handler could run the function out of time after the send and
+    // before the event was marked processed: the stale claim is then taken
+    // over and the buyer gets the confirmation twice. The mail belongs after
+    // the response, which is what Next's after() is for.
+    const intentId = await makeIntent();
+    const session = sessionObject({ client_reference_id: intentId });
+    const event = completed(session);
+    const deferred: Array<() => Promise<void>> = [];
+
+    const response = await handleStripeWebhook(signed(event), {
+      defer: (task) => {
+        deferred.push(task);
+      },
+    });
+    assert.equal(response.status, 200);
+
+    const orderId = (await ordersFor(session.id))[0]!.id;
+    const ledger = await query<{ processed: boolean }>(
+      "select processed_at is not null as processed from webhook_event where id = $1",
+      [event.id],
+    );
+    assert.equal(ledger[0]?.processed, true, "the event is done once the order is committed");
+    assert.deepEqual(
+      await query("select id from email_log where order_id = $1", [orderId]),
+      [],
+      "no mail may be sent while Stripe is still waiting for the answer",
+    );
+    assert.equal(deferred.length, 1, "the confirmation is handed to after(), once");
+
+    await deferred[0]!();
+
+    const mail = await query<{ template: string }>(
+      "select template from email_log where order_id = $1",
+      [orderId],
+    );
+    assert.deepEqual(mail.map((m) => m.template), ["order-confirmation"]);
+  });
+
   it("asks for a retry while another delivery holds a fresh claim", async () => {
     const intentId = await makeIntent();
     const session = sessionObject({ client_reference_id: intentId });

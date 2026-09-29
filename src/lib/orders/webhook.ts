@@ -51,7 +51,59 @@ const HANDLED = new Set<string>([
   "charge.refunded",
 ]);
 
-export async function handleStripeWebhook(request: Request): Promise<Response> {
+/**
+ * Schedules work to run after the response has gone.
+ *
+ * Tests pass their own, so they can see what was deferred and run it.
+ */
+export type Defer = (task: () => Promise<void>) => void | Promise<void>;
+
+/**
+ * Next's after(), from the one place it can be reached.
+ *
+ * Imported lazily: `next/server` has no ESM export map, so a static import
+ * makes this file unloadable by `node --test`, and the webhook's tests are the
+ * reason it lives in src/lib at all. Outside a request scope — a test, a
+ * script — after() throws, and the work runs inline instead, which is what
+ * this handler did before it was deferred.
+ */
+async function afterResponse(task: () => Promise<void>): Promise<void> {
+  try {
+    const { after } = await import("next/server");
+    after(task);
+    return;
+  } catch {
+    // Not inside a Next request. Fall through and do it now.
+  }
+
+  await task();
+}
+
+/**
+ * The confirmation, as a deferred task: it never rejects, because nothing is
+ * left to hear it once the response has gone. A failure is logged here;
+ * sendEmail records its own failures in email_log, resendable from the portal.
+ */
+function confirmationTask(orderId: string): () => Promise<void> {
+  return async () => {
+    try {
+      await ensureOrderConfirmationSent(orderId);
+    } catch (error) {
+      console.error(
+        `[guard-theory] order confirmation for ${orderId} failed after the webhook answered; ` +
+          "resend it from the portal:",
+        error instanceof Error ? error.message : error,
+      );
+    }
+  };
+}
+
+export async function handleStripeWebhook(
+  request: Request,
+  options: { defer?: Defer } = {},
+): Promise<Response> {
+  const defer = options.defer ?? afterResponse;
+
   if (!isStripeConfigured() || !process.env.STRIPE_WEBHOOK_SECRET) {
     console.error("[guard-theory] webhook received but Stripe is not configured");
     return new Response("not configured", { status: 500 });
@@ -139,17 +191,6 @@ export async function handleStripeWebhook(request: Request): Promise<Response> {
         `[guard-theory] order ${result.orderNumber} created from ${session.id}` +
           (result.oversold ? " (FLAGGED: oversold)" : ""),
       );
-
-      // The confirmation is sent AFTER the order is written and outside its
-      // transaction. sendEmail never throws — a mail outage must not turn a
-      // paid order into a 500 that Stripe then retries against an order that
-      // already exists. A failure is logged, recorded in email_log, and
-      // resendable from the portal.
-      await ensureOrderConfirmationSent(result.orderId);
-    } else if (result.outcome === "already-recorded") {
-      // A retry of an event whose first handler wrote the order and then died
-      // before the email. Sent now, unless the log shows it already went.
-      await ensureOrderConfirmationSent(result.orderId);
     }
 
     // "unfulfilled" reaches here too, and is marked processed on purpose: the
@@ -157,6 +198,19 @@ export async function handleStripeWebhook(request: Request): Promise<Response> {
     // threw, and this line is never reached). Retrying cannot conjure a missing
     // address; a human can, and the portal is now showing them the row.
     await markEventProcessed(event.id);
+
+    // The confirmation goes AFTER the response, not before it. Awaited here it
+    // shared the route's 15s with Resend's 8s timeout: a slow send could run
+    // the function out of time after the mail went but before the event was
+    // marked processed, the stale claim was taken over, and the buyer got it
+    // twice. The order is committed and the event is done; the mail is not
+    // Stripe's business. "already-recorded" is a retry of an event whose first
+    // handler wrote the order and died before the email — sent now, unless
+    // email_log shows it already went.
+    if (result.outcome === "created" || result.outcome === "already-recorded") {
+      await defer(confirmationTask(result.orderId));
+    }
+
     return new Response(result.outcome === "unfulfilled" ? "recorded for review" : "ok", {
       status: 200,
     });

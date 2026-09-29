@@ -19,11 +19,11 @@ import type { DraftArticle } from "../types.ts";
  * other account as disputed. It agrees with the Figures entry as corrected on
  * 2026-09-29 (PR #65).
  *
- * Drysdale's position is reported as his published words support it: he calls
- * the line a non-Gracie one himself, and his objection is that no evidence
- * links Luiz Franca to Maeda. The published `maeda-and-the-arrival-of-judo-in-
- * brazil` says he questioned the "non-Gracie" label; that is the owner's to
- * correct, and this piece follows the interview. No one is said to have
+ * Drysdale's position is reported from his own words. His 2019 GTR article
+ * questions the non-Gracie label outright (a 1938 paper lists Franca for the
+ * Gracie academy); the 2020 "it's a non Gracie one" restates the popular
+ * premise before calling it "problematic". This matches the published Maeda
+ * piece as corrected on 2026-09-29 (PR #68). No one is said to have
  * invented the foot lock, and the line is not compared with any other.
  *
  * Revised 2026-09-29 against the fact and voice audits on PR #61.
@@ -67,7 +67,7 @@ export const oswaldoFaddaAndTheLineageOutsideTheFamily: DraftArticle = {
       heading: "Luiz Franca's teachers",
       paragraphs: [
         "BJJ Heroes' Fadda page gives his lineage as Mitsuyo Maeda, then Luis Franca, then Fadda. Its page on Franca tells a longer story: that Franca trained for about a year at the Manaus academy of Soishiro Satake, another Kodokan judoka who had travelled with Maeda; that he then moved to Belem, where Maeda was based, and trained under him; that he later trained in Sao Paulo with Geo Omori; and that he settled on the outskirts of Rio, teaching army men including a young marine named Oswaldo Fadda. The page lists as its resources a book, O Livro Proibido do Jiu Jitsu, and four websites, one of them the judo blog cited below. Its own Fadda page qualifies Franca's instructor grade with the word allegedly, and its page on Franca opens by calling him a student of Satake and \"allegedly\" of Maeda, before telling the Maeda story without the qualifier.",
-        "Drysdale's position, as BJJ Eastern Europe reported it, is that there is no evidence for any of it. If you look on the internet, he said, you will find Maeda and you will find Geo Mori, as he put it, as Franca's teachers, but researchers in Brazil have looked for that evidence for a long time without finding it, and his suspicion is that Franca was self-taught. He calls the line a non-Gracie one himself. His objection is to the Maeda link: the line's origin, on his account, cannot be traced.",
+        "Drysdale's position, as BJJ Eastern Europe reported it, is that there is no evidence for any of it. If you look on the internet, he said, you will find Maeda and you will find Geo Mori, as he put it, as Franca's teachers, but researchers in Brazil have looked for that evidence for a long time without finding it, and his suspicion is that Franca was self-taught. In those remarks he restated the usual description, \"it's a non Gracie one\", only to call it \"problematic\": the line's origin, on his account, cannot be traced. He had gone further in a 2019 article of his own, citing a 1938 newspaper that lists Franca as fighting for the Gracie academy and a 1956 one calling him one of \"Helio Gracie's best students\", and concluding that \"the claim that it is a lineage outside of the Gracie family\" lacks any supporting evidence at the moment.",
         "BJJ Heroes' editor, Andre Borges, answered in the same article. He noted that books reference Franca as a student of both Maeda and Satake, that training in the early 1900s was not documented the way it is now, and that a wholly self-taught instructor seemed far-fetched to him; he allowed that Brazilian teachers may not have trained as long with their Japanese sources as they later said. Both men are describing the same gap. Neither produces a document from Franca's training.",
       ],
     },
@@ -144,6 +144,25 @@ export const oswaldoFaddaAndTheLineageOutsideTheFamily: DraftArticle = {
     },
     {
       title:
+        "Robert Drysdale, \"Is the Fadda lineage a Non-Gracie lineage?\", 1 January 2019: cites Jornal do Brasil, 2 November 1938, listing \"Luis Franca (A. Gracie)\", and a 1956 article calling Franca one of \"Helio Gracie's best students\" (archived copy)",
+      publisher: "Global Training Report, via the Internet Archive",
+      url: "https://web.archive.org/web/20200115191155/http://global-training-report.com/drysdale_2019_1.htm",
+      accessed: "2026-09-29",
+    },
+    {
+      title: "Drysdale Questions If Fadda lineage is a Non-Gracie lineage (7 January 2019)",
+      publisher: "BJJ Eastern Europe",
+      url: "https://www.bjjee.com/articles/drysdale-explains-fadda-lineage-a-non-gracie-lineage/",
+      accessed: "2026-09-29",
+    },
+    {
+      title: "Robert Drysdale: The Fadda Lineage Could Actually Be a Gracie One! (interview, 10 October 2019)",
+      publisher: "BJJ Eastern Europe",
+      url: "https://www.bjjee.com/articles/robert-drysdale-the-fadda-lineage-could-actually-be-a-gracie-one/",
+      accessed: "2026-09-29",
+    },
+    {
+      title:
         "\"Acabamos com o tabu dos Gracies\" Mestre Fadda (blog account in Portuguese: 1954 challenge in O Globo and Diario da Noite; Helio Gracie quotation dated 1954)",
       publisher: "Judo Tradicional Goshin Jutsu Kan (blog)",
       url: "http://judotradicionalgoshinjutsukan.blogspot.com/2010/04/acabamos-com-o-tabu-dos-gracies-mestre.html",
@@ -178,6 +197,7 @@ export const oswaldoFaddaAndTheLineageOutsideTheFamily: DraftArticle = {
     "The date of Fadda's challenge to the Gracie academy is given as 1951 by BJJ Heroes, as 1954 by a Brazilian judo blog, and as 14 January 1955 by the Diario da Noite page itself, whose acceptance and result pages follow on 19 and 24 January. The pages were read from scans in an anonymous 2015 upload on a public image host, not from a library copy; the Hemeroteca Digital Brasileira refused automated access on the accessed date. Their printed weekdays match 1955 and no nearby year.",
     "Helio Gracie's remark that there had to be a Fadda is dated 1955 by GracieMag and 1954 by the same blog, both in Revista dos Esportes. Neither the magazine nor its date was checked against an original, and the blog's own text, which has Fadda in jiu-jitsu for more than twenty years, fits a later interview than either.",
     "Whether Luiz Franca learned from Mitsuyo Maeda is unresolved. BJJ Heroes tells it, while calling the Maeda link 'alleged' in its own opening line, with Satake and Geo Omori as further teachers, citing a Brazilian book series; Robert Drysdale says no evidence for it has been found; BJJ Heroes' editor argues that the absence of records is expected for the period.",
+    "Whether the line is outside the Gracie family at all is itself questioned. Drysdale's 2019 article cites a 1938 newspaper listing Franca for the Gracie academy and a 1956 one calling him one of Helio Gracie's best students, and says the evidence available suggests Franca was a Gracie academy student; neither newspaper was read for this piece.",
     "The result of the challenge is disputed. The only contemporary report read (Diario da Noite, 24 January 1955) gives the Gracie academy 7 wins, 3 losses and 4 draws, with Fadda as referee. BJJ Heroes, citing Reila Gracie's biography of Carlos Gracie, and the judo blog both say Fadda's team won. English Wikipedia reports a second meeting the following year that Fadda's team won; that claim was not checked here. The association of Fadda's school with foot locks rests, in the sources read here, on BJJ Heroes; the biography was not read.",
     "A caption in the BJJ Eastern Europe article says the academy has been in its building since 1947. Both profiles date the academy to January 1950. The two may describe the building and the academy respectively; the piece uses 1950.",
   ],

@@ -13,7 +13,7 @@ import type { PublishedArticle } from "../types.ts";
 export const drillingRehearsingAndPositionalSparring: PublishedArticle = {
   status: "published",
   publishedAt: "2026-08-04",
-  authorId: "rick-r",
+  authorId: "guard-theory-editorial",
   slug: "drilling-rehearsing-and-positional-sparring",
   category: "training-culture",
   title: "Drilling, rehearsing, and what positional sparring changes",

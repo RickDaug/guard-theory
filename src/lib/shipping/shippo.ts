@@ -271,17 +271,32 @@ export async function buyUspsLabel(to: Address, orderId: string): Promise<Bought
     async: false,
   });
 
-  if (transaction.status !== "SUCCESS" || !transaction.label_url) {
+  if (transaction.status !== "SUCCESS") {
     throw new ShippoError(
       "Shippo could not produce a label. Nothing has been bought; Shippo's dashboard shows why.",
       true,
     );
   }
 
+  // SUCCESS is a purchase. One that came back without a label or a tracking
+  // number is still paid for, so it is NOT "nothing bought": the claim on the
+  // order must stay. It used to store an empty string as the tracking number,
+  // which blocked relabelling without being a number anyone could track.
+  const trackingNumber = transaction.tracking_number?.trim() ?? "";
+
+  if (!transaction.label_url || !trackingNumber) {
+    throw new ShippoError(
+      `Shippo reports a label as bought (transaction ${transaction.object_id}) but returned no ` +
+        `${transaction.label_url ? "tracking number" : "label"}. Do not buy another: open that ` +
+        "transaction in Shippo and paste its tracking number here.",
+      false,
+    );
+  }
+
   return {
     transactionId: transaction.object_id,
     labelUrl: transaction.label_url,
-    trackingNumber: transaction.tracking_number ?? "",
+    trackingNumber,
     trackingUrl: transaction.tracking_url_provider ?? null,
     carrier: rate.provider ?? "USPS",
     amount: rate.amount,

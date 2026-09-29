@@ -4,11 +4,14 @@ import {
   type TechniqueEntry,
   type TechniqueReview,
 } from "./types.ts";
+import { americanaIsTheKimuraReversed } from "./entries/americana-is-the-kimura-reversed.ts";
 import { armDrag } from "./entries/arm-drag.ts";
 import { bloodChokeVersusAirChoke } from "./entries/blood-choke-versus-air-choke.ts";
+import { bodyTriangleControlsTheRibs } from "./entries/body-triangle-controls-the-ribs.ts";
 import { butterflyHookAsLever } from "./entries/butterfly-hook-as-lever.ts";
 import { closedGuardPostureBattle } from "./entries/closed-guard-posture-battle.ts";
 import { connectionInOpenGuard } from "./entries/connection-in-open-guard.ts";
+import { crucifixBothArmsOut } from "./entries/crucifix-both-arms-out.ts";
 import { deLaRivaHook } from "./entries/de-la-riva-hook.ts";
 import { elbowKneeEscape } from "./entries/elbow-knee-escape.ts";
 import { framesVersusBlocks } from "./entries/frames-versus-blocks.ts";
@@ -17,8 +20,10 @@ import { insidePosition } from "./entries/inside-position.ts";
 import { kneeCutPass } from "./entries/knee-cut-pass.ts";
 import { kneeShield } from "./entries/knee-shield.ts";
 import { legEntanglementAsControl } from "./entries/leg-entanglement-as-control.ts";
+import { northSouthChoke } from "./entries/north-south-choke.ts";
 import { seatBeltAndHooks } from "./entries/seat-belt-and-hooks.ts";
 import { sweepingTowardTheMissingPost } from "./entries/sweeping-toward-the-missing-post.ts";
+import { trapAndRollRemovesAPost } from "./entries/trap-and-roll-removes-a-post.ts";
 import { underhookHalfGuard } from "./entries/underhook-half-guard.ts";
 
 /**
@@ -27,11 +32,14 @@ import { underhookHalfGuard } from "./entries/underhook-half-guard.ts";
  * quietly disappearing from the sitemap.
  */
 export const ENTRIES: TechniqueEntry[] = [
+  americanaIsTheKimuraReversed,
   armDrag,
   bloodChokeVersusAirChoke,
+  bodyTriangleControlsTheRibs,
   butterflyHookAsLever,
   closedGuardPostureBattle,
   connectionInOpenGuard,
+  crucifixBothArmsOut,
   deLaRivaHook,
   elbowKneeEscape,
   framesVersusBlocks,
@@ -40,8 +48,10 @@ export const ENTRIES: TechniqueEntry[] = [
   kneeCutPass,
   kneeShield,
   legEntanglementAsControl,
+  northSouthChoke,
   seatBeltAndHooks,
   sweepingTowardTheMissingPost,
+  trapAndRollRemovesAPost,
   underhookHalfGuard,
 ];
 

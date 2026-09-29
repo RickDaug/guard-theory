@@ -3,6 +3,8 @@ import Link from "next/link";
 import { stripeKeyRefusal, stripeMode } from "@/lib/stripe/client";
 import { portalUrl } from "@/lib/portal/routes";
 import { getSession } from "@/lib/portal/session";
+import { PortalNav } from "./PortalNav";
+import { signOut } from "./sign-in/actions";
 
 export const metadata: Metadata = {
   robots: { index: false, follow: false, nocache: true },
@@ -24,10 +26,13 @@ export const metadata: Metadata = {
 
 const NAV = [
   { href: "", label: "Today" },
+  { href: "/orders/ship", label: "To ship" },
   { href: "/orders", label: "Orders" },
   { href: "/products", label: "Products" },
   { href: "/categories", label: "Categories" },
   { href: "/list", label: "First Edition" },
+  { href: "/messages", label: "Messages" },
+  { href: "/settings", label: "Settings" },
   { href: "/learn", label: "Learn" },
 ];
 
@@ -91,20 +96,25 @@ export default async function CrewLayout({ children }: { children: React.ReactNo
             Crew Portal
           </Link>
 
-          <nav aria-label="Portal" className="ml-auto">
-            <ul className="m-0 flex list-none flex-wrap items-center gap-x-7 gap-y-2 p-0">
-              {NAV.map((item) => (
-                <li key={item.label}>
-                  <Link
-                    href={portalUrl(item.href)}
-                    className="display-plain inline-flex min-h-6 items-center text-sm text-steel no-underline transition-colors duration-[140ms] ease-[var(--ease-control)] hover:text-chalk"
-                  >
-                    {item.label}
-                  </Link>
-                </li>
-              ))}
-            </ul>
-          </nav>
+          <PortalNav
+            items={NAV.map((item) => ({ href: portalUrl(item.href), label: item.label }))}
+          >
+            <li>
+              {/*
+                signOut existed with nothing calling it, so the only way out
+                was waiting twelve hours or signing in again elsewhere. A form
+                rather than a link: signing out changes state, so it is a POST.
+              */}
+              <form action={signOut}>
+                <button
+                  type="submit"
+                  className="display-plain inline-flex min-h-6 cursor-pointer items-center border-0 bg-transparent p-0 text-sm text-steel transition-colors duration-[140ms] ease-[var(--ease-control)] hover:text-chalk"
+                >
+                  Sign out
+                </button>
+              </form>
+            </li>
+          </PortalNav>
         </div>
       </header>
 

@@ -10,6 +10,7 @@ import {
   type OrderStatus,
 } from "@/lib/orders/manage";
 import { formatMoney } from "@/lib/money";
+import { FLAG_SHORT, isFlagReason } from "@/lib/orders/flags";
 import { ReconcileButton } from "./ReconcileButton";
 import { ResolveUnfulfilledButton } from "./ResolveUnfulfilledButton";
 
@@ -82,7 +83,12 @@ export default async function OrdersPage({
                     href={`${portalUrl("/orders")}?status=${tab.key}`}
                     aria-current={isActive ? "page" : undefined}
                     className={`display-plain inline-flex min-h-6 items-center text-sm no-underline transition-colors duration-[140ms] ease-[var(--ease-control)] ${
-                      isActive ? "text-chalk" : "text-steel hover:text-chalk"
+                      // The current tab is underlined as well as brighter:
+                      // chalk against steel is a difference of colour alone
+                      // (SC 1.4.1).
+                      isActive
+                        ? "text-chalk underline decoration-signal-lift decoration-2 underline-offset-[6px]"
+                        : "text-steel hover:text-chalk"
                     }`}
                   >
                     {/* One text node: a count in its own element inside a flex
@@ -146,24 +152,29 @@ export default async function OrdersPage({
                   href={portalUrl(`/orders/${order.id}`)}
                   className="flex flex-wrap items-baseline gap-x-8 gap-y-2 px-6 py-5 no-underline transition-colors duration-[140ms] ease-[var(--ease-control)] hover:bg-ink-raised"
                 >
+                  {/* Every space between these is written: the flex gap draws
+                      one that is not in the link's name, which read
+                      "#12Jane DoeAustin, TX$19.11". */}
                   <span className="notation text-2xs text-orchid tabular-nums">
                     {`#${order.number}`}
-                  </span>
-                  <span className="display-plain text-base text-chalk">{order.ship_name}</span>
+                  </span>{" "}
+                  <span className="display-plain text-base text-chalk">{order.ship_name}</span>{" "}
                   <span className="text-sm text-steel">
                     {`${order.ship_city}, ${order.ship_state}`}
-                  </span>
+                  </span>{" "}
                   {order.flagged_reason ? (
-                    <span className="notation text-2xs text-signal-lift">
-                      {order.flagged_reason === "oversell"
-                        ? "Oversold"
-                        : order.flagged_reason === "reconciled"
-                          ? "Recovered"
-                          : "Refunded"}
-                    </span>
+                    <>
+                      <span className="notation text-2xs text-signal-lift">
+                        {isFlagReason(order.flagged_reason)
+                          ? FLAG_SHORT[order.flagged_reason]
+                          : "Flagged"}
+                      </span>{" "}
+                    </>
                   ) : null}
                   {order.stripe_mode === "test" ? (
-                    <span className="notation text-2xs text-steel">Test</span>
+                    <>
+                      <span className="notation text-2xs text-steel">Test</span>{" "}
+                    </>
                   ) : null}
                   <span className="display-plain ml-auto text-base text-chalk tabular-nums">
                     {formatMoney(order.total_cents, order.currency)}

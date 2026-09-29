@@ -24,14 +24,19 @@ export type ContactMessage = {
 export interface ContactStore {
   readonly name: string;
   readonly isDurable: boolean;
-  save(message: ContactMessage): Promise<boolean>;
+  /**
+   * The new row's id, or null when it was not saved. The id is what the
+   * forward records its delivery against.
+   */
+  save(message: ContactMessage): Promise<string | null>;
 }
 
 class PostgresContactStore implements ContactStore {
   readonly name = "postgres";
   readonly isDurable = true;
 
-  async save(message: ContactMessage): Promise<boolean> {
+  async save(message: ContactMessage): Promise<string | null> {
+    const id = randomUUID();
     try {
       await query(
         `
@@ -39,7 +44,7 @@ class PostgresContactStore implements ContactStore {
         values ($1, $2, $3, $4, $5, $6)
         `,
         [
-          randomUUID(),
+          id,
           message.name,
           message.email.toLowerCase(),
           message.topic,
@@ -47,13 +52,13 @@ class PostgresContactStore implements ContactStore {
           message.receivedAt,
         ],
       );
-      return true;
+      return id;
     } catch (error) {
       console.error(
         "[guard-theory] failed to store contact message:",
         error instanceof Error ? error.message : error,
       );
-      return false;
+      return null;
     }
   }
 }
@@ -64,7 +69,7 @@ class MemoryContactStore implements ContactStore {
 
   private warned = false;
 
-  async save(): Promise<boolean> {
+  async save(): Promise<string | null> {
     if (!this.warned) {
       this.warned = true;
       console.warn(
@@ -72,7 +77,7 @@ class MemoryContactStore implements ContactStore {
           "in memory and will be lost when this process exits. Development only.",
       );
     }
-    return true;
+    return randomUUID();
   }
 }
 
@@ -80,12 +85,12 @@ class UnavailableContactStore implements ContactStore {
   readonly name = "unavailable (no DATABASE_URL)";
   readonly isDurable = false;
 
-  async save(): Promise<boolean> {
+  async save(): Promise<string | null> {
     console.error(
       "[guard-theory] DATABASE_URL is not set in production. A contact message " +
         "was refused rather than accepted and dropped. Set it and redeploy.",
     );
-    return false;
+    return null;
   }
 }
 

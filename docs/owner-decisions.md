@@ -29,6 +29,18 @@ technical reviewer will be credited separately.
 **Blocks:** `Person` schema, article bylines, the editorial policy page.
 **Note:** nothing will be published under a fabricated name.
 
+**OWNER-SUPPLIED 2026-09-29 — bylines on AI-assisted writing.** Every Journal
+article researched and drafted with AI assistance is published under the
+**Guard Theory editorial** byline (`guard-theory-editorial` in
+`src/content/authors.ts`, an `Organization` in structured data), not under
+Rick R or Steven P. The editorial policy's "Bylines" section says so. No
+published article had any record of being written, or read and approved, by
+either named person, so all 20 moved to the editorial byline. To give one back
+to a person, add its slug to `OWNER_CONFIRMED_PERSON_BYLINES` in
+`src/content/claims.ts` and change its `authorId`. The claim
+`journal-bylines-are-editorial` fails otherwise. Drafts in open PRs (#18, #56,
+#61) should use the editorial byline when they publish.
+
 ## 3. Product specifications and measurements
 
 No garment measurements exist yet. The Size and Fit guide currently cannot be
@@ -38,6 +50,52 @@ written truthfully.
 composition, GSM/fabric weight, construction details (seam type, print
 method), and country of manufacture.
 **Blocks:** `/size-and-fit`, product detail pages, technical flat callouts.
+
+**2026-09-29 — invented specifications and size chart removed.** Commit
+`4364d22` (2026-08-04, "build the site out as customer-ready") filled this gap
+with values nobody supplied, and they were live on guardtheory.net until this
+date. You confirmed that neither you nor the manufacturer provided any of them.
+Removed:
+
+- Fabric composition "82% recycled polyester, 18% elastane" (also the only
+  sustainability claim on the site), fabric weight "240 gsm", seam construction
+  "Flatlock, four-thread", print method "Full sublimation, dyed into the fibre",
+  fit "Athletic compression", and care "Cold wash, hang dry, no fabric softener".
+- The six-size chart (XS–XXL, to-fit chest in inches and cm, body length, long
+  and short sleeve in cm) and its fit notes on `/size-and-fit`.
+- The construction callouts on both flats (bound crew neck, raglan sleeve seam,
+  single-edge cuff, flatlock side seam, straight hem), the "Neck: Crew, bound"
+  line, and the registry size range XS–XXL.
+- Copy that depended on them: "the specification is published in full" (/shop,
+  the sleeve article, the short-sleeve page), "Fabric weight, composition, seam
+  construction and print method are stated on the product page"
+  (/first-edition), "apparel with published specifications" (/about), "Sizing
+  questions get an answer with actual measurements" (/contact), the FAQ's "full
+  chart", and "a garment that does not match our published measurements" in
+  the returns policy's who-pays list (the rest of that policy is unchanged —
+  it is §12). Also cut, as unsupplied claims about the garment: "designed inside
+  competition rulesets" (/, /first-edition, the long-sleeve page, the FAQ's
+  competition-legal answer) and "the drawings a factory is given" (/lookbook,
+  FAQ).
+
+How it is kept out: each product now has `specSource`, and the chart has
+`SIZE_CHART_SOURCE`; both are `null`. `tests/unit/content.test.ts` fails if a
+specification value (other than Sleeve), a construction callout, a size label or
+a chart row exists while the source is not `"owner"`, and the retired claims in
+`src/content/claims.ts` fail if the old sentences or figures reappear first.
+
+**Needed from you to put them back** (per garment): fabric composition, fabric
+weight (GSM), seam construction, print method, country of manufacture, neck
+finish, fit, care instructions, the construction details the flats should call
+out, the size range, and a size chart measured from production garments or
+taken from the manufacturer's graded spec. Also: are the garments designed to a
+competition ruleset (IBJJF/ADCC), and does a factory tech pack exist that the
+drawings reflect? When you supply them, set `specSource: "owner"` in the product
+entry (or enter them in the portal) and `SIZE_CHART_SOURCE = "owner"`.
+**Interim behaviour:** product pages show the drawing, the sleeve length and
+nothing else about construction; `/size-and-fit` is the fit guide with no chart.
+Portal go-live (PR #40) requires fabric weight, composition, seams and print
+method, so the two registry garments cannot go live until these are supplied.
 
 ## 4. Pricing
 
@@ -192,6 +250,29 @@ section; search for the quoted words if they have drifted.
 **2026-09-24:** commerce merged (PR #3), so every figure in this table and every
 promise in §13 is now live on guardtheory.net as written — `docs/owner-checklist.md` step 13.
 
+### OWNER-SUPPLIED 2026-09-29 — answers to rows a and d–j
+
+These are the owner's decisions. Do not flag them again as invented. The
+figures are held in `OWNER_TERMS` in `src/content/claims.ts`. The claims
+`dispatch-time-is-the-owners` and `return-window-is-the-owners` assert them,
+and `retired-unconfirmed-buyer-terms` fails the build if any replaced wording
+comes back.
+
+| Row | Decision | Now printed as |
+|---|---|---|
+| a | Dispatch **within 7 business days** of the order. US shipping only, as the checkout already enforces | "dispatched within seven business days": shipping policy, `/order/confirmed`, order confirmation email |
+| d | No numbered trace promise | the "seven days" trace is cut from the shipping policy and the shipped email: "If tracking stops moving … we will work it out with the carrier" |
+| e, f | No numbered lost-parcel or damaged-parcel promise. Contact us and we work it out with the carrier | the 21-day replace-or-refund and "we will not ask you to return the damaged goods" are cut |
+| g | **30-day** return window from delivery, no reason needed, **no restocking fee** | "within thirty days of delivery" |
+| h | No day count on refunds. Refunds go to the original payment method once the return has arrived and been checked | "five business days" cut |
+| i | Change of mind: **the buyer pays** return postage. Our fault (wrong item, defective on arrival): **we pay**. **No prepaid return label** is promised, because nothing in the build buys one | "we will send return instructions" |
+| j | Size exchange: the buyer returns the item and **the replacement ships, at our cost, when the return arrives**, not on carrier scan | returns policy "Exchanges", `/size-and-fit` |
+| (new) | **The open-ended fault warranty is removed** ("Faults after thirty days … we will repair, replace or refund it") | replaced by "Your statutory rights are not affected by anything on this page." |
+
+Rows **b** (weekend orders count from the next business day), **c** (three to
+five business days in transit, labelled a carrier estimate), **k** and **l**
+were not part of this decision and are still open. Row m is the checklist's.
+
 ## 13. Promises about process that nothing in the build carries out
 
 Found by the claims sweep (2026-09-18). These are sentences about what *we will
@@ -214,6 +295,14 @@ figures. The two sections do not overlap.)
 | g | "The list is told first, and told once" / "Once, when the First Edition opens" / "One message when it opens, and nothing else" | `src/app/faq/page.tsx:17`, `:29`; `src/app/first-edition/page.tsx:67`; `src/components/waitlist/WaitlistForm.tsx:126-127`; `src/app/shop/[slug]/page.tsx:110` | Nothing sends on `main`. The draft announcement send (PR #2) skips anyone `email_log` says already has it, which is what would enforce "once" — if a second, different message is ever wanted, these sentences forbid it. | confirm one message is the promise |
 | h | Tape "comes first" among accessories; spats and shorts follow the rash guards | `src/app/faq/page.tsx:57`; `src/app/shop/page.tsx:18-26` | §11 above still lists the accessory order as undecided. | answer §11, and the copy follows |
 
+**2026-09-29, row d (`feat/contact-forward`):** every saved contact message is
+now emailed, plain text, to `OWNER_ALERT_EMAIL` (else `REPLY_TO_EMAIL`) with the
+sender as Reply-To, and the portal's Messages screen lists them newest first
+with an answered flag. With neither address set nothing is sent and the row
+records `not-delivered`. What is still yours: set one of the two addresses, and
+read what arrives. Row c's retention is unchanged — answering a message deletes
+nothing.
+
 Also found, and not an owner question: `/email-confirmed` tells a visitor "that
 address is confirmed". No confirmation step exists, nothing links to the page,
 and it is excluded from robots and the sitemap — it is unreachable except by
@@ -223,6 +312,11 @@ deletes the route.
 **Needed:** an answer per row. Line numbers are as of the commit that added this
 section; search for the quoted words if they have drifted.
 **Interim behaviour:** the sentences stand as published.
+
+**OWNER-SUPPLIED 2026-09-29, related:** the Journal byline promise ("a piece
+nobody will put their name to is not worth reading", and "the Journal is written
+by the same people" who make the apparel) is replaced. AI-assisted articles
+carry the Guard Theory editorial byline (§2). Rows a–h above are still open.
 
 
 ## 14. A mistyped product address is blank until JavaScript runs
@@ -243,3 +337,38 @@ standard, and `tests/e2e/not-found.spec.ts` records this one as the exception.
 | b. List the registry's products at build time and refuse the rest | A product created in the portal without a registry entry has no page until the next deploy — the storefront would list it and its link would 404. |
 
 **Needed:** a or b. **Interim behaviour:** a.
+
+## 15. Cancel, refund and restock — decided 2026-09-28, built
+
+**Status: decided.** You authorised the common-sense defaults from the
+decision brief (items 6 and 7), and they are now what the portal does:
+
+| When | Money | Stock | Buyer |
+|---|---|---|---|
+| **Cancel**, before the parcel has shipped | Everything not yet refunded is refunded, in the same action | Everything that was taken off the shelf goes back | Emailed that it is cancelled and what was refunded |
+| **Cancel**, after it has shipped | Refused: that is a return, not a cancel | — | — |
+| **Full refund**, before it has shipped | Refunded | Goes back on its own | (no email; the refund itself shows on their card) |
+| **Part refund**, before it has shipped | Refunded | Nothing moves — a part refund is usually a price adjustment | — |
+| **Refund after shipping** (a return) | Refunded | Nothing moves unless you tick it: each line has a "Put back in stock" box, never pre-ticked. Tick only what has come back and is fit to sell | — |
+
+Why the cancel refunds in the same action: under the FTC Mail Order Rule an
+order that is cancelled is owed a prompt refund. A cancel that relied on you
+remembering a second click was the one way to break that by accident. If Stripe
+refuses the refund, or does not answer, the order is **not** cancelled and the
+page says why — a cancelled order still holding the buyer's money cannot happen.
+
+A cancel is refused while a label purchase is in progress; one that has
+finished does not block it, and the page reminds you to void that label in
+Shippo for the postage back. Nothing can be put back in stock twice: each line
+records how much has gone back, and a double click, a second tab or a cancel
+after a full refund all find nothing left to return. A line that was oversold
+took nothing off the shelf, so a cancel puts nothing back for it.
+
+Orders cancelled before this was built kept the money and the stock. Refunding
+one of those in full now puts its stock back too.
+
+**Still yours:** the returns and cancellation wording on the policy pages
+(`src/content/policies/index.ts`) should say this. Suggested sense, not final
+text: an order can be cancelled for a full refund until it has shipped; after
+that it is a return; a returned item is refunded once it arrives and has been
+checked.

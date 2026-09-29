@@ -288,11 +288,14 @@ enter a price in the portal.
 2. Developers → API keys → create a **restricted key** (`rk_test_…`), scoped to
    **write** on Checkout Sessions and Refunds, **read** on Events, Charges and
    PaymentIntents → `STRIPE_SECRET_KEY`.
-   The code makes exactly three API calls: `checkout.sessions.create`,
-   `checkout.sessions.list` (the reconciler) and `refunds.create`. The two write
-   scopes cover those. No call in the code today exercises the three read
-   scopes, and whether Stripe wants PaymentIntents read for a refund made
-   against a PaymentIntent has not been tested — so keep them, and let a
+   The code makes exactly four API calls: `checkout.sessions.create`,
+   `checkout.sessions.list` and `refunds.list` (both the reconciler — the
+   second catches refunds made in the dashboard that the webhook missed, and
+   expands each refund's charge), and `refunds.create`. The two write scopes
+   cover the creates; `refunds.list` needs **read** on Refunds, which the write
+   scope includes, and its expanded charge is covered by **read** on Charges.
+   Whether Stripe wants PaymentIntents read for a refund made against a
+   PaymentIntent has not been tested — so keep the three read scopes, and let a
    test-mode order and refund settle it.
    Stripe's own guidance is that plain secret keys are no longer recommended for
    new use cases, because their permissions cannot be limited.
@@ -303,8 +306,10 @@ enter a price in the portal.
    `https://guardtheory.net/api/webhooks/stripe`, subscribed to
    `checkout.session.completed`,
    `checkout.session.async_payment_succeeded`,
-   `charge.refunded`.
-   Those three are everything the handler acts on
+   `charge.refunded`,
+   `charge.dispute.created`,
+   `charge.dispute.closed`.
+   Those five are everything the handler acts on
    (`src/app/api/webhooks/stripe/route.ts`). Any other event is answered 200 and
    ignored.
    **Set the endpoint's API version to `2026-07-29.dahlia`.** That is the
@@ -360,6 +365,31 @@ intents, old sign-in attempts and dead portal sessions, and asks Stripe nothing.
 is counts only, and the logs carry Stripe session ids and nothing about a
 customer. The handler is `src/lib/orders/cron.ts`; the manual button and the
 script still work and are the same code.
+
+Each run also drops processed `webhook_event` rows older than ninety days,
+sends any order confirmation that never went (attempted and undelivered, or
+never attempted because the function died before the send — only while a mail
+provider is connected), and then checks for anything that needs a person.
+
+### Owner alerts, and `OWNER_ALERT_EMAIL`
+
+Set **`OWNER_ALERT_EMAIL`** (Production, Sensitive is fine) to an address the
+owner reads. After every scheduled run the cron looks for: a failed or stale
+reconcile (no finished run in 45 minutes while Stripe is connected), a refund
+check that could not read Stripe, payments with no order, orders flagged
+oversold or recovered, paid orders whose confirmation never went or failed,
+label purchases that started and never finished, and Stripe or Shippo events
+unprocessed after ten minutes. If there is anything, it emails one plain digest
+— **counts only**, no order numbers, no customer details, no portal path.
+
+It cannot spam: at most one digest an hour, and the same list again only after
+24 hours; a new problem inside that window waits for the hour. When everything
+is clear the record (`setting.owner_alert`) is dropped, so the next problem is
+news. Unset, or not an email address, and nothing is sent. It needs mail to
+actually deliver (`RESEND_API_KEY` + `RECEIPT_FROM_EMAIL`); with the log-only
+provider each run logs a warning instead. The portal's **Settings** screen shows
+whether it is on, when the last digest went, and when the reconciler last
+finished (the same record the alert reads).
 
 ### Stripe Tax — the one step with a real financial consequence
 
@@ -418,6 +448,17 @@ announcement does not — budget **$20/month Pro** for announcement months.
 
    `_dmarc` already existed at `p=none` from before Resend and needed no change
    for the domain to verify.
+
+   **Checked against public DNS on 2026-09-28:** DKIM (`resend._domainkey`,
+   1024-bit), the `send`/`rsend` return-path CNAMEs (SPF and bounce MX behind
+   them) and the root MX (`mail.guardtheory.net`) all resolve, so mail passes
+   DMARC on DKIM and on SPF, both aligned with `guardtheory.net`. What is left
+   is DMARC itself: `v=DMARC1; p=none;` has no `rua`, so nobody sees reports,
+   and `p=none` asks receivers to deliver mail that fails. Change `_dmarc` to
+   `v=DMARC1; p=none; rua=mailto:<an address you read>; adkim=r; aspf=r` now,
+   and to `p=quarantine` after two to four weeks of clean reports. The root SPF
+   (`v=spf1 ip4:67.222.24.90 +mx ~all`) belongs to the web host; Resend mail is
+   checked against the `send` subdomain, so the root needs no Resend include.
 3. ~~Create an API key with sending permission.~~ Done — `RESEND_API_KEY` is set
    in Vercel **Production**.
 4. ~~Pick a from-address on the verified domain.~~ Done — `RECEIPT_FROM_EMAIL`
@@ -544,6 +585,8 @@ integration; the rest you add by hand.
 | `STRIPE_APPAREL_TAX_CODE` | 3 | optional — defaults to `txcd_30021000`; owner decision | no |
 | `RESEND_API_KEY` | 4 | yes | **yes** |
 | `RECEIPT_FROM_EMAIL` | 4 | yes | **yes** |
+| `OWNER_ALERT_EMAIL` | 4 | optional, strongly advised — where the cron's problem digest goes (see "Owner alerts"). Unset means no alert | no |
+| `DATABASE_QUERY_TIMEOUT_MS` | — | optional — client-side ceiling per query, default 15000; `0` turns it off | no |
 | `REPLY_TO_EMAIL` | 4 | optional — an address that has a mailbox. Every message then carries it as its reply-to, so a customer who replies reaches a person instead of a bounce. A stopgap: the real fix is a forwarder for the from-address at the mail host | no |
 | `SHIPPO_API_TOKEN` | 5 | yes | no |
 | `SHIPPO_WEBHOOK_TOKEN` | 5 | yes — a random string of your own, 32 characters or more (shorter is refused) | no |

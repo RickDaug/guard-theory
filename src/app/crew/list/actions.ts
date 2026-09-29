@@ -31,11 +31,11 @@ export async function sendAnnouncement(
   const testTo = String(formData.get("testTo") ?? "").trim();
 
   if (!subject) {
-    return { status: "error", message: "Give it a subject line." };
+    return { status: "error", message: "Give it a subject line.", field: "subject" };
   }
 
   if (body.length < 20) {
-    return { status: "error", message: "Write the message first." };
+    return { status: "error", message: "Write the message first.", field: "body" };
   }
 
   // The same voice rules the Journal is held to, checked before it goes out
@@ -59,6 +59,13 @@ export async function sendAnnouncement(
       null,
     );
 
+    if (sent && !getMailProvider().delivers) {
+      return {
+        status: "error",
+        message: "The test was not sent — no mail provider is connected, so it was written to the log instead.",
+      };
+    }
+
     return sent
       ? { status: "success", message: `Test sent to ${testTo}. Nobody on the list was emailed.` }
       : { status: "error", message: "The test did not send. Check the logs." };
@@ -68,6 +75,7 @@ export async function sendAnnouncement(
     return {
       status: "error",
       message: "Tick the box to confirm you mean to email the whole list.",
+      field: "confirm",
     };
   }
 
@@ -75,9 +83,16 @@ export async function sendAnnouncement(
     // unsubscribed_at is null is the whole safety mechanism. Someone who left
     // the list must not receive this, and the check belongs in the query
     // rather than in a filter someone can forget.
+    //
+    // consent_state is the other half (0013). A 'pending' address was typed
+    // into the form by someone and never confirmed by its owner; it is not on
+    // the list. 'legacy' rows joined before confirmation existed and are sent
+    // to as they always were — whether to ask them to re-confirm first is the
+    // owner's decision, and changing it is deleting 'legacy' from this line.
     `select email, unsubscribe_token
        from waitlist_signup
       where unsubscribed_at is null
+        and consent_state in ('confirmed', 'legacy')
       order by submitted_at asc`,
   );
 

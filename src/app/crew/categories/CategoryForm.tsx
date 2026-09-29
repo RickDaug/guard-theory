@@ -1,30 +1,26 @@
 "use client";
 
-import { useActionState } from "react";
+import { useActionState, useId } from "react";
 import { saveCategory } from "../products/actions";
 import { PORTAL_INITIAL_STATE } from "@/lib/portal/form-state";
 import { Button } from "@/components/ui/Button";
+import { FormFeedback, PORTAL_CONTROL, fieldProps } from "@/components/ui/FormFeedback";
 
 export function CategoryForm() {
   const [state, formAction, pending] = useActionState(saveCategory, PORTAL_INITIAL_STATE);
+  const feedbackId = useId();
 
   return (
     <form action={formAction} className="flex flex-col gap-6 border border-steel-dim p-7">
-      {state.status !== "idle" ? (
-        <p
-          role={state.status === "error" ? "alert" : "status"}
-          className="border-l-2 border-signal-lift bg-graphite px-5 py-3 text-base text-chalk"
-        >
-          {state.message}
-        </p>
-      ) : null}
+      <FormFeedback id={feedbackId} state={state} />
 
       <label className="flex flex-col gap-2">
         <span className="display-plain text-sm text-steel">Name</span>
         <input
           name="name"
           required
-          className="min-h-6 border border-steel-dim bg-graphite px-4 py-3 text-chalk"
+          {...fieldProps(state, "name", feedbackId)}
+          className={PORTAL_CONTROL}
         />
       </label>
 
@@ -34,7 +30,7 @@ export function CategoryForm() {
         </span>
         <input
           name="slug"
-          className="min-h-6 border border-steel-dim bg-graphite px-4 py-3 text-chalk"
+          className={PORTAL_CONTROL}
         />
       </label>
 

@@ -12,7 +12,7 @@ import type { PublishedArticle } from "../types.ts";
 export const theArmbarFromClosedGuard: PublishedArticle = {
   status: "published",
   publishedAt: "2026-08-04",
-  authorId: "steven-p",
+  authorId: "guard-theory-editorial",
   slug: "the-armbar-from-closed-guard",
   category: "technique-notes",
   title: "The armbar from closed guard",

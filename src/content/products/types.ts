@@ -44,6 +44,16 @@ export type Specification = {
   value: string | null;
 };
 
+/** Who supplied a set of product facts. There is no other valid source. */
+export type SpecSource = "owner" | null;
+
+/**
+ * Specification lines that restate what the product IS rather than how it is
+ * made — "Long" on the long sleeve — and so need no supplier. Keep this short:
+ * everything else is a manufacturing fact.
+ */
+export const DRAWN_SPECIFICATION_LABELS: readonly string[] = ["Sleeve"];
+
 export type Product = {
   slug: string;
   name: string;
@@ -59,8 +69,22 @@ export type Product = {
   metaDescription?: string;
   description: string;
   constructionPoints: ConstructionPoint[];
+  /**
+   * Where the specification values came from. `"owner"` only when the owner
+   * (or their manufacturer, through them) supplied them. While this is null,
+   * only the lines in DRAWN_SPECIFICATION_LABELS may carry a value and
+   * `constructionPoints` must be empty. Asserted in tests/unit/content.test.ts.
+   *
+   * It exists because on 2026-08-04 a fabric composition, a GSM, a seam type
+   * and a print method were typed in with no source and were published until
+   * 2026-09-29. See docs/owner-decisions.md §3.
+   */
+  specSource: SpecSource;
   specifications: Specification[];
-  /** Size labels only. Measurements are an owner decision and are not invented. */
+  /**
+   * Size labels only, and empty until the owner supplies a range. Purchasable
+   * sizes come from the owner's variants in the portal, which override this.
+   */
   sizeLabels: string[];
 };
 

@@ -60,6 +60,8 @@ export default async function CategoriesPage() {
                   <input type="hidden" name="direction" value="up" />
                   <Button type="submit" intent="quiet" disabled={index === 0}>
                     Move up
+                    {/* Every row has the same two buttons; the name says which. */}
+                    <span className="sr-only">{`, ${category.name}`}</span>
                   </Button>
                 </form>
                 <form action={moveCategory}>
@@ -71,6 +73,7 @@ export default async function CategoriesPage() {
                     disabled={index === categories.length - 1}
                   >
                     Move down
+                    <span className="sr-only">{`, ${category.name}`}</span>
                   </Button>
                 </form>
               </div>

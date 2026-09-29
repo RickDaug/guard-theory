@@ -3,6 +3,7 @@ import Link from "next/link";
 import { stripeKeyRefusal, stripeMode } from "@/lib/stripe/client";
 import { portalUrl } from "@/lib/portal/routes";
 import { getSession } from "@/lib/portal/session";
+import { PortalNav } from "./PortalNav";
 
 export const metadata: Metadata = {
   robots: { index: false, follow: false, nocache: true },
@@ -93,20 +94,9 @@ export default async function CrewLayout({ children }: { children: React.ReactNo
             Crew Portal
           </Link>
 
-          <nav aria-label="Portal" className="ml-auto">
-            <ul className="m-0 flex list-none flex-wrap items-center gap-x-7 gap-y-2 p-0">
-              {NAV.map((item) => (
-                <li key={item.label}>
-                  <Link
-                    href={portalUrl(item.href)}
-                    className="display-plain inline-flex min-h-6 items-center text-sm text-steel no-underline transition-colors duration-[140ms] ease-[var(--ease-control)] hover:text-chalk"
-                  >
-                    {item.label}
-                  </Link>
-                </li>
-              ))}
-            </ul>
-          </nav>
+          <PortalNav
+            items={NAV.map((item) => ({ href: portalUrl(item.href), label: item.label }))}
+          />
         </div>
       </header>
 

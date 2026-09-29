@@ -2,6 +2,8 @@ import { CATEGORIES, isPublished, readingTimeMinutes } from "./types.ts";
 import type { Article, JournalCategorySlug } from "./types.ts";
 import { deLaRivaAndTheGuardThatTookHisName } from "./entries/de-la-riva-and-the-guard-that-took-his-name.ts";
 import { gripDecayAndTheHalfLifeOfANoGiGrip } from "./entries/grip-decay-and-the-half-life-of-a-no-gi-grip.ts";
+import { howTheGuardReorganisedAroundLegEntanglements } from "./entries/how-the-guard-reorganised-around-leg-entanglements.ts";
+import { oswaldoFaddaAndTheLineageOutsideTheFamily } from "./entries/oswaldo-fadda-and-the-lineage-outside-the-family.ts";
 import { howToWashARashGuard } from "./entries/how-to-wash-a-rash-guard.ts";
 import { seatedGuardAndSupineGuard } from "./entries/seated-guard-and-supine-guard.ts";
 import { theDropoutNumberNobodyCanSource } from "./entries/the-dropout-number-nobody-can-source.ts";
@@ -38,7 +40,9 @@ export const ARTICLES: Article[] = [
   ibjjfNoGiUniformRulesReadCarefully,
   longSleeveOrShortSleeve,
   howToWashARashGuard,
+  howTheGuardReorganisedAroundLegEntanglements,
   maedaAndTheArrivalOfJudoInBrazil,
+  oswaldoFaddaAndTheLineageOutsideTheFamily,
   seatedGuardAndSupineGuard,
   submissionOnlyAndTheOvertimeProblem,
   theDropoutNumberNobodyCanSource,

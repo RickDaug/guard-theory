@@ -66,7 +66,10 @@ export default async function ShopPage() {
             id="in-progress"
             className="display-condensed mb-10 text-2xl text-chalk"
           >
-            In progress
+            {/* "In progress" is only true while nothing can be bought. */}
+            {products.some((product) => stockStatus(product) === "purchasable")
+              ? "The garments"
+              : "In progress"}
           </h2>
 
           <ul className="m-0 grid list-none gap-px bg-steel-dim p-0 lg:grid-cols-2">

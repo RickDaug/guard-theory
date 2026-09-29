@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import Link from "next/link";
 import { Breadcrumbs } from "@/components/site/Breadcrumbs";
 import { CartView } from "@/components/cart/CartView";
 import { pageMetadata } from "@/lib/metadata";
@@ -30,6 +31,33 @@ export default function CartPage() {
         </header>
 
         <CartView />
+
+        {/* The terms a first-time buyer looks for before paying, one step
+            from the Checkout button. Linked, never restated here. */}
+        <p className="mt-14 max-w-[46rem] text-sm text-steel">
+          Shipping is one flat rate per order, whatever is in it. Read the{" "}
+          <Link
+            href="/policies/shipping"
+            className="text-chalk underline decoration-steel-dim underline-offset-[5px] transition-colors duration-[140ms] ease-[var(--ease-control)] hover:decoration-signal-lift"
+          >
+            shipping
+          </Link>{" "}
+          and{" "}
+          <Link
+            href="/policies/returns"
+            className="text-chalk underline decoration-steel-dim underline-offset-[5px] transition-colors duration-[140ms] ease-[var(--ease-control)] hover:decoration-signal-lift"
+          >
+            returns
+          </Link>{" "}
+          policies, or{" "}
+          <Link
+            href="/size-and-fit"
+            className="text-chalk underline decoration-steel-dim underline-offset-[5px] transition-colors duration-[140ms] ease-[var(--ease-control)] hover:decoration-signal-lift"
+          >
+            check your size
+          </Link>{" "}
+          before you pay.
+        </p>
       </div>
     </main>
   );

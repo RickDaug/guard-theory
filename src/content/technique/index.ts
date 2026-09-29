@@ -5,6 +5,7 @@ import {
   type TechniqueReview,
 } from "./types.ts";
 import { armDrag } from "./entries/arm-drag.ts";
+import { armbarIsHipToShoulderDistance } from "./entries/armbar-is-hip-to-shoulder-distance.ts";
 import { backRetentionFollowingTheTurn } from "./entries/back-retention-following-the-turn.ts";
 import { bloodChokeVersusAirChoke } from "./entries/blood-choke-versus-air-choke.ts";
 import { butterflyHookAsLever } from "./entries/butterfly-hook-as-lever.ts";
@@ -17,7 +18,10 @@ import { escapingBackControl } from "./entries/escaping-back-control.ts";
 import { escapingSideControl } from "./entries/escaping-side-control.ts";
 import { framesVersusBlocks } from "./entries/frames-versus-blocks.ts";
 import { gettingHipsUnderneath } from "./entries/getting-hips-underneath.ts";
+import { guillotineIsABrokenPosture } from "./entries/guillotine-is-a-broken-posture.ts";
+import { headAndArmStrangles } from "./entries/head-and-arm-strangles.ts";
 import { insidePosition } from "./entries/inside-position.ts";
+import { kimuraIsAGripFirst } from "./entries/kimura-is-a-grip-first.ts";
 import { kneeCutPass } from "./entries/knee-cut-pass.ts";
 import { kneeShield } from "./entries/knee-shield.ts";
 import { legEntanglementAsControl } from "./entries/leg-entanglement-as-control.ts";
@@ -25,6 +29,7 @@ import { positionalHierarchy } from "./entries/positional-hierarchy.ts";
 import { rearNakedStrangle } from "./entries/rear-naked-strangle.ts";
 import { seatBeltAndHooks } from "./entries/seat-belt-and-hooks.ts";
 import { sweepingTowardTheMissingPost } from "./entries/sweeping-toward-the-missing-post.ts";
+import { triangleClosesAtTheShoulder } from "./entries/triangle-closes-at-the-shoulder.ts";
 import { underhookHalfGuard } from "./entries/underhook-half-guard.ts";
 
 /**
@@ -34,6 +39,7 @@ import { underhookHalfGuard } from "./entries/underhook-half-guard.ts";
  */
 export const ENTRIES: TechniqueEntry[] = [
   armDrag,
+  armbarIsHipToShoulderDistance,
   backRetentionFollowingTheTurn,
   bloodChokeVersusAirChoke,
   butterflyHookAsLever,
@@ -46,7 +52,10 @@ export const ENTRIES: TechniqueEntry[] = [
   escapingSideControl,
   framesVersusBlocks,
   gettingHipsUnderneath,
+  guillotineIsABrokenPosture,
+  headAndArmStrangles,
   insidePosition,
+  kimuraIsAGripFirst,
   kneeCutPass,
   kneeShield,
   legEntanglementAsControl,
@@ -54,6 +63,7 @@ export const ENTRIES: TechniqueEntry[] = [
   rearNakedStrangle,
   seatBeltAndHooks,
   sweepingTowardTheMissingPost,
+  triangleClosesAtTheShoulder,
   underhookHalfGuard,
 ];
 

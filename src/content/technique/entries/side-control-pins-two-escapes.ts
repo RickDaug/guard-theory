@@ -5,17 +5,17 @@ export const sideControlPinsTwoEscapes: TechniqueEntry = {
   category: "passing",
   title: "Side control pins the bridge and the shrimp",
   summary:
-    "Holding side control means taking away the bottom player's two escapes, the bridge and the shrimp, with head control and near-hip control, and moving the pin when they fight one.",
+    "Holding side control means taking away the two movements the bottom player's escapes are built from, the bridge and the shrimp, with head control and near-hip control, and moving the pin when they fight one.",
   metaDescription:
     "How to hold side control in gi or no-gi: control the head against the bridge and the near hip against the shrimp, then shift to knee on belly or north-south.",
   difficulty: "Foundational",
   relevance: "Gi and no-gi",
   positionAndProblem:
-    "The pass is done and they are flat under you, chest to chest, and for a few breaths it feels secure. Then they bridge into you, you post a hand to stay on, they hip away into the space the post opened, and a knee slides in between your chest and their hips. Side control, which many rooms also call side mount or cross side, is where passes commonly finish, and it tends to be lost in the order escapes are taught: a bridge to move the weight, then a shrimp into the space it made. Holding it means knowing those two movements well enough to take them away before they start.",
+    "The pass is done and they are flat under you, chest to chest, and for a few breaths it feels secure. Then they bridge into you, you post a hand to stay on, they hip away into the space the post opened, and a knee slides in between your chest and their hips. Side control, also known as side mount or cross side, is where passes commonly finish, and it is usually lost in two moves: a bridge to move the weight, then a shrimp into the space it made.",
   objective:
     "Keep the bottom player flat with their head turned away and their near hip blocked, so that neither the bridge nor the shrimp can start.",
   coreConcept:
-    "The bottom player has two ways out of side control, and they point in opposite directions. The bridge drives up and into you to lift and shift your weight; the shrimp, or hip escape, moves their hips away from you into whatever space the bridge made, so a knee can come back inside. Side control is held with one control for each. Head control, commonly a crossface with your shoulder across their jaw or an arm wrapped under the head, turns their face away from you, and a bottom player who cannot turn toward you cannot finish a bridge into you or come up onto their knees. Near-hip control, with your hand, forearm or elbow blocking the hip closest to you and your knee tight against it, stops the hips from sliding away, which is the direction the shrimp needs. With both in place, keep your hips low and your weight spread across their chest instead of perched on your knees, so the bridge has little it can lift. The position also moves. When they frame hard and win a little space at the hips, sliding a knee onto their stomach follows the hips without leaving room for their knee; that position is usually called knee on belly, or knee on stomach. When they bridge into you with force, walking around their head to north-south takes you out of the bridge's path while keeping your chest on them. Both are the same pin carried to where the escape is heading, and they are learned best as answers to a movement rather than as moves of their own.",
+    "The bottom player's escapes are built from two movements, and they point in opposite directions. The bridge drives up and into you to lift and shift your weight; the shrimp, or hip escape, moves their hips away from you into whatever space the bridge made, so a knee can come back inside. Side control is held with one control for each. Head control, commonly a crossface with your shoulder across their jaw or an arm wrapped under the head, turns their face away from you, and a bottom player who cannot turn toward you cannot finish a bridge into you or come up onto their knees. Near-hip control, with your hand, forearm or elbow blocking the hip closest to you and your knee tight against it, stops the hips from sliding away, which is the direction the shrimp needs. With both in place, keep your hips low and your weight spread across their chest instead of perched on your knees, so the bridge has little it can lift. The position also moves. When they frame hard and win a little space at the hips, sliding a knee onto their stomach follows the hips without leaving room for their knee; that position is usually called knee on belly, or knee on stomach. When they bridge into you with force, walking around their head to north-south takes you out of the bridge's path while keeping your chest on them. Both are the same pin carried to where the escape is heading, and they are learned best as answers to a movement rather than as moves of their own.",
   keyMechanics: [
     "Control the head first. A crossface or an arm under the head that turns their face away from you removes the direction that both the bridge and the turn to the knees need.",
     "Block the near hip with your hand, forearm or elbow and keep your knee against it. The shrimp moves the hips away from you, and a hip blocked before it moves has no room to begin.",
@@ -41,7 +41,7 @@ export const sideControlPinsTwoEscapes: TechniqueEntry = {
     "Transition drill: partner alternates between framing for space and bridging hard. Answer space with knee on belly and the bridge with a walk to north-south, then return to side control.",
     "Constrained: partner may escape by any movement but not attack; you may hold and change position but not submit. Restart when a knee gets inside or they reach their knees.",
     "Positional: full resistance from side control with both players free to attack, restarting on any guard recovery or submission.",
-    "Live rounds: watch where your partner's first movement goes when pinned, toward you or away from you, and which of your two controls it went through.",
+    "Live rounds: after each round, tell your partner which of your two controls their first escape went through, toward you or away from you, and let them say whether you read it right.",
   ],
   relatedSlugs: [
     "elbow-knee-escape",
@@ -53,9 +53,9 @@ export const sideControlPinsTwoEscapes: TechniqueEntry = {
     drafted:
       "assisted draft, 2026-09-29, from technique batch 2 target list (A); written by a Claude Code agent from the research brief and the batch-1 audit findings.",
     factAudit:
-      "Pending: fact audit not yet run (independent fact-and-mechanics audit, stage 3 of docs/technique-pipeline.md).",
+      "Fact audit, assisted (Claude Code agent), 2026-09-29: bridge-into/shrimp-away and head/near-hip controls confirmed and consistent with escaping-side-control; fix applied: 'two ways out' reworded to two movements (coreConcept, and the summary to match) so it does not contradict that entry's second door.",
     voiceAudit:
-      "Pending: voice audit not yet run (independent voice audit, stage 4 of docs/technique-pipeline.md).",
+      "Voice audit, assisted (Claude Code agent), 2026-09-29: mechanics clean (title 43, meta 157); fixes applied: templated 'Holding it means' closer cut; claim about how escapes are taught replaced with the two movements themselves; 'many rooms also call' attribution and the fixed last-step frame rewritten.",
     approvedBy: null,
   },
 };

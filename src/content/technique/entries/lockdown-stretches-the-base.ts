@@ -15,9 +15,9 @@ export const lockdownStretchesTheBase: TechniqueEntry = {
   objective:
     "Lock your legs around the top player's calf and extend them, so the trapped leg stays trapped and straight while you work back onto your side.",
   coreConcept:
-    "A leg can only post while it can bend. The top player in half guard balances on their free foot and on the knee or foot of their trapped leg, and they recover from sweeps by stepping or sliding that trapped leg to wherever their weight has gone. The lockdown takes that option away. With your legs wrapped around their calf, one hooked under the shin and the other locking that foot in place so the pair make a figure-four around the lower leg, extending your legs straightens their knee and draws the leg back behind them, and a straight leg held from behind is not a post. Their weight moves onto the free leg and forward onto you, and the side of the trapped leg is left with nothing under it. That is what stretching the base means here: the stance gets longer and wider until one of its two supports holds nothing. Because the lock is on the leg rather than the upper body, it keeps working when your shoulders are flat. The top player can crossface and underhook, but while the leg is locked and extended they cannot free it with a knee slice or a backstep, and each extension buys a moment to turn back onto your side. Many rooms call the sharp version of the extension the whip up, done with the arms pulling their upper body toward you as the legs stretch, so that their weight comes forward over you and you can get deeper underneath or come up onto your side. The lockdown also leads to the position usually called the electric chair, a sweep and submission family that splits the top player's legs apart; it is named here and not taught, because it loads the hip and groin in a way that belongs in a coach's hands.",
+    "A leg can only post while it can bend. The top player in half guard balances on their free foot and on the knee or foot of their trapped leg, and they recover from sweeps by stepping or sliding that trapped leg to wherever their weight has gone. The lockdown takes that option away. With your outside leg over their calf and its foot hooked behind your inside ankle, and your inside foot hooked under their foot, extending your legs straightens their knee and draws the leg back behind them, and a straight leg held from behind is not a post. Their weight moves onto the free leg and forward onto you, and the side of the trapped leg is left with nothing under it. The stance gets longer and wider until one of its two supports holds nothing. Because the lock is on the leg rather than the upper body, it keeps working when your shoulders are flat. The top player can crossface and underhook, but while the leg is locked and extended they struggle to free it with a knee slice or a backstep, and each extension buys a moment to turn back onto your side. The sharp version of the extension is known as the whip up, done with the arms pulling their upper body toward you as the legs stretch, so that their weight comes forward over you and you can get deeper underneath or come up onto your side. The lockdown also leads to the position usually called the electric chair, a sweep and submission family that splits the top player's legs apart and loads the hip and groin.",
   keyMechanics: [
-    "Lock below their knee, around the calf, with one leg hooked under the shin and the other locking that foot down. A lock up on the thigh lets the knee bend, and a leg that can bend can still post.",
+    "Lock below their knee: your outside leg over the calf with its foot behind your inside ankle, and your inside foot hooked under theirs. A lock up on the thigh leaves the knee free to bend.",
     "Extend with the hips and legs together, pushing their leg back rather than pulling it toward you. The extension straightens the knee, and a straight trapped leg cannot step.",
     "Time the extension to their movement. Stretching as they try to free the leg or shift weight onto it catches them off balance; stretching against a settled, heavy passer mostly tires your legs.",
     "Use each extension to turn back onto your side and fight for the underhook. The lockdown holds the leg, and getting your shoulder off the mat is what turns holding into sweeping.",
@@ -36,7 +36,7 @@ export const lockdownStretchesTheBase: TechniqueEntry = {
     "Cooperative: partner holds a crossface and tries at half speed to free the leg with a knee slice. Extend as the leg starts to move and use it to turn back onto your side.",
     "Timing game: partner shifts weight onto and off the trapped leg without warning. Extend only on the shift onto it and stay locked and quiet otherwise.",
     "Constrained: start flat with the lockdown on against a crossface and underhook. The top player tries to free the leg and you try to reach your side with an underhook; restart when either happens.",
-    "Live rounds: notice whether you reached for the lockdown before you were flat or only after, and which of the two gave you more.",
+    "Live rounds: after each round, say out loud whether the lockdown came before or after your shoulders went flat, and which of the two gave you more.",
   ],
   relatedSlugs: [
     "underhook-half-guard",
@@ -48,9 +48,9 @@ export const lockdownStretchesTheBase: TechniqueEntry = {
     drafted:
       "assisted draft, 2026-09-29, from technique batch 2 target list (A); written by a Claude Code agent from the research brief and the batch-1 audit findings.",
     factAudit:
-      "Pending: fact audit not yet run (independent fact-and-mechanics audit, stage 3 of docs/technique-pipeline.md).",
+      "Fact audit, assisted (Claude Code agent), 2026-09-29: extension, whip-up and electric-chair naming confirmed; fixes applied: leg placement rewritten to outside leg over the calf and inside foot hooking the foot, per published lockdown instruction (coreConcept, keyMechanics[0]); 'cannot free it' hedged to 'struggle to free it'.",
     voiceAudit:
-      "Pending: voice audit not yet run (independent voice audit, stage 4 of docs/technique-pipeline.md).",
+      "Voice audit, assisted (Claude Code agent), 2026-09-29: mechanics clean (title 40, meta 151); fixes applied: 'named here and not taught' self-reference cut; sentence explaining the title cut; governing line no longer restated in KM1; 'Many rooms call' attribution and the fixed 'notice whether' last step rewritten.",
     approvedBy: null,
   },
 };

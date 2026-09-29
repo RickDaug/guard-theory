@@ -7,9 +7,11 @@ import {
 import { armDrag } from "./entries/arm-drag.ts";
 import { bloodChokeVersusAirChoke } from "./entries/blood-choke-versus-air-choke.ts";
 import { butterflyHookAsLever } from "./entries/butterfly-hook-as-lever.ts";
+import { closedGuardAttacksShareOneAngle } from "./entries/closed-guard-attacks-share-one-angle.ts";
 import { closedGuardPostureBattle } from "./entries/closed-guard-posture-battle.ts";
 import { connectionInOpenGuard } from "./entries/connection-in-open-guard.ts";
 import { deLaRivaHook } from "./entries/de-la-riva-hook.ts";
+import { deepHalfGuard } from "./entries/deep-half-guard.ts";
 import { doubleLegIsALevelChange } from "./entries/double-leg-is-a-level-change.ts";
 import { elbowKneeEscape } from "./entries/elbow-knee-escape.ts";
 import { escapingTurtle } from "./entries/escaping-turtle.ts";
@@ -20,6 +22,7 @@ import { insidePosition } from "./entries/inside-position.ts";
 import { kneeCutPass } from "./entries/knee-cut-pass.ts";
 import { kneeShield } from "./entries/knee-shield.ts";
 import { legEntanglementAsControl } from "./entries/leg-entanglement-as-control.ts";
+import { omoplataIsAKimuraWithTheLeg } from "./entries/omoplata-is-a-kimura-with-the-leg.ts";
 import { seatBeltAndHooks } from "./entries/seat-belt-and-hooks.ts";
 import { snapDownToFrontHeadlock } from "./entries/snap-down-to-front-headlock.ts";
 import { sweepingTowardTheMissingPost } from "./entries/sweeping-toward-the-missing-post.ts";
@@ -35,9 +38,11 @@ export const ENTRIES: TechniqueEntry[] = [
   armDrag,
   bloodChokeVersusAirChoke,
   butterflyHookAsLever,
+  closedGuardAttacksShareOneAngle,
   closedGuardPostureBattle,
   connectionInOpenGuard,
   deLaRivaHook,
+  deepHalfGuard,
   doubleLegIsALevelChange,
   elbowKneeEscape,
   escapingTurtle,
@@ -48,6 +53,7 @@ export const ENTRIES: TechniqueEntry[] = [
   kneeCutPass,
   kneeShield,
   legEntanglementAsControl,
+  omoplataIsAKimuraWithTheLeg,
   seatBeltAndHooks,
   snapDownToFrontHeadlock,
   sweepingTowardTheMissingPost,

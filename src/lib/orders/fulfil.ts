@@ -4,7 +4,7 @@ import type { PoolClient } from "pg";
 import { query, transaction } from "../db/client.ts";
 import type { PricedLine } from "../cart/types.ts";
 import { orderStripeMode, stripeMode } from "../stripe/client.ts";
-import { raiseFlagSql } from "./flags.ts";
+import { raiseFlagSql, strongestFlag } from "./flags.ts";
 
 /**
  * Turning a paid Checkout Session into an order.
@@ -219,6 +219,40 @@ function sessionMode(session: Stripe.Checkout.Session): { mode: "test" | "live";
 }
 
 /**
+ * Why a paid session does not match the cart it was priced from, or null.
+ *
+ * Stripe's totals are what the order records — they include tax, which we do
+ * not compute — but the SUBTOTAL is ours: the priced lines in the intent. A
+ * session whose subtotal differs, whose currency is not USD (the only one
+ * checkout offers), or which Stripe says needed no payment, was not made by
+ * startCheckout from this intent as it stands: another Checkout on the same
+ * account naming our intent as client_reference_id, or Adaptive Pricing
+ * converting the currency. The order is still made, because money may have
+ * been taken, and flagged `amount-mismatch` (0014) for the owner. Security
+ * audit 2026-09-29, S3-5.
+ */
+export function amountMismatch(
+  session: Pick<Stripe.Checkout.Session, "amount_subtotal" | "currency" | "payment_status">,
+  snapshot: { subtotal_cents: number },
+): string | null {
+  const problems: string[] = [];
+  if (session.payment_status === "no_payment_required") {
+    problems.push("Stripe says no payment was required");
+  }
+  if ((session.currency ?? "").toLowerCase() !== "usd") {
+    problems.push(`currency is ${session.currency ?? "missing"}, not usd`);
+  }
+  if (typeof session.amount_subtotal !== "number") {
+    problems.push("the session has no subtotal");
+  } else if (session.amount_subtotal !== Number(snapshot.subtotal_cents)) {
+    problems.push(
+      `subtotal ${session.amount_subtotal} does not match the priced ${snapshot.subtotal_cents}`,
+    );
+  }
+  return problems.length === 0 ? null : problems.join("; ");
+}
+
+/**
  * Writes down a payment that could not become an order.
  *
  * Money was taken. Whatever went wrong on our side, the one outcome that is
@@ -372,6 +406,14 @@ export async function fulfilCheckoutSession(
     const lines = snapshot.lines_json;
     const orderId = randomUUID();
 
+    const mismatchedAmount = amountMismatch(session, snapshot);
+    if (mismatchedAmount) {
+      console.error(
+        `[guard-theory] amount-mismatch: session ${session.id} ${mismatchedAmount}. ` +
+          "Recorded as Stripe charged it and flagged for the owner.",
+      );
+    }
+
     // Stripe's totals are authoritative — they include the tax it calculated,
     // which we deliberately do not compute ourselves.
     const totalCents = session.amount_total ?? 0;
@@ -413,9 +455,14 @@ export async function fulfilCheckoutSession(
           ? session.payment_intent
           : (session.payment_intent?.id ?? null),
         mode,
-        // A half-swapped key outranks "recovered by the reconciler": both say
-        // look at this order, and the mismatch is the one with a fix to make.
-        mismatch ? "mode-mismatch" : (options.flagAs ?? null),
+        // Every reason that applies, and the one FLAG_PRECEDENCE ranks highest
+        // wins: a charge that does not match the cart outranks a half-swapped
+        // key, which outranks "recovered by the reconciler".
+        strongestFlag(
+          mismatchedAmount ? "amount-mismatch" : null,
+          mismatch ? "mode-mismatch" : null,
+          options.flagAs ?? null,
+        ),
       ],
     );
 

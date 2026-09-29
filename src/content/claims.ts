@@ -545,6 +545,19 @@ function listMailCarriesUnsubscribe(): true | string {
       if (!template.toString().includes("/unsubscribe?t=")) {
         problems.push(`the list template "${name}" no longer builds an unsubscribe link`);
       }
+      // "One-click": the body link opens a confirm page (a GET must not write),
+      // so the one click is RFC 8058's — the mail client's own button. Checked
+      // on a built message, not the source: the headers come from
+      // src/lib/mail/list-unsubscribe.ts.
+      const built = (template as (...args: string[]) => { headers?: Record<string, string> })(
+        "someone@example.com",
+        "claims-check-token",
+        "Subject",
+        "Body",
+      );
+      if (built.headers?.["List-Unsubscribe-Post"] !== "List-Unsubscribe=One-Click") {
+        problems.push(`the list template "${name}" no longer sends List-Unsubscribe-Post (RFC 8058 one-click)`);
+      }
     } else if (!TRANSACTIONAL_MAIL.includes(name)) {
       problems.push(
         `src/lib/mail/templates.ts now exports "${name}". Add it to LIST_MAIL or TRANSACTIONAL_MAIL in src/content/claims.ts`,

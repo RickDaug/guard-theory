@@ -32,6 +32,10 @@ process.env.DATABASE_POOL_MAX = "3";
 delete process.env.RESEND_API_KEY;
 
 const HAS_DB = isDatabaseConfigured();
+// PGlite serves one connection at a time, so a test that runs two
+// transactions at once resets it (ECONNRESET) and wedges the tests after it.
+// Those run on CI's real Postgres, as in fulfil.test.ts.
+const REAL_PG = HAS_DB && process.env.CI === "true";
 
 let productId = "";
 /** Two sizes, ids chosen so their lock order is known: A before B. */
@@ -337,7 +341,7 @@ describe("cancel and restock", { skip: !HAS_DB && "no DATABASE_URL" }, () => {
       assert.equal(await stockOf(variantB), b0);
     });
 
-    it("a double-clicked cancel refunds once and restocks once", async () => {
+    it("a double-clicked cancel refunds once and restocks once", { skip: !REAL_PG && "needs a real Postgres (CI)" }, async () => {
       const a0 = await stockOf(variantA);
       const { id } = await makeOrder([{ variant: variantA, quantity: 2 }]);
       const { calls, createRefund } = recorder();
@@ -354,7 +358,7 @@ describe("cancel and restock", { skip: !HAS_DB && "no DATABASE_URL" }, () => {
       assert.equal((await cancelEmails(id)).length, 1, "one email");
     });
 
-    it("cancel racing a label purchase: the claim that arrives during the cancel buys nothing", async () => {
+    it("cancel racing a label purchase: the claim that arrives during the cancel buys nothing", { skip: !REAL_PG && "needs a real Postgres (CI)" }, async () => {
       const { id } = await makeOrder([{ variant: variantA, quantity: 1 }]);
       let claim: ReturnType<typeof claimLabelPurchase> | undefined;
 
@@ -373,7 +377,7 @@ describe("cancel and restock", { skip: !HAS_DB && "no DATABASE_URL" }, () => {
       assert.equal(row.label_claimed_at, null, "no postage is being bought for a cancelled order");
     });
 
-    it("cancel racing a label purchase: a claim that got there first stops the cancel", async () => {
+    it("cancel racing a label purchase: a claim that got there first stops the cancel", { skip: !REAL_PG && "needs a real Postgres (CI)" }, async () => {
       const a0 = await stockOf(variantA);
       const { id } = await makeOrder([{ variant: variantA, quantity: 1 }]);
       const { calls, createRefund } = recorder();
@@ -471,7 +475,7 @@ describe("cancel and restock", { skip: !HAS_DB && "no DATABASE_URL" }, () => {
       assert.equal(await stockOf(variantA), a0, "the M line had nothing left to put back");
     });
 
-    it("a double-submitted return restocks once", async () => {
+    it("a double-submitted return restocks once", { skip: !REAL_PG && "needs a real Postgres (CI)" }, async () => {
       const a0 = await stockOf(variantA);
       const { id, items } = await makeOrder([{ variant: variantA, quantity: 1 }], {
         status: "delivered",
@@ -522,7 +526,7 @@ describe("the cancellation email", () => {
 
   it("says what was refunded, and accounts for an earlier part refund", () => {
     const email = orderCancelled(order, { refundedCents: 7600, earlierRefundCents: 2000 });
-    assert.match(email.subject, /Order 1042 has been cancelled/);
+    assert.match(email.subject, /^Guard Theory order 1042 has been cancelled$/);
     assert.match(email.body, /refunded \$76\.00 to the card you paid with/);
     assert.match(email.body, /\$20\.00 refunded earlier/);
     assert.match(email.body, /\/policies\/returns/);

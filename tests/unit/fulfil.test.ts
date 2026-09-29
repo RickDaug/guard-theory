@@ -5,6 +5,7 @@ import { after, before, describe, it, mock } from "node:test";
 import { Client } from "pg";
 
 import {
+  amountMismatch,
   claimEvent,
   fulfilCheckoutSession,
   markEventProcessed,
@@ -338,6 +339,48 @@ describe("turning a paid session into an order", { skip: !HAS_DB && "no DATABASE
     assert.equal(stock[0]!.stock, 0, "and stock lands honestly at zero, not at minus one");
   });
 
+  it("flags, and does not refuse, a paid session that does not match its cart (0014)", async () => {
+    // Security audit 2026-09-29, S3-5: fulfilment trusted amount_total. Any
+    // other Checkout on the account naming our intent, or Adaptive Pricing in
+    // another currency, became an ordinary order. It is still an order —
+    // money was taken — but the owner has to see it before shipping.
+    const quiet = mock.method(console, "error", () => {});
+
+    try {
+      const cases = [
+        { amount_subtotal: 100 },
+        { currency: "eur" },
+        { payment_status: "no_payment_required" },
+      ];
+
+      for (const overrides of cases) {
+        const odd = session({ client_reference_id: await makeIntent(1, 5), ...overrides });
+        assert.equal((await fulfilCheckoutSession(odd)).outcome, "created", JSON.stringify(overrides));
+        const row = await query<{ flagged_reason: string | null }>(
+          `select flagged_reason from "order" where stripe_session_id = $1`,
+          [odd.id],
+        );
+        assert.equal(row[0]!.flagged_reason, "amount-mismatch", JSON.stringify(overrides));
+      }
+
+      assert.ok(
+        quiet.mock.calls.some((call) => String(call.arguments[0]).includes("amount-mismatch")),
+        "the mismatch is said out loud",
+      );
+
+      // The matching session is not flagged.
+      const fine = session({ client_reference_id: await makeIntent(1, 5) });
+      assert.equal((await fulfilCheckoutSession(fine)).outcome, "created");
+      const fineRow = await query<{ flagged_reason: string | null }>(
+        `select flagged_reason from "order" where stripe_session_id = $1`,
+        [fine.id],
+      );
+      assert.equal(fineRow[0]!.flagged_reason, null);
+    } finally {
+      quiet.mock.restore();
+    }
+  });
+
   it("stamps the order's mode from the event's livemode, not from the key", async () => {
     // During a key swap the webhook secret and the secret key are changed by
     // hand, one after the other. A live payment verified while the key is still
@@ -603,5 +646,26 @@ describe("turning a paid session into an order", { skip: !HAS_DB && "no DATABASE
     assert.deepEqual(recorded.map((row) => row.reason), ["no shipping address"]);
 
     await query("delete from unfulfilled_payment where stripe_session_id = $1", [paid.id]);
+  });
+});
+
+describe("amountMismatch (no database)", () => {
+  const snapshot = { subtotal_cents: 8900 };
+  const ok = { amount_subtotal: 8900, currency: "usd", payment_status: "paid" } as const;
+
+  it("is null when the session matches the priced cart", () => {
+    assert.equal(amountMismatch(ok, snapshot), null);
+    assert.equal(amountMismatch({ ...ok, currency: "USD" }, snapshot), null);
+  });
+
+  it("names each disagreement", () => {
+    assert.match(amountMismatch({ ...ok, amount_subtotal: 1 }, snapshot) ?? "", /subtotal 1 does not match the priced 8900/);
+    assert.match(amountMismatch({ ...ok, currency: "eur" }, snapshot) ?? "", /currency is eur/);
+    assert.match(amountMismatch({ ...ok, currency: null } as never, snapshot) ?? "", /currency is missing/);
+    assert.match(amountMismatch({ ...ok, amount_subtotal: null }, snapshot) ?? "", /no subtotal/);
+    assert.match(
+      amountMismatch({ ...ok, payment_status: "no_payment_required" }, snapshot) ?? "",
+      /no payment was required/,
+    );
   });
 });

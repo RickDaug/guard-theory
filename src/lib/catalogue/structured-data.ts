@@ -15,13 +15,22 @@ import { effectivePriceCents, hasPublishableOffer, stockStatus, type ProductView
  */
 
 /**
- * The returns terms the Offer repeats, each one quoted from the returns policy.
+ * The returns terms the Offer repeats, each one quoted from the returns policy
+ * as the owner set it on 2026-09-29 (docs/owner-decisions.md §12).
  * tests/unit/product-structured-data.test.ts fails if the policy stops saying
  * any of them, so the markup cannot outlive the sentence it repeats.
  *
+ * - `returnMethod` is ReturnByMail because the policy prices the return as
+ *   postage. It is not sourced to a return label: none is provided, and the
+ *   policy says only that we send return instructions.
+ * - Fees are split the way the policy splits them: change of mind is the
+ *   buyer's postage (`customerRemorseReturnFees`), a fault is ours
+ *   (`itemDefectReturnFees`).
+ *
  * Deliberately absent:
- * - `returnFees`. Change-of-mind postage is the buyer's, at a cost the policy
- *   does not state, and a fault is free — no single value is true of both.
+ * - `returnFees`. No single value is true of both cases above.
+ * - `refundType`. The policy says "for a refund", not "a full refund", and
+ *   gives no refund amount rule; FullRefund would be a claim it does not make.
  * - `shippingDetails`. Google wants a `shippingRate`, and the shipping policy
  *   says only "one flat rate … shown in your cart"; the figure is not a
  *   published fact.
@@ -31,13 +40,20 @@ export const RETURN_POLICY_FACTS = {
   applicableCountry: { value: "US", source: ["shipping", "We ship within the United States."] },
   merchantReturnDays: {
     value: 30,
-    source: ["returns", "Return anything within thirty days of delivery for a full refund."],
+    source: ["returns", "Return anything within thirty days of delivery for a refund."],
   },
   returnMethod: {
     value: "https://schema.org/ReturnByMail",
-    source: ["returns", "we will send a return label"],
+    source: ["returns", "return postage is yours"],
   },
-  refundType: { value: "https://schema.org/FullRefund", source: ["returns", "for a full refund"] },
+  customerRemorseReturnFees: {
+    value: "https://schema.org/ReturnFeesCustomerResponsibility",
+    source: ["returns", "If you have simply changed your mind, return postage is yours."],
+  },
+  itemDefectReturnFees: {
+    value: "https://schema.org/FreeReturn",
+    source: ["returns", "it arrived defective — the postage is ours"],
+  },
 } as const;
 
 /** The full text of a policy, for checking a quoted fact against it. */
@@ -54,7 +70,8 @@ function returnPolicy() {
     returnPolicyCategory: "https://schema.org/MerchantReturnFiniteReturnWindow",
     merchantReturnDays: RETURN_POLICY_FACTS.merchantReturnDays.value,
     returnMethod: RETURN_POLICY_FACTS.returnMethod.value,
-    refundType: RETURN_POLICY_FACTS.refundType.value,
+    customerRemorseReturnFees: RETURN_POLICY_FACTS.customerRemorseReturnFees.value,
+    itemDefectReturnFees: RETURN_POLICY_FACTS.itemDefectReturnFees.value,
     url: absoluteUrl("/policies/returns"),
   };
 }

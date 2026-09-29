@@ -142,6 +142,17 @@ describe("productJsonLd", () => {
     assert.equal(policy.applicableCountry, "US");
   });
 
+  it("states the owner's 2026-09-29 return terms, and nothing the policy does not say", () => {
+    const policy = (productJsonLd(view({}))!.offers as Offer).hasMerchantReturnPolicy;
+    // Change of mind: the buyer pays postage. A fault: we do.
+    assert.equal(policy.customerRemorseReturnFees, "https://schema.org/ReturnFeesCustomerResponsibility");
+    assert.equal(policy.itemDefectReturnFees, "https://schema.org/FreeReturn");
+    // No "full refund" and no return label are promised any more.
+    assert.equal(policy.refundType, undefined);
+    assert.ok(!/label/i.test(RETURN_POLICY_FACTS.returnMethod.source[1]));
+    assert.ok(!policyText("returns").includes("return label"));
+  });
+
   it("can fail: a sentence the policy does not contain is caught", () => {
     assert.ok(!policyText("returns").includes("within ninety days of delivery"));
     assert.equal(policyText("no-such-policy"), "");

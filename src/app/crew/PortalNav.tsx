@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import type { ReactNode } from "react";
 import { usePathname } from "next/navigation";
 
 /**
@@ -13,8 +14,16 @@ import { usePathname } from "next/navigation";
  * cannot disagree.
  *
  * A client component only because the layout does not know the path.
+ * `children` is rendered as the last item: the layout passes the sign-out
+ * form there, because its server action is bound on the server.
  */
-export function PortalNav({ items }: { items: { href: string; label: string }[] }) {
+export function PortalNav({
+  items,
+  children,
+}: {
+  items: { href: string; label: string }[];
+  children?: ReactNode;
+}) {
   const pathname = usePathname();
 
   const current = items
@@ -40,6 +49,7 @@ export function PortalNav({ items }: { items: { href: string; label: string }[] 
             </li>
           );
         })}
+        {children}
       </ul>
     </nav>
   );

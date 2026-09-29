@@ -25,8 +25,14 @@ import {
   isShippoConfigured,
   refreshLabelUrl,
   ShippoError,
+  shippoMode,
 } from "@/lib/shipping/shippo";
-import { claimLabelPurchase, releaseLabelClaim } from "@/lib/orders/label";
+import {
+  claimLabelPurchase,
+  labelRefusal,
+  recordBoughtLabel,
+  releaseLabelClaim,
+} from "@/lib/orders/label";
 import type { PortalFormState } from "@/lib/portal/form-state";
 
 /** Every action authorises itself. A proxy matcher is not a boundary for these. */
@@ -329,6 +335,14 @@ export async function buyLabel(
     return { status: "error", message: "That order no longer exists." };
   }
 
+  // Before anything is claimed or bought: the wrong mode, or an order that is
+  // not going anywhere, spends money on a label nobody will use.
+  const refusal = labelRefusal(order, shippoMode());
+
+  if (refusal) {
+    return { status: "error", message: refusal };
+  }
+
   // Buying a second label for the same parcel is real money and two barcodes
   // on one box. The claim is one atomic UPDATE, taken BEFORE Shippo is called:
   // of two simultaneous clicks, exactly one gets past this line.
@@ -339,6 +353,8 @@ export async function buyLabel(
       gone: "That order no longer exists.",
       "has-tracking":
         "This order already has a tracking number. Clear it first if the label was wrong.",
+      "not-shippable":
+        "This order was cancelled or refunded in full while you were looking at it. No label was bought.",
       "in-progress": "A label is already being bought for this order. Give it a moment, then reload.",
       abandoned:
         "A label purchase for this order was started and never finished, so it may have gone through. " +
@@ -385,22 +401,14 @@ export async function buyLabel(
     };
   }
 
-  await query(
-    `update "order"
-        set tracking_number = $2, tracking_carrier = $3, tracking_url = $4,
-            label_url = $5, shippo_transaction_id = $6
-      where id = $1`,
-    [
-      order.id,
-      label.trackingNumber,
-      label.carrier,
-      label.trackingUrl,
-      label.labelUrl,
-      label.transactionId,
-    ],
-  );
+  // Paid for from here on. A failed save keeps the claim and says what was bought.
+  const saved = await recordBoughtLabel(order.id, label);
 
   revalidateOrders(order.id);
+
+  if (!saved.ok) {
+    return { status: "error", message: saved.message };
+  }
 
   return {
     status: "success",

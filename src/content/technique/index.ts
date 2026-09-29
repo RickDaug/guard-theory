@@ -11,9 +11,12 @@ import { butterflyHookAsLever } from "./entries/butterfly-hook-as-lever.ts";
 import { closedGuardPostureBattle } from "./entries/closed-guard-posture-battle.ts";
 import { connectionInOpenGuard } from "./entries/connection-in-open-guard.ts";
 import { deLaRivaHook } from "./entries/de-la-riva-hook.ts";
+import { doubleLegIsALevelChange } from "./entries/double-leg-is-a-level-change.ts";
 import { elbowKneeEscape } from "./entries/elbow-knee-escape.ts";
+import { escapingTurtle } from "./entries/escaping-turtle.ts";
 import { framesVersusBlocks } from "./entries/frames-versus-blocks.ts";
 import { gettingHipsUnderneath } from "./entries/getting-hips-underneath.ts";
+import { granbyRollTurnsPressure } from "./entries/granby-roll-turns-pressure.ts";
 import { insidePosition } from "./entries/inside-position.ts";
 import { kneeCutPass } from "./entries/knee-cut-pass.ts";
 import { kneeShield } from "./entries/knee-shield.ts";
@@ -23,8 +26,10 @@ import { lockdownStretchesTheBase } from "./entries/lockdown-stretches-the-base.
 import { passingHalfGuardFromTheHead } from "./entries/passing-half-guard-from-the-head.ts";
 import { seatBeltAndHooks } from "./entries/seat-belt-and-hooks.ts";
 import { sideControlPinsTwoEscapes } from "./entries/side-control-pins-two-escapes.ts";
+import { snapDownToFrontHeadlock } from "./entries/snap-down-to-front-headlock.ts";
 import { sweepingTowardTheMissingPost } from "./entries/sweeping-toward-the-missing-post.ts";
 import { underhookHalfGuard } from "./entries/underhook-half-guard.ts";
+import { wrestlingUpTechnicalStandUp } from "./entries/wrestling-up-technical-stand-up.ts";
 
 /**
  * The registry. Entries are imported explicitly rather than globbed so that the
@@ -39,9 +44,12 @@ export const ENTRIES: TechniqueEntry[] = [
   closedGuardPostureBattle,
   connectionInOpenGuard,
   deLaRivaHook,
+  doubleLegIsALevelChange,
   elbowKneeEscape,
+  escapingTurtle,
   framesVersusBlocks,
   gettingHipsUnderneath,
+  granbyRollTurnsPressure,
   insidePosition,
   kneeCutPass,
   kneeShield,
@@ -51,8 +59,10 @@ export const ENTRIES: TechniqueEntry[] = [
   passingHalfGuardFromTheHead,
   seatBeltAndHooks,
   sideControlPinsTwoEscapes,
+  snapDownToFrontHeadlock,
   sweepingTowardTheMissingPost,
   underhookHalfGuard,
+  wrestlingUpTechnicalStandUp,
 ];
 
 export const ENTRIES_BY_SLUG = new Map(ENTRIES.map((e) => [e.slug, e]));

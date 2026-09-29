@@ -362,7 +362,13 @@ describe("creating and editing against the database", { skip: !HAS_DB && "no DAT
     assert.equal(specs.length, PUBLISHED_SPECIFICATIONS.length, "the refused save was not rolled back");
 
     const renamed = await run((client) => renameSize(client, id, m!.id, "3XL"));
-    assert.equal(renamed.ok, false, "renamed a live size to one the size guide has no row for");
+    if (SIZE_CHART.length > 0) {
+      assert.equal(renamed.ok, false, "renamed a live size to one the size guide has no row for");
+    } else {
+      // #64 emptied the chart: the guide makes no claim about any size, so a
+      // rename is not refused for being off-chart (storefrontProblems).
+      assert.equal(renamed.ok, true, "with no size chart, a rename was refused as off-chart");
+    }
   });
 
   it("adds, renames and removes a size nothing depends on, with its SKU", async () => {

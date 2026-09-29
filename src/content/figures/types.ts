@@ -44,6 +44,12 @@ export type Figure = {
    * length is asserted either way in tests/unit/content.test.ts.
    */
   metaDescription?: string;
+  /**
+   * ISO date of the last substantive revision, set when a published entry is
+   * corrected. The correction itself is stated in the entry, with its date, in
+   * the entry's own words: a page is not quietly edited.
+   */
+  updatedAt?: string;
   image?: FigureImage;
   /** 4–7 paragraphs. Substantive, sourced, no hagiography. */
   body: string[];

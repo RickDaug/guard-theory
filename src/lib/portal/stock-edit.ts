@@ -109,6 +109,12 @@ export type StockEditResult = {
  * Does not roll back by itself: if `moved` is not empty the caller must throw
  * so that nothing — price and status included — is saved from a form that was
  * working from the wrong numbers.
+ *
+ * Rows are written in variant-id order, whatever order the form posted them
+ * in. The webhook locks stock rows in that same order when it decrements a
+ * paid order (src/lib/orders/fulfil.ts); a save touching two sizes in the
+ * other order could hold one row while an order held the other, and Postgres
+ * would kill one of the two as a deadlock — possibly the paid order.
  */
 export async function applyStockEdits(
   client: PoolClient,
@@ -118,7 +124,11 @@ export async function applyStockEdits(
   const written: string[] = [];
   const moved: StockMove[] = [];
 
-  for (const edit of edits) {
+  const byVariant = [...edits].sort((a, b) =>
+    a.variantId < b.variantId ? -1 : a.variantId > b.variantId ? 1 : 0,
+  );
+
+  for (const edit of byVariant) {
     if (edit.entered === edit.seen) {
       continue;
     }

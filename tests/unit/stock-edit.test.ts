@@ -101,6 +101,28 @@ describe("what the next save compares against", () => {
   });
 });
 
+describe("the order stock rows are written in", () => {
+  it("is variant-id order, the order the webhook locks them in", async () => {
+    // fulfil.ts decrements in variant-id order so two carts cannot deadlock;
+    // a save that wrote the same rows in form order could deadlock with one.
+    const written: string[] = [];
+    const client = {
+      query: async (_sql: string, params: unknown[]) => {
+        written.push(String(params[0]));
+        return { rowCount: 1, rows: [] };
+      },
+    } as unknown as Parameters<typeof applyStockEdits>[0];
+
+    await applyStockEdits(client, "p", [
+      { variantId: "v-c", seen: 1, entered: 2 },
+      { variantId: "v-a", seen: 1, entered: 2 },
+      { variantId: "v-b", seen: 1, entered: 2 },
+    ]);
+
+    assert.deepEqual(written, ["v-a", "v-b", "v-c"]);
+  });
+});
+
 describe("the product form and its action", () => {
   // Source-level, because the action needs a request and a session. It is the
   // half that decides whether the guard above is used at all.

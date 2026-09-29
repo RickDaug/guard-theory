@@ -5,13 +5,13 @@ export const pressurePassingVersusLoosePassing: TechniqueEntry = {
   category: "passing",
   title: "Pressure passing versus loose passing",
   summary:
-    "Every guard pass is a way of getting past the knees to the hips, and the three families of pass, pressure, movement and the leg drag, each pay for their reach in a different currency.",
+    "A guard pass is a way of getting past the knees to the hips, and the three families of pass, pressure, movement and the leg drag, each get there with their own cost.",
   metaDescription:
     "Guard passing in no-gi comes in three families, pressure, movement and the leg drag, and a passing system is choosing one for the shape in front of you.",
   difficulty: "Intermediate",
   relevance: "No-gi first",
   positionAndProblem:
-    "You are on top, kneeling or standing, and their legs are between you and everything you want. Going over meets a shin, going around watches the hips turn and the knees follow, and every pass you were shown seems to fit a guard other than the one in front of you. A guard passing system sounds like a large thing to own. In practice it is a small one: three families of pass, and a way of choosing between them. Pressure passing closes the distance and moves last. Loose passing, which many rooms call movement passing, keeps the distance and moves first. The leg drag sits between the two. In no-gi, where there is no cloth to slow the bottom player's hips, the choice between them decides more than the details of any single pass.",
+    "You are on top, kneeling or standing, and their legs are between you and everything you want. Going over meets a shin, going around watches the hips turn and the knees follow, and every pass you were shown seems to fit a guard other than the one in front of you. A guard passing system is smaller than it sounds: three families of pass, and a way of choosing between them. Pressure passing closes the distance and moves last. Loose passing, which many rooms call movement passing, keeps the distance and moves first. The leg drag sits between the two. In no-gi, where there is no cloth to slow the bottom player's hips, the choice between them decides more than the details of any single pass.",
   objective:
     "Read the shape of the guard in front of you, choose the family that fits it, and finish with your chest past their knees and your head across.",
   coreConcept:
@@ -23,7 +23,7 @@ export const pressurePassingVersusLoosePassing: TechniqueEntry = {
     "Loose: keep your hips back out of hook range and hold the distance with your hands on their shins or knees. Their hooks reach as far as their shins, and a hip inside that reach is a hip they can lift.",
     "Loose: move the legs first and yourself second. Steer the knees to one side, step to the side they now point away from, and drop your weight only once your hip is past their knee line.",
     "Leg drag: pull the leg across their body until the thigh is pinned against your hip, then drive that hip down. The drag works because both of their knees now point the same way, away from you.",
-    "Commit at the moment of arrival, whatever the family. Every pass finishes the same way, chest past the knees and head across, and a passer who hesitates at the hips gives the knee time to come back.",
+    "Commit at the moment of arrival, whatever the family. All three families finish the same way, chest past the knees and head across, and a passer who hesitates at the hips gives the knee time to come back.",
     "Switch families when the shape changes. A partner who sits up under pressure is asking for distance, and a partner who lies back under a loose pass is asking for weight.",
   ],
   commonErrors: [
@@ -42,7 +42,7 @@ export const pressurePassingVersusLoosePassing: TechniqueEntry = {
     "Constrained: you may pass only with pressure; the bottom player may retain but not sweep or attack. Then a round of loose passing only, then the leg drag only. Notice which family their guard was built against.",
     "Constrained: partner changes shape twice in each repetition, sitting up and lying back. You score only for switching family at the right moment, never for finishing the pass.",
     "Positional: full-resistance passing from open guard, restarting when the pass completes or the bottom player sweeps.",
-    "Live: note which family each of your passes came from, and whether the failed ones failed at the entry or at the hips.",
+    "Live rounds: note which family each of your passes came from, and whether the failed ones failed at the entry or at the hips.",
   ],
   relatedSlugs: [
     "knee-cut-pass",
@@ -54,8 +54,10 @@ export const pressurePassingVersusLoosePassing: TechniqueEntry = {
   review: {
     drafted:
       "Assisted draft, 2026-09-25, from docs/agent-handoffs/technique-program-2026-09 (brief 04, pressure-passing-versus-loose-passing); written by a Claude Code agent from the research brief and the house style fingerprint.",
-    factAudit: "Pending: independent fact-and-mechanics audit not yet run.",
-    voiceAudit: "Pending: independent voice audit not yet run.",
+    factAudit:
+      "Fact audit, assisted (Claude Code agent), 2026-09-28: all ledger rows checked, no changes; toreando/bullfighter naming and leg-drag knee load confirmed. Revision softened 'every guard pass' and 'every pass finishes' to claims about the three families.",
+    voiceAudit:
+      "Voice audit, assisted (Claude Code agent), 2026-09-28, revised the same day: setup-and-payoff 'large thing to own / small one' cadence cut; the 'price/currency' metaphor no longer stated twice across summary and coreConcept; last step relabelled 'Live rounds'.",
     approvedBy: null,
   },
 };

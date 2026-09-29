@@ -11,11 +11,11 @@ export const mountIsAHipPin: TechniqueEntry = {
   difficulty: "Foundational",
   relevance: "Gi and no-gi",
   positionAndProblem:
-    "You have passed the guard and climbed to mount, and it lasts about four seconds. They bridge, you post a hand, they turn onto a side, a knee appears under your thigh, and you are back in half guard with the whole pass to do again. In no-gi the position feels lighter than it looks, because there is no lapel or belt to hold and the hands find nothing to hang on to. The question people search is how to hold mount, and most of the answers describe what the hands should grab. The hands were never the problem. Mount is held by the hips and the legs, and the thing that keeps undoing it is the same thing that undid the pass: a knee getting back between your body and theirs.",
+    "You have passed the guard and climbed to mount, and it lasts a few seconds. They bridge, you post a hand, they turn onto a side, a knee appears under your thigh, and you are back in half guard with the whole pass to do again. In no-gi the position feels lighter than it looks, because there is no lapel or belt to hold and the hands find nothing to hang on to. Mount is held by the hips and the legs, not the hands, and the thing that keeps undoing it is the same thing that undid the pass: a knee getting back between your body and theirs.",
   objective:
     "Keep your hips over the bottom player's hips, with your knees pinched to their ribs, so that neither the bridge nor the turn can bring a knee back inside.",
   coreConcept:
-    "Mount is a pin applied to the hips, and everything the bottom player can do to escape starts at the hips you are sitting on. They have two engines. The bridge lifts your weight up and over one shoulder, and the turn onto a side brings a knee under your thigh and back inside. Your hips low over their belt line, with your weight forward of your own knees, make the bridge lift your chest onto theirs rather than throwing you anywhere. Your knees pinched to their ribs stop the turn, and your feet tucked near their hips or hooked under their thighs close the channel a knee would slide into. Passing and holding mount turn out to be one problem seen from either end. Passing is getting past the knees to the hips, and holding mount is keeping those knees out once you have arrived. The moment their knee gets between your thigh and their body, the mount has become half guard with the name unchanged. Many gyms call the version with the hips low and the feet hooked low mount, and the version with the knees climbed up under the armpits high mount; the first holds better and the second attacks better, and moving between them is most of the skill.",
+    "Mount is a pin applied to the hips, and everything the bottom player can do to escape starts at the hips you are sitting on. They have two engines. The bridge lifts your weight up and over one shoulder, and the turn onto a side brings a knee under your thigh and back inside. Your hips low over their belt line, with your weight forward of your own knees, make the bridge lift your chest onto theirs rather than throwing you anywhere. Your knees pinched to their ribs stop the turn, and your feet tucked near their hips or hooked under their thighs close the channel a knee would slide into. Passing is getting past the knees to the hips; holding mount is keeping those knees out once you have arrived, and the moment their knee gets between your thigh and their body, the mount has become half guard with the name unchanged. Many gyms call the version with the hips low and the feet hooked under the thighs low mount, and the version with the knees climbed up under the armpits high mount; the first holds better and the second attacks better, and much of the skill is moving between them.",
   keyMechanics: [
     "Keep your hips over their belt line with your weight forward of your own knees. Weight sitting back toward the heels lets a bridge lift you; weight forward lands the bridge on your chest instead.",
     "Pinch the knees to their ribs and keep the feet tucked against their hips or hooked under their thighs. The knees stop the turn, and the feet close the channel a knee needs to slide inside.",
@@ -34,14 +34,14 @@ export const mountIsAHipPin: TechniqueEntry = {
     "Fighting the turn back to flat rather than following it toward the back, which spends effort on a return the bottom player will repeat.",
   ],
   safetyNote:
-    "The structure under load in mount is the bottom player's neck. A crossface driven under the jaw with the weight of the mount behind it turns the head one way while the bridge is trying to lift the other way, and the cervical spine takes the difference. On top, use the crossface to steer the head and never to crank it past where the shoulders can follow. Underneath, bridge through the feet and the upper back with the head off the mat, because a bridge driven off the crown puts the weight of two bodies through the neck in extension. The second exposure is the top player's own foot. A hook tucked under a thigh while the bottom player turns hard is an ankle held at one end and twisted at the other, so free the hook and re-place it rather than riding the turn on it.",
+    "A crossface driven under the bottom player's jaw with the weight of the mount behind it turns the head one way while the bridge is trying to lift the other way, and the cervical spine takes the difference. On top, use the crossface to steer the head and never to crank it past where the shoulders can follow. Underneath, bridge through the feet and the upper back with the head off the mat, because a bridge driven off the crown puts the weight of two bodies through the neck in extension. On top, your own feet are exposed too: a hook tucked under a thigh while the bottom player turns hard traps the foot while the turn twists the shin above it, so free the hook and re-place it rather than riding the turn on it.",
   trainingProgression: [
     "Static: partner lies still under mount. Place the hips over the belt line, pinch the knees and take both hands off them. Hold for thirty seconds on hips and legs alone and notice where the weight sits.",
     "Cooperative: partner bridges slowly to one side each repetition. Post early, let the bridge run out, and settle back over the hips before they try the other side.",
     "Cooperative: partner turns slowly onto a side and begins to slide a knee under your thigh. Climb the near knee toward the armpit as their hip moves, before the elbow arrives.",
     "Constrained: partner may bridge and turn at full effort but may not use the arms. You may hold and climb but not attack. Restart every time a knee gets inside.",
     "Positional: full-resistance mount, both players free to attack, restarting at any guard recovery or any submission.",
-    "Live: after each round, recall whether you lost the mount to a bridge or to a knee, and which of your own hands was holding something at the moment it went.",
+    "Live rounds: after each round, recall whether you lost the mount to a bridge or to a knee, and which of your own hands was holding something at the moment it went.",
   ],
   relatedSlugs: [
     "elbow-knee-escape",
@@ -52,8 +52,10 @@ export const mountIsAHipPin: TechniqueEntry = {
   review: {
     drafted:
       "Assisted draft, 2026-09-25, from docs/agent-handoffs/technique-program-2026-09 (brief 04, mount-is-a-hip-pin); written by a Claude Code agent from the research brief and the house style fingerprint.",
-    factAudit: "Pending: independent fact-and-mechanics audit not yet run.",
-    voiceAudit: "Pending: independent voice audit not yet run.",
+    factAudit:
+      "Fact audit, assisted (Claude Code agent), 2026-09-28: pin and escape mechanics confirmed; an unverifiable claim about other answers cut (positionAndProblem); low mount / high mount terminology made explicit (coreConcept). Revision also cut the unsourced 'about four seconds' and hedged 'most of the skill'.",
+    voiceAudit:
+      "Voice audit, assisted (Claude Code agent), 2026-09-28, revised the same day: search-narration sentence and the 'hands were never the problem' beat cut; 'one problem seen from either end' pair folded into a plain statement; 'The structure under load' safety opener and the 'second exposure' device rewritten; last step relabelled 'Live rounds'.",
     approvedBy: null,
   },
 };

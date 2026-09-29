@@ -10,7 +10,7 @@ import { readFileSync } from "node:fs";
 
 import { fromWithName, readReplyTo, resendHeaders, resendPayload } from "../../src/lib/mail/index.ts";
 import { listUnsubscribeHeaders } from "../../src/lib/mail/list-unsubscribe.ts";
-import { DISPATCH_WITHIN, TRACE_AFTER } from "../../src/content/policies/shipping-terms.ts";
+import { DISPATCH_WITHIN } from "../../src/content/policies/shipping-terms.ts";
 import { POLICIES } from "../../src/content/policies/index.ts";
 import { SITE_URL } from "../../src/lib/site.ts";
 import { confirmationIdempotencyKey } from "../../src/lib/orders/confirmation.ts";
@@ -290,7 +290,7 @@ describe("the confirmation, exactly", () => {
         "  Tax          $18.41",
         "  Total        $248.41",
         "",
-        "It is packed and dispatched within two business days. You will get a second",
+        "It is packed and dispatched within seven business days. You will get a second",
         "message with a tracking number when the parcel leaves us.",
         "",
         "Order number: 1043. Quote it if you write to us about this.",
@@ -341,11 +341,17 @@ describe("order mail promises only what the shipping policy promises", () => {
   const policyText = shipping ? shipping.sections.flatMap((s) => s.paragraphs).join("\n") : "";
   const shipped = MESSAGES[2][1];
 
-  it("the dispatch window and the trace threshold come from the policy's constants", () => {
+  it("the dispatch window comes from the policy's constant", () => {
     assert.match(policyText, new RegExp(`dispatched within ${DISPATCH_WITHIN}`));
-    assert.match(policyText, new RegExp(`not moved for ${TRACE_AFTER}`));
     assert.match(orderConfirmation(ORDER).body, new RegExp(`dispatched within ${DISPATCH_WITHIN}`));
-    assert.match(shipped.body, new RegExp(`not moved for ${TRACE_AFTER}`));
+  });
+
+  it("the shipped mail and the policy give the same lost-or-damaged answer, with no day count", () => {
+    // Owner decision 2026-09-29: no trace threshold, no replacement deadline.
+    const answer = /work it out with the carrier/;
+    assert.match(policyText, answer);
+    assert.match(shipped.body.replace(/\s+/g, " "), answer);
+    assert.doesNotMatch(shipped.body, /not moved for|open a trace/);
   });
 
   it("the template source types no timescale of its own", () => {

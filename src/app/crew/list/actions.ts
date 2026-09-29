@@ -67,11 +67,11 @@ export async function sendAnnouncement(
   const body = String(formData.get("body") ?? "").trim();
 
   if (!subject) {
-    return { status: "error", message: "Give it a subject line." };
+    return { status: "error", message: "Give it a subject line.", field: "subject" };
   }
 
   if (body.length < 20) {
-    return { status: "error", message: "Write the message first." };
+    return { status: "error", message: "Write the message first.", field: "body" };
   }
 
   // The same voice rules the Journal is held to, checked before it goes out
@@ -116,6 +116,7 @@ export async function sendAnnouncement(
     return {
       status: "error",
       message: `Nothing was sent. To send for real, type the number of recipients (${draft.due}). ${summary}`,
+      field: "confirm",
     };
   }
 

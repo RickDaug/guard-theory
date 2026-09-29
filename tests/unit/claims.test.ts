@@ -9,6 +9,10 @@ import {
   numberWord,
 } from "../../src/content/section-descriptions.ts";
 import { CATEGORIES } from "../../src/content/technique/index.ts";
+import { ARTICLES, isPublished } from "../../src/content/journal/index.ts";
+
+const MAIL = "src/lib/mail/templates.ts";
+const POLICY = "src/content/policies/index.ts";
 
 /**
  * What the site says about itself is still true.
@@ -26,7 +30,7 @@ import { CATEGORIES } from "../../src/content/technique/index.ts";
 const ROOT = join(import.meta.dirname, "..", "..");
 
 /** Where copy lives. A retired sentence may not reappear anywhere in here. */
-const COPY_DIRECTORIES = ["src/app", "src/components", "src/content"];
+const COPY_DIRECTORIES = ["src/app", "src/components", "src/content", "src/lib/mail"];
 
 /** The registry quotes every sentence it guards, so it is not copy. */
 const NOT_COPY = new Set(["src/content/claims.ts"]);
@@ -261,6 +265,67 @@ describe("the guard can fail", () => {
       'a: "Rick R. Every article carries a byline, a publication date and the sources',
       claim.says,
     );
+  });
+
+  it("objects when the dispatch time drifts from the owner's figure", () => {
+    const claim = byId("dispatch-time-is-the-owners");
+    // The constant every copy file renders from…
+    const terms = "src/content/policies/shipping-terms.ts";
+    const viaConstant = claim.holds(
+      contextFor(null, {
+        [terms]: raw(terms).replace('"seven business days"', '"two business days"'),
+      }),
+    );
+    assert.match(String(viaConstant), /promises dispatch within two business days/);
+    // …and a figure typed straight into the copy instead of the constant.
+    const typed = claim.holds(
+      contextFor(null, {
+        [MAIL]: raw(MAIL).replace("dispatched within ${DISPATCH_WITHIN}", "dispatched within two business days"),
+      }),
+    );
+    assert.match(String(typed), /promises dispatch within two business days/);
+  });
+
+  it("objects when the return window drifts from the owner's figure", () => {
+    const claim = byId("return-window-is-the-owners");
+    const verdict = claim.holds(
+      contextFor(null, {
+        [POLICY]: raw(POLICY).replace("within thirty days of delivery", "within sixty days of delivery"),
+      }),
+    );
+    assert.match(String(verdict), /return window of sixty days/);
+  });
+
+  it("keeps the unconfirmed buyer terms cut", () => {
+    const claim = byId("retired-unconfirmed-buyer-terms");
+    assert.notEqual(claim.holds(contextFor(null)), true);
+    for (const sentence of [
+      "Orders are packed and dispatched within two business days.",
+      "Refunds are issued to the original payment method within five business days of the return arriving.",
+      "we will send a return label and instructions",
+      "Contact us with a photograph and we will repair, replace or refund it.",
+      "If tracking shows no delivery after twenty-one days, we will replace the order",
+      "We will replace it and we will not ask you to return the damaged goods.",
+      "We dispatch the replacement as soon as the return is scanned by the carrier",
+      "If tracking has not moved for seven days, write to us",
+    ]) {
+      assert.match(sentence, claim.says, sentence);
+    }
+    assert.doesNotMatch("Orders are packed and dispatched within seven business days.", claim.says);
+  });
+
+  it("objects when an article carries a person's byline the owner has not confirmed", () => {
+    const claim = byId("journal-bylines-are-editorial");
+    assert.equal(claim.holds(contextFor(null)), true);
+    const article = ARTICLES.find(isPublished);
+    assert.ok(article);
+    const original = article.authorId;
+    try {
+      (article as { authorId: string }).authorId = "steven-p";
+      assert.match(String(claim.holds(contextFor(null))), /person's byline the owner has not confirmed/);
+    } finally {
+      (article as { authorId: string }).authorId = original;
+    }
   });
 
   it("objects when a connector changes colour and not weight", () => {

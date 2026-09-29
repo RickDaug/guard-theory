@@ -85,7 +85,7 @@ export default async function OrderPage({ params }: { params: Promise<{ id: stri
       <div className="mx-auto max-w-[70rem]">
         <Link
           href={portalUrl("/orders")}
-          className="display-plain text-sm text-steel no-underline hover:text-chalk"
+          className="display-plain inline-flex min-h-6 items-center text-sm text-steel no-underline hover:text-chalk"
         >
           Back to orders
         </Link>
@@ -135,7 +135,7 @@ export default async function OrderPage({ params }: { params: Promise<{ id: stri
                     {`${item.product_name} — ${item.product_kind}, size ${item.size_label}${
                       item.quantity > 1 ? ` × ${item.quantity}` : ""
                     }${item.restocked_quantity > 0 ? ` (${item.restocked_quantity} back in stock)` : ""}`}
-                  </span>
+                  </span>{" "}
                   <span className="text-base text-chalk tabular-nums">
                     {formatMoney(item.unit_cents * item.quantity, order.currency)}
                   </span>
@@ -312,10 +312,17 @@ export default async function OrderPage({ params }: { params: Promise<{ id: stri
                     {view.label}
                   </span>
                   {email.error ? (
-                    <span className="text-sm text-steel">{email.error.slice(0, 120)}</span>
-                  ) : null}
+                    <>
+                      {" "}
+                      <span className="text-sm text-steel">{email.error.slice(0, 120)}</span>
+                    </>
+                  ) : null}{" "}
                   <span className="ml-auto">
-                    <ResendControl id={order.id} template={email.template} />
+                    <ResendControl
+                      id={order.id}
+                      template={email.template}
+                      templateLabel={TEMPLATE_LABEL[email.template] ?? email.template}
+                    />
                   </span>
                 </li>
                 );

@@ -12,7 +12,7 @@ import type { PublishedArticle } from "../types.ts";
 export const takingTheBackFromTurtle: PublishedArticle = {
   status: "published",
   publishedAt: "2026-08-04",
-  authorId: "steven-p",
+  authorId: "guard-theory-editorial",
   slug: "taking-the-back-from-turtle",
   category: "guard-systems",
   title: "Taking the back from turtle",

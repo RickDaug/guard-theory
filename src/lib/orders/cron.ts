@@ -3,6 +3,12 @@ import { isDatabaseConfigured } from "../db/client.ts";
 import { isStripeConfigured } from "../stripe/client.ts";
 import { purgeStaleIntents } from "../cart/price.ts";
 import { sweepLoginAttempts } from "../portal/attempts.ts";
+import { type AlertOutcome, type RunContext, runOwnerAlert } from "../ops/alert.ts";
+import {
+  retryUndeliveredConfirmations,
+  sendMissingConfirmations,
+  sweepWebhookEvents,
+} from "../ops/sweep.ts";
 import {
   type ReconcileOptions,
   type ReconcileReport,
@@ -24,6 +30,15 @@ import {
  * were riding along on other requests (stale checkout intents, old sign-in
  * attempts, expired portal sessions). Those still ride along where they did;
  * this is so they also happen on a day nobody signs in.
+ *
+ * After the reconcile it does three more things (src/lib/ops):
+ *   - drops processed webhook_event rows older than ninety days;
+ *   - sends order confirmations that never went — attempted and undelivered,
+ *     or never attempted at all because the function died before the send;
+ *   - emails the owner a digest of anything that needs a person, when
+ *     OWNER_ALERT_EMAIL is set (see src/lib/ops/alert.ts for the rate limit).
+ * None of the three can turn a run into a failure. A reconcile failure still
+ * reports 500, and the alert still goes out about it.
  *
  * WHO MAY CALL IT
  *
@@ -56,6 +71,10 @@ export type CronDeps = {
   purgeIntents: () => Promise<number>;
   sweepAttempts: () => Promise<number>;
   sweepSessions: () => Promise<number>;
+  sweepWebhookEvents: () => Promise<number>;
+  retryUndelivered: () => Promise<number | null>;
+  sendMissing: () => Promise<number>;
+  alert: (context: RunContext) => Promise<AlertOutcome>;
   stripeConfigured: () => boolean;
   databaseConfigured: () => boolean;
 };
@@ -68,6 +87,10 @@ const REAL: CronDeps = {
   // Imported on use: session.ts pulls in next/headers, which exists inside a
   // request and not under `node --test`.
   sweepSessions: async () => (await import("../portal/session.ts")).sweepExpiredSessions(),
+  sweepWebhookEvents: () => sweepWebhookEvents(),
+  retryUndelivered: retryUndeliveredConfirmations,
+  sendMissing: () => sendMissingConfirmations(),
+  alert: (context) => runOwnerAlert(context),
   stripeConfigured: isStripeConfigured,
   databaseConfigured: isDatabaseConfigured,
 };
@@ -108,13 +131,38 @@ export function isAuthorisedCron(
   return timingSafeEqual(digest(header ?? ""), digest(`Bearer ${secret}`));
 }
 
-async function count(sweep: () => Promise<number>): Promise<number | null> {
+async function count(sweep: () => Promise<number | null>): Promise<number | null> {
   try {
     return await sweep();
   } catch {
     // Housekeeping. Never the reason a run is reported as failed.
     return null;
   }
+}
+
+/**
+ * The mail catch-ups and the owner alert. Run on every path that reached the
+ * database, Stripe or no Stripe, success or failure: a failed reconcile is the
+ * thing the owner most needs to hear about.
+ */
+async function afterRun(deps: CronDeps, context: RunContext) {
+  const confirmations = {
+    retried: await count(deps.retryUndelivered),
+    missing: await count(deps.sendMissing),
+  };
+
+  let alert: AlertOutcome | "error";
+
+  try {
+    alert = await deps.alert(context);
+  } catch (error) {
+    console.error(
+      `[guard-theory] the owner alert could not run: ${error instanceof Error ? error.name : "unknown error"}`,
+    );
+    alert = "error";
+  }
+
+  return { confirmations, alert };
 }
 
 export async function handleReconcileCron(
@@ -135,13 +183,15 @@ export async function handleReconcileCron(
     checkoutIntents: await count(deps.purgeIntents),
     loginAttempts: await count(deps.sweepAttempts),
     portalSessions: await count(deps.sweepSessions),
+    webhookEvents: await count(deps.sweepWebhookEvents),
   };
 
   // The state right after the merge: no Stripe keys yet. Nothing to ask and
   // nothing wrong, every fifteen minutes, so it is said quietly and nothing is
   // written over the portal's "last checked" line.
   if (!deps.stripeConfigured()) {
-    return json({ ok: true, ran: false, why: "stripe-not-configured", swept }, 200);
+    const after = await afterRun(deps, { runFailed: null, refundsFailed: null });
+    return json({ ok: true, ran: false, why: "stripe-not-configured", swept, ...after }, 200);
   }
 
   let report: ReconcileReport;
@@ -154,10 +204,10 @@ export async function handleReconcileCron(
   } catch (error) {
     // Stripe unreachable, or the list call refused. The name of the error and
     // nothing else: Stripe's messages quote request parameters.
-    console.error(
-      `[guard-theory] scheduled reconcile failed: ${error instanceof Error ? error.name : "unknown error"}`,
-    );
-    return json({ ok: false, ran: false, why: "reconcile-failed", swept }, 500);
+    const name = error instanceof Error ? error.name : "unknown error";
+    console.error(`[guard-theory] scheduled reconcile failed: ${name}`);
+    const after = await afterRun(deps, { runFailed: name, refundsFailed: null });
+    return json({ ok: false, ran: false, why: "reconcile-failed", swept, ...after }, 500);
   }
 
   await deps.record(report).catch(() => {});
@@ -173,6 +223,11 @@ export async function handleReconcileCron(
     );
   }
 
+  const after = await afterRun(deps, {
+    runFailed: null,
+    refundsFailed: report.refunds?.failed ?? null,
+  });
+
   return json(
     {
       ok: true,
@@ -183,6 +238,7 @@ export async function handleReconcileCron(
       skipped: report.skipped.length,
       truncated: report.truncated === true,
       swept,
+      ...after,
     },
     200,
   );

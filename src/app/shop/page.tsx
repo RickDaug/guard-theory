@@ -10,7 +10,7 @@ import { formatMoney } from "@/lib/money";
 
 export const metadata: Metadata = pageMetadata({
   title: "Shop — No-gi BJJ rash guards",
-  description: "What Guard Theory makes, and the published specification behind each garment — fabric, weight, seam construction and print method.",
+  description: "What Guard Theory makes: the First Edition no-gi rash guards, long sleeve and short sleeve, each drawn as a flat. Join the list for first access.",
   path: "/shop",
 });
 
@@ -50,9 +50,7 @@ export default async function ShopPage() {
           <p className="notation text-2xs text-orchid">First Edition</p>
           <h1 className="display-condensed mt-6 text-4xl text-chalk">Shop</h1>
           <p className="mt-8 text-lg text-steel">
-            {capitalise(numberWord(products.length))} garments. The specification is published in
-            full on each page — fabric, weight, seam construction, print method
-            — because that is what you are actually choosing between.
+            {capitalise(numberWord(products.length))} garments, each drawn as a flat.
           </p>
           <div className="mt-10">
             <ButtonLink href="/first-edition">

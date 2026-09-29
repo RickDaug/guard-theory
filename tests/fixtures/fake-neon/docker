@@ -1,0 +1,38 @@
+#!/usr/bin/env bash
+#
+# A stand-in for `docker`, for tests/unit/restore-verify-ci.test.ts. No
+# network, no database: it answers what scripts/db/restore-verify-ci.sh asks a
+# postgres container for, from environment variables the test sets, and
+# appends what it was asked to FAKE_LOG.
+#
+#   FAKE_TOC             what `pg_restore --list` prints
+#   FAKE_COPY            a file: what `pg_restore --data-only --file=-` prints
+#   FAKE_RESTORED        what the row-count query prints (table|count lines)
+#   FAKE_RESTORE_ERROR   if set, pg_restore prints it to stderr and fails
+
+case "$*" in
+  *"pg_restore --list"*)
+    cat >/dev/null
+    printf '%s\n' "${FAKE_TOC:-}"
+    ;;
+  *"--data-only"*)
+    cat >/dev/null
+    cat "$FAKE_COPY"
+    ;;
+  *"pg_restore --no-owner"*)
+    cat >/dev/null
+    echo "docker pg_restore into ${RESTORE_URL:-nothing}" >>"${FAKE_LOG:-/dev/null}"
+    if [ -n "${FAKE_RESTORE_ERROR:-}" ]; then
+      echo "$FAKE_RESTORE_ERROR" >&2
+      exit 1
+    fi
+    ;;
+  *psql*)
+    echo "docker psql ${SQL:0:40} into ${RESTORE_URL:-nothing}" >>"${FAKE_LOG:-/dev/null}"
+    case "$SQL" in
+      *query_to_xml*) printf '%s\n' "${FAKE_RESTORED:-}" ;;
+      *) : ;;
+    esac
+    ;;
+  *) exit 99 ;;
+esac

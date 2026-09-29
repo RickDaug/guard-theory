@@ -19,7 +19,10 @@ import type { DraftArticle } from "../types.ts";
  * is still a draft and is not pointed at. This article makes no medical, hygiene or injury-prevention claim of
  * its own.
  *
- * Draft: no author has read this piece, so it carries no byline and no date.
+ * Draft: no one has read and signed off this piece, so it carries no byline
+ * and no date. AI-assisted pieces are published under the "Guard Theory
+ * editorial" byline (authorId "guard-theory-editorial"; owner, 2026-09-29),
+ * once a person has reviewed them.
  */
 export const howLongToBlueBeltAndOtherFirstWeekQuestions: DraftArticle = {
   status: "draft",

@@ -17,7 +17,10 @@ import type { DraftArticle } from "../types.ts";
  * accessed date but refused our fetch tool with a 403; the figures used from it
  * are the ones read from the page text and no others.
  *
- * Draft: no author has read this piece, so it carries no byline and no date.
+ * Draft: no one has read and signed off this piece, so it carries no byline
+ * and no date. AI-assisted pieces are published under the "Guard Theory
+ * editorial" byline (authorId "guard-theory-editorial"; owner, 2026-09-29),
+ * once a person has reviewed them.
  */
 export const ufcSubmissionsByTheNumbers: DraftArticle = {
   status: "draft",

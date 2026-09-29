@@ -315,6 +315,7 @@ export async function refundWithin(
     `update "order"
         set refunded_cents = $2,
             refund_status = $3,
+            refunded_at = now(),
             flagged_reason = coalesce(flagged_reason, 'refunded')
       where id = $1`,
     [orderId, refundedCents, status],
@@ -369,6 +370,13 @@ export async function applyRefundFromCharge(
               when greatest(refunded_cents, $2::integer) >= total_cents then 'full'
               when greatest(refunded_cents, $2::integer) > 0 then 'partial'
               else 'none'
+            end,
+            -- Stamped only when the figure actually rises: a replayed or
+            -- out-of-order event must not move the date of a refund it did
+            -- not make. Every SET expression reads the row as it was.
+            refunded_at = case
+              when least(greatest(refunded_cents, $2::integer), total_cents) > refunded_cents then now()
+              else refunded_at
             end,
             flagged_reason = case
               when $2::integer > 0 then coalesce(flagged_reason, 'refunded')

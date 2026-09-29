@@ -7,7 +7,7 @@ import { GuardSystemMap } from "@/components/notation/GuardSystemMap";
 export const metadata: Metadata = pageMetadata({
   title: `${SITE_NAME} — No-gi grappling apparel`,
   description:
-    "No-gi grappling apparel and a technical study of the guard. Garments designed inside competition rulesets, and the reasoning published alongside them.",
+    "No-gi grappling apparel and a technical study of the guard: the First Edition rash guards, a sourced Journal and a Technique Library.",
   path: "/",
 });
 

@@ -11,6 +11,7 @@ import {
 } from "../../src/lib/orders/cron.ts";
 import {
   type ReconcileOptions,
+  reconcileRefunds,
   reconcileStripeSessions,
 } from "../../src/lib/orders/reconcile.ts";
 import { closePool, isDatabaseConfigured, query } from "../../src/lib/db/client.ts";
@@ -52,6 +53,10 @@ function traps(calls: string[]): CronDeps {
     purgeIntents: note("purgeIntents", 0),
     sweepAttempts: note("sweepAttempts", 0),
     sweepSessions: note("sweepSessions", 0),
+    sweepWebhookEvents: note("sweepWebhookEvents", 0),
+    retryUndelivered: note("retryUndelivered", 0),
+    sendMissing: note("sendMissing", 0),
+    alert: note("alert", "none" as const),
     stripeConfigured: () => true,
     databaseConfigured: () => true,
   };
@@ -150,7 +155,16 @@ describe("what an authorised run does", () => {
     });
 
     assert.equal(response.status, 200);
-    assert.deepEqual(calls, ["sweepAttempts", "sweepSessions", "reconcile", "record"]);
+    assert.deepEqual(calls, [
+      "sweepAttempts",
+      "sweepSessions",
+      "sweepWebhookEvents",
+      "reconcile",
+      "record",
+      "retryUndelivered",
+      "sendMissing",
+      "alert",
+    ]);
 
     const before = Date.now();
     assert.ok(options?.deadlineMs && options.deadlineMs > before, "a deadline was set");
@@ -165,7 +179,9 @@ describe("what an authorised run does", () => {
       alreadyRecorded: 1,
       skipped: 1,
       truncated: false,
-      swept: { checkoutIntents: 4, loginAttempts: 0, portalSessions: 0 },
+      swept: { checkoutIntents: 4, loginAttempts: 0, portalSessions: 0, webhookEvents: 0 },
+      confirmations: { retried: 0, missing: 0 },
+      alert: "none",
     });
     assert.doesNotMatch(text, /@|cs_test_/, "counts only: no reason, no id");
   });
@@ -248,17 +264,46 @@ function session(overrides: Record<string, unknown> = {}): Stripe.Checkout.Sessi
   } as unknown as Stripe.Checkout.Session;
 }
 
-/** The one method of Stripe's the reconciler calls, yielding fixtures. */
-function fakeStripe(sessions: Stripe.Checkout.Session[]): NonNullable<ReconcileOptions["client"]> {
+/**
+ * A refund as `refunds.list({ expand: ["data.charge"] })` returns it: the
+ * charge inlined, carrying its running `amount_refunded`.
+ */
+function refund(paymentIntent: string, amountRefunded: number): Stripe.Refund {
+  return {
+    id: `re_${randomUUID()}`,
+    object: "refund",
+    status: "succeeded",
+    payment_intent: paymentIntent,
+    charge: {
+      id: `ch_${randomUUID()}`,
+      object: "charge",
+      payment_intent: paymentIntent,
+      amount_refunded: amountRefunded,
+    },
+  } as unknown as Stripe.Refund;
+}
+
+function iterate<T>(items: T[]) {
+  return () => ({
+    async *[Symbol.asyncIterator]() {
+      yield* items;
+    },
+  });
+}
+
+/** The two methods of Stripe's the reconciler calls, yielding fixtures. */
+function fakeStripe(
+  sessions: Stripe.Checkout.Session[],
+  refunds: Stripe.Refund[] = [],
+): NonNullable<ReconcileOptions["client"]> {
   return {
     checkout: {
       sessions: {
-        list: (() => ({
-          async *[Symbol.asyncIterator]() {
-            yield* sessions;
-          },
-        })) as unknown as Stripe["checkout"]["sessions"]["list"],
+        list: iterate(sessions) as unknown as Stripe["checkout"]["sessions"]["list"],
       },
+    },
+    refunds: {
+      list: iterate(refunds) as unknown as Stripe["refunds"]["list"],
     },
   };
 }
@@ -368,6 +413,128 @@ describe(
       const late = await reconcileStripeSessions(72, { client, deadlineMs: Date.now() - 1 });
       assert.equal(late.scanned, 0);
       assert.equal(late.truncated, true);
+    });
+
+    async function makeIntent(): Promise<string> {
+      const intentId = randomUUID();
+      await query(
+        `insert into checkout_intent (id, lines_json, subtotal_cents, shipping_cents)
+         values ($1, $2::jsonb, 8900, 700)`,
+        [
+          intentId,
+          JSON.stringify([
+            {
+              variantId,
+              quantity: 1,
+              slug: "cron-test",
+              productName: "Cron Test",
+              productKind: "Fixture",
+              sizeLabel: "M",
+              sku: `CRON-${intentId.slice(0, 8)}`,
+              unitCents: 8900,
+              lineCents: 8900,
+              stock: 5,
+            },
+          ]),
+        ],
+      );
+      return intentId;
+    }
+
+    const refundState = async (sessionId: string) =>
+      (
+        await query<{ refunded_cents: number; refund_status: string }>(
+          `select refunded_cents, refund_status from "order" where stripe_session_id = $1`,
+          [sessionId],
+        )
+      )[0];
+
+    it("a dashboard refund of an order whose webhook was missed lands on the order it creates", async () => {
+      // B4: the webhook for the order failed, the owner refunded it from the
+      // Stripe dashboard, and the reconciler then created the order. It used
+      // to be created unrefunded — and shipped.
+      const paid = session({ client_reference_id: await makeIntent() });
+      const pi = paid.payment_intent as string;
+      const client = fakeStripe([paid], [refund(pi, 9600)]);
+
+      const run = () =>
+        handleReconcileCron(call(`Bearer ${SECRET}`), {
+          reconcile: (hours, options) => reconcileStripeSessions(hours, { ...options, client }),
+          sweepSessions: async () => 0,
+        });
+
+      const response = await run();
+      assert.equal(response.status, 200);
+      assert.equal((await response.json()).recovered, 1);
+      assert.deepEqual(await refundState(paid.id), { refunded_cents: 9600, refund_status: "full" });
+
+      const last = await query<{ value: string }>(
+        "select value::text as value from setting where key = 'last_reconcile'",
+      );
+      assert.match(last[0]!.value, /"refunds":\s*\{[^}]*"synced":\s*1/);
+
+      // Again: nothing changes, nothing is created.
+      assert.equal((await (await run()).json()).alreadyRecorded, 1);
+      assert.deepEqual(await refundState(paid.id), { refunded_cents: 9600, refund_status: "full" });
+    });
+
+    it("syncs a refund on an order that already exists, taking the largest running total", async () => {
+      const paid = session({ client_reference_id: await makeIntent() });
+      const pi = paid.payment_intent as string;
+      await reconcileStripeSessions(72, { client: fakeStripe([paid]) });
+      assert.deepEqual(await refundState(paid.id), { refunded_cents: 0, refund_status: "none" });
+
+      // Two dashboard refunds of one charge, listed newest first: each carries
+      // the charge's running total at the time it was expanded.
+      const report = await reconcileRefunds(72, {
+        client: fakeStripe([], [refund(pi, 5000), refund(pi, 2000)]),
+      });
+
+      assert.deepEqual(report, { scanned: 2, synced: 1, unmatched: 0 });
+      assert.deepEqual(await refundState(paid.id), {
+        refunded_cents: 5000,
+        refund_status: "partial",
+      });
+    });
+
+    it("a refund with no order yet is counted, not fatal, and applied once the order exists", async () => {
+      const pi = `pi_${randomUUID()}`;
+      const client = fakeStripe([], [refund(pi, 1500)]);
+
+      const first = await reconcileStripeSessions(72, { client });
+      assert.deepEqual(first.refunds, { scanned: 1, synced: 0, unmatched: 1 });
+
+      const paid = session({ client_reference_id: await makeIntent(), payment_intent: pi });
+      const second = await reconcileStripeSessions(72, { client: fakeStripe([paid], [refund(pi, 1500)]) });
+
+      assert.equal(second.created, 1);
+      assert.deepEqual(second.refunds, { scanned: 1, synced: 1, unmatched: 0 });
+      assert.deepEqual(await refundState(paid.id), {
+        refunded_cents: 1500,
+        refund_status: "partial",
+      });
+    });
+
+    it("a refund list that fails does not lose the session walk's report", async () => {
+      const client = fakeStripe([session({ payment_status: "unpaid" })]);
+      client.refunds.list = (() => {
+        throw Object.assign(new Error("No such refund: buyer@example.com"), {
+          name: "StripePermissionError",
+        });
+      }) as unknown as Stripe["refunds"]["list"];
+
+      const report = await reconcileStripeSessions(72, { client });
+      assert.equal(report.scanned, 1);
+      assert.equal(report.refunds?.failed, "StripePermissionError");
+      assert.doesNotMatch(JSON.stringify(report), /@/);
+    });
+
+    it("the refund pass honours the deadline too", async () => {
+      const report = await reconcileRefunds(72, {
+        client: fakeStripe([], [refund(`pi_${randomUUID()}`, 100)]),
+        deadlineMs: Date.now() - 1,
+      });
+      assert.deepEqual(report, { scanned: 0, synced: 0, unmatched: 0, truncated: true });
     });
   },
 );

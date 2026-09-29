@@ -6,10 +6,11 @@
  * one. Nothing can be backdated to make the site look older, because the
  * publish date is written once, when it is genuinely published.
  *
- * Authorship is deliberately not a free-text string. Until the owner supplies a
- * real named author with real credentials (docs/owner-decisions.md item 2),
- * articles stay in draft, render a visible draft notice, and emit no Person
- * schema. Nothing is published under an invented byline.
+ * Authorship is deliberately not a free-text string: `authorId` names an entry
+ * in src/content/authors.ts. A piece drafted with AI assistance is published
+ * under the Guard Theory editorial byline (an Organization in schema), never a
+ * person's name (docs/owner-decisions.md §2). Nothing is published under an
+ * invented byline.
  */
 
 export const CATEGORIES = [

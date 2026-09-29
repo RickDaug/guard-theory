@@ -28,6 +28,7 @@ const NAV = [
   { href: "/products", label: "Products" },
   { href: "/categories", label: "Categories" },
   { href: "/list", label: "First Edition" },
+  { href: "/messages", label: "Messages" },
   { href: "/learn", label: "Learn" },
 ];
 

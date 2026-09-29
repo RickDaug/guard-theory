@@ -16,14 +16,18 @@ import { deLaRivaHook } from "./entries/de-la-riva-hook.ts";
 import { elbowKneeEscape } from "./entries/elbow-knee-escape.ts";
 import { framesVersusBlocks } from "./entries/frames-versus-blocks.ts";
 import { gettingHipsUnderneath } from "./entries/getting-hips-underneath.ts";
+import { hipBumpSweep } from "./entries/hip-bump-sweep.ts";
 import { insidePosition } from "./entries/inside-position.ts";
 import { kneeCutPass } from "./entries/knee-cut-pass.ts";
 import { kneeShield } from "./entries/knee-shield.ts";
 import { legEntanglementAsControl } from "./entries/leg-entanglement-as-control.ts";
 import { northSouthChoke } from "./entries/north-south-choke.ts";
+import { reverseDeLaRiva } from "./entries/reverse-de-la-riva.ts";
 import { seatBeltAndHooks } from "./entries/seat-belt-and-hooks.ts";
+import { singleLegXGuard } from "./entries/single-leg-x-guard.ts";
 import { sweepingTowardTheMissingPost } from "./entries/sweeping-toward-the-missing-post.ts";
 import { trapAndRollRemovesAPost } from "./entries/trap-and-roll-removes-a-post.ts";
+import { triangleDefencePosture } from "./entries/triangle-defence-posture.ts";
 import { underhookHalfGuard } from "./entries/underhook-half-guard.ts";
 
 /**
@@ -44,14 +48,18 @@ export const ENTRIES: TechniqueEntry[] = [
   elbowKneeEscape,
   framesVersusBlocks,
   gettingHipsUnderneath,
+  hipBumpSweep,
   insidePosition,
   kneeCutPass,
   kneeShield,
   legEntanglementAsControl,
   northSouthChoke,
+  reverseDeLaRiva,
   seatBeltAndHooks,
+  singleLegXGuard,
   sweepingTowardTheMissingPost,
   trapAndRollRemovesAPost,
+  triangleDefencePosture,
   underhookHalfGuard,
 ];
 

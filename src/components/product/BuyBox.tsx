@@ -1,8 +1,10 @@
 "use client";
 
+import Link from "next/link";
 import { useState } from "react";
 import { addToCart } from "@/lib/cart/client";
 import { formatMoney } from "@/lib/money";
+import { SIZE_CHART } from "@/content/products/size-chart";
 import type { VariantView } from "@/lib/catalogue/types";
 import { Button, ButtonLink } from "@/components/ui/Button";
 
@@ -50,6 +52,18 @@ export function BuyBox({ productName, priceCents, compareAtCents, currency, vari
 
       <fieldset className="mt-8 border-0 p-0">
         <legend className="display-plain mb-4 text-sm text-steel">Size</legend>
+        {/* The size question is asked here, so the answer is linked here —
+            not only from the Sizes section further down the page. The page
+            has a chart only once the owner supplies one (#64); until then it
+            is the fit guide, and the link says so. */}
+        <p className="-mt-2 mb-4 text-sm text-steel">
+          <Link
+            href="/size-and-fit"
+            className="inline-flex min-h-6 items-center text-chalk underline decoration-steel-dim underline-offset-[5px] transition-colors duration-[140ms] ease-[var(--ease-control)] hover:decoration-signal-lift"
+          >
+            {SIZE_CHART.length > 0 ? "Size chart and fit guide" : "How it should fit"}
+          </Link>
+        </p>
         <div className="flex flex-wrap gap-3">
           {variants.map((variant) => {
             const isSelected = variant.id === selected;

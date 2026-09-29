@@ -170,6 +170,16 @@ export default function SizeAndFitPage() {
             </div>
           </aside>
         </div>
+
+        {/* Most readers arrive here from a product page with a size in mind.
+            Hand them back rather than leaving the browser's Back as the only
+            way to the garment. */}
+        <Link
+          href="/shop"
+          className="display-plain mt-16 inline-flex min-h-6 items-center text-sm text-chalk underline decoration-steel-dim underline-offset-[6px] transition-colors duration-[140ms] ease-[var(--ease-control)] hover:decoration-signal-lift"
+        >
+          Back to the shop
+        </Link>
       </div>
     </main>
   );

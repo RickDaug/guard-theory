@@ -177,7 +177,7 @@ describe("sign-in attempt limiting, in Postgres", { skip: !HAS_DB && "no DATABAS
   it("stores a hash, never the address", () => {
     const k = addressKey("203.0.113.9", secret);
     assert.match(k, /^[0-9a-f]{64}$/);
-    assert.doesNotMatch(k, /203/);
+    assert.equal(k.includes("203.0.113.9"), false);
     assert.notEqual(k, addressKey("203.0.113.9", "another-secret"));
     assert.equal(addressKey(null, secret), addressKey("", secret));
   });

@@ -184,9 +184,11 @@ export function orderShipped(
  * promises and what the law requires. It points at `?t=`, which is the
  * parameter `src/app/unsubscribe/page.tsx` actually reads.
  *
- * It also carries List-Unsubscribe and List-Unsubscribe-Post, the headers a
- * mail client turns into its own unsubscribe button (list-unsubscribe.ts). No
- * order message may carry them.
+ * The body link opens a confirm page (a GET must not write: mail scanners
+ * follow every link). The headers are the one-click path: RFC 8058's
+ * `List-Unsubscribe-Post` tells the mail client to POST to /api/unsubscribe,
+ * which acts at once (list-unsubscribe.ts builds them). Gmail and Yahoo
+ * require both headers from bulk senders. No order message may carry them.
  */
 export function announcement(
   to: string,

@@ -9,10 +9,7 @@ import {
 import { readFileSync } from "node:fs";
 
 import { fromWithName, readReplyTo, resendHeaders, resendPayload } from "../../src/lib/mail/index.ts";
-import {
-  handleOneClickUnsubscribe,
-  listUnsubscribeHeaders,
-} from "../../src/lib/mail/list-unsubscribe.ts";
+import { listUnsubscribeHeaders } from "../../src/lib/mail/list-unsubscribe.ts";
 import { DISPATCH_WITHIN, TRACE_AFTER } from "../../src/content/policies/shipping-terms.ts";
 import { POLICIES } from "../../src/content/policies/index.ts";
 import { SITE_URL } from "../../src/lib/site.ts";
@@ -188,6 +185,7 @@ describe("replies can be routed somewhere that exists", () => {
       to: [EMAIL.to],
       subject: EMAIL.subject,
       text: EMAIL.body,
+      // List mail's own RFC 8058 headers (unsubscribe-post.test.ts); not a reply-to.
       headers: EMAIL.headers,
     });
   });
@@ -431,41 +429,5 @@ describe("From carries the shop's name", () => {
   });
 });
 
-describe("the one-click unsubscribe POST", () => {
-  const post = (query: string) =>
-    new Request(`https://guardtheory.net/api/unsubscribe${query}`, {
-      method: "POST",
-      body: "List-Unsubscribe=One-Click",
-      headers: { "Content-Type": "application/x-www-form-urlencoded" },
-    });
-
-  it("honours the token and answers 200", async () => {
-    const seen: string[] = [];
-    const response = await handleOneClickUnsubscribe(post("?t=tok"), async (token) => {
-      seen.push(token);
-      return "unsubscribed";
-    });
-    assert.equal(response.status, 200);
-    assert.deepEqual(seen, ["tok"]);
-  });
-
-  it("an unknown token is a 200 too, so tokens cannot be probed", async () => {
-    const response = await handleOneClickUnsubscribe(post("?t=nope"), async () => "unknown-token");
-    assert.equal(response.status, 200);
-  });
-
-  it("a failure on our side is a 503, so the client may retry", async () => {
-    const response = await handleOneClickUnsubscribe(post("?t=tok"), async () => "unavailable");
-    assert.equal(response.status, 503);
-  });
-
-  it("no token is a 400 and touches nothing", async () => {
-    let called = false;
-    const response = await handleOneClickUnsubscribe(post(""), async () => {
-      called = true;
-      return "unsubscribed";
-    });
-    assert.equal(response.status, 400);
-    assert.equal(called, false);
-  });
-});
+// The one-click POST itself (/api/unsubscribe) is tested in
+// unsubscribe-post.test.ts, against src/lib/waitlist/one-click.ts.

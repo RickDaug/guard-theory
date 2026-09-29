@@ -1,5 +1,4 @@
 import { SITE_URL } from "../site.ts";
-import type { UnsubscribeResult } from "../waitlist/postgres-store.ts";
 
 /**
  * One-click unsubscribe in the mail client's own UI (RFC 2369 + RFC 8058).
@@ -16,9 +15,10 @@ import type { UnsubscribeResult } from "../waitlist/postgres-store.ts";
  * mailing list" sentence exists to prevent. `tests/unit/email.test.ts` fails if
  * a transactional template ever carries these headers.
  *
- * The URL is `/api/unsubscribe`, not `/unsubscribe`: the page unsubscribes on
- * GET because the privacy policy promises one click, and one-click POSTs need
- * a route handler, which cannot share a segment with a page.
+ * The URL is `/api/unsubscribe`, not `/unsubscribe`: one-click POSTs need a
+ * route handler, which cannot share a segment with a page. The handler is
+ * src/lib/waitlist/one-click.ts (POST acts; GET is sent to the confirm page,
+ * because mail scanners follow every link).
  */
 export function oneClickUnsubscribeUrl(token: string): string {
   return `${SITE_URL}/api/unsubscribe?t=${encodeURIComponent(token)}`;
@@ -29,34 +29,4 @@ export function listUnsubscribeHeaders(token: string): Record<string, string> {
     "List-Unsubscribe": `<${oneClickUnsubscribeUrl(token)}>`,
     "List-Unsubscribe-Post": "List-Unsubscribe=One-Click",
   };
-}
-
-export type UnsubscribeFn = (token: string) => Promise<UnsubscribeResult>;
-
-/**
- * The POST a mail client sends. Kept out of the route file so the test can
- * drive it with a fake store.
- *
- * Only a failure on our side is a non-2xx: a client that gets an error may
- * retry, which is right for "unavailable" and pointless for an unknown token.
- * An unknown or already-used token answers 200 — nothing about the response
- * should let a caller probe which tokens exist.
- */
-export async function handleOneClickUnsubscribe(
-  request: Request,
-  unsubscribe: UnsubscribeFn,
-): Promise<Response> {
-  const token = new URL(request.url).searchParams.get("t")?.trim() ?? "";
-
-  if (!token) {
-    return new Response("Missing token.", { status: 400 });
-  }
-
-  const outcome = await unsubscribe(token);
-
-  if (outcome === "unavailable") {
-    return new Response("Try again shortly.", { status: 503 });
-  }
-
-  return new Response("Unsubscribed.", { status: 200 });
 }

@@ -33,7 +33,7 @@ export const deLaRivaBackTake: TechniqueEntry = {
     "Holding the hook rigid as the hip passes, which fixes your own bent knee under their weight at the moment it is loaded.",
   ],
   safetyNote:
-    "Your own knee on the hooking leg is the structure loaded on the way under. As the passer's hip rotates forward and over the hook, your leg is bent, turned out and threaded around theirs, and if the hook stays locked while their weight lands on it the twist arrives at your knee from the side. Keep the hook light enough to release, let the knee straighten as their hip passes, and take the leg out the moment weight lands on it. The neck is the second exposure and belongs to the inverted version: rolling under your own shoulder with a passer's weight above you puts the load on the back of the neck if the roll is done on the head, so any inversion is done on the shoulders and only with a coach present. When you are the passer, free the hook before you drop your weight or spin out of the back take, and never yank your leg free while the guard player's knee is wrapped around it.",
+    "Your knee on the hooking leg takes the load on the way under. As the passer's hip rotates forward and over the hook, your leg is bent, turned out and threaded around theirs, and if the hook stays locked while their weight lands on it the twist arrives at your knee from the side. Keep the hook light enough to release, let the knee straighten as their hip passes, and take the leg out the moment weight lands on it. The neck is the second exposure and belongs to the inverted version: rolling under your own shoulder with a passer's weight above you puts the load on the back of the neck if the roll is done on the head, so any inversion is done on the shoulders and only with a coach present. When you are the passer, free the hook before you drop your weight or spin out of the back take, and never yank your leg free while the guard player's knee is wrapped around it.",
   trainingProgression: [
     "Static: partner stands with a foot forward and holds still. Set the hook, the ankle and the far-hip foot, then turn onto the hook-side hip and slide your head outside the leg. Notice where their back is from there.",
     "Cooperative: partner leans forward slowly and posts a hand. Steer the knee forward with the hook, keep the ankle, go under, and come up to their back with your chest before touching it with your hands.",
@@ -52,8 +52,10 @@ export const deLaRivaBackTake: TechniqueEntry = {
   review: {
     drafted:
       "Assisted draft, 2026-09-25, from docs/agent-handoffs/technique-program-2026-09 (brief 04, de-la-riva-back-take); written by a Claude Code agent from the research brief and the house style fingerprint.",
-    factAudit: "Pending: independent fact-and-mechanics audit not yet run.",
-    voiceAudit: "Pending: independent voice audit not yet run.",
+    factAudit:
+      "Fact audit, assisted (Claude Code agent), 2026-09-28: all ledger rows checked, no changes; berimbolo reported as terminology; knee and neck safety notes confirmed.",
+    voiceAudit:
+      "Voice audit, assisted (Claude Code agent), 2026-09-28: PASS; the optional batch change applied, so the safety note opens on the knee and its load rather than on 'the structure'.",
     approvedBy: null,
   },
 };

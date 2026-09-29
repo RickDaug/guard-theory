@@ -11,7 +11,7 @@ export const whizzerIsAnOverhookOnTheHip: TechniqueEntry = {
   difficulty: "Intermediate",
   relevance: "Gi and no-gi",
   positionAndProblem:
-    "You are on your knees beside someone, or standing in a tie, and their arm has just gone under your armpit. Your shoulder starts to rise, their head arrives at your ribs, and you can feel the direction they are about to take you. The reflex is to throw your arm over the top of theirs and squeeze, and the reflex is right about the arm and wrong about everything else. That wrap over an underhooking arm, with the elbow clamped down and the hand usually on your own hip or thigh, is what wrestlers and most grappling gyms call a whizzer. The name is common in wrestling, in jiu-jitsu and in MMA, and it refers to the same overhook in all three. Taken as an arm movement alone, it slows the underhook for about a second and then loses to it, because an arm wrapped around the outside of another arm can only follow where that arm goes.",
+    "You are on your knees beside someone, or standing in a tie, and their arm has just gone under your armpit. Your shoulder starts to rise, their head arrives at your ribs, and you can feel the direction they are about to take you. The reflex is to throw your arm over the top of theirs and squeeze, and the reflex gets the arm right and leaves the hips behind. That wrap over an underhooking arm, with the elbow clamped down and the hand usually on your own hip or thigh, is what wrestlers and many grappling gyms call a whizzer. Taken as an arm movement alone, it slows the underhook briefly and then loses to it, because an arm wrapped around the outside of another arm can only follow where that arm goes.",
   objective:
     "Wrap the underhooking arm from above and drive your hip through theirs in the same movement, so their shoulder is pressed down instead of lifting you.",
   coreConcept:
@@ -23,7 +23,7 @@ export const whizzerIsAnOverhookOnTheHip: TechniqueEntry = {
     "Keep your chest over the top of their shoulder and your head above theirs. When their head gets under your chin, they are lower than you and the position belongs to the underhook again.",
     "Use the free hand for a wrist or a post on the far side. The whizzer decides nothing about their other arm, which is the one that takes a second underhook or reaches for your leg.",
     "Convert it while the hip is through. Standing, turn them over the hip you have driven in; on the knees, keep driving until their shoulder touches the mat; in half guard, pair it with a crossface and flatten them.",
-    "Let it go when the hip is lost. If they get lower and further behind your hip, the whizzer is an arm behind your own back, and pummelling for the underhook is the honest answer.",
+    "Let it go when the hip is lost. If they get lower and further behind your hip, the whizzer is an arm behind your own back; pummel for the underhook instead.",
   ],
   commonErrors: [
     "Wrapping the arm while the hips stay square or behind theirs, so the overhook is an outside grip on an arm that is still lifting.",
@@ -33,7 +33,7 @@ export const whizzerIsAnOverhookOnTheHip: TechniqueEntry = {
     "Holding the whizzer after they have circled behind the hip, when the wrapped arm is now the arm they take your back through.",
   ],
   safetyNote:
-    "The shoulder of the arm being whizzered is the structure this position loads. The elbow is trapped high, the wrap pins the upper arm, and the whizzerer's weight then arrives on the shoulder from above and in front, which is a direction the joint tolerates only when the load comes on gradually. Whoever is applying the whizzer should drive with the hip and body and never wrench the arm backwards in a snap, and a throw from the whizzer should carry the partner over the hip rather than slamming them on the trapped arm. Whoever is underneath it should pull the arm out and give up the underhook the moment the shoulder is being levered rather than pressed. The whizzerer's own shoulder is exposed the other way round: when the underhooker gets behind the hip, the wrapped arm is now behind its owner's back, and holding on turns it into a lever against yourself. Release early on both sides.",
+    "With the elbow trapped high and the upper arm pinned by the wrap, the underhooker's shoulder takes the weight of the person applying the whizzer from above and in front, a direction the joint tolerates only when the load comes on gradually. Whoever is applying the whizzer should drive with the hip and body and never wrench the arm backwards in a snap, and a throw from the whizzer should carry the partner over the hip rather than slamming them on the trapped arm. Whoever is underneath it should pull the arm out and give up the underhook the moment the shoulder is being levered rather than pressed. The shoulder of the person applying the whizzer is exposed the other way round: when the underhooker gets behind the hip, the wrapped arm is now behind its owner's back, and holding on turns it into a lever against that shoulder. Release early on both sides.",
   trainingProgression: [
     "Static: from the knees, partner sets an underhook and holds still. Wrap above the elbow, clamp, and step the hip through until their shoulder drops. Notice how little the arm did.",
     "Cooperative: partner swims the underhook in slowly ten times. Each time, wrap and drive the hip in one movement, then release and let them swim again.",
@@ -51,8 +51,10 @@ export const whizzerIsAnOverhookOnTheHip: TechniqueEntry = {
   review: {
     drafted:
       "Assisted draft, 2026-09-25, from docs/agent-handoffs/technique-program-2026-09 (brief 04, whizzer-is-an-overhook-on-the-hip); written by a Claude Code agent from the research brief and the house style fingerprint.",
-    factAudit: "Pending: independent fact-and-mechanics audit not yet run.",
-    voiceAudit: "Pending: independent voice audit not yet run.",
+    factAudit:
+      "Fact audit, assisted (Claude Code agent), 2026-09-28: all ledger rows checked, no changes; whizzer and underhook mechanics and the shoulder safety note confirmed.",
+    voiceAudit:
+      "Voice audit, assisted (Claude Code agent), 2026-09-28: REVISE (4), all applied; the filler triad on the name cut, 'about a second' and 'honest' removed, the coined 'whizzerer' replaced, 'most gyms' hedged; safety note reopened on the shoulder and its load.",
     approvedBy: null,
   },
 };

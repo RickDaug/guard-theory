@@ -75,9 +75,16 @@ export async function sendAnnouncement(
     // unsubscribed_at is null is the whole safety mechanism. Someone who left
     // the list must not receive this, and the check belongs in the query
     // rather than in a filter someone can forget.
+    //
+    // consent_state is the other half (0013). A 'pending' address was typed
+    // into the form by someone and never confirmed by its owner; it is not on
+    // the list. 'legacy' rows joined before confirmation existed and are sent
+    // to as they always were — whether to ask them to re-confirm first is the
+    // owner's decision, and changing it is deleting 'legacy' from this line.
     `select email, unsubscribe_token
        from waitlist_signup
       where unsubscribed_at is null
+        and consent_state in ('confirmed', 'legacy')
       order by submitted_at asc`,
   );
 

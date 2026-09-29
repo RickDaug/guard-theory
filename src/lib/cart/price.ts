@@ -1,6 +1,7 @@
 import { randomUUID } from "node:crypto";
 import { isDatabaseConfigured, query } from "../db/client.ts";
 import { PRICE_BUCKET, takeRateLimit } from "../rate-limit-db.ts";
+import { PRICE_CALL_BUCKET } from "../public-limits.ts";
 import type { CartLine, PricedCart, PricedLine } from "./types.ts";
 import {
   CHECKOUT_INTENT_RETENTION_DAYS,
@@ -171,7 +172,11 @@ export type PriceCartOptions = {
    * inside one minute — the same Stripe Checkout Session.
    */
   previousIntentId?: string | null;
-  /** The caller's rate-limit key (src/lib/rate-limit-db.ts). Omitted, nothing is counted. */
+  /**
+   * The caller's rate-limit key (src/lib/rate-limit-db.ts). Every call is then
+   * counted against PRICE_CALL_BUCKET before the first query, and a new intent
+   * against PRICE_BUCKET as well. Omitted, nothing is counted.
+   */
   callerKey?: string;
 };
 
@@ -195,6 +200,17 @@ async function reusableIntent(
   return rows[0]?.id ?? null;
 }
 
+/** The caller priced too many carts in the window. Nothing was read. */
+export class PricingRefusedError extends Error {
+  readonly retryAfterSeconds: number;
+
+  constructor(retryAfterSeconds: number) {
+    super(`Cart pricing refused: rate limit. Try again in ${retryAfterSeconds} seconds.`);
+    this.name = "PricingRefusedError";
+    this.retryAfterSeconds = retryAfterSeconds;
+  }
+}
+
 export async function priceCart(
   lines: CartLine[],
   contentFor: (slug: string) => { name: string; kind: string } | undefined,
@@ -211,6 +227,20 @@ export async function priceCart(
 
   if (lines.length === 0 || !isDatabaseConfigured()) {
     return empty;
+  }
+
+  if (options.callerKey) {
+    // Before anything is read. Re-pricing with a made-up previous intent used
+    // to run every query below uncounted, so a loop could keep the database's
+    // compute awake for free; now the loop is refused at one upsert per call.
+    const gate = await takeRateLimit(PRICE_CALL_BUCKET, options.callerKey);
+
+    if (!gate.allowed) {
+      // Thrown, not an empty cart: an empty cart would tell the buyer their
+      // items had gone. The cart page's "we could not work out your total, try
+      // again in a moment" is the true sentence here.
+      throw new PricingRefusedError(gate.retryAfterSeconds);
+    }
   }
 
   const wanted = new Map<string, number>();

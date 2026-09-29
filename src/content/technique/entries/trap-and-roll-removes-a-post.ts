@@ -40,7 +40,7 @@ export const trapAndRollRemovesAPost: TechniqueEntry = {
     "Cooperative: partner alternates between posting a hand and keeping both hands off the mat. Roll only when a hand posts or reaches, and switch to the elbow-knee escape when it does not.",
     "Constrained: partner may defend the roll only by widening the base or freeing the trapped arm, with no submissions.",
     "Positional: start mounted with the partner attacking. Escape by either route, and restart on an escape or a submission.",
-    "Live rounds: when a roll fails, work out whether a hand had posted or reached before you bridged.",
+    "Live rounds: before each bridge from mount, find the posted or reaching hand first, and go to the elbow-knee escape when there is none.",
   ],
   relatedSlugs: [
     "elbow-knee-escape",

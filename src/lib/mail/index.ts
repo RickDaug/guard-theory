@@ -1,5 +1,6 @@
 import { randomUUID } from "node:crypto";
 import { isDatabaseConfigured, query } from "../db/client.ts";
+import { SITE_NAME } from "../site.ts";
 import type { Email, EmailStatus, EmailTemplate, MailProvider, SendResult } from "./types.ts";
 
 /**
@@ -100,12 +101,26 @@ class LoggingProvider implements MailProvider {
  */
 export function resendPayload(from: string, replyTo: string | null, email: Email) {
   return {
-    from,
+    from: fromWithName(from),
     to: [email.to],
     subject: email.subject,
     text: email.body,
     ...(replyTo ? { reply_to: replyTo } : {}),
+    ...(email.headers && Object.keys(email.headers).length > 0 ? { headers: email.headers } : {}),
   };
+}
+
+/**
+ * The From header, with a display name.
+ *
+ * `RECEIPT_FROM_EMAIL` is set as a bare address. Sent as-is, the inbox shows
+ * the local part or the whole address where the shop name belongs, and a
+ * receipt from a sender nobody recognises is the one that gets marked as spam.
+ * A value that already carries a name (`Name <addr>`) is left as written.
+ */
+export function fromWithName(from: string): string {
+  const value = from.trim();
+  return value.includes("<") ? value : `${SITE_NAME} <${value}>`;
 }
 
 /**

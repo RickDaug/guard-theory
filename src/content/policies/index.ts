@@ -9,6 +9,8 @@
  * docs/owner-decisions.md rather than announced to the reader on every page.
  */
 
+import { DISPATCH_WITHIN, TRACE_AFTER } from "./shipping-terms.ts";
+
 export type PolicySection = {
   id: string;
   heading: string;
@@ -145,13 +147,13 @@ export const POLICIES: Policy[] = [
     title: "Shipping",
     summary: "Where we ship, what it costs, and how long it takes.",
     metaDescription:
-      "We ship within the United States, at a flat rate shown in your cart. Dispatched within two business days, three to five in transit. A lost parcel is ours.",
+      `We ship within the United States, at a flat rate shown in your cart. Dispatched within ${DISPATCH_WITHIN}, three to five in transit. A lost parcel is ours.`,
     sections: [
       {
         id: "dispatch",
         heading: "Dispatch",
         paragraphs: [
-          "Orders are packed and dispatched within two business days. You will receive a dispatch confirmation with a tracking number as soon as the parcel leaves us.",
+          `Orders are packed and dispatched within ${DISPATCH_WITHIN}. You will receive a dispatch confirmation with a tracking number as soon as the parcel leaves us.`,
           "Orders placed on a weekend or a public holiday are treated as placed on the next business day.",
         ],
       },
@@ -174,7 +176,7 @@ export const POLICIES: Policy[] = [
         heading: "Delivery times",
         paragraphs: [
           "Orders typically arrive within three to five business days of dispatch.",
-          "These are carrier estimates rather than guarantees. If a parcel has not moved for seven days, contact us and we will open a trace with the carrier — you do not need to chase it yourself.",
+          `These are carrier estimates rather than guarantees. If a parcel has not moved for ${TRACE_AFTER}, contact us and we will open a trace with the carrier — you do not need to chase it yourself.`,
         ],
       },
       {

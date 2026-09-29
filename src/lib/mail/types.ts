@@ -34,6 +34,12 @@ export type Email = {
    * deliberate resend from the portal, which is meant to go again.
    */
   idempotencyKey?: string;
+  /**
+   * Extra message headers. List mail only: the announcement sets
+   * List-Unsubscribe and List-Unsubscribe-Post here, and no order message may
+   * carry either (see src/lib/mail/list-unsubscribe.ts).
+   */
+  headers?: Record<string, string>;
 };
 
 /**

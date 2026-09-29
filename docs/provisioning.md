@@ -448,6 +448,17 @@ announcement does not — budget **$20/month Pro** for announcement months.
 
    `_dmarc` already existed at `p=none` from before Resend and needed no change
    for the domain to verify.
+
+   **Checked against public DNS on 2026-09-28:** DKIM (`resend._domainkey`,
+   1024-bit), the `send`/`rsend` return-path CNAMEs (SPF and bounce MX behind
+   them) and the root MX (`mail.guardtheory.net`) all resolve, so mail passes
+   DMARC on DKIM and on SPF, both aligned with `guardtheory.net`. What is left
+   is DMARC itself: `v=DMARC1; p=none;` has no `rua`, so nobody sees reports,
+   and `p=none` asks receivers to deliver mail that fails. Change `_dmarc` to
+   `v=DMARC1; p=none; rua=mailto:<an address you read>; adkim=r; aspf=r` now,
+   and to `p=quarantine` after two to four weeks of clean reports. The root SPF
+   (`v=spf1 ip4:67.222.24.90 +mx ~all`) belongs to the web host; Resend mail is
+   checked against the `send` subdomain, so the root needs no Resend include.
 3. ~~Create an API key with sending permission.~~ Done — `RESEND_API_KEY` is set
    in Vercel **Production**.
 4. ~~Pick a from-address on the verified domain.~~ Done — `RECEIPT_FROM_EMAIL`

@@ -167,8 +167,8 @@ export type PriceCartOptions = {
    * and records exactly this cart at exactly these figures.
    *
    * Only the browser's own previous intent, never "any matching one": two
-   * buyers with the same cart would otherwise share an intent, and with it —
-   * inside one minute — the same Stripe Checkout Session.
+   * buyers with the same cart would otherwise share an intent, and with it â€”
+   * inside one minute â€” the same Stripe Checkout Session.
    */
   previousIntentId?: string | null;
   /** The caller's rate-limit key (src/lib/rate-limit-db.ts). Omitted, nothing is counted. */

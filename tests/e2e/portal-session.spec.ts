@@ -154,13 +154,21 @@ async function postClearFlag(request: APIRequestContext, cookie: string): Promis
   const manifest = JSON.parse(
     readFileSync(path.join(process.cwd(), ".next", "server", "server-reference-manifest.json"), "utf8"),
   ) as {
-    node: Record<string, { workers: Record<string, { exportedName?: string; filename?: string }> }>;
+    node: Record<
+      string,
+      {
+        exportedName?: string;
+        filename?: string;
+        workers: Record<string, { exportedName?: string; filename?: string }>;
+      }
+    >;
   };
 
+  // Next 16.2 writes the name and file on each worker; 16.3 moved them up to
+  // the entry. Either shape is read.
   const id = Object.entries(manifest.node).find(([, entry]) =>
-    Object.values(entry.workers).some(
-      (worker) =>
-        worker.exportedName === "clearFlag" && worker.filename?.includes("crew/orders/actions"),
+    [entry, ...Object.values(entry.workers)].some(
+      (meta) => meta.exportedName === "clearFlag" && meta.filename?.includes("crew/orders/actions"),
     ),
   )?.[0];
 

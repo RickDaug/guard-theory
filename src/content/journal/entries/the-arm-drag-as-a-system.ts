@@ -10,11 +10,12 @@ import type { DraftArticle } from "../types.ts";
  * No medal tally is stated. The one competition result used, the 2003
  * Brazilian ADCC trials bout lost on a guard-pull penalty, is single-sourced to
  * BJJ Heroes and says so, including that its biography calls the bout the final
- * and its record table a semi-final. Nothing is credited as his invention: Grapplearts says the drag came from
- * wrestling, and the piece repeats that as Grapplearts' statement. Nicknamed
- * techniques are left out. A conditioning section drawn from a systematic
- * review (Andreato et al. 2017) was cut in revision: the review measured gi
- * grips, so it had nothing to say about this game.
+ * and its record table a semi-final. Nothing is credited as his invention:
+ * Grapplearts says the drag came from wrestling, and the piece repeats that as
+ * Grapplearts' statement. Nicknamed techniques are left out. A conditioning
+ * section drawn from a systematic review (Andreato et al. 2017) was cut in
+ * revision: the review measured gi grips, so it had nothing to say about this
+ * game.
  *
  * BJJ Heroes' submission panel prints a percentage and then a count for each
  * technique (RNC "29 16" is 29 percent, 16 wins). The counts sum to the 55

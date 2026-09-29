@@ -59,6 +59,13 @@ export async function sendAnnouncement(
       null,
     );
 
+    if (sent && !getMailProvider().delivers) {
+      return {
+        status: "error",
+        message: "The test was not sent — no mail provider is connected, so it was written to the log instead.",
+      };
+    }
+
     return sent
       ? { status: "success", message: `Test sent to ${testTo}. Nobody on the list was emailed.` }
       : { status: "error", message: "The test did not send. Check the logs." };

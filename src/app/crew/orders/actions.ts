@@ -13,7 +13,8 @@ import {
 import type { OrderStatus } from "@/lib/orders/manage";
 import { refundOrder } from "@/lib/orders/refund";
 import { reconcileStripeSessions, recordReconcileRun } from "@/lib/orders/reconcile";
-import { sendEmail } from "@/lib/mail";
+import { getMailProvider, sendEmail } from "@/lib/mail";
+import { resendOutcome } from "@/lib/portal/email-status";
 import {
   orderConfirmation,
   orderInProcess,
@@ -25,8 +26,14 @@ import {
   isShippoConfigured,
   refreshLabelUrl,
   ShippoError,
+  shippoMode,
 } from "@/lib/shipping/shippo";
-import { claimLabelPurchase, releaseLabelClaim } from "@/lib/orders/label";
+import {
+  claimLabelPurchase,
+  labelRefusal,
+  recordBoughtLabel,
+  releaseLabelClaim,
+} from "@/lib/orders/label";
 import { orderParcelWeight, weightWarning } from "@/lib/shipping/weight";
 import type { PortalFormState } from "@/lib/portal/form-state";
 
@@ -252,9 +259,9 @@ export async function resendEmail(
 
   revalidateOrders(order.id);
 
-  return sent
-    ? { status: "success", message: "Sent." }
-    : { status: "error", message: "It did not send. The reason is on the order, under Messages." };
+  // sendEmail reports true for the log-only provider as well, so "Sent." is
+  // only said when a provider that delivers is connected.
+  return resendOutcome(sent, getMailProvider().delivers);
 }
 
 /** Clears a flag once the owner has dealt with whatever it was for. */
@@ -330,6 +337,14 @@ export async function buyLabel(
     return { status: "error", message: "That order no longer exists." };
   }
 
+  // Before anything is claimed or bought: the wrong mode, or an order that is
+  // not going anywhere, spends money on a label nobody will use.
+  const refusal = labelRefusal(order, shippoMode());
+
+  if (refusal) {
+    return { status: "error", message: refusal };
+  }
+
   // Buying a second label for the same parcel is real money and two barcodes
   // on one box. The claim is one atomic UPDATE, taken BEFORE Shippo is called:
   // of two simultaneous clicks, exactly one gets past this line.
@@ -340,6 +355,8 @@ export async function buyLabel(
       gone: "That order no longer exists.",
       "has-tracking":
         "This order already has a tracking number. Clear it first if the label was wrong.",
+      "not-shippable":
+        "This order was cancelled or refunded in full while you were looking at it. No label was bought.",
       "in-progress": "A label is already being bought for this order. Give it a moment, then reload.",
       abandoned:
         "A label purchase for this order was started and never finished, so it may have gone through. " +
@@ -402,22 +419,14 @@ export async function buyLabel(
     };
   }
 
-  await query(
-    `update "order"
-        set tracking_number = $2, tracking_carrier = $3, tracking_url = $4,
-            label_url = $5, shippo_transaction_id = $6
-      where id = $1`,
-    [
-      order.id,
-      label.trackingNumber,
-      label.carrier,
-      label.trackingUrl,
-      label.labelUrl,
-      label.transactionId,
-    ],
-  );
+  // Paid for from here on. A failed save keeps the claim and says what was bought.
+  const saved = await recordBoughtLabel(order.id, label);
 
   revalidateOrders(order.id);
+
+  if (!saved.ok) {
+    return { status: "error", message: saved.message };
+  }
 
   return {
     status: "success",

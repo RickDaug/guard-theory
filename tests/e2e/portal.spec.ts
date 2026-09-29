@@ -23,6 +23,8 @@ test.describe("portal access", () => {
       "/crew/products",
       "/crew/categories",
       "/crew/orders",
+      "/crew/orders/ship",
+      "/crew/settings",
       "/crew/list",
       "/crew/learn",
     ]) {
@@ -83,10 +85,18 @@ test.describe("portal access", () => {
     // stranger can find them; what must hold is that calling one gets nowhere.
     const manifest = JSON.parse(
       readFileSync(path.join(process.cwd(), ".next", "server", "server-reference-manifest.json"), "utf8"),
-    ) as { node: Record<string, { workers: Record<string, unknown> }> };
+    ) as { node: Record<string, { workers: Record<string, { filename?: string }> }> };
 
+    // The portal layout's sign-out form puts signIn and signOut on this page
+    // too. Neither needs a session — signing out without one is harmless — so
+    // they are not what this test is about; the order actions are.
     const ids = Object.entries(manifest.node)
-      .filter(([, entry]) => Object.keys(entry.workers).some((worker) => worker.includes("/crew/orders")))
+      .filter(([, entry]) =>
+        Object.entries(entry.workers).some(
+          ([worker, meta]) =>
+            worker.includes("/crew/orders") && !meta.filename?.includes("crew/sign-in/"),
+        ),
+      )
       .map(([id]) => id);
 
     expect(ids.length, "no portal action ids found in the build manifest").toBeGreaterThan(0);
@@ -160,114 +170,6 @@ test.describe("portal access", () => {
     expect(cookies.find((c) => SESSION_COOKIE.test(c.name))).toBeUndefined();
   });
 
-  /**
-   * The signing-in path itself.
-   *
-   * Runs only where a password and a database exist — CI, or a local run with
-   * `npm run db:local`. It does not silently pass when they do not: it skips,
-   * loudly, because a sign-in test that reports green without ever signing in
-   * is the guard that has only ever been green.
-   */
-  const configured =
-    Boolean(process.env.PORTAL_PASSWORD_HASH) &&
-    Boolean(process.env.PORTAL_TEST_PASSWORD) &&
-    Boolean(process.env.DATABASE_URL);
-
-  // One admin, one session: signing in ends every other session
-  // (src/lib/portal/session.ts). Two signed-in tests running in parallel sign
-  // each other out, so they run one after the other.
-  test.describe("signed in", () => {
-    test.describe.configure({ mode: "serial" });
-
-    test("the right password opens the door, the wrong one does not", async ({ page }) => {
-      test.skip(!configured, "no PORTAL_PASSWORD_HASH / PORTAL_TEST_PASSWORD / DATABASE_URL");
-
-      await page.goto("/crew/sign-in", { waitUntil: "load" });
-      await page.getByLabel(/password/i).fill("definitely-not-the-password");
-      await page.getByRole("button", { name: /^sign in$/i }).click();
-
-      const alert = page.locator("form").getByRole("alert");
-      await expect(alert).toContainText(/not right/i);
-      expect((await page.context().cookies()).find((c) => SESSION_COOKIE.test(c.name))).toBeUndefined();
-
-      await page.getByLabel(/password/i).fill(process.env.PORTAL_TEST_PASSWORD!);
-      await page.getByRole("button", { name: /^sign in$/i }).click();
-
-      await page.waitForURL(/\/crew(\?|$)/);
-      await expect(page.getByRole("heading", { level: 1, name: /today/i })).toBeVisible();
-
-      const cookie = (await page.context().cookies()).find((c) => SESSION_COOKIE.test(c.name));
-      expect(cookie, "a session cookie must be set").toBeTruthy();
-      expect(cookie!.httpOnly, "the session cookie must be httpOnly").toBe(true);
-      expect(cookie!.sameSite).toBe("Lax");
-
-      // And every page behind the door now opens, with exactly one h1 each —
-      // which is what accessibility.spec.ts asserts for the public site and what
-      // these would otherwise escape.
-      for (const [path, heading] of [
-        ["/crew/products", /products/i],
-        ["/crew/categories", /categories/i],
-        ["/crew/orders", /orders/i],
-        ["/crew/list", /first edition/i],
-        ["/crew/learn", /learn/i],
-      ] as const) {
-        await page.goto(path, { waitUntil: "load" });
-        await expect(page.getByRole("heading", { level: 1, name: heading })).toBeVisible();
-        expect(await page.locator("h1").count(), `${path} has more than one h1`).toBe(1);
-      }
-
-      // The list export is a real file, not a page.
-      //
-      // Fetched from inside the page rather than with page.request, which does
-      // not carry the browser context's session cookie here and so follows the
-      // redirect to the sign-in screen and returns HTML.
-      const csv = await page.evaluate(async () => {
-        const response = await fetch("/crew/list/export");
-        return {
-          status: response.status,
-          type: response.headers.get("content-type") ?? "",
-          body: (await response.text()).slice(0, 200),
-        };
-      });
-
-      expect(csv.status).toBe(200);
-      expect(csv.type, "the export must be a file, not the sign-in page").toContain("text/csv");
-      expect(csv.body).toContain("email");
-    });
-    test("a product made in the portal starts as a draft and cannot go live half-made", async ({ page }) => {
-      test.skip(!configured, "no PORTAL_PASSWORD_HASH / PORTAL_TEST_PASSWORD / DATABASE_URL");
-
-      await page.goto("/crew/sign-in?next=/crew/products", { waitUntil: "load" });
-      await page.getByLabel(/password/i).fill(process.env.PORTAL_TEST_PASSWORD!);
-      await page.getByRole("button", { name: /^sign in$/i }).click();
-      await page.waitForURL(/\/crew\/products/);
-
-      const slug = `e2e-${Date.now().toString(36)}`;
-      const create = page.locator("form", { has: page.getByRole("heading", { name: "New product" }) });
-      await create.getByLabel("Name", { exact: true }).fill("E2E Fixture");
-      await create.getByLabel(/^Kind/).fill("Fixture kind");
-      await create.getByLabel(/^Web address/).fill(slug);
-      await create.getByRole("button", { name: "Create as draft" }).click();
-      await expect(create.getByRole("status")).toContainText("saved as a draft");
-
-      // Its card: the status form, whose heading is the product's name.
-      const card = page.locator("form", { has: page.getByText(slug, { exact: true }) });
-      await expect(card.getByLabel("Status")).toHaveValue("draft");
-
-      // Priced, but no size and no specification: live is refused, with the reasons.
-      await card.getByLabel("Price", { exact: true }).fill("10");
-      await card.getByLabel("Status").selectOption("active");
-      await card.getByRole("button", { name: "Save" }).click();
-      const refusal = card.getByRole("alert");
-      await expect(refusal).toContainText("cannot go on the storefront yet");
-      await expect(refusal).toContainText("at least one size");
-      await expect(refusal).toContainText("fabric weight");
-
-      // And the storefront has never heard of it.
-      const response = await page.request.get(`/shop/${slug}`);
-      expect(response.status()).toBe(404);
-
-      await expect(page.getByText("Images: added by the developer for now.").first()).toBeVisible();
-    });
-  });
+  // Signing in, and everything that needs a session, is in portal-session.spec.ts:
+  // one serial block, because signing in ends every other session.
 });

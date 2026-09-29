@@ -1,0 +1,38 @@
+#!/usr/bin/env bash
+#
+# A stand-in for `curl`, for tests/unit/restore-verify-ci.test.ts. No network:
+# it answers the Neon API calls scripts/db/restore-verify-*.sh make, from
+# environment variables the test sets, and appends each call to FAKE_LOG.
+#
+#   FAKE_BRANCHES        body of GET  /branches
+#   FAKE_ENDPOINTS       body of GET  /endpoints
+#   FAKE_CREATED         body of POST /branches
+#   FAKE_CREATE_STATUS   status of POST /branches (default 201)
+#   FAKE_DELETE_STATUS   status of DELETE /branches/<id> (default 200)
+
+method=GET out=/dev/null body="" url="" auth=""
+while [ $# -gt 0 ]; do
+  case "$1" in
+    -X) method="$2"; shift 2 ;;
+    -o) out="$2"; shift 2 ;;
+    -w) shift 2 ;;
+    --data) body="$2"; shift 2 ;;
+    -H) case "$2" in Authorization:*) auth="$2" ;; esac; shift 2 ;;
+    -*) shift ;;
+    *) url="$1"; shift ;;
+  esac
+done
+
+path="${url#*/projects/*/}"
+echo "${method} /${path} ${body}" >>"${FAKE_LOG:-/dev/null}"
+[ "$auth" = "Authorization: Bearer ${FAKE_EXPECT_KEY:-}" ] || { echo '{"message":"bad key"}' >"$out"; printf 401; exit 0; }
+
+reply() { printf '%s' "$2" >"$out"; printf '%s' "$1"; }
+
+case "${method} /${path}" in
+  "GET /branches") reply 200 "${FAKE_BRANCHES}" ;;
+  "GET /endpoints") reply 200 "${FAKE_ENDPOINTS}" ;;
+  "POST /branches") reply "${FAKE_CREATE_STATUS:-201}" "${FAKE_CREATED}" ;;
+  "DELETE /branches/"*) reply "${FAKE_DELETE_STATUS:-200}" '{}' ;;
+  *) reply 404 '{"message":"not found"}' ;;
+esac

@@ -3,6 +3,7 @@ import Link from "next/link";
 import { stripeKeyRefusal, stripeMode } from "@/lib/stripe/client";
 import { portalUrl } from "@/lib/portal/routes";
 import { getSession } from "@/lib/portal/session";
+import { signOut } from "./sign-in/actions";
 
 export const metadata: Metadata = {
   robots: { index: false, follow: false, nocache: true },
@@ -24,10 +25,12 @@ export const metadata: Metadata = {
 
 const NAV = [
   { href: "", label: "Today" },
+  { href: "/orders/ship", label: "To ship" },
   { href: "/orders", label: "Orders" },
   { href: "/products", label: "Products" },
   { href: "/categories", label: "Categories" },
   { href: "/list", label: "First Edition" },
+  { href: "/settings", label: "Settings" },
   { href: "/learn", label: "Learn" },
 ];
 
@@ -103,6 +106,21 @@ export default async function CrewLayout({ children }: { children: React.ReactNo
                   </Link>
                 </li>
               ))}
+              <li>
+                {/*
+                  signOut existed with nothing calling it, so the only way out
+                  was waiting twelve hours or signing in again elsewhere. A form
+                  rather than a link: signing out changes state, so it is a POST.
+                */}
+                <form action={signOut}>
+                  <button
+                    type="submit"
+                    className="display-plain inline-flex min-h-6 cursor-pointer items-center border-0 bg-transparent p-0 text-sm text-steel transition-colors duration-[140ms] ease-[var(--ease-control)] hover:text-chalk"
+                  >
+                    Sign out
+                  </button>
+                </form>
+              </li>
             </ul>
           </nav>
         </div>

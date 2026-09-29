@@ -16,7 +16,12 @@ import {
 } from "../../src/content/journal/index.ts";
 import { FIGURES } from "../../src/content/figures/index.ts";
 import { POLICIES } from "../../src/content/policies/index.ts";
-import { PRODUCTS } from "../../src/content/products/index.ts";
+import { DRAWN_SPECIFICATION_LABELS, PRODUCTS } from "../../src/content/products/index.ts";
+import {
+  FIT_NOTES,
+  SIZE_CHART,
+  SIZE_CHART_SOURCE,
+} from "../../src/content/products/size-chart.ts";
 import {
   CROSS_LINKS,
   crossLinksFor,
@@ -554,5 +559,52 @@ describe("meta descriptions fit what search and social display", () => {
           `the copy on the page — if it is not changing anything, delete it`,
       );
     }
+  });
+});
+
+/**
+ * Product facts need a supplier.
+ *
+ * From 2026-08-04 to 2026-09-29 the product pages published a fabric
+ * composition, a GSM, a seam type, a print method, a fit and care line, and a
+ * six-size measurement chart that nobody supplied — the owner confirmed it.
+ * "Never invent a fact" was a rule; this makes it a check. A specification
+ * value (other than what the drawing itself shows) and a chart row can only
+ * exist when the registry records that the owner supplied them.
+ */
+describe("product facts come from the owner or not at all", () => {
+  for (const product of PRODUCTS) {
+    it(`${product.slug} states no specification, construction or size range the owner did not supply`, () => {
+      if (product.specSource === "owner") return;
+      const unsupplied = product.specifications.filter(
+        (spec) => spec.value !== null && !DRAWN_SPECIFICATION_LABELS.includes(spec.label),
+      );
+      assert.deepEqual(
+        unsupplied.map((spec) => `${spec.label}: ${spec.value}`),
+        [],
+        `${product.slug} carries specification values with specSource ${String(product.specSource)}. ` +
+          `Set them to null, or record that the owner supplied them (specSource: "owner"). ` +
+          `See docs/owner-decisions.md §3.`,
+      );
+      assert.deepEqual(
+        product.constructionPoints.map((point) => point.label),
+        [],
+        `${product.slug} asserts construction details with no owner source.`,
+      );
+      assert.deepEqual(
+        product.sizeLabels,
+        [],
+        `${product.slug} lists a size range with no owner source.`,
+      );
+    });
+  }
+
+  it("publishes no size chart the owner did not supply", () => {
+    if (SIZE_CHART_SOURCE === "owner") {
+      assert.ok(SIZE_CHART.length > 0, "SIZE_CHART_SOURCE is \"owner\" but the chart is empty");
+      return;
+    }
+    assert.deepEqual(SIZE_CHART, [], "size chart rows exist without SIZE_CHART_SOURCE: \"owner\"");
+    assert.deepEqual(FIT_NOTES, [], "fit notes describe a pattern nobody supplied");
   });
 });

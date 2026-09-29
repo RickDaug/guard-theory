@@ -8,6 +8,7 @@ import { ButtonLink } from "@/components/ui/Button";
 import { BuyBox } from "@/components/product/BuyBox";
 import { GarmentFlat } from "@/components/product/GarmentFlat";
 import { PRODUCTS, STATUS_LABEL } from "@/content/products";
+import { SIZE_CHART } from "@/content/products/size-chart";
 import {
   effectivePriceCents,
   getProductView,
@@ -204,7 +205,10 @@ export default async function ProductPage({ params }: Params) {
                   Specification for {product.name}, {product.kind}.
                 </caption>
                 <tbody>
-                  {product.specifications.map((spec) => (
+                  {/* A line with no value is not a line: a null means nobody has
+                      supplied that fact, and the page says nothing about it
+                      rather than printing a blank or a placeholder. */}
+                  {product.specifications.filter((spec) => spec.value).map((spec) => (
                     <tr key={spec.label} className="border-b border-steel-dim">
                       <th
                         scope="row"
@@ -223,20 +227,24 @@ export default async function ProductPage({ params }: Params) {
 
             <section aria-labelledby="sizes" className="mt-14">
               <h2 id="sizes" className="display-condensed mb-6 text-xl text-chalk">
-                Sizes
+                {product.sizeLabels.length > 0 ? "Sizes" : "Size and fit"}
               </h2>
-              <ul className="m-0 flex list-none flex-wrap gap-3 p-0">
-                {product.sizeLabels.map((size) => (
-                  <li
-                    key={size}
-                    className="notation border border-steel-dim px-4 py-2 text-2xs text-steel"
-                  >
-                    {size}
-                  </li>
-                ))}
-              </ul>
-              <p className="mt-6 max-w-[34rem] text-sm text-steel">
-                Full measurements are in the{" "}
+              {/* Sizes come from the owner's variants. The registry carries
+                  none, because no size range has been supplied. */}
+              {product.sizeLabels.length > 0 ? (
+                <ul className="m-0 mb-6 flex list-none flex-wrap gap-3 p-0">
+                  {product.sizeLabels.map((size) => (
+                    <li
+                      key={size}
+                      className="notation border border-steel-dim px-4 py-2 text-2xs text-steel"
+                    >
+                      {size}
+                    </li>
+                  ))}
+                </ul>
+              ) : null}
+              <p className="max-w-[34rem] text-sm text-steel">
+                {SIZE_CHART.length > 0 ? "Full measurements are in the" : "What to check when you try one on is in the"}{" "}
                 <Link
                   href="/size-and-fit"
                   className="text-chalk underline decoration-steel-dim underline-offset-[5px] transition-colors duration-[140ms] ease-[var(--ease-control)] hover:decoration-signal-lift"

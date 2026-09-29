@@ -9,7 +9,7 @@ import type { PublishedArticle } from "../types.ts";
 export const theDropoutNumberNobodyCanSource: PublishedArticle = {
   status: "published",
   publishedAt: "2026-08-04",
-  authorId: "rick-r",
+  authorId: "guard-theory-editorial",
   slug: "the-dropout-number-nobody-can-source",
   category: "training-culture",
   title: "The dropout number nobody can source",

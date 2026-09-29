@@ -10,6 +10,7 @@ import {
   type OrderStatus,
 } from "@/lib/orders/manage";
 import { formatMoney } from "@/lib/money";
+import { FLAG_SHORT, isFlagReason } from "@/lib/orders/flags";
 import { ReconcileButton } from "./ReconcileButton";
 import { ResolveUnfulfilledButton } from "./ResolveUnfulfilledButton";
 
@@ -65,7 +66,13 @@ export default async function OrdersPage({
       <div className="mx-auto max-w-[80rem]">
         <div className="mb-10 flex flex-wrap items-baseline gap-x-8 gap-y-4">
           <h1 className="display-condensed text-3xl text-chalk">Orders</h1>
-          <div className="ml-auto">
+          <div className="ml-auto flex flex-wrap items-baseline gap-x-8 gap-y-4">
+            <Link
+              href={portalUrl("/orders/export")}
+              className="display-plain inline-flex min-h-6 items-center text-sm text-steel hover:text-chalk"
+            >
+              Sales records export
+            </Link>{" "}
             <ReconcileButton />
           </div>
         </div>
@@ -155,11 +162,9 @@ export default async function OrdersPage({
                   </span>
                   {order.flagged_reason ? (
                     <span className="notation text-2xs text-signal-lift">
-                      {order.flagged_reason === "oversell"
-                        ? "Oversold"
-                        : order.flagged_reason === "reconciled"
-                          ? "Recovered"
-                          : "Refunded"}
+                      {isFlagReason(order.flagged_reason)
+                        ? FLAG_SHORT[order.flagged_reason]
+                        : "Flagged"}
                     </span>
                   ) : null}
                   {order.stripe_mode === "test" ? (

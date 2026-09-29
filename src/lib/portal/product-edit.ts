@@ -224,10 +224,13 @@ export type StorefrontCheck = {
  *
  * Each line is something the site already says about every product it shows:
  * a price where a price is expected, a size to choose, the four specification
- * lines /shop and /first-edition promise, and sizes the size and fit guide —
- * which every product page links to — actually has a row for.
+ * lines (PUBLISHED_SPECIFICATIONS), and — once the owner has supplied a size
+ * chart — sizes the size and fit guide actually has a row for.
  */
-export function storefrontProblems(check: StorefrontCheck): string[] {
+export function storefrontProblems(
+  check: StorefrontCheck,
+  chartedSizes: readonly string[] = CHARTED_SIZES,
+): string[] {
   const problems: string[] = [];
 
   if (check.priceCents === null) problems.push("a price");
@@ -246,11 +249,16 @@ export function storefrontProblems(check: StorefrontCheck): string[] {
     problems.push("at least one size");
   }
 
-  const uncharted = check.sizeLabels.filter((size) => !CHARTED_SIZES.includes(size));
+  // The size and fit guide renders a chart only when the owner has supplied
+  // one (#64). With no chart it makes no claim about any size, so there is
+  // nothing for a size label to contradict; with one, every size sold must be
+  // a row of it.
+  const uncharted =
+    chartedSizes.length > 0 ? check.sizeLabels.filter((size) => !chartedSizes.includes(size)) : [];
 
   if (uncharted.length > 0) {
     problems.push(
-      `sizes the size and fit guide covers (${CHARTED_SIZES.join(", ")}) — not ${uncharted.join(", ")}`,
+      `sizes the size and fit guide covers (${chartedSizes.join(", ")}) — not ${uncharted.join(", ")}`,
     );
   }
 

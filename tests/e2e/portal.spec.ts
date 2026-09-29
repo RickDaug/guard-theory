@@ -173,94 +173,101 @@ test.describe("portal access", () => {
     Boolean(process.env.PORTAL_TEST_PASSWORD) &&
     Boolean(process.env.DATABASE_URL);
 
-  test("the right password opens the door, the wrong one does not", async ({ page }) => {
-    test.skip(!configured, "no PORTAL_PASSWORD_HASH / PORTAL_TEST_PASSWORD / DATABASE_URL");
+  // One admin, one session: signing in ends every other session
+  // (src/lib/portal/session.ts). Two signed-in tests running in parallel sign
+  // each other out, so they run one after the other.
+  test.describe("signed in", () => {
+    test.describe.configure({ mode: "serial" });
 
-    await page.goto("/crew/sign-in", { waitUntil: "load" });
-    await page.getByLabel(/password/i).fill("definitely-not-the-password");
-    await page.getByRole("button", { name: /^sign in$/i }).click();
+    test("the right password opens the door, the wrong one does not", async ({ page }) => {
+      test.skip(!configured, "no PORTAL_PASSWORD_HASH / PORTAL_TEST_PASSWORD / DATABASE_URL");
 
-    const alert = page.locator("form").getByRole("alert");
-    await expect(alert).toContainText(/not right/i);
-    expect((await page.context().cookies()).find((c) => SESSION_COOKIE.test(c.name))).toBeUndefined();
+      await page.goto("/crew/sign-in", { waitUntil: "load" });
+      await page.getByLabel(/password/i).fill("definitely-not-the-password");
+      await page.getByRole("button", { name: /^sign in$/i }).click();
 
-    await page.getByLabel(/password/i).fill(process.env.PORTAL_TEST_PASSWORD!);
-    await page.getByRole("button", { name: /^sign in$/i }).click();
+      const alert = page.locator("form").getByRole("alert");
+      await expect(alert).toContainText(/not right/i);
+      expect((await page.context().cookies()).find((c) => SESSION_COOKIE.test(c.name))).toBeUndefined();
 
-    await page.waitForURL(/\/crew(\?|$)/);
-    await expect(page.getByRole("heading", { level: 1, name: /today/i })).toBeVisible();
+      await page.getByLabel(/password/i).fill(process.env.PORTAL_TEST_PASSWORD!);
+      await page.getByRole("button", { name: /^sign in$/i }).click();
 
-    const cookie = (await page.context().cookies()).find((c) => SESSION_COOKIE.test(c.name));
-    expect(cookie, "a session cookie must be set").toBeTruthy();
-    expect(cookie!.httpOnly, "the session cookie must be httpOnly").toBe(true);
-    expect(cookie!.sameSite).toBe("Lax");
+      await page.waitForURL(/\/crew(\?|$)/);
+      await expect(page.getByRole("heading", { level: 1, name: /today/i })).toBeVisible();
 
-    // And every page behind the door now opens, with exactly one h1 each —
-    // which is what accessibility.spec.ts asserts for the public site and what
-    // these would otherwise escape.
-    for (const [path, heading] of [
-      ["/crew/products", /products/i],
-      ["/crew/categories", /categories/i],
-      ["/crew/orders", /orders/i],
-      ["/crew/list", /first edition/i],
-      ["/crew/learn", /learn/i],
-    ] as const) {
-      await page.goto(path, { waitUntil: "load" });
-      await expect(page.getByRole("heading", { level: 1, name: heading })).toBeVisible();
-      expect(await page.locator("h1").count(), `${path} has more than one h1`).toBe(1);
-    }
+      const cookie = (await page.context().cookies()).find((c) => SESSION_COOKIE.test(c.name));
+      expect(cookie, "a session cookie must be set").toBeTruthy();
+      expect(cookie!.httpOnly, "the session cookie must be httpOnly").toBe(true);
+      expect(cookie!.sameSite).toBe("Lax");
 
-    // The list export is a real file, not a page.
-    //
-    // Fetched from inside the page rather than with page.request, which does
-    // not carry the browser context's session cookie here and so follows the
-    // redirect to the sign-in screen and returns HTML.
-    const csv = await page.evaluate(async () => {
-      const response = await fetch("/crew/list/export");
-      return {
-        status: response.status,
-        type: response.headers.get("content-type") ?? "",
-        body: (await response.text()).slice(0, 200),
-      };
+      // And every page behind the door now opens, with exactly one h1 each —
+      // which is what accessibility.spec.ts asserts for the public site and what
+      // these would otherwise escape.
+      for (const [path, heading] of [
+        ["/crew/products", /products/i],
+        ["/crew/categories", /categories/i],
+        ["/crew/orders", /orders/i],
+        ["/crew/list", /first edition/i],
+        ["/crew/learn", /learn/i],
+      ] as const) {
+        await page.goto(path, { waitUntil: "load" });
+        await expect(page.getByRole("heading", { level: 1, name: heading })).toBeVisible();
+        expect(await page.locator("h1").count(), `${path} has more than one h1`).toBe(1);
+      }
+
+      // The list export is a real file, not a page.
+      //
+      // Fetched from inside the page rather than with page.request, which does
+      // not carry the browser context's session cookie here and so follows the
+      // redirect to the sign-in screen and returns HTML.
+      const csv = await page.evaluate(async () => {
+        const response = await fetch("/crew/list/export");
+        return {
+          status: response.status,
+          type: response.headers.get("content-type") ?? "",
+          body: (await response.text()).slice(0, 200),
+        };
+      });
+
+      expect(csv.status).toBe(200);
+      expect(csv.type, "the export must be a file, not the sign-in page").toContain("text/csv");
+      expect(csv.body).toContain("email");
     });
+    test("a product made in the portal starts as a draft and cannot go live half-made", async ({ page }) => {
+      test.skip(!configured, "no PORTAL_PASSWORD_HASH / PORTAL_TEST_PASSWORD / DATABASE_URL");
 
-    expect(csv.status).toBe(200);
-    expect(csv.type, "the export must be a file, not the sign-in page").toContain("text/csv");
-    expect(csv.body).toContain("email");
-  });
-  test("a product made in the portal starts as a draft and cannot go live half-made", async ({ page }) => {
-    test.skip(!configured, "no PORTAL_PASSWORD_HASH / PORTAL_TEST_PASSWORD / DATABASE_URL");
+      await page.goto("/crew/sign-in?next=/crew/products", { waitUntil: "load" });
+      await page.getByLabel(/password/i).fill(process.env.PORTAL_TEST_PASSWORD!);
+      await page.getByRole("button", { name: /^sign in$/i }).click();
+      await page.waitForURL(/\/crew\/products/);
 
-    await page.goto("/crew/sign-in?next=/crew/products", { waitUntil: "load" });
-    await page.getByLabel(/password/i).fill(process.env.PORTAL_TEST_PASSWORD!);
-    await page.getByRole("button", { name: /^sign in$/i }).click();
-    await page.waitForURL(/\/crew\/products/);
+      const slug = `e2e-${Date.now().toString(36)}`;
+      const create = page.locator("form", { has: page.getByRole("heading", { name: "New product" }) });
+      await create.getByLabel("Name", { exact: true }).fill("E2E Fixture");
+      await create.getByLabel(/^Kind/).fill("Fixture kind");
+      await create.getByLabel(/^Web address/).fill(slug);
+      await create.getByRole("button", { name: "Create as draft" }).click();
+      await expect(create.getByRole("status")).toContainText("saved as a draft");
 
-    const slug = `e2e-${Date.now().toString(36)}`;
-    const create = page.locator("form", { has: page.getByRole("heading", { name: "New product" }) });
-    await create.getByLabel("Name", { exact: true }).fill("E2E Fixture");
-    await create.getByLabel(/^Kind/).fill("Fixture kind");
-    await create.getByLabel(/^Web address/).fill(slug);
-    await create.getByRole("button", { name: "Create as draft" }).click();
-    await expect(create.getByRole("status")).toContainText("saved as a draft");
+      // Its card: the status form, whose heading is the product's name.
+      const card = page.locator("form", { has: page.getByText(slug, { exact: true }) });
+      await expect(card.getByLabel("Status")).toHaveValue("draft");
 
-    // Its card: the status form, whose heading is the product's name.
-    const card = page.locator("form", { has: page.getByText(slug, { exact: true }) });
-    await expect(card.getByLabel("Status")).toHaveValue("draft");
+      // Priced, but no size and no specification: live is refused, with the reasons.
+      await card.getByLabel("Price", { exact: true }).fill("10");
+      await card.getByLabel("Status").selectOption("active");
+      await card.getByRole("button", { name: "Save" }).click();
+      const refusal = card.getByRole("alert");
+      await expect(refusal).toContainText("cannot go on the storefront yet");
+      await expect(refusal).toContainText("at least one size");
+      await expect(refusal).toContainText("fabric weight");
 
-    // Priced, but no size and no specification: live is refused, with the reasons.
-    await card.getByLabel("Price", { exact: true }).fill("10");
-    await card.getByLabel("Status").selectOption("active");
-    await card.getByRole("button", { name: "Save" }).click();
-    const refusal = card.getByRole("alert");
-    await expect(refusal).toContainText("cannot go on the storefront yet");
-    await expect(refusal).toContainText("at least one size");
-    await expect(refusal).toContainText("fabric weight");
+      // And the storefront has never heard of it.
+      const response = await page.request.get(`/shop/${slug}`);
+      expect(response.status()).toBe(404);
 
-    // And the storefront has never heard of it.
-    const response = await page.request.get(`/shop/${slug}`);
-    expect(response.status()).toBe(404);
-
-    await expect(page.getByText("Images: added by the developer for now.").first()).toBeVisible();
+      await expect(page.getByText("Images: added by the developer for now.").first()).toBeVisible();
+    });
   });
 });

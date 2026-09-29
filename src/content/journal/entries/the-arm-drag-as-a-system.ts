@@ -7,12 +7,14 @@ import type { DraftArticle } from "../types.ts";
  * pay for each outcome of the drag; the person is reported from BJJ Heroes and
  * Grapplearts, each attributed in the sentence that uses it.
  *
- * No medal tally is stated. The one competition result used, the 2003 trials
- * final lost on a guard-pull penalty, is single-sourced to BJJ Heroes and says
- * so. Nothing is credited as his invention: Grapplearts says the drag came from
+ * No medal tally is stated. The one competition result used, the 2003
+ * Brazilian ADCC trials bout lost on a guard-pull penalty, is single-sourced to
+ * BJJ Heroes and says so, including that its biography calls the bout the final
+ * and its record table a semi-final. Nothing is credited as his invention: Grapplearts says the drag came from
  * wrestling, and the piece repeats that as Grapplearts' statement. Nicknamed
- * techniques are left out. The conditioning section reports what a systematic
- * review found and gives no training advice.
+ * techniques are left out. A conditioning section drawn from a systematic
+ * review (Andreato et al. 2017) was cut in revision: the review measured gi
+ * grips, so it had nothing to say about this game.
  *
  * BJJ Heroes' submission panel prints a percentage and then a count for each
  * technique (RNC "29 16" is 29 percent, 16 wins). The counts sum to the 55
@@ -26,25 +28,25 @@ export const theArmDragAsASystem: DraftArticle = {
   category: "influential-practitioners",
   title: "Marcelo Garcia and the arm drag as a system",
   standfirst:
-    "The arm drag came from wrestling. What Marcelo Garcia showed in public was a chain in which the drag, the butterfly hook and the back each pay off when the one before it fails.",
+    "The arm drag came from wrestling. What Marcelo Garcia showed in public was a chain, drag to butterfly hook to back, built so that defending one link opens the next.",
   metaDescription:
-    "Marcelo Garcia did not invent the arm drag. He built a chain around it, drag to hook to back, in which each link still scores when the one before it fails.",
+    "Marcelo Garcia did not invent the arm drag. He built a chain around it, drag to hook to back, in which defending one link opens the next.",
   sections: [
     {
       id: "what-is-being-credited",
       heading: "What is being credited",
       paragraphs: [
-        "Start with what Marcelo Garcia did not do. Stephan Kesting, writing on Grapplearts in 2016, asks whether Garcia invented the arm drag and answers that he certainly did not: he took it from wrestling, where it sets up takedowns. The same article says he was the first to popularise it in jiu-jitsu by landing it successfully and repeatedly at the biggest events, ADCC among them. That second sentence is Kesting's judgement, not a record, and it is reported here as his.",
-        "BJJ Heroes records that Garcia started judo and jiu-jitsu in Minas Gerais, arrived at the Alliance academy in Sao Paulo as a brown belt, and had never trained or competed without the gi when he began doing so there. It lists his favourite positions as the arm drag, X-guard, butterfly guard, the guillotine and the mata leao, the rear naked choke.",
-        "So the claim this piece makes is not about a move. It is about an arrangement. A drag, a hook and a back take are three techniques anyone can learn separately. Put in order, with each one built on the reaction the previous one draws, they become a game that does not need the opponent to cooperate at any single step, and that is the game the record associates with him.",
+        "Stephan Kesting, writing on Grapplearts in 2016, asks whether Garcia invented the arm drag and answers that he certainly did not: he took it from wrestling, where it sets up takedowns. The same article says he was the first to popularise it in jiu-jitsu by landing it successfully and repeatedly at the biggest events, ADCC among them. That second sentence is Kesting's judgement, not a record.",
+        "BJJ Heroes records that Garcia started judo and jiu-jitsu in Minas Gerais, moved to Sao Paulo as a brown belt, first to Terere's academy and then to Fabio Gurgel's Alliance headquarters, and had never trained or competed without the gi until he began doing so there. It lists his favourite positions as the arm drag, X-guard, butterfly guard, the guillotine and the mata leao, the rear naked choke.",
+        "The claim here is about an arrangement. A drag, a hook and a back take are three techniques anyone can learn separately. Put in order, with each one built on the reaction the previous one draws, they become a game that does not need the opponent to cooperate at any single step, and that is the game the record associates with him.",
       ],
     },
     {
-      id: "not-a-move-a-direction",
-      heading: "Not a move: a way of taking the near side",
+      id: "where-the-drag-ends",
+      heading: "Where the drag ends",
       paragraphs: [
         "The Technique Library's entry on the arm drag describes it as a redirection. You take an arm the opponent has already extended, grip it at the wrist and above the elbow, and carry it across their centreline, so their shoulders turn away and the side the arm was defending is left open. Kesting's description matches: same-side wrist, cup the triceps, step and swing the arm past you.",
-        "What makes that a system and not a trick is where it ends. From standing, Kesting writes, a successful drag puts you directly behind the opponent, often in a rear bear hug. From the guard it puts you on the back without first having to sweep and then pass. That second point is the one that matters for a guard player. A sweep followed by a pass is two separate contests, each of which the opponent can win. The drag skips both and arrives at the position both of them were trying to reach.",
+        "What matters is where it ends. From standing, Kesting writes, a successful drag puts you directly behind the opponent, often in a rear bear hug. From the guard it puts you on the back without first having to sweep and then pass. A sweep followed by a pass is two separate contests, each of which the opponent can win. The drag skips both and arrives at the position both of them were trying to reach.",
         "The rule books say the same thing in points. Under the IBJJF Rule Book, version 6.1, back control is worth four points and a sweep two. ADCC's published rules pay three for back mount with hooks and two for a sweep. Under both, the drag's intended destination is worth more than the sweep a guard player would otherwise be working for.",
       ],
     },
@@ -61,8 +63,8 @@ export const theArmDragAsASystem: DraftArticle = {
       heading: "The hook that makes the drag pay",
       paragraphs: [
         "Kesting writes that the drag is typically done from butterfly guard: cup the triceps, bring one leg outside, pull the opponent forward and shift the hips to one side. If it works, the opponent lands beside you and you take the back. If it does not, and they turn in to face you in time, the same motion is still a sweep, which the IBJJF scores at two.",
-        "That is the structural point, and it is what the word system means here. The drag has a failure mode that scores. An opponent who defends the back take by turning in has turned into the sweep, and an opponent who posts a hand to stop the sweep has extended the arm the drag wants. The Library's entry on the butterfly hook explains why the hook is there at all: a hook only lifts once the opponent's weight is loaded onto it through an upper-body connection, and a drag that pulls the opponent forward is one way of bringing their weight onto it.",
-        "Kesting's list for Garcia runs on from butterfly to the X-guard and the single-leg X-guard, which he describes as places the butterfly guard lets him move to. He first saw the X-guard in Garcia's 2003 ADCC match against Renzo Gracie, and describes it as a position he did not recognise and then, like other grapplers of the time, set about reverse-engineering. The positions change. The idea underneath does not: keep the opponent's weight moving towards you, and be ready to take whichever side they give up.",
+        "The drag has a failure mode that scores. An opponent who defends the back take by turning in has turned into the sweep, and an opponent who posts a hand to stop the sweep has extended the arm the drag wants. The Library's entry on the butterfly hook explains why the hook is there at all: a hook only lifts once the opponent's weight is loaded onto it through an upper-body connection, and a drag that pulls the opponent forward is one way of bringing their weight onto it.",
+        "Kesting's list for Garcia runs on from butterfly to the X-guard and the single-leg X-guard, which he describes as places the butterfly guard lets him move to. The first time Kesting saw Garcia compete, in his 2003 ADCC match against Renzo Gracie, the match turned on a position he did not recognise, the X-guard, which he, like other grapplers of the time, then set about reverse-engineering. Across all of them the idea is the same: keep the opponent's weight moving towards you, and be ready to take whichever side they give up.",
       ],
     },
     {
@@ -70,17 +72,8 @@ export const theArmDragAsASystem: DraftArticle = {
       heading: "Chest connection before hooks",
       paragraphs: [
         "The chain ends on the back, and its last link is the one the Library's entry says most people learn in the wrong order. That entry, on the seat belt and hooks, argues that back control is held by the chest first and the legs second, because the opponent escapes by turning their shoulders, and that turn is fought at the shoulder line, not at the hips. The arm drag entry says the same thing about the moment of arrival: get the chest onto the side of the torso, not behind the arm, or the exposed back becomes a scramble.",
-        "Kesting reports a detail from Garcia's game that fits that ordering. Going for the choke before the hooks are in is ordinarily, in his words, a rookie mistake, and Garcia sometimes does it anyway: an opponent busy blocking the choke is not defending the hooks, which then go in easily. The upper body leads and the legs follow.",
+        "Kesting reports a detail from Garcia's game that fits that ordering. Going for the choke before the hooks are in is ordinarily, in his words, a rookie mistake, and Garcia sometimes does it anyway: an opponent busy blocking the choke is not defending the hooks, which then go in easily.",
         "His recorded finishes point the same way. BJJ Heroes' panel lists 85 wins, 55 of them by submission, and breaks the 55 down by technique. The rear naked choke is the largest single entry at 16, which is 29 percent of those submission wins. The record mixes gi and no-gi events and is compiled by a community site, not a federation, so it describes a tendency, not a statistic about the sport.",
-      ],
-    },
-    {
-      id: "what-the-system-asks-of-conditioning",
-      heading: "What the system asks of conditioning",
-      paragraphs: [
-        "A game built on hand-fighting for a wrist and chasing the back through scrambles sounds like a game that makes particular physical demands. The published research can say less about that than one might expect.",
-        "Andreato and colleagues' systematic review of the physical profiles of jiu-jitsu athletes, published in Sports Medicine - Open in 2017, reports isometric handgrip strength of between 48 and 57 kilograms-force in elite or experienced athletes, and describes those values as not high. It reports that aerobic power did not seem to separate athletes of different competitive levels. The grip-endurance tests it found able to discriminate between levels were a timed hang from a gi and pull-up repetitions holding one, with mean hang times of 54 to 62 seconds reported for national and international competitors. It notes a lack of studies of anaerobic output in the lower limbs and an absence of them in the upper limbs.",
-        "Those are findings about gi grips and about athletes in general, not about a no-gi game. The tests that tell good athletes from less experienced ones are tests of holding cloth, and the drag holds a wrist. What a wrist-and-triceps game asks of the forearms, and whether it asks less or more, is not something the review measured, and this piece draws no conclusion about training from it. The Journal's piece on grip decay makes the same point about the research at more length.",
       ],
     },
     {
@@ -88,8 +81,8 @@ export const theArmDragAsASystem: DraftArticle = {
       heading: "A system is what happens next",
       paragraphs: [
         "The clearest evidence that this was a system and not a signature move is what happened when opponents learned it. Kesting writes that for a long time the arm drag to back take to choke was Garcia's staple, and then opponents stopped letting him take the back so easily, and he moved on to the north-south choke. When the X-guard spread and people learned to defend it, he moved to the single-leg X-guard.",
-        "A move stops working when the opponent learns it. A system is built so that the opponent's defence is the next entry: turn in and you are swept, post a hand and you are dragged, and, on Kesting's account, shut the back and the attack moves to the north-south choke. The record does not show that Garcia invented any of its parts, and a seated game had its costs. BJJ Heroes records that he lost the Brazilian ADCC trials final in 2003 by a single point, which it attributes to a guard-pull penalty, under a rule set whose current version still charges for sitting down.",
-        "That is the contribution the sources support. A set of techniques that already existed, assembled so that each one is paid for by the failure of the last, and shown working in public against people who knew it was coming.",
+        "A move stops working when the opponent learns it. A system is built so that the opponent's defence is the next entry: turn in and you are swept, post a hand and you are dragged, and, on Kesting's account, shut the back and the attack moves to the north-south choke. The record does not show that Garcia invented any of its parts. A seated game also had costs: BJJ Heroes records that he lost at the 2003 Brazilian ADCC trials by a single point, which it attributes to a guard-pull penalty (its biography calls the bout the final; its record table lists it as a semi-final), under a rule set whose current version still charges for sitting down.",
+        "That is the contribution the sources support: techniques that already existed, put in an order where defending one opens the next, and carried on to the next link each time opponents learned to stop one.",
       ],
     },
   ],
@@ -120,13 +113,6 @@ export const theArmDragAsASystem: DraftArticle = {
       url: "https://adcombat.com/adcc-rules-regulations/",
       accessed: "2026-09-29",
     },
-    {
-      title:
-        "Andreato LV et al., \"Physical and Physiological Profiles of Brazilian Jiu-Jitsu Athletes: a Systematic Review\", Sports Medicine - Open 3, article 9 (2017)",
-      publisher: "Springer Nature",
-      url: "https://link.springer.com/article/10.1186/s40798-016-0069-5",
-      accessed: "2026-09-29",
-    },
   ],
   relatedSlugs: [
     "de-la-riva-and-the-guard-that-took-his-name",
@@ -136,8 +122,7 @@ export const theArmDragAsASystem: DraftArticle = {
   ],
   contestedNotes: [
     "Whether Garcia was the first to popularise the arm drag in jiu-jitsu is Stephan Kesting's judgement on Grapplearts, not a documented fact. No source consulted credits Garcia with inventing the arm drag, the butterfly guard, the X-guard or the north-south choke, and this article does not.",
-    "The 2003 ADCC trials result, a one-point loss attributed to a guard-pull penalty, comes from BJJ Heroes alone. No official ADCC bracket record was read, and the ADCC rules page read for this article is undated, so the 2003 rule is taken from BJJ Heroes' description.",
+    "The 2003 ADCC trials result, a one-point loss attributed to a guard-pull penalty, comes from BJJ Heroes alone, and BJJ Heroes is not consistent about it: its biography says he lost the final, and its record table lists the bout, against Daniel Moraes, as a semi-final (\"ADCC Trials 77KG SF 2003\"). The article names neither round. No official ADCC bracket record was read, and the ADCC rules page read for this article is undated, so the 2003 rule is taken from BJJ Heroes' description.",
     "The submission breakdown is BJJ Heroes' compilation, which mixes gi and no-gi events and does not link each result to an official record. The panel prints each technique as a percentage followed by a count; the counts are used here, and they sum to the 55 submission wins the panel states.",
-    "The conditioning findings are the systematic review's, drawn from studies of jiu-jitsu athletes in general, with the discriminating grip tests performed on the gi. They are not findings about Garcia or about no-gi, and no training recommendation is made from them.",
   ],
 };

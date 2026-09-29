@@ -1,6 +1,13 @@
 name: Neon preview cleanup
 
-# Deletes a pull request's Neon preview branch when the pull request closes.
+# Deletes a pull request's Neon preview branch when the pull request closes,
+# and once a day sweeps every preview/* branch whose git branch is gone, whose
+# pull request is closed, or which never had a pull request and is two weeks
+# old (scripts/db/neon-preview-sweep.sh says exactly which).
+#
+# Every preview branch is a fork of production and holds real customer data
+# (docs/database-runbook.md §2a). The close event alone missed branches pushed
+# and deleted without a pull request, and those copies lived for ever.
 #
 # The Vercel Marketplace integration makes a `preview/<git branch>` database
 # branch for every preview deployment, and only removes it when Vercel removes
@@ -17,6 +24,11 @@ name: Neon preview cleanup
 on:
   pull_request:
     types: [closed]
+  schedule:
+    # Off the hour, when GitHub's scheduler is least delayed. Runs from the
+    # default branch only.
+    - cron: "41 10 * * *"
+  workflow_dispatch:
 
 permissions: {}
 
@@ -24,7 +36,7 @@ jobs:
   delete-preview-branch:
     # Secrets are not given to pull requests from forks, and a fork's branch
     # name could collide with ours. Only clean up after our own branches.
-    if: github.event.pull_request.head.repo.full_name == github.repository
+    if: github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository
     runs-on: ubuntu-latest
     timeout-minutes: 5
 
@@ -56,3 +68,47 @@ jobs:
           curl -fsS -X DELETE -H "Authorization: Bearer ${NEON_API_KEY}" -H "Accept: application/json" \
             "$api/$id" > /dev/null
           echo "Deleted Neon branch ${name}."
+
+  sweep-preview-branches:
+    if: github.event_name != 'pull_request'
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      contents: read
+      pull-requests: read
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          sparse-checkout: |
+            scripts/db/neon-preview-sweep.sh
+          sparse-checkout-cone-mode: false
+          persist-credentials: false
+
+      # What exists on GitHub, written to files for the script. Only this
+      # repository's own pull requests count: a fork's branch name can collide
+      # with ours. A failed call fails the step (pipefail), so a half-read list
+      # never reaches the script — which also refuses a list missing `main`.
+      - name: List git branches and pull requests
+        env:
+          GH_TOKEN: ${{ github.token }}
+          REPO: ${{ github.repository }}
+        run: |
+          set -euo pipefail
+          d="${RUNNER_TEMP}/sweep"
+          mkdir -p "$d"
+          gh api --paginate "repos/${REPO}/branches?per_page=100" --jq '.[].name' > "$d/live"
+          for state in open closed; do
+            gh api --paginate "repos/${REPO}/pulls?state=${state}&per_page=100"               --jq '.[] | select(.head.repo.full_name == "'"${REPO}"'") | .head.ref' > "$d/${state}"
+          done
+          echo "$(wc -l < "$d/live") branches, $(wc -l < "$d/open") open and $(wc -l < "$d/closed") closed pull requests."
+
+      - name: Delete preview branches nothing needs
+        env:
+          NEON_API_KEY: ${{ secrets.NEON_API_KEY }}
+          NEON_PROJECT_ID: ${{ vars.NEON_PROJECT_ID }}
+          LIVE_BRANCHES_FILE: ${{ runner.temp }}/sweep/live
+          OPEN_PR_FILE: ${{ runner.temp }}/sweep/open
+          CLOSED_PR_FILE: ${{ runner.temp }}/sweep/closed
+          DEFAULT_GIT_BRANCH: ${{ github.event.repository.default_branch }}
+        run: bash scripts/db/neon-preview-sweep.sh

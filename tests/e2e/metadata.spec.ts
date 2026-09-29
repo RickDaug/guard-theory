@@ -1,5 +1,6 @@
 import { expect, test } from "@playwright/test";
 import { ARTICLES, isPublished } from "../../src/content/journal/index.ts";
+import { getAuthor } from "../../src/content/authors.ts";
 import { CATEGORIES as TECHNIQUE_CATEGORIES } from "../../src/content/technique/index.ts";
 import { isTechniqueCategoryIndexable } from "../../src/content/category-gate.ts";
 
@@ -223,6 +224,20 @@ test("structured data parses and claims nothing untrue", async ({ page }) => {
           continue;
         }
 
+        // Material and size facts need an owner source (docs/owner-decisions.md
+        // §3), and the invented ones removed on 2026-09-29 must not resurface
+        // in structured data either.
+        for (const key of ["material", "size", "additionalProperty", "weight"]) {
+          expect(record[key], `${path} emits a Product with a "${key}"`).toBeUndefined();
+        }
+
+        // Country of origin only when the owner typed one that names a
+        // country (src/content/products/origin.ts). The registry garments have
+        // none, so their Product must not carry one.
+        if (path === "/shop/theory-01-long-sleeve") {
+          expect(record.countryOfOrigin, `${path} invents a country of origin`).toBeUndefined();
+        }
+
         const offer = record.offers as Record<string, unknown> | undefined;
 
         expect(offer, `${path} emits a Product with no Offer`).toBeTruthy();
@@ -245,6 +260,16 @@ test("structured data parses and claims nothing untrue", async ({ page }) => {
         ).toMatch(/schema\.org\/(InStock|OutOfStock)$/);
       }
     }
+  }
+
+  // 16 CFR 303.34 origin: said only from the owner's value. Neither registry
+  // garment has one, so neither page says "Made in" or "Imported".
+  for (const path of ["/shop/theory-01-long-sleeve", "/shop/theory-01-short-sleeve"]) {
+    await page.goto(path, { waitUntil: "load" });
+    await expect(page.locator("[data-origin-disclosure]"), `${path} states an origin nobody supplied`).toHaveCount(0);
+    await expect(page.locator("main"), `${path} states an origin nobody supplied`).not.toContainText(
+      /Made in|Imported/,
+    );
   }
 
   // The waitlist is not a PreOrder, and never becomes one.
@@ -310,8 +335,13 @@ test("article and entry structured data repeat the page, and add nothing", async
       `${path} states a dateModified the registry does not carry`,
     ).toBe(article.updatedAt);
 
-    const author = node!.author as { "@id"?: string; name?: string };
+    const author = node!.author as { "@id"?: string; "@type"?: string; name?: string };
     expect(author?.["@id"], `${path} author has no stable @id`).toMatch(/#author-/);
+    // An article drafted with AI assistance names the publication, never a
+    // Person (owner decision 2026-09-29, docs/owner-decisions.md §2).
+    expect(author["@type"], `${path} author type`).toBe(
+      getAuthor(article.authorId)?.kind === "organization" ? "Organization" : "Person",
+    );
     // The same person is the same node wherever they appear.
     const seen = authorIds.get(article.authorId);
     if (seen) expect(author["@id"]).toBe(seen);

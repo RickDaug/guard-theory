@@ -3,6 +3,7 @@ import { query } from "../db/client.ts";
 import { stripe, isStripeConfigured } from "../stripe/client.ts";
 import { fulfilCheckoutSession } from "./fulfil.ts";
 import { ensureOrderConfirmationSent } from "./confirmation.ts";
+import { applyRefundFromCharge } from "./refund.ts";
 
 /**
  * Catching what the webhook missed.
@@ -33,6 +34,20 @@ export type ReconcileReport = {
   skipped: { sessionId: string; reason: string }[];
   /** True when a bound stopped the walk early. The next run starts again from the top. */
   truncated?: boolean;
+  /** The refund pass that follows the session walk. See reconcileRefunds. */
+  refunds?: RefundReconcileReport;
+};
+
+export type RefundReconcileReport = {
+  /** Refunds listed from Stripe. */
+  scanned: number;
+  /** Payments whose running refunded total was applied to an order or an unfulfilled payment. */
+  synced: number;
+  /** Payments with a refund and no row of ours yet. Tried again on the next run. */
+  unmatched: number;
+  /** The error's name when listing refunds failed. The session walk's results still stand. */
+  failed?: string;
+  truncated?: boolean;
 };
 
 /**
@@ -47,11 +62,22 @@ export type ReconcileReport = {
  * `client` exists so a test can hand in a list of sessions instead of Stripe.
  */
 export type ReconcileOptions = {
-  /** Epoch milliseconds after which no further session is started. */
+  /** Epoch milliseconds after which no further session or refund is started. */
   deadlineMs?: number;
   maxSessions?: number;
-  client?: { checkout: { sessions: Pick<Stripe["checkout"]["sessions"], "list"> } };
+  maxRefunds?: number;
+  client?: ReconcileClient;
 };
+
+/** The two list calls the reconciler makes: all of Stripe it touches. */
+export type ReconcileClient = {
+  checkout: { sessions: Pick<Stripe["checkout"]["sessions"], "list"> };
+  refunds: Pick<Stripe["refunds"], "list">;
+};
+
+const pastBound = (options: { deadlineMs?: number }, count: number, max?: number) =>
+  (options.deadlineMs !== undefined && Date.now() >= options.deadlineMs) ||
+  (max !== undefined && count >= max);
 
 export async function reconcileStripeSessions(
   lookbackHours = 72,
@@ -73,10 +99,7 @@ export async function reconcileStripeSessions(
     created: { gte: since },
     limit: 100,
   })) {
-    if (
-      (options.deadlineMs !== undefined && Date.now() >= options.deadlineMs) ||
-      (options.maxSessions !== undefined && report.scanned >= options.maxSessions)
-    ) {
+    if (pastBound(options, report.scanned, options.maxSessions)) {
       report.truncated = true;
       break;
     }
@@ -119,6 +142,99 @@ export async function reconcileStripeSessions(
         sessionId: session.id,
         reason: error instanceof Error ? error.message : String(error),
       });
+    }
+  }
+
+  // After the sessions, on purpose: an order this walk has just created is one
+  // a refund may already be waiting for.
+  report.refunds = await reconcileRefunds(lookbackHours, { ...options, client });
+
+  if (report.refunds.truncated) {
+    report.truncated = true;
+  }
+
+  return report;
+}
+
+/**
+ * Catching the refunds the webhook missed.
+ *
+ * `charge.refunded` is the only thing that tells us about a refund made in the
+ * Stripe dashboard, and it can be missed the way any webhook can — or arrive
+ * before its order exists, be retried for three days, and run out. The order
+ * then says "not refunded" and the owner ships it. This lists recent refunds,
+ * reads each charge's running `amount_refunded` (expanded, so it is one list
+ * call rather than one per refund), and applies it through the same monotonic
+ * update the webhook uses. Applying a figure the row already has changes
+ * nothing, so it is safe every fifteen minutes.
+ *
+ * "Recent" is when the REFUND was made, not the payment, so a refund of an old
+ * order is caught as long as it happened inside the lookback.
+ */
+export async function reconcileRefunds(
+  lookbackHours = 72,
+  options: ReconcileOptions = {},
+): Promise<RefundReconcileReport> {
+  const report: RefundReconcileReport = { scanned: 0, synced: 0, unmatched: 0 };
+
+  if (!options.client && !isStripeConfigured()) {
+    return report;
+  }
+
+  const client = options.client ?? stripe();
+  const since = Math.floor(Date.now() / 1000) - lookbackHours * 60 * 60;
+
+  // Payment intent → the largest running total seen. Several refunds of one
+  // charge all carry the same charge, so they collapse to one write.
+  const totals = new Map<string, number>();
+
+  try {
+    for await (const refund of client.refunds.list({
+      created: { gte: since },
+      limit: 100,
+      expand: ["data.charge"],
+    })) {
+      if (pastBound(options, report.scanned, options.maxRefunds)) {
+        report.truncated = true;
+        break;
+      }
+
+      report.scanned += 1;
+
+      const charge = typeof refund.charge === "object" ? refund.charge : null;
+      const intent = refund.payment_intent ?? charge?.payment_intent ?? null;
+      const paymentIntent = typeof intent === "string" ? intent : intent?.id;
+
+      if (!charge || !paymentIntent) {
+        continue;
+      }
+
+      totals.set(paymentIntent, Math.max(totals.get(paymentIntent) ?? 0, charge.amount_refunded));
+    }
+  } catch (error) {
+    // The name only: Stripe's messages quote request parameters.
+    report.failed = error instanceof Error ? error.name : "unknown error";
+    console.error(`[guard-theory] refund reconcile could not list refunds: ${report.failed}`);
+  }
+
+  for (const [paymentIntent, amountRefunded] of totals) {
+    try {
+      const outcome = await applyRefundFromCharge(paymentIntent, amountRefunded);
+
+      if (outcome === "no-match") {
+        report.unmatched += 1;
+        console.warn(
+          `[guard-theory] refund on ${paymentIntent} matches no order yet; will try again next run`,
+        );
+      } else {
+        report.synced += 1;
+      }
+    } catch (error) {
+      report.unmatched += 1;
+      console.error(
+        `[guard-theory] could not apply the refund on ${paymentIntent}: ` +
+          (error instanceof Error ? error.name : "unknown error"),
+      );
     }
   }
 

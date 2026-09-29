@@ -74,6 +74,11 @@ export async function ensureOrderConfirmationSent(orderId: string): Promise<bool
  * Does nothing while mail only logs. The window keeps a years-old order from
  * getting a surprise confirmation when mail is first switched on.
  *
+ * Cancelled orders and orders refunded in full are left alone: a receipt for
+ * an order that has already been undone confirms nothing, and would only tell
+ * the buyer they had been charged again. The cron's sweep for confirmations
+ * that were never attempted (src/lib/ops/sweep.ts) skips the same two.
+ *
  * Returns how many orders it tried.
  */
 export async function retryUndeliveredConfirmations(
@@ -90,6 +95,8 @@ export async function retryUndeliveredConfirmations(
       where l.template = 'order-confirmation'
         and l.status in ('not-delivered', 'failed')
         and o.placed_at > now() - make_interval(days => $1::int)
+        and o.status <> 'cancelled'
+        and o.refund_status <> 'full'
         and not exists (
           select 1 from email_log s
            where s.order_id = l.order_id

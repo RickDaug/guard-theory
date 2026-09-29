@@ -78,7 +78,7 @@ export const theArmbarFromClosedGuard: PublishedArticle = {
         "There is very little quantitative work on submissions in grappling, and none of it is about this one. Spanias, Kirk and Ovretveit's analysis of 26 no-gi submission-only matches found that time spent in dominant positions correlated with winning by an upper-body submission and did not correlate with winning by a lower-body one, and that the single most frequent finish in their sample was the heel hook. That is a small sample from two events under one format, and the authors present it as such.",
         "What that finding supports is modest and worth having anyway: upper-body attacks in their sample arrived through position, and lower-body attacks did not. An armbar from closed guard is not from a dominant position in that study's sense, since closed guard is not among the positions it counted, but it is positional in a looser one: it is the end of a sequence of small controls, not a thing that happens to be available.",
         "What no source supports is any claim about how often this attack succeeds, at what level, or against whom. Rooms carry strong opinions about that and none of them are measurements. The reason to build the arm control first is mechanical and it stands on its own: the leg has a long way to travel, and an arm that is not committed will be gone before it arrives.",
-        "Correction, 29 September 2026: an earlier version of this article put both legs on the far side of the trunk in the finished position and the shoulder against the mat at the moment the leg crosses. In the finish one leg is over the head and the other across the chest, with the arm between the thighs, and from closed guard the shoulder is clamped against the hip rather than the mat. The judo paragraph now cites the IJF rule that made joint locks anywhere but the elbow a disqualifying foul.",
+        "Correction, 29 September 2026: an earlier version of this article put both legs on the far side of the trunk in the finished position and the shoulder against the mat at the moment the leg crosses. In the finish one leg is over the head and the other across the chest, with the arm between the thighs, and from closed guard the shoulder is clamped against the hip rather than the mat. The judo paragraph now cites the IJF rule that made joint locks anywhere but the elbow a disqualifying foul. It also cited the August 2025 text of the Unified Rules of MMA, since amended on 5 August 2026; the clause quoted here is unchanged.",
       ],
     },
   ],
@@ -113,10 +113,10 @@ export const theArmbarFromClosedGuard: PublishedArticle = {
     },
     {
       title:
-        "Unified Rules of Mixed Martial Arts, August 2025: fouls, including small joint manipulation and the definition of large joints",
+        "Unified Rules of Mixed Martial Arts, as amended 5 August 2026: fouls, including small joint manipulation and the definition of large joints (foul 16, unchanged from the 2025 text)",
       publisher: "Association of Boxing Commissions and Combative Sports",
-      url: "https://www.abcboxing.com/wp-content/uploads/2025/08/Unified-Rules-of-MMA-8.2025.pdf",
-      accessed: "2026-08-04",
+      url: "https://www.abcboxing.com/wp-content/uploads/2026/08/Unified-Rules-of-MMA-8.2026.pdf",
+      accessed: "2026-09-29",
     },
     {
       title:

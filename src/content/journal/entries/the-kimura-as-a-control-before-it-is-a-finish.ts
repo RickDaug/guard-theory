@@ -86,7 +86,7 @@ export const theKimuraAsAControlBeforeItIsAFinish: PublishedArticle = {
         "We found nothing in the research literature about this grip. There is no measurement of how often a kimura control leads to a sweep, a back take or a finish, and no comparison between rooms that teach it as a control and rooms that teach it as a submission.",
         "The nearest relevant finding is indirect. Spanias, Kirk and Ovretveit, analysing 26 no-gi submission-only matches, found that time spent in dominant positions correlated with winning by an upper-body submission and did not correlate with winning by a lower-body one. Upper-body attacks in that sample arrived through position. A grip that improves position and threatens a shoulder sits on the same side of that line, which is consistent with the argument here and is not evidence for it.",
         "So the case for treating the kimura as a control is mechanical and it is testable in your own training rather than in a citation. Take the grip in a positional round and forbid yourself the finish. Count what becomes available. If the answer is nothing, the argument is wrong for the way you play, and that is a more useful result than a statistic somebody assembled from a different sport under a different ruleset.",
-        "Correction, 29 September 2026: an earlier version of this article described the IJF's statement of principles as a rule, and said judo restricts the direction a joint is loaded rather than which joints may be attacked. The IJF's refereeing rules have made kansetsu-waza anywhere but the elbow a disqualifying foul, and the article now cites that rule. The description of the grip and of the half-guard post is now tied to named arms and sides.",
+        "Correction, 29 September 2026: an earlier version of this article described the IJF's statement of principles as a rule, and said judo restricts the direction a joint is loaded rather than which joints may be attacked. The IJF's refereeing rules have made kansetsu-waza anywhere but the elbow a disqualifying foul, and the article now cites that rule. The description of the grip and of the half-guard post is now tied to named arms and sides. It also cited the August 2025 text of the Unified Rules of MMA, since amended on 5 August 2026; the clause quoted here is unchanged.",
       ],
     },
   ],
@@ -114,10 +114,10 @@ export const theKimuraAsAControlBeforeItIsAFinish: PublishedArticle = {
     },
     {
       title:
-        "Unified Rules of Mixed Martial Arts, August 2025: foul 16, small joint manipulation, and the definition of large joints",
+        "Unified Rules of Mixed Martial Arts, as amended 5 August 2026: foul 16, small joint manipulation, and the definition of large joints (unchanged from the 2025 text)",
       publisher: "Association of Boxing Commissions and Combative Sports",
-      url: "https://www.abcboxing.com/wp-content/uploads/2025/08/Unified-Rules-of-MMA-8.2025.pdf",
-      accessed: "2026-08-04",
+      url: "https://www.abcboxing.com/wp-content/uploads/2026/08/Unified-Rules-of-MMA-8.2026.pdf",
+      accessed: "2026-09-29",
     },
     {
       title:

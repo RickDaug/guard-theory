@@ -78,7 +78,7 @@ export const theGuillotineFromTheFrontHeadlock: PublishedArticle = {
         "There is no published comparison of arm-in and arm-out finishing rates, no measurement of how often a front headlock produces a guillotine rather than a back take, and no data on where the position sits in the economy of a match.",
         "The nearest useful evidence is about a category rather than a technique. Spanias, Kirk and Ovretveit, coding 26 no-gi submission-only matches, found that time in dominant positions correlated with winning by upper-body submissions and did not correlate with winning by lower-body ones. A front headlock is not a dominant position under any of the scoring tables cited in this article, which is a mild reason to treat the guillotine as something you take when it appears rather than something you build a game around. That is an inference from a small sample and it is offered as one.",
         "What stands without evidence is the mechanical account, because it does not require any. The arms hold, the hips separate, the arm inside the loop changes what the structure is, and the crank line is written into three rule books, in different words and in slightly different places. Everything else about this technique is a matter of preference, and preferences do not need citations as long as they are not printed as facts.",
-        "Correction, 29 September 2026: an earlier version of this article said three rule books draw the crank line in nearly the same words. They use different words, and ADCC permits the can opener that United World Wrestling prohibits, as the section above sets out. Several frequency claims have also been softened.",
+        "Correction, 29 September 2026: an earlier version of this article said three rule books draw the crank line in nearly the same words. They use different words, and ADCC permits the can opener that United World Wrestling prohibits, as the section above sets out. Several frequency claims have also been softened. It also cited the August 2025 text of the Unified Rules of MMA, since amended on 5 August 2026; the clause quoted here is unchanged.",
       ],
     },
   ],
@@ -106,10 +106,10 @@ export const theGuillotineFromTheFrontHeadlock: PublishedArticle = {
     },
     {
       title:
-        "Unified Rules of Mixed Martial Arts, August 2025: foul 6, spiking an opponent onto the head or neck, and the clause on elevating an opponent who is attempting a submission",
+        "Unified Rules of Mixed Martial Arts, as amended 5 August 2026: foul 6, spiking an opponent onto the head or neck, and the clause on elevating an opponent who is attempting a submission (unchanged from the 2025 text)",
       publisher: "Association of Boxing Commissions and Combative Sports",
-      url: "https://www.abcboxing.com/wp-content/uploads/2025/08/Unified-Rules-of-MMA-8.2025.pdf",
-      accessed: "2026-08-04",
+      url: "https://www.abcboxing.com/wp-content/uploads/2026/08/Unified-Rules-of-MMA-8.2026.pdf",
+      accessed: "2026-09-29",
     },
     {
       title:

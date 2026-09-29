@@ -76,7 +76,7 @@ export const theRearNakedStrangleFromBackControl: PublishedArticle = {
         "The English name is a poor one, and the argument about it is not new. Judo's nomenclature calls the technique hadaka-jime, which the IJF rules use directly when describing a strangle applied with the attacker on the opponent's back. Hadaka-jime translates as naked strangle, usually glossed as a strangle made without the jacket. Where the word rear entered the English name is not something this article can settle, and no source consulted for it does.",
         "The choke-versus-strangle distinction has the same character. Many coaches, following judo usage, reserve strangle for the technique described here and choke for pressure on the airway. Ordinary gym speech calls all of them chokes, and so do several of the rule books quoted above, including the sentence from United World Wrestling that draws the crank line. This site uses strangle where it can, not to correct anybody, but because the vocabulary makes the mechanical difference visible.",
         "What is not a matter of naming is the boundary in the rule books. Whatever anyone calls it, a closed structure applied across the sides of the neck and a lever applied to a spine are different actions, and the documents that govern competition treat them differently. That is the part worth carrying out of this article.",
-        "Correction, 29 September 2026: an earlier version of this article said the three scoring tables share one picture of back control, chest included. Only United World Wrestling's definition includes the chest, and the shoulder-line limits differ between the IBJJF and ADCC. We also removed an unsourced claim about who is usually injured when a back roll goes wrong, and a speculation about the name.",
+        "Correction, 29 September 2026: an earlier version of this article said the three scoring tables share one picture of back control, chest included. Only United World Wrestling's definition includes the chest, and the shoulder-line limits differ between the IBJJF and ADCC. We also removed an unsourced claim about who is usually injured when a back roll goes wrong, and a speculation about the name. It also cited the August 2025 text of the Unified Rules of MMA, since amended on 5 August 2026; the clause quoted here is unchanged.",
       ],
     },
   ],
@@ -111,10 +111,10 @@ export const theRearNakedStrangleFromBackControl: PublishedArticle = {
     },
     {
       title:
-        "Unified Rules of Mixed Martial Arts, August 2025: fouls, including throat attacks and grabbing the trachea",
+        "Unified Rules of Mixed Martial Arts, as amended 5 August 2026: fouls, including throat attacks and grabbing the trachea (foul 8, unchanged from the 2025 text)",
       publisher: "Association of Boxing Commissions and Combative Sports",
-      url: "https://www.abcboxing.com/wp-content/uploads/2025/08/Unified-Rules-of-MMA-8.2025.pdf",
-      accessed: "2026-08-04",
+      url: "https://www.abcboxing.com/wp-content/uploads/2026/08/Unified-Rules-of-MMA-8.2026.pdf",
+      accessed: "2026-09-29",
     },
   ],
   relatedSlugs: [

@@ -9,6 +9,10 @@ import {
   numberWord,
 } from "../../src/content/section-descriptions.ts";
 import { CATEGORIES } from "../../src/content/technique/index.ts";
+import { ARTICLES, isPublished } from "../../src/content/journal/index.ts";
+
+const MAIL = "src/lib/mail/templates.ts";
+const POLICY = "src/content/policies/index.ts";
 
 /**
  * What the site says about itself is still true.
@@ -26,7 +30,7 @@ import { CATEGORIES } from "../../src/content/technique/index.ts";
 const ROOT = join(import.meta.dirname, "..", "..");
 
 /** Where copy lives. A retired sentence may not reappear anywhere in here. */
-const COPY_DIRECTORIES = ["src/app", "src/components", "src/content"];
+const COPY_DIRECTORIES = ["src/app", "src/components", "src/content", "src/lib/mail"];
 
 /** The registry quotes every sentence it guards, so it is not copy. */
 const NOT_COPY = new Set(["src/content/claims.ts"]);
@@ -199,6 +203,39 @@ describe("the guard can fail", () => {
     assert.match(String(added), /"@vercel\/analytics" is now a runtime dependency/);
   });
 
+  it("objects when the backup stops going to GitHub, or is kept longer than the policy says", () => {
+    const workflow = ".github/workflows/db-backup.yml";
+    const policy = "src/content/policies/index.ts";
+
+    const unnamed = byId("privacy-who-else-handles-it").holds(
+      contextFor(null, { [policy]: raw(policy).replace("GitHub stores", "A company stores") }),
+    );
+    assert.match(String(unnamed), /GitHub handles reader data/);
+
+    const longer = byId("privacy-backups-kept-fourteen-days").holds(
+      contextFor(null, { [workflow]: raw(workflow).replace("retention-days: 14", "retention-days: 90") }),
+    );
+    assert.match(String(longer), /keeps the artifact for 90 days, not fourteen/);
+  });
+
+  it("objects when the cart limiter keeps its rows longer, or keeps the address", () => {
+    const limiter = "src/lib/rate-limit-db.ts";
+    const longer = byId("privacy-rate-limit-hash-kept-a-day").holds(
+      contextFor(null, {
+        [limiter]: raw(limiter).replace("RATE_LIMIT_RETENTION_HOURS = 24;", "RATE_LIMIT_RETENTION_HOURS = 720;"),
+      }),
+    );
+    assert.match(String(longer), /no longer deletes its rows after 24 hours/);
+
+    const migration = "migrations/0010_rate_limit.sql";
+    const raw_ip = byId("privacy-rate-limit-hash-kept-a-day").holds(
+      contextFor(null, {
+        [migration]: raw(migration).replace("key_hash     text        not null,", "key_hash text not null, ip text,"),
+      }),
+    );
+    assert.match(String(raw_ip), /looks like it holds the address itself/);
+  });
+
   it("objects when the cookies policy stops naming the portal's session cookie", () => {
     const policy = "src/content/policies/index.ts";
     const verdict = byId("no-cookies-no-tracking").holds(
@@ -228,6 +265,67 @@ describe("the guard can fail", () => {
       'a: "Rick R. Every article carries a byline, a publication date and the sources',
       claim.says,
     );
+  });
+
+  it("objects when the dispatch time drifts from the owner's figure", () => {
+    const claim = byId("dispatch-time-is-the-owners");
+    // The constant every copy file renders from…
+    const terms = "src/content/policies/shipping-terms.ts";
+    const viaConstant = claim.holds(
+      contextFor(null, {
+        [terms]: raw(terms).replace('"seven business days"', '"two business days"'),
+      }),
+    );
+    assert.match(String(viaConstant), /promises dispatch within two business days/);
+    // …and a figure typed straight into the copy instead of the constant.
+    const typed = claim.holds(
+      contextFor(null, {
+        [MAIL]: raw(MAIL).replace("dispatched within ${DISPATCH_WITHIN}", "dispatched within two business days"),
+      }),
+    );
+    assert.match(String(typed), /promises dispatch within two business days/);
+  });
+
+  it("objects when the return window drifts from the owner's figure", () => {
+    const claim = byId("return-window-is-the-owners");
+    const verdict = claim.holds(
+      contextFor(null, {
+        [POLICY]: raw(POLICY).replace("within thirty days of delivery", "within sixty days of delivery"),
+      }),
+    );
+    assert.match(String(verdict), /return window of sixty days/);
+  });
+
+  it("keeps the unconfirmed buyer terms cut", () => {
+    const claim = byId("retired-unconfirmed-buyer-terms");
+    assert.notEqual(claim.holds(contextFor(null)), true);
+    for (const sentence of [
+      "Orders are packed and dispatched within two business days.",
+      "Refunds are issued to the original payment method within five business days of the return arriving.",
+      "we will send a return label and instructions",
+      "Contact us with a photograph and we will repair, replace or refund it.",
+      "If tracking shows no delivery after twenty-one days, we will replace the order",
+      "We will replace it and we will not ask you to return the damaged goods.",
+      "We dispatch the replacement as soon as the return is scanned by the carrier",
+      "If tracking has not moved for seven days, write to us",
+    ]) {
+      assert.match(sentence, claim.says, sentence);
+    }
+    assert.doesNotMatch("Orders are packed and dispatched within seven business days.", claim.says);
+  });
+
+  it("objects when an article carries a person's byline the owner has not confirmed", () => {
+    const claim = byId("journal-bylines-are-editorial");
+    assert.equal(claim.holds(contextFor(null)), true);
+    const article = ARTICLES.find(isPublished);
+    assert.ok(article);
+    const original = article.authorId;
+    try {
+      (article as { authorId: string }).authorId = "steven-p";
+      assert.match(String(claim.holds(contextFor(null))), /person's byline the owner has not confirmed/);
+    } finally {
+      (article as { authorId: string }).authorId = original;
+    }
   });
 
   it("objects when a connector changes colour and not weight", () => {

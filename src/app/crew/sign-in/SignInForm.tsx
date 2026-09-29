@@ -25,6 +25,7 @@ export function SignInForm({ next }: { next?: string }) {
       {state.status === "error" ? (
         <p
           ref={alert}
+          id="sign-in-error"
           role="alert"
           tabIndex={-1}
           className="border-l-2 border-signal-lift bg-graphite px-5 py-4 text-base text-chalk"
@@ -40,6 +41,11 @@ export function SignInForm({ next }: { next?: string }) {
         label="Password"
         autoComplete="current-password"
         required
+        // The summary above is the only error on this form, and it is always
+        // about signing in, so the field is described by it whenever it shows.
+        // Invalid only when it is the password itself that was wrong.
+        aria-describedby={state.status === "error" ? "sign-in-error" : undefined}
+        aria-invalid={state.status === "error" && state.field === "password" ? true : undefined}
       />
 
       <div>

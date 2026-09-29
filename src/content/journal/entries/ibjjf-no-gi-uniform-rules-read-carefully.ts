@@ -17,7 +17,7 @@ import type { PublishedArticle } from "../types.ts";
 export const ibjjfNoGiUniformRulesReadCarefully: PublishedArticle = {
   status: "published",
   publishedAt: "2026-08-19",
-  authorId: "steven-p",
+  authorId: "guard-theory-editorial",
   slug: "ibjjf-no-gi-uniform-rules-read-carefully",
   category: "competition-analysis",
   title: "The IBJJF no-gi uniform rules, read carefully",

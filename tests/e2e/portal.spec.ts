@@ -23,6 +23,8 @@ test.describe("portal access", () => {
       "/crew/products",
       "/crew/categories",
       "/crew/orders",
+      "/crew/orders/ship",
+      "/crew/settings",
       "/crew/list",
       "/crew/learn",
     ]) {
@@ -83,10 +85,25 @@ test.describe("portal access", () => {
     // stranger can find them; what must hold is that calling one gets nowhere.
     const manifest = JSON.parse(
       readFileSync(path.join(process.cwd(), ".next", "server", "server-reference-manifest.json"), "utf8"),
-    ) as { node: Record<string, { workers: Record<string, unknown> }> };
+    ) as {
+      node: Record<string, { filename?: string; workers: Record<string, { filename?: string }> }>;
+    };
 
+    // The portal layout's sign-out form puts signIn and signOut on this page
+    // too. Neither needs a session — signing out without one is harmless — so
+    // they are not what this test is about; the order actions are.
+    //
+    // Next 16.2 writes each action's filename on its workers; 16.3 moved it up
+    // to the entry. Read either, or on 16.3 the sign-in actions stop being
+    // excluded and signOut's harmless redirect fails the forged-cookie check.
     const ids = Object.entries(manifest.node)
-      .filter(([, entry]) => Object.keys(entry.workers).some((worker) => worker.includes("/crew/orders")))
+      .filter(([, entry]) =>
+        Object.entries(entry.workers).some(
+          ([worker, meta]) =>
+            worker.includes("/crew/orders") &&
+            !(meta.filename ?? entry.filename)?.includes("crew/sign-in/"),
+        ),
+      )
       .map(([id]) => id);
 
     expect(ids.length, "no portal action ids found in the build manifest").toBeGreaterThan(0);
@@ -160,72 +177,6 @@ test.describe("portal access", () => {
     expect(cookies.find((c) => SESSION_COOKIE.test(c.name))).toBeUndefined();
   });
 
-  /**
-   * The signing-in path itself.
-   *
-   * Runs only where a password and a database exist — CI, or a local run with
-   * `npm run db:local`. It does not silently pass when they do not: it skips,
-   * loudly, because a sign-in test that reports green without ever signing in
-   * is the guard that has only ever been green.
-   */
-  const configured =
-    Boolean(process.env.PORTAL_PASSWORD_HASH) &&
-    Boolean(process.env.PORTAL_TEST_PASSWORD) &&
-    Boolean(process.env.DATABASE_URL);
-
-  test("the right password opens the door, the wrong one does not", async ({ page }) => {
-    test.skip(!configured, "no PORTAL_PASSWORD_HASH / PORTAL_TEST_PASSWORD / DATABASE_URL");
-
-    await page.goto("/crew/sign-in", { waitUntil: "load" });
-    await page.getByLabel(/password/i).fill("definitely-not-the-password");
-    await page.getByRole("button", { name: /^sign in$/i }).click();
-
-    const alert = page.locator("form").getByRole("alert");
-    await expect(alert).toContainText(/not right/i);
-    expect((await page.context().cookies()).find((c) => SESSION_COOKIE.test(c.name))).toBeUndefined();
-
-    await page.getByLabel(/password/i).fill(process.env.PORTAL_TEST_PASSWORD!);
-    await page.getByRole("button", { name: /^sign in$/i }).click();
-
-    await page.waitForURL(/\/crew(\?|$)/);
-    await expect(page.getByRole("heading", { level: 1, name: /today/i })).toBeVisible();
-
-    const cookie = (await page.context().cookies()).find((c) => SESSION_COOKIE.test(c.name));
-    expect(cookie, "a session cookie must be set").toBeTruthy();
-    expect(cookie!.httpOnly, "the session cookie must be httpOnly").toBe(true);
-    expect(cookie!.sameSite).toBe("Lax");
-
-    // And every page behind the door now opens, with exactly one h1 each —
-    // which is what accessibility.spec.ts asserts for the public site and what
-    // these would otherwise escape.
-    for (const [path, heading] of [
-      ["/crew/products", /products/i],
-      ["/crew/categories", /categories/i],
-      ["/crew/orders", /orders/i],
-      ["/crew/list", /first edition/i],
-      ["/crew/learn", /learn/i],
-    ] as const) {
-      await page.goto(path, { waitUntil: "load" });
-      await expect(page.getByRole("heading", { level: 1, name: heading })).toBeVisible();
-      expect(await page.locator("h1").count(), `${path} has more than one h1`).toBe(1);
-    }
-
-    // The list export is a real file, not a page.
-    //
-    // Fetched from inside the page rather than with page.request, which does
-    // not carry the browser context's session cookie here and so follows the
-    // redirect to the sign-in screen and returns HTML.
-    const csv = await page.evaluate(async () => {
-      const response = await fetch("/crew/list/export");
-      return {
-        status: response.status,
-        type: response.headers.get("content-type") ?? "",
-        body: (await response.text()).slice(0, 200),
-      };
-    });
-
-    expect(csv.status).toBe(200);
-    expect(csv.type, "the export must be a file, not the sign-in page").toContain("text/csv");
-    expect(csv.body).toContain("email");
-  });
+  // Signing in, and everything that needs a session, is in portal-session.spec.ts:
+  // one serial block, because signing in ends every other session.
 });

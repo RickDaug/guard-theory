@@ -9,7 +9,7 @@ import type { PublishedArticle } from "../types.ts";
 export const deLaRivaAndTheGuardThatTookHisName: PublishedArticle = {
   status: "published",
   publishedAt: "2026-08-04",
-  authorId: "rick-r",
+  authorId: "guard-theory-editorial",
   slug: "de-la-riva-and-the-guard-that-took-his-name",
   category: "influential-practitioners",
   title: "De la Riva, and the guard that took his name",

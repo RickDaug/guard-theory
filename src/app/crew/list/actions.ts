@@ -1,23 +1,61 @@
 "use server";
 
+import { revalidatePath } from "next/cache";
 import { requireSession } from "@/lib/portal/session";
-import { query } from "@/lib/db/client";
-import { sendEmail, getMailProvider } from "@/lib/mail";
-import { announcement } from "@/lib/mail/templates";
+import { portalUrl } from "@/lib/portal/routes";
 import { findBannedConstructions, BANNED_IN_EMAIL } from "@/content/editorial-voice";
 import type { PortalFormState } from "@/lib/portal/form-state";
+import { isDatabaseConfigured } from "@/lib/db/client";
+import { getMailProvider } from "@/lib/mail";
+import { problemsWithMessage } from "@/lib/mail/announcement";
+import { isConfirmed } from "@/lib/mail/announcement-cli";
+import {
+  advanceCampaign,
+  createCampaign,
+  draftCampaign,
+  openCampaignId,
+  realSendProblem,
+  type AdvanceOutcome,
+} from "@/lib/mail/campaign";
+import { SITE_URL } from "@/lib/site";
 
 /**
  * The one composed message the owner sends to the list.
  *
- * Deliberately not a campaign tool. There is no scheduling, no segmentation and
- * no template gallery, because sending more than a handful of messages to this
- * list is not the plan — the First Edition page promises "one message, no
- * newsletter", and a tool that makes it easy to send twenty is a tool that
- * eventually sends twenty.
+ * Deliberately not a campaign tool in the marketing sense. There is no
+ * scheduling, no segmentation and no template gallery, because sending more
+ * than a handful of messages to this list is not the plan — the First Edition
+ * page promises "one message, no newsletter".
+ *
+ * A dry run is the default: the form reports who would receive it and sends
+ * nothing. A real send needs the box ticked AND the recipient count typed back,
+ * the same gate as scripts/mail/send-announcement.ts. It then writes a
+ * campaign — one row per recipient — and sends the first batch. The rest goes
+ * out a batch per press of "Continue sending", so no single call has to live
+ * long enough to reach the whole list. `src/lib/mail/campaign.ts` has the why.
  */
 
-type Recipient = { email: string; unsubscribe_token: string };
+function sendNow(campaignId: string): Promise<AdvanceOutcome> {
+  const provider = getMailProvider();
+  return advanceCampaign(campaignId, {
+    deliver: (email) => provider.send(email),
+    sleep: (ms) => new Promise((resolve) => setTimeout(resolve, ms)),
+  });
+}
+
+function describe(outcome: AdvanceOutcome): string {
+  const progress = outcome.progress;
+  const done = progress?.status === "done";
+  const left = progress ? progress.queued + progress.sending : 0;
+  const parts = [
+    `${outcome.sent} sent in this batch.`,
+    done ? "Every recipient has been reached." : `${left} still to send.`,
+  ];
+  if (outcome.stoppedBecause) {
+    parts.push(`Stopped: ${outcome.stoppedBecause}`);
+  }
+  return parts.join(" ");
+}
 
 export async function sendAnnouncement(
   _previous: PortalFormState,
@@ -27,23 +65,19 @@ export async function sendAnnouncement(
 
   const subject = String(formData.get("subject") ?? "").trim();
   const body = String(formData.get("body") ?? "").trim();
-  const confirm = formData.get("confirm") === "on";
-  const testTo = String(formData.get("testTo") ?? "").trim();
 
   if (!subject) {
-    return { status: "error", message: "Give it a subject line." };
+    return { status: "error", message: "Give it a subject line.", field: "subject" };
   }
 
   if (body.length < 20) {
-    return { status: "error", message: "Write the message first." };
+    return { status: "error", message: "Write the message first.", field: "body" };
   }
 
   // The same voice rules the Journal is held to, checked before it goes out
   // rather than after. A test would catch this in CI; the owner writing at
   // eleven at night is not running CI.
-  const problems = findBannedConstructions(`${subject}\n${body}`, BANNED_IN_EMAIL);
-
-  if (problems.length > 0) {
+  if (findBannedConstructions(`${subject}\n${body}`, BANNED_IN_EMAIL).length > 0) {
     return {
       status: "error",
       message:
@@ -51,70 +85,79 @@ export async function sendAnnouncement(
     };
   }
 
-  // A test send goes to one address and touches nobody on the list.
-  if (testTo) {
-    const sent = await sendEmail(
-      "announcement",
-      announcement(testTo, "test-token-not-a-real-unsubscribe", subject, body),
-      null,
-    );
-
-    return sent
-      ? { status: "success", message: `Test sent to ${testTo}. Nobody on the list was emailed.` }
-      : { status: "error", message: "The test did not send. Check the logs." };
+  const problems = problemsWithMessage({ subject, body });
+  if (problems.length > 0) {
+    return { status: "error", message: `Nothing was sent. ${problems.join(" ")}` };
   }
 
-  if (!confirm) {
+  if (!isDatabaseConfigured()) {
+    return { status: "error", message: "Nothing was sent. There is no database connected." };
+  }
+
+  const open = await openCampaignId();
+  if (open) {
     return {
       status: "error",
-      message: "Tick the box to confirm you mean to email the whole list.",
+      message: "Nothing new was queued. A send is already under way — use Continue sending below.",
     };
   }
 
-  const recipients = await query<Recipient>(
-    // unsubscribed_at is null is the whole safety mechanism. Someone who left
-    // the list must not receive this, and the check belongs in the query
-    // rather than in a filter someone can forget.
-    `select email, unsubscribe_token
-       from waitlist_signup
-      where unsubscribed_at is null
-      order by submitted_at asc`,
-  );
+  const draft = await draftCampaign();
+  const summary =
+    `${draft.due} ${draft.due === 1 ? "person is" : "people are"} due it` +
+    ` (${draft.today} within today's quota; the rest go on later days).` +
+    ` ${draft.alreadySent} already have it or may have it; ${draft.reserved} test addresses are skipped.`;
 
-  if (recipients.length === 0) {
-    return { status: "error", message: "There is nobody on the list to email." };
+  if (formData.get("send") !== "on") {
+    return { status: "success", message: `Dry run — nothing was sent. ${summary}` };
   }
 
-  let sent = 0;
-  let failed = 0;
-
-  for (const recipient of recipients) {
-    const ok = await sendEmail(
-      "announcement",
-      announcement(recipient.email, recipient.unsubscribe_token, subject, body),
-      null,
-    );
-
-    if (ok) {
-      sent += 1;
-    } else {
-      failed += 1;
-    }
-  }
-
-  const provider = getMailProvider();
-
-  if (!provider.delivers) {
+  if (!isConfirmed(String(formData.get("confirm") ?? ""), draft.due)) {
     return {
       status: "error",
-      message: `Nothing was actually sent — no mail provider is connected. ${sent} message${sent === 1 ? "" : "s"} were written to the log instead.`,
+      message: `Nothing was sent. To send for real, type the number of recipients (${draft.due}). ${summary}`,
+      field: "confirm",
     };
   }
 
-  return failed === 0
-    ? { status: "success", message: `Sent to ${sent}.` }
-    : {
-        status: "error",
-        message: `Sent to ${sent}. ${failed} failed — the reasons are in the logs. Do not send again, or the first ${sent} get it twice.`,
-      };
+  const gate = realSendProblem({ siteUrl: SITE_URL, delivers: getMailProvider().delivers });
+  if (gate) {
+    return { status: "error", message: `Nothing was sent. ${gate}` };
+  }
+
+  const created = await createCampaign({ subject, body });
+  if ("problems" in created) {
+    return { status: "error", message: `Nothing was sent. ${created.problems.join(" ")}` };
+  }
+  if ("open" in created) {
+    return {
+      status: "error",
+      message: "Nothing new was queued. A send is already under way — use Continue sending below.",
+    };
+  }
+
+  const outcome = await sendNow(created.created);
+  revalidatePath(portalUrl("/list"));
+  return { status: outcome.stoppedBecause ? "error" : "success", message: describe(outcome) };
+}
+
+export async function continueAnnouncement(
+  _previous: PortalFormState,
+  formData: FormData,
+): Promise<PortalFormState> {
+  await requireSession();
+
+  const campaignId = String(formData.get("campaign") ?? "");
+  if (!campaignId || !isDatabaseConfigured()) {
+    return { status: "error", message: "There is no send to continue." };
+  }
+
+  const gate = realSendProblem({ siteUrl: SITE_URL, delivers: getMailProvider().delivers });
+  if (gate) {
+    return { status: "error", message: `Nothing was sent. ${gate}` };
+  }
+
+  const outcome = await sendNow(campaignId);
+  revalidatePath(portalUrl("/list"));
+  return { status: outcome.stoppedBecause ? "error" : "success", message: describe(outcome) };
 }

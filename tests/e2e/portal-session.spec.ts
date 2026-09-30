@@ -2,6 +2,7 @@ import { createHash, randomInt } from "node:crypto";
 import { readFileSync } from "node:fs";
 import path from "node:path";
 import pg from "pg";
+import sharp from "sharp";
 import AxeBuilder from "@axe-core/playwright";
 import {
   expect,
@@ -307,7 +308,121 @@ test.describe.serial("a signed-in session", () => {
     const response = await page.request.get(`/shop/${slug}`);
     expect(response.status()).toBe(404);
 
-    await expect(page.getByText("Images: added by the developer for now.").first()).toBeVisible();
+    // A photograph is part of being whole, and the refusal says so.
+    await expect(refusal).toContainText("at least one photograph with alt text");
+
+    await context.close();
+  });
+
+  // Blob is the fake in tests/e2e/fixtures/fake-blob.mjs, which playwright.config.ts
+  // points the SDK at. Everything else — the action, sharp, the SDK, the rows — is real.
+  test("a photograph is stored without its location data, described, made primary and removed with its file", async ({
+    browser,
+  }) => {
+    const FAKE_BLOB = "http://127.0.0.1:3101";
+    type Uploads = {
+      stored: { url: string; pathname: string; contentType: string; access: string; bytes: string }[];
+      deleted: string[];
+    };
+    const uploads = async (): Promise<Uploads> => (await (await fetch(`${FAKE_BLOB}/__uploads`)).json()) as Uploads;
+
+    const context = await browser.newContext({ storageState: saved });
+    const page = await context.newPage();
+    await page.goto("/crew/products", { waitUntil: "load" });
+
+    const slug = `e2e-photo-${Date.now().toString(36)}`;
+    const create = page.locator("form", { has: page.getByRole("heading", { name: "New product" }) });
+    await create.getByLabel("Name", { exact: true }).fill("E2E Photo Fixture");
+    await create.getByLabel(/^Kind/).fill("Fixture kind");
+    await create.getByLabel(/^Web address/).fill(slug);
+    await create.getByRole("button", { name: "Create as draft" }).click();
+    await expect(create.getByRole("status")).toContainText("saved as a draft");
+
+    const card = page.locator(`[data-product="${slug}"]`);
+    const photographs = card.locator("section", { has: page.getByRole("heading", { name: "Photographs" }) });
+    await expect(photographs.getByText("No photographs yet.")).toBeVisible();
+    const uploader = photographs.locator("form").last();
+
+    // A phone photograph, 4:5, carrying GPS coordinates and the camera's name.
+    const marker = "gt-e2e-camera-marker";
+    const file = await sharp({
+      create: { width: 1600, height: 2000, channels: 3, background: { r: 30, g: 28, b: 40 } },
+    })
+      .withExif({
+        IFD0: { Artist: marker, Make: marker },
+        IFD3: { GPSLatitudeRef: "N", GPSLatitude: "37/1 46/1 0/1" },
+      })
+      .jpeg()
+      .toBuffer();
+    expect(file.includes(marker), "the fixture carries no EXIF").toBe(true);
+
+    const upload = { name: "theory-e2e-flat-front-01.jpg", mimeType: "image/jpeg", buffer: file };
+
+    // The filename is not alt text.
+    await uploader.getByLabel("Photograph", { exact: true }).setInputFiles(upload);
+    await uploader.getByLabel("Alt text").fill("theory-e2e-flat-front-01.jpg");
+    await uploader.getByRole("button", { name: "Upload photograph" }).click();
+    await expect(uploader.getByRole("alert")).toContainText("filename");
+    expect((await uploads()).stored.some((stored) => stored.pathname.includes(slug))).toBe(false);
+
+    const alt = "E2E fixture garment laid flat, front view, on white.";
+    await uploader.getByLabel("Photograph", { exact: true }).setInputFiles(upload);
+    await uploader.getByLabel("Alt text").fill(alt);
+    await uploader.getByRole("button", { name: "Upload photograph" }).click();
+    await expect(uploader.getByRole("status")).toContainText("location and camera data removed");
+
+    // What reached storage: public, under the product, and without a byte of the camera's metadata.
+    const mine = (await uploads()).stored.filter((stored) => stored.pathname.startsWith(`products/${slug}/`));
+    expect(mine).toHaveLength(1);
+    const [first] = mine;
+    expect(first!.access).toBe("public");
+    expect(first!.contentType).toBe("image/jpeg");
+    expect(first!.pathname).toMatch(new RegExp(`^products/${slug}/theory-e2e-flat-front-01-\\w+\\.jpg$`));
+    const bytes = Buffer.from(first!.bytes, "base64");
+    expect(bytes.includes(marker), "the camera's EXIF reached storage").toBe(false);
+    const stored = await sharp(bytes).metadata();
+    expect(stored.exif, "EXIF reached storage").toBeUndefined();
+    expect([stored.width, stored.height]).toEqual([1600, 2000]);
+
+    // The row, with its dimensions, as the product page will read it.
+    const rows = await withDatabase((db) =>
+      db.query<{ blob_url: string; alt: string; width: number; height: number; sort_index: number }>(
+        `select pi.blob_url, pi.alt, pi.width, pi.height, pi.sort_index
+           from product_image pi join product p on p.id = pi.product_id
+          where p.slug = $1`,
+        [slug],
+      ),
+    );
+    expect(rows.rows).toEqual([{ blob_url: first!.url, alt, width: 1600, height: 2000, sort_index: 0 }]);
+    await expect(photographs.getByText(/^Primary ·/)).toBeVisible();
+
+    // A second, then make it the primary.
+    const back = { ...upload, name: "theory-e2e-flat-back-01.jpg" };
+    await uploader.getByLabel("Photograph", { exact: true }).setInputFiles(back);
+    await uploader.getByLabel("Alt text").fill("E2E fixture garment laid flat, back view, on white.");
+    await uploader.getByRole("button", { name: "Upload photograph" }).click();
+    await expect(uploader.getByRole("status")).toContainText("Uploaded");
+    await photographs.getByRole("button", { name: "Make primary" }).click();
+    await expect(photographs.getByText("That is now the primary photograph.")).toBeVisible();
+
+    const order = await withDatabase((db) =>
+      db.query<{ blob_url: string }>(
+        `select pi.blob_url from product_image pi join product p on p.id = pi.product_id
+          where p.slug = $1 order by pi.sort_index`,
+        [slug],
+      ),
+    );
+    expect(order.rows.map((row) => row.blob_url.includes("flat-back"))).toEqual([true, false]);
+
+    // Removing one deletes its file from storage as well as the row.
+    await photographs.getByRole("button", { name: "Remove photograph 2" }).click();
+    await expect(photographs.getByText(/its file deleted from storage/)).toBeVisible();
+    expect((await uploads()).deleted).toContain(first!.url);
+
+    // Tidy: the other one, and the product.
+    await photographs.getByRole("button", { name: "Remove photograph 1" }).click();
+    await expect(photographs.getByText("No photographs yet.")).toBeVisible();
+    await withDatabase((db) => db.query("delete from product where slug = $1", [slug]));
 
     await context.close();
   });

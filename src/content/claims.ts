@@ -488,6 +488,10 @@ export const DEPENDENCIES: Record<string, string> = {
   "react-dom": "sends nothing anywhere",
   pg: "the Postgres driver; accounted for as the processor Neon",
   stripe: "the Stripe SDK; accounted for as the processor Stripe",
+  "@vercel/blob":
+    "stores the product photographs the owner uploads in the Crew Portal, in Vercel Blob; no reader data goes through it, and Vercel is already a named processor",
+  sharp:
+    "re-encodes an uploaded product photograph on the server, removing its location and camera metadata; sends nothing anywhere",
 };
 
 function externalHosts(context: ClaimContext): string[] {

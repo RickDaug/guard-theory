@@ -61,9 +61,10 @@ const WALKTHROUGHS: Walkthrough[] = [
       "Open Products and fill in New product: its name, what kind of garment it is, and the web address if you want a particular one.",
       "Under Sizes, add each size it comes in, using the sizes in the size and fit guide.",
       "Under Words and specification, write the summary and the description, and fill in the fabric weight, composition, seam construction and print method.",
+      "Under Photographs, upload at least one, with alt text saying what it shows. The first is the primary: it leads the product page and is the picture on the Stripe checkout.",
       "Then put it on sale as above: price, stock, Live.",
     ],
-    note: "If something is missing when you press Save, the page lists what, and the product stays a draft. Photographs are added by the developer for now.",
+    note: "If something is missing when you press Save, the page lists what, and the product stays a draft. If Photographs says image storage is not connected, the Blob store has not been set up yet.",
   },
   {
     id: "sold-out",

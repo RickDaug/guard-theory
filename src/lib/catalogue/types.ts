@@ -1,4 +1,5 @@
 import type { ConstructionPoint, Specification } from "../../content/products/index.ts";
+import { isStoredImageUrl } from "../images/host.ts";
 
 /**
  * The commerce half of a product: the facts the content registry deliberately
@@ -99,4 +100,18 @@ export function hasPublishableOffer(view: ProductView): boolean {
   const status = stockStatus(view);
 
   return price !== null && price > 0 && (status === "purchasable" || status === "sold-out");
+}
+
+/**
+ * The photographs the storefront may show for this product, in the owner's
+ * order: rows whose URL is on the configured Blob host and which carry alt
+ * text. The first is the primary.
+ *
+ * Product JSON-LD's `image` is built from this and emitted only when it is not
+ * empty — never a share card or a drawing standing in for a photograph.
+ */
+export function productPhotographs(view: ProductView): Commerce["images"] {
+  return (view.commerce?.images ?? []).filter(
+    (image) => image.alt.trim() !== "" && isStoredImageUrl(image.url),
+  );
 }

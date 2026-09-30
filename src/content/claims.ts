@@ -210,6 +210,12 @@ export const STORED: Record<string, Record<string, Disclosure>> = {
     ["id", "key_hash", "succeeded", "attempted_at"],
     "the portal's sign-in limiter: a keyed hash of the attempt's address, never the address, deleted after a day",
   ),
+
+  /* The cart's abuse limiter. About a request, never a person. */
+  rate_limit: internal(
+    ["bucket", "key_hash", "window_start", "hits"],
+    "the cart's rate limiter: a count of requests per keyed hash of the address, never the address, deleted after a day",
+  ),
 };
 
 /** Every column of a table that holds nothing collected from a person. */

@@ -1,8 +1,10 @@
 import { randomUUID } from "node:crypto";
 import { isDatabaseConfigured, query } from "../db/client.ts";
+import { PRICE_BUCKET, takeRateLimit } from "../rate-limit-db.ts";
 import type { CartLine, PricedCart, PricedLine } from "./types.ts";
 import {
   CHECKOUT_INTENT_RETENTION_DAYS,
+  CHECKOUT_INTENT_TTL_MINUTES,
   MAX_CART_LINES,
   MAX_QUANTITY_PER_LINE,
 } from "./types.ts";
@@ -151,9 +153,52 @@ export async function snapshotDrift(
 /** One pricing call in this many also sweeps. */
 const PURGE_ONE_IN = 20;
 
+/**
+ * How young an intent must be to be handed back instead of a new one.
+ *
+ * Well inside CHECKOUT_INTENT_TTL_MINUTES, so a reused intent still has at
+ * least ten minutes to be turned into a checkout.
+ */
+export const INTENT_REUSE_MINUTES = CHECKOUT_INTENT_TTL_MINUTES - 10;
+
+export type PriceCartOptions = {
+  /**
+   * The intent this browser was last given. Reused when it is unpaid, young,
+   * and records exactly this cart at exactly these figures.
+   *
+   * Only the browser's own previous intent, never "any matching one": two
+   * buyers with the same cart would otherwise share an intent, and with it —
+   * inside one minute — the same Stripe Checkout Session.
+   */
+  previousIntentId?: string | null;
+  /** The caller's rate-limit key (src/lib/rate-limit-db.ts). Omitted, nothing is counted. */
+  callerKey?: string;
+};
+
+/** The browser's previous intent, if it is still exactly this cart. */
+async function reusableIntent(
+  id: string,
+  priced: PricedLine[],
+  subtotalCents: number,
+  shippingCents: number,
+): Promise<string | null> {
+  const rows = await query<{ id: string }>(
+    `select id from checkout_intent
+      where id = $1
+        and consumed_at is null
+        and created_at > now() - make_interval(mins => $2)
+        and lines_json = $3::jsonb
+        and subtotal_cents = $4
+        and shipping_cents = $5`,
+    [id, INTENT_REUSE_MINUTES, JSON.stringify(priced), subtotalCents, shippingCents],
+  );
+  return rows[0]?.id ?? null;
+}
+
 export async function priceCart(
   lines: CartLine[],
   contentFor: (slug: string) => { name: string; kind: string } | undefined,
+  options: PriceCartOptions = {},
 ): Promise<PricedCart> {
   const empty: PricedCart = {
     intentId: null,
@@ -267,9 +312,33 @@ export async function priceCart(
   let intentId: string | null = null;
 
   if (priced.length > 0) {
-    intentId = randomUUID();
-
     try {
+      const previous =
+        typeof options.previousIntentId === "string" && options.previousIntentId.length <= 64
+          ? options.previousIntentId
+          : null;
+      const reused = previous
+        ? await reusableIntent(previous, priced, subtotalCents, shippingCents)
+        : null;
+
+      if (reused) {
+        // The same cart at the same figures: nothing new to record.
+        return { intentId: reused, lines: priced, dropped, subtotalCents, shippingCents, currency };
+      }
+
+      if (options.callerKey) {
+        const gate = await takeRateLimit(PRICE_BUCKET, options.callerKey);
+
+        if (!gate.allowed) {
+          // The cart still renders with its figures; it just is not offered a
+          // checkout until the window turns, and the cart says so.
+          console.warn("[guard-theory] cart pricing refused a new intent: rate limit");
+          return { intentId: null, lines: priced, dropped, subtotalCents, shippingCents, currency };
+        }
+      }
+
+      intentId = randomUUID();
+
       await query(
         `
         insert into checkout_intent (id, lines_json, subtotal_cents, shipping_cents)

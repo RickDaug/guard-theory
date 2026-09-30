@@ -234,6 +234,12 @@ export const CROSS_LINKS: CrossLink[] = [
     basis:
       "The article places the half guard underhook inside the general idea of inside control.",
   },
+  {
+    a: journal("why-the-underhook-decides-half-guard"),
+    b: technique("underhook-half-guard"),
+    basis:
+      "The entry is the underhook game the article argues decides half guard.",
+  },
 
   // ── Technique Library ↔ Figures ────────────────────────────────────────
   {

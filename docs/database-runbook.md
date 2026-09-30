@@ -313,23 +313,68 @@ For a real restore the target is production's unpooled string instead of
 `$SCRATCH`, after the drill above has succeeded against the same file, and with
 the site in maintenance so nothing writes underneath it.
 
-### The quarterly restore drill
+### The weekly restore check (automated)
 
-First week of January, April, July and October, and once before the first real
-order. Twenty minutes. A backup nobody has restored is a belief, not a backup.
+`.github/workflows/db-restore-check.yml` does *Getting one back out* by itself,
+every Monday at 11:43 UTC and whenever somebody presses **Run workflow** on it.
+Script: `scripts/db/restore-verify-ci.sh`. It:
 
-1. Actions → **Database backup**: the recent nightly runs are green. If the
-   workflow says *disabled*, enable it and find out when it stopped.
-2. Do *Getting one back out*, steps 1–6, against the newest artifact **using the
-   passphrase from the password manager** — not from anywhere else. This is the
-   step that finds a lost passphrase while there is still time to set a new one.
-3. Compare the counts in step 6 with production's in the portal. Last night's
-   figures, not today's.
-4. Step 7. Then add a line below.
+1. downloads the newest successful nightly artifact, checks its `.sha256`, and
+   **fails if it is more than 72 hours old** — a stopped nightly job is found
+   here within a week rather than on the day it is needed;
+2. decrypts it with the `BACKUP_PASSPHRASE` secret, and reads the archive's own
+   manifest: its tables, and the number of rows in each, counted from the dump;
+3. creates a scratch branch named `restore-check/<run id>-<attempt>` off the
+   default branch, with an `expires_at` four hours out, so Neon removes it even
+   if everything below fails;
+4. checks the branch four ways before writing anything to it — the name it
+   asked for, an id that is not the default's, Neon's `default: false`, and a
+   host that is none of the default branch's hosts — and masks its connection
+   string, password and host in the log the moment they are known;
+5. empties the branch's `public` schema, `pg_restore`s the dump into it, and
+   fails unless the restored tables are exactly the archive's tables, every
+   table's row count equals the archive's, and `_migration` has between one row
+   and the number of files in `migrations/`;
+6. deletes the branch in a step that runs whatever happened, then clears any
+   `restore-check/*` branch an earlier run left behind. Only `restore-check/*`
+   branches that are not the default are ever deleted; `tests/unit/restore-verify-ci.test.ts`
+   runs both scripts against stand-ins for `curl` and `docker` and proves it.
+
+It prints counts and nothing else — backup age, table count, total rows,
+migration count. No row, no host, no connection string.
+
+It needs the `BACKUP_PASSPHRASE` and `NEON_API_KEY` secrets and the
+`NEON_PROJECT_ID` variable, all already set for the backup and the preview
+cleanup. **It takes one of Neon Free's ten branches for a few minutes.** If all
+ten are taken it fails at once and says how many are `preview/*`; clear the
+stale previews and run it again.
+
+### The quarterly restore drill — what still needs a person
+
+The weekly check proves the file restores. It cannot prove three things, and
+those are what the drill is now for. First week of January, April, July and
+October, and once before the first real order. Ten minutes.
+
+1. Actions → **Database backup** and **Database restore check**: both green
+   recently, neither *disabled*. GitHub switches off scheduled workflows after
+   sixty days without a commit.
+2. **The passphrase in the password manager still opens a backup.** The
+   automated check uses the GitHub secret, which nobody can read back; if the
+   owner's copy was lost or mistyped, only a person finds that out. Do *Getting
+   one back out* steps 1–3 with the password manager's copy, then step 7.
+3. **The numbers look like the business.** The check proves the restore equals
+   the dump, not that the dump equals reality. Compare the newest *Database
+   restore check* summary's row total and migration count with what you know
+   (the portal, `npm run db:status:production`).
+4. Add a line below.
 
 | Date | Artifact | Restored into | Counts matched | By |
 |---|---|---|---|---|
 | — | — | — | — | not yet run |
+
+A real restore into production is still manual, and still *Getting one back
+out* with production's unpooled string as the target — after the weekly check
+has passed against the same file.
 
 ### Or take one yourself
 
@@ -373,8 +418,9 @@ For a JSON backup, replay the rows per table after migrating.
 
 ### Rehearse it before it matters
 
-Do the restore drill above **before Phase 2 puts money through this database**,
-and every quarter after.
+The weekly restore check does the restore itself. Do the quarterly drill above
+**before Phase 2 puts money through this database**, and every quarter after:
+it is what checks the passphrase a person holds.
 
 ---
 

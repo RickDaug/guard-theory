@@ -94,3 +94,35 @@ export function checkTarget(url, argv) {
       "  For local work export BOTH DATABASE_URL and DATABASE_URL_UNPOOLED; see AGENTS.md.",
   };
 }
+
+/* -------------------------------------------------------------------------- */
+/* Status                                                                      */
+/* -------------------------------------------------------------------------- */
+
+/**
+ * Where each migration stands against a database's ledger, without touching
+ * the database: the same judgement `migrate.mjs --status` prints, as data, for
+ * `scripts/activation-check.mjs`.
+ *
+ * `files` are the migration files in ./migrations ({ name, sql }), `applied`
+ * the ledger's rows ({ name, checksum }). Returns every file as `applied`,
+ * `pending` or `changed` (applied, and edited since), in filename order, plus
+ * `unknown`: ledger rows with no file here, which means this checkout is older
+ * than the database.
+ */
+export function classifyMigrations(files, applied) {
+  const recorded = new Map(applied.map((row) => [row.name, row.checksum]));
+  const names = new Set(files.map((file) => file.name));
+
+  const migrations = [...files]
+    .sort((a, b) => (a.name < b.name ? -1 : a.name > b.name ? 1 : 0))
+    .map(({ name, sql }) => {
+      const checksum = recorded.get(name);
+      if (checksum === undefined) return { name, state: "pending" };
+      return { name, state: checksumMatches(checksum, sql) ? "applied" : "changed" };
+    });
+
+  const unknown = applied.map((row) => row.name).filter((name) => !names.has(name)).sort();
+
+  return { migrations, unknown };
+}

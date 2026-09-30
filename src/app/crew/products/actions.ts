@@ -2,9 +2,41 @@
 
 import { revalidatePath } from "next/cache";
 import { randomUUID } from "node:crypto";
+import type { PoolClient } from "pg";
 import { query, queryOne, transaction } from "@/lib/db/client";
 import { requireSession } from "@/lib/portal/session";
 import type { PortalFormState } from "@/lib/portal/form-state";
+import {
+  applyStockEdits,
+  nextSeen,
+  readStockEdits,
+  stockMovedMessage,
+  type ProductFormState,
+  type StockEditResult,
+} from "@/lib/portal/stock-edit";
+import {
+  EditRefused,
+  SIZE_LABEL_INVALID,
+  addSize,
+  createDraftProduct,
+  isStorefrontStatus,
+  readContent,
+  readNewProduct,
+  readSizeLabel,
+  removeSize,
+  renameSize,
+  saveContent,
+  setSizeWeight,
+  storefrontProblemsFor,
+  storefrontRefusal,
+  type EditResult,
+} from "@/lib/portal/product-edit";
+import { WEIGHT_INVALID, readWeightOz } from "@/lib/shipping/weight";
+import { isImageStorageConnected } from "@/lib/images/host";
+import { prepareUpload } from "@/lib/images/process";
+import { deleteImage, storeImage } from "@/lib/images/storage";
+import { checkFileSize, readAltText } from "@/lib/images/validate";
+import { addImage, moveImage, removeImage, setImageAlt } from "@/lib/portal/product-images";
 
 /**
  * Product management.
@@ -50,18 +82,12 @@ function parsePriceToCents(raw: FormDataEntryValue | null): number | null | "inv
 }
 
 const MAX_PRICE_CENTS = 10_000_00;
-const MAX_STOCK = 100_000;
 
-/** "12" is stock. "12abc", "1e3", "-1", " 12 .5" and "" are not. */
-function parseStock(raw: string): number | null {
-  const trimmed = raw.trim();
-
-  if (!/^\d{1,6}$/.test(trimmed)) {
-    return null;
+/** Thrown inside the transaction to roll it back when stock moved underneath. */
+class StockMoved extends Error {
+  constructor(readonly result: StockEditResult) {
+    super("stock moved since the form was loaded");
   }
-
-  const stock = Number(trimmed);
-  return stock <= MAX_STOCK ? stock : null;
 }
 
 function text(formData: FormData, key: string): string {
@@ -70,9 +96,9 @@ function text(formData: FormData, key: string): string {
 }
 
 export async function saveProduct(
-  _previous: PortalFormState,
+  _previous: ProductFormState,
   formData: FormData,
-): Promise<PortalFormState> {
+): Promise<ProductFormState> {
   await requireSession();
 
   const id = text(formData, "id");
@@ -88,6 +114,7 @@ export async function saveProduct(
     return {
       status: "error",
       message: "Write the price as a number, like 89 or 89.00. Leave it empty for no price.",
+      field: "price",
     };
   }
 
@@ -95,6 +122,7 @@ export async function saveProduct(
     return {
       status: "error",
       message: "Write the sale price as a number, or leave it empty.",
+      field: "salePrice",
     };
   }
 
@@ -104,6 +132,7 @@ export async function saveProduct(
     return {
       status: "error",
       message: "A sale price has to be lower than the price. Otherwise it is just the price.",
+      field: "salePrice",
     };
   }
 
@@ -111,6 +140,7 @@ export async function saveProduct(
     return {
       status: "error",
       message: "Set a price before setting a sale price.",
+      field: "price",
     };
   }
 
@@ -126,6 +156,7 @@ export async function saveProduct(
     return {
       status: "error",
       message: "A product cannot go live without a price. Set one first, or leave it as a draft.",
+      field: "price",
     };
   }
 
@@ -138,8 +169,29 @@ export async function saveProduct(
     };
   }
 
+  // Stock, one field per variant, named stock-<variantId>, each paired with the
+  // number the form was showing (seen-stock-<variantId>). See stock-edit.ts.
+  const stock = readStockEdits(formData);
+
+  if (!stock.ok) {
+    return { status: "error", message: stock.message };
+  }
+
+  let result: StockEditResult;
+
   try {
-    await transaction(async (client) => {
+    result = await transaction(async (client) => {
+      // Live or sold out puts it on the storefront, so it has to be whole
+      // first: a price, a size, the words and the promised specification.
+      // Checked here, against the database, because the form cannot be
+      // trusted to have shown the owner the current sizes.
+      if (isStorefrontStatus(status)) {
+        const problems = await storefrontProblemsFor(client, id, price);
+        if (problems.length > 0) {
+          throw new EditRefused(storefrontRefusal(problems));
+        }
+      }
+
       await client.query(
         `update product
             set status = $2, price_cents = $3, sale_cents = $4, updated_at = now()
@@ -147,45 +199,210 @@ export async function saveProduct(
         [id, status, price, sale],
       );
 
-      // Stock, one field per variant, named stock-<variantId>.
-      for (const [key, value] of formData.entries()) {
-        if (!key.startsWith("stock-") || typeof value !== "string") {
-          continue;
-        }
+      const applied = await applyStockEdits(client, id, stock.edits);
 
-        const variantId = key.slice("stock-".length);
-        // parseInt("12abc") is 12. A typo must be a refusal, not a guess.
-        const stock = parseStock(value);
-
-        if (stock === null) {
-          throw new Error(`Stock has to be a whole number, zero or more.`);
-        }
-
-        await client.query("update variant set stock = $2 where id = $1 and product_id = $3", [
-          variantId,
-          stock,
-          id,
-        ]);
+      if (applied.moved.length > 0) {
+        throw new StockMoved(applied);
       }
+
+      return applied;
     });
   } catch (error) {
+    if (error instanceof EditRefused) {
+      return { status: "error", message: error.refusal, seen: nextSeen(stock.edits, null) };
+    }
+
+    if (error instanceof StockMoved) {
+      return {
+        status: "error",
+        message: stockMovedMessage(error.result.moved),
+        seen: nextSeen(stock.edits, error.result),
+        moved: Object.fromEntries(error.result.moved.map((move) => [move.variantId, move.current])),
+      };
+    }
+
     console.error(
       "[guard-theory] could not save product:",
       error instanceof Error ? error.message : error,
     );
     return {
       status: "error",
-      message:
-        error instanceof Error && error.message.startsWith("Stock has to be")
-          ? error.message
-          : "We could not save that just now. Nothing has changed.",
+      message: "We could not save that just now. Nothing has changed.",
+      seen: nextSeen(stock.edits, null),
     };
   }
 
   revalidatePath("/shop");
   revalidatePath("/shop/[slug]", "page");
 
-  return { status: "success", message: "Saved." };
+  return { status: "success", message: "Saved.", seen: nextSeen(stock.edits, result) };
+}
+
+function revalidateCatalogue(): void {
+  revalidatePath("/crew/products");
+  revalidatePath("/shop");
+  revalidatePath("/shop/[slug]", "page");
+}
+
+/**
+ * Runs one catalogue edit in a transaction and turns the outcome into a
+ * sentence. An EditRefused thrown inside rolls the edit back; so does any other
+ * error, which the owner is told about without the database's wording.
+ */
+async function edit(
+  what: string,
+  run: (client: PoolClient) => Promise<EditResult>,
+  done: string,
+): Promise<PortalFormState> {
+  try {
+    await transaction(async (client) => {
+      const outcome = await run(client);
+      // A refusal returned (rather than thrown) may follow writes made before
+      // the refusal was known. Roll those back too.
+      if (!outcome.ok) throw new EditRefused(outcome.message);
+    });
+  } catch (error) {
+    if (error instanceof EditRefused) {
+      return { status: "error", message: error.refusal };
+    }
+
+    console.error(
+      `[guard-theory] could not ${what}:`,
+      error instanceof Error ? error.message : error,
+    );
+    return { status: "error", message: "We could not save that just now. Nothing has changed." };
+  }
+
+  revalidateCatalogue();
+  return { status: "success", message: done };
+}
+
+/**
+ * A new product. Always a draft, with no price, no sizes and no specification
+ * values: createDraftProduct writes the status as a literal, so nothing posted
+ * here can put a product on the storefront.
+ */
+export async function createProduct(
+  _previous: PortalFormState,
+  formData: FormData,
+): Promise<PortalFormState> {
+  await requireSession();
+
+  const parsed = readNewProduct(formData);
+
+  if (!parsed.ok) {
+    return { status: "error", message: parsed.message };
+  }
+
+  return edit(
+    "create product",
+    async (client) => {
+      const created = await createDraftProduct(client, parsed.product);
+      return created.ok ? { ok: true } : created;
+    },
+    `${parsed.product.name} is saved as a draft. Its sizes, words and specification are below.`,
+  );
+}
+
+/** Name, kind, summary, description and the specification rows. */
+export async function saveProductContent(
+  _previous: PortalFormState,
+  formData: FormData,
+): Promise<PortalFormState> {
+  await requireSession();
+
+  const id = text(formData, "id");
+
+  if (!id) {
+    return { status: "error", message: "That product could not be identified." };
+  }
+
+  const parsed = readContent(formData);
+
+  if (!parsed.ok) {
+    return { status: "error", message: parsed.message };
+  }
+
+  return edit("save product content", (client) => saveContent(client, id, parsed.content), "Saved.");
+}
+
+export async function addProductSize(
+  _previous: PortalFormState,
+  formData: FormData,
+): Promise<PortalFormState> {
+  await requireSession();
+
+  const id = text(formData, "id");
+  const sizeLabel = readSizeLabel(formData.get("sizeLabel"));
+
+  if (!id) {
+    return { status: "error", message: "That product could not be identified." };
+  }
+
+  if (!sizeLabel) {
+    return { status: "error", message: SIZE_LABEL_INVALID };
+  }
+
+  return edit(
+    "add size",
+    (client) => addSize(client, id, sizeLabel),
+    `${sizeLabel} added, with no stock. Set its stock above.`,
+  );
+}
+
+/**
+ * Renaming, removing or weighing one size. One form with three buttons, so the
+ * row has one answer; `op` is the button that was pressed.
+ */
+export async function changeProductSize(
+  _previous: PortalFormState,
+  formData: FormData,
+): Promise<PortalFormState> {
+  await requireSession();
+
+  const id = text(formData, "id");
+  const variantId = text(formData, "variantId");
+  const op = text(formData, "op");
+
+  if (!id || !variantId) {
+    return { status: "error", message: "That size could not be identified." };
+  }
+
+  if (op === "remove") {
+    return edit("remove size", (client) => removeSize(client, id, variantId), "Size removed.");
+  }
+
+  if (op === "weight") {
+    const weightOz = readWeightOz(formData.get("weightOz"));
+
+    if (weightOz === "invalid") {
+      return { status: "error", message: WEIGHT_INVALID };
+    }
+
+    return edit(
+      "set size weight",
+      (client) => setSizeWeight(client, id, variantId, weightOz),
+      weightOz === null
+        ? "Weight cleared. Labels for orders with this size use the fixed weight."
+        : `Weight saved: ${weightOz} oz.`,
+    );
+  }
+
+  if (op !== "rename") {
+    return { status: "error", message: "That is not something a size can do." };
+  }
+
+  const sizeLabel = readSizeLabel(formData.get("sizeLabel"));
+
+  if (!sizeLabel) {
+    return { status: "error", message: SIZE_LABEL_INVALID };
+  }
+
+  return edit(
+    "rename size",
+    (client) => renameSize(client, id, variantId, sizeLabel),
+    `Renamed to ${sizeLabel}.`,
+  );
 }
 
 /**
@@ -243,7 +460,7 @@ export async function saveCategory(
   const name = text(formData, "name");
 
   if (!name) {
-    return { status: "error", message: "Give the category a name." };
+    return { status: "error", message: "Give the category a name.", field: "name" };
   }
 
   const slug =
@@ -255,7 +472,7 @@ export async function saveCategory(
       .replace(/^-+|-+$/g, "");
 
   if (!slug) {
-    return { status: "error", message: "That name does not make a usable web address." };
+    return { status: "error", message: "That name does not make a usable web address.", field: "name" };
   }
 
   const id = text(formData, "id") || `cat_${randomUUID().slice(0, 8)}`;
@@ -329,4 +546,183 @@ export async function moveCategory(formData: FormData): Promise<void> {
   }
 
   revalidatePath("/shop");
+}
+
+/* ------------------------------------------------------------------------ */
+/* Photographs                                                               */
+/* ------------------------------------------------------------------------ */
+
+const STORAGE_NOT_CONNECTED =
+  "Image storage not connected. Photographs can be uploaded once a Vercel Blob store is connected to this project (docs/provisioning.md).";
+
+/**
+ * One photograph, uploaded.
+ *
+ * In this order, so that nothing half-done survives a failure: check the file
+ * and the alt text; re-encode it without its metadata (src/lib/images/
+ * process.ts); store it; then insert the row. If the row cannot be written the
+ * stored file is deleted again. The file never reaches storage as it arrived.
+ */
+export async function uploadProductImage(
+  _previous: PortalFormState,
+  formData: FormData,
+): Promise<PortalFormState> {
+  await requireSession();
+
+  if (!isImageStorageConnected()) {
+    return { status: "error", message: STORAGE_NOT_CONNECTED };
+  }
+
+  const id = text(formData, "id");
+  const file = formData.get("file");
+
+  if (!id) {
+    return { status: "error", message: "That product could not be identified." };
+  }
+
+  if (!(file instanceof File) || file.size === 0) {
+    return { status: "error", message: "Choose a photograph to upload.", field: "file" };
+  }
+
+  const sizeProblem = checkFileSize(file.size);
+
+  if (sizeProblem) {
+    return { status: "error", message: sizeProblem, field: "file" };
+  }
+
+  const alt = readAltText(formData.get("alt"), file.name);
+
+  if (!alt.ok) {
+    return { status: "error", message: alt.message, field: "alt" };
+  }
+
+  const product = await queryOne<{ slug: string }>("select slug from product where id = $1", [id]);
+
+  if (!product) {
+    return { status: "error", message: "That product could not be found." };
+  }
+
+  const prepared = await prepareUpload(new Uint8Array(await file.arrayBuffer()));
+
+  if (!prepared.ok) {
+    return { status: "error", message: prepared.message, field: "file" };
+  }
+
+  let url: string;
+
+  try {
+    const stored = await storeImage(product.slug, file.name, prepared.image);
+
+    if (!stored.ok) {
+      return { status: "error", message: stored.message };
+    }
+
+    url = stored.url;
+  } catch (error) {
+    console.error(
+      "[guard-theory] could not store an image:",
+      error instanceof Error ? error.message : error,
+    );
+    return { status: "error", message: "Image storage did not accept the file just now. Nothing was saved." };
+  }
+
+  const saved = await edit(
+    "add product image",
+    async (client) => {
+      const added = await addImage(client, id, {
+        url,
+        alt: alt.alt,
+        width: prepared.image.width,
+        height: prepared.image.height,
+      });
+      return added.ok ? { ok: true } : added;
+    },
+    `Uploaded: ${prepared.image.width} × ${prepared.image.height}, with its location and camera data removed.`,
+  );
+
+  if (saved.status === "error") {
+    await deleteImage(url);
+  }
+
+  return saved;
+}
+
+/**
+ * Moving, making primary, re-describing or removing one photograph. One form
+ * with several buttons, like a size row; `op` is the button that was pressed.
+ */
+export async function changeProductImage(
+  _previous: PortalFormState,
+  formData: FormData,
+): Promise<PortalFormState> {
+  await requireSession();
+
+  const id = text(formData, "id");
+  const imageId = text(formData, "imageId");
+  const op = text(formData, "op");
+
+  if (!id || !imageId) {
+    return { status: "error", message: "That photograph could not be identified." };
+  }
+
+  if (op === "up" || op === "down" || op === "primary") {
+    return edit(
+      "reorder product images",
+      (client) => moveImage(client, id, imageId, op),
+      op === "primary" ? "That is now the primary photograph." : "Moved.",
+    );
+  }
+
+  if (op === "alt") {
+    const alt = readAltText(formData.get("alt"));
+
+    if (!alt.ok) {
+      return { status: "error", message: alt.message, field: "alt" };
+    }
+
+    return edit(
+      "save image alt text",
+      (client) => setImageAlt(client, id, imageId, alt.alt),
+      "Alt text saved.",
+    );
+  }
+
+  if (op !== "remove") {
+    return { status: "error", message: "That is not something a photograph can do." };
+  }
+
+  // Removing the row without removing the file would leave a public copy
+  // nobody can find to delete. So with no storage connected, nothing is removed.
+  if (!isImageStorageConnected()) {
+    return { status: "error", message: STORAGE_NOT_CONNECTED };
+  }
+
+  let url: string;
+
+  try {
+    url = await transaction(async (client) => {
+      const removed = await removeImage(client, id, imageId);
+      if (!removed.ok) throw new EditRefused(removed.message);
+      return removed.url;
+    });
+  } catch (error) {
+    if (error instanceof EditRefused) {
+      return { status: "error", message: error.refusal };
+    }
+
+    console.error(
+      "[guard-theory] could not remove product image:",
+      error instanceof Error ? error.message : error,
+    );
+    return { status: "error", message: "We could not save that just now. Nothing has changed." };
+  }
+
+  revalidateCatalogue();
+
+  return (await deleteImage(url))
+    ? { status: "success", message: "Photograph removed, and its file deleted from storage." }
+    : {
+        status: "error",
+        message: `Photograph removed from the product, but its file could not be deleted from storage. Delete it in the Vercel Blob dashboard: ${url}`,
+      };
 }

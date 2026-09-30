@@ -288,11 +288,14 @@ enter a price in the portal.
 2. Developers → API keys → create a **restricted key** (`rk_test_…`), scoped to
    **write** on Checkout Sessions and Refunds, **read** on Events, Charges and
    PaymentIntents → `STRIPE_SECRET_KEY`.
-   The code makes exactly three API calls: `checkout.sessions.create`,
-   `checkout.sessions.list` (the reconciler) and `refunds.create`. The two write
-   scopes cover those. No call in the code today exercises the three read
-   scopes, and whether Stripe wants PaymentIntents read for a refund made
-   against a PaymentIntent has not been tested — so keep them, and let a
+   The code makes exactly four API calls: `checkout.sessions.create`,
+   `checkout.sessions.list` and `refunds.list` (both the reconciler — the
+   second catches refunds made in the dashboard that the webhook missed, and
+   expands each refund's charge), and `refunds.create`. The two write scopes
+   cover the creates; `refunds.list` needs **read** on Refunds, which the write
+   scope includes, and its expanded charge is covered by **read** on Charges.
+   Whether Stripe wants PaymentIntents read for a refund made against a
+   PaymentIntent has not been tested — so keep the three read scopes, and let a
    test-mode order and refund settle it.
    Stripe's own guidance is that plain secret keys are no longer recommended for
    new use cases, because their permissions cannot be limited.
@@ -303,8 +306,10 @@ enter a price in the portal.
    `https://guardtheory.net/api/webhooks/stripe`, subscribed to
    `checkout.session.completed`,
    `checkout.session.async_payment_succeeded`,
-   `charge.refunded`.
-   Those three are everything the handler acts on
+   `charge.refunded`,
+   `charge.dispute.created`,
+   `charge.dispute.closed`.
+   Those five are everything the handler acts on
    (`src/app/api/webhooks/stripe/route.ts`). Any other event is answered 200 and
    ignored.
    **Set the endpoint's API version to `2026-07-29.dahlia`.** That is the
@@ -360,6 +365,31 @@ intents, old sign-in attempts and dead portal sessions, and asks Stripe nothing.
 is counts only, and the logs carry Stripe session ids and nothing about a
 customer. The handler is `src/lib/orders/cron.ts`; the manual button and the
 script still work and are the same code.
+
+Each run also drops processed `webhook_event` rows older than ninety days,
+sends any order confirmation that never went (attempted and undelivered, or
+never attempted because the function died before the send — only while a mail
+provider is connected), and then checks for anything that needs a person.
+
+### Owner alerts, and `OWNER_ALERT_EMAIL`
+
+Set **`OWNER_ALERT_EMAIL`** (Production, Sensitive is fine) to an address the
+owner reads. After every scheduled run the cron looks for: a failed or stale
+reconcile (no finished run in 45 minutes while Stripe is connected), a refund
+check that could not read Stripe, payments with no order, orders flagged
+oversold or recovered, paid orders whose confirmation never went or failed,
+label purchases that started and never finished, and Stripe or Shippo events
+unprocessed after ten minutes. If there is anything, it emails one plain digest
+— **counts only**, no order numbers, no customer details, no portal path.
+
+It cannot spam: at most one digest an hour, and the same list again only after
+24 hours; a new problem inside that window waits for the hour. When everything
+is clear the record (`setting.owner_alert`) is dropped, so the next problem is
+news. Unset, or not an email address, and nothing is sent. It needs mail to
+actually deliver (`RESEND_API_KEY` + `RECEIPT_FROM_EMAIL`); with the log-only
+provider each run logs a warning instead. The portal's **Settings** screen shows
+whether it is on, when the last digest went, and when the reconciler last
+finished (the same record the alert reads).
 
 ### Stripe Tax — the one step with a real financial consequence
 
@@ -418,6 +448,17 @@ announcement does not — budget **$20/month Pro** for announcement months.
 
    `_dmarc` already existed at `p=none` from before Resend and needed no change
    for the domain to verify.
+
+   **Checked against public DNS on 2026-09-28:** DKIM (`resend._domainkey`,
+   1024-bit), the `send`/`rsend` return-path CNAMEs (SPF and bounce MX behind
+   them) and the root MX (`mail.guardtheory.net`) all resolve, so mail passes
+   DMARC on DKIM and on SPF, both aligned with `guardtheory.net`. What is left
+   is DMARC itself: `v=DMARC1; p=none;` has no `rua`, so nobody sees reports,
+   and `p=none` asks receivers to deliver mail that fails. Change `_dmarc` to
+   `v=DMARC1; p=none; rua=mailto:<an address you read>; adkim=r; aspf=r` now,
+   and to `p=quarantine` after two to four weeks of clean reports. The root SPF
+   (`v=spf1 ip4:67.222.24.90 +mx ~all`) belongs to the web host; Resend mail is
+   checked against the `send` subdomain, so the root needs no Resend include.
 3. ~~Create an API key with sending permission.~~ Done — `RESEND_API_KEY` is set
    in Vercel **Production**.
 4. ~~Pick a from-address on the verified domain.~~ Done — `RECEIPT_FROM_EMAIL`
@@ -529,6 +570,60 @@ in the database. Nothing is signed, so there is nothing to sign with.
 
 ---
 
+## Tier 7 — Vercel Blob, for product photographs
+
+The Crew Portal's product editor uploads photographs (`src/app/crew/products/
+ImagesEditor.tsx`). Until a Blob store is connected, the editor's Photographs
+panel says **"Image storage not connected"** and nothing else changes: no
+upload is attempted, the product pages render as before, and checkout sends
+no image. A product cannot go live without at least one photograph with alt
+text, so **this tier has to be done before anything new can go on sale.**
+
+1. **Create the store.** Vercel → the `guard-theory` project → **Storage** →
+   **Create** → **Blob**. Set access to **Public**: the image optimizer fetches
+   the original without credentials, and Google and Stripe need a public URL.
+   Connect it to **Production** and **Preview** (and Development if you want to
+   upload from `next dev`).
+2. **Check the variable.** Connecting the store adds
+   `BLOB_READ_WRITE_TOKEN` to the project. That one variable is enough: the
+   code reads the store id out of it and derives the public host
+   (`<store id>.public.blob.vercel-storage.com`) for `images.remotePatterns`.
+   `vercel env ls production` should list it. Vercel may add `BLOB_STORE_ID`
+   as well; nothing here needs it.
+3. **Optional: `NEXT_PUBLIC_BLOB_HOSTNAME`.** Set it only if the derived host
+   is ever wrong. Copy the host from the store's page in the dashboard (the
+   part before the first `/` of any file URL). If set, it wins.
+4. **Redeploy.** The host is pinned into `images.remotePatterns` at **build**
+   time. A store connected after the last deploy uploads fine but its
+   photographs will not display until the next build — the portal says so
+   next to each one. Redeploy production (Deployments → the latest → Redeploy,
+   or merge anything to `main`).
+5. **Check it on a preview first.** Upload a photograph to a draft product,
+   confirm it shows in the portal, then remove it and confirm the portal says
+   its file was deleted from storage. `vercel env pull` shows sensitive values
+   as empty, so a real upload is the only reliable check.
+
+**What happens to an upload:** JPEG, PNG or WebP only (by the file's bytes, not
+its name), 4 MB or less, framed 4:5 or 1:1, each edge at least 1500 px. It is
+re-encoded with sharp: the phone's orientation is applied, **every EXIF, GPS,
+XMP and IPTC field is removed** (the stored file is public, and a phone photo
+carries where it was taken), and an sRGB profile is embedded. The stored
+original is at a public URL with a random suffix; removing a photograph in the
+portal deletes the file from the store as well as the row.
+
+**Where the primary photograph goes:** the first photograph (reorder with Move
+up / Make primary) leads the product page, is the first `image` in the
+product's JSON-LD, and is the picture on the Stripe Checkout line. Upload the
+1:1 white reference shot first, or make it primary.
+
+**The Blob host is not in the Content-Security-Policy, and should not be.** The
+browser never requests it: `next/image` fetches the original on the server
+and serves it from `/_next/image` on this origin. `tests/unit/images.test.ts`
+fails the build if a raw `<img>`, an `unoptimized` image or a hard-coded
+Blob URL appears in `src/`.
+
+---
+
 ## The full environment-variable list
 
 Set all of these in Vercel **Production**. `DATABASE_*` are injected by the Neon
@@ -544,6 +639,8 @@ integration; the rest you add by hand.
 | `STRIPE_APPAREL_TAX_CODE` | 3 | optional — defaults to `txcd_30021000`; owner decision | no |
 | `RESEND_API_KEY` | 4 | yes | **yes** |
 | `RECEIPT_FROM_EMAIL` | 4 | yes | **yes** |
+| `OWNER_ALERT_EMAIL` | 4 | optional, strongly advised — where the cron's problem digest goes (see "Owner alerts"). Unset means no alert | no |
+| `DATABASE_QUERY_TIMEOUT_MS` | — | optional — client-side ceiling per query, default 15000; `0` turns it off | no |
 | `REPLY_TO_EMAIL` | 4 | optional — an address that has a mailbox. Every message then carries it as its reply-to, so a customer who replies reaches a person instead of a bounce. A stopgap: the real fix is a forwarder for the from-address at the mail host | no |
 | `SHIPPO_API_TOKEN` | 5 | yes | no |
 | `SHIPPO_WEBHOOK_TOKEN` | 5 | yes — a random string of your own, 32 characters or more (shorter is refused) | no |
@@ -552,7 +649,8 @@ integration; the rest you add by hand.
 | `SHIP_PARCEL_LENGTH_IN` `_WIDTH_IN` `_HEIGHT_IN` `_WEIGHT_OZ` | 5 | optional, defaulted | no |
 | `PORTAL_PASSWORD_HASH` | 6 | yes — fails closed without it | no |
 | `PORTAL_PATH` | 6 | optional, build time — defaults to `/crew` | no |
-| `NEXT_PUBLIC_BLOB_HOSTNAME` | — | optional, build time — deferrable | no |
+| `BLOB_READ_WRITE_TOKEN` | 7 | yes, before anything new goes live — added by connecting the Blob store; read at build time too, so redeploy after | no |
+| `NEXT_PUBLIC_BLOB_HOSTNAME` | 7 | optional, build time — only to override the host derived from the token | no |
 | `NEXT_PUBLIC_SITE_URL` | — | already set | **yes** |
 | `NEXT_PUBLIC_ALLOW_INDEXING` | — | already set | **yes** |
 
@@ -568,12 +666,11 @@ PR leaves its `preview/*` branch behind; seven stale ones were deleted on
 2026-09-24 after previews had started failing to provision, and previews work
 again.
 
-**`NEXT_PUBLIC_BLOB_HOSTNAME` can wait.** It does one thing: `next.config.ts`
-reads it at build time to add the Vercel Blob host to `images.remotePatterns`.
-There is no upload code on `main`, so nothing is missing without
-it until a product photograph is served from Blob. For the same reason
-**nothing reads `BLOB_READ_WRITE_TOKEN`**, which `docs/commerce-plan.md` §14
-also lists.
+**`BLOB_READ_WRITE_TOKEN` is what connects photographs** (Tier 7).
+Without it the portal says "Image storage not connected" and nothing breaks,
+but no product can go live, because going live needs a photograph.
+`NEXT_PUBLIC_BLOB_HOSTNAME` is only an override for the host the build
+derives from the token.
 
 The code reads a few more that need no action: `DATABASE_POOL_MAX` and
 `DATABASE_POOL_IDLE_MS` (optional pool tuning), and `VERCEL` and

@@ -37,7 +37,52 @@ export type SessionInput = {
   lines: PricedLine[];
   shippingCents: number;
   currency: string;
+  /**
+   * The primary photograph's public URL, by variant id. A line with none is
+   * sent with no image, as every line was before photographs existed.
+   */
+  imagesByVariant?: Record<string, string>;
 };
+
+/**
+ * The line items, as Stripe receives them. Exported so the image rule can be
+ * tested without a Stripe account: at most one image per line (Stripe allows
+ * eight; the primary is the one the brief shot for it, 1:1 on white), https
+ * only, and nothing at all when the product has no photograph.
+ */
+export function buildLineItems(
+  lines: PricedLine[],
+  currency: string,
+  imagesByVariant: Record<string, string> = {},
+): Stripe.Checkout.SessionCreateParams.LineItem[] {
+  return lines.map((line) => {
+    const image = imagesByVariant[line.variantId];
+
+    return {
+      quantity: line.quantity,
+      price_data: {
+        currency: currency.toLowerCase(),
+        // Read from Postgres this request. Inline rather than a pre-created Price
+        // object because Prices are immutable in amount: an owner editing a price
+        // would otherwise mean creating a new Price, archiving the old one, and
+        // keeping our row and Stripe's object in agreement forever. One system of
+        // record instead of two.
+        unit_amount: line.unitCents,
+        // US convention: tax is added at checkout, not folded into the figure.
+        tax_behavior: "exclusive",
+        product_data: {
+          name: `${line.productName} — ${line.productKind}`,
+          description: `Size ${line.sizeLabel}`,
+          tax_code: APPAREL_TAX_CODE,
+          metadata: { sku: line.sku, variant_id: line.variantId },
+          // Checkout is hosted, so Stripe's servers fetch this, not our page:
+          // the CSP does not move.
+          ...(image && image.startsWith("https://") ? { images: [image] } : {}),
+        },
+      },
+    };
+  });
+}
 
 /**
  * When the session stops being payable, as a Unix timestamp.
@@ -58,33 +103,14 @@ export async function createCheckoutSession(
   input: SessionInput,
   nowMs: number = Date.now(),
 ): Promise<Stripe.Checkout.Session> {
-  const { intentId, lines, shippingCents, currency } = input;
+  const { intentId, lines, shippingCents, currency, imagesByVariant } = input;
   const expiresAt = sessionExpiresAt(nowMs);
 
   if (lines.length === 0) {
     throw new Error("Refusing to create a Checkout Session for an empty cart.");
   }
 
-  const lineItems: Stripe.Checkout.SessionCreateParams.LineItem[] = lines.map((line) => ({
-    quantity: line.quantity,
-    price_data: {
-      currency: currency.toLowerCase(),
-      // Read from Postgres this request. Inline rather than a pre-created Price
-      // object because Prices are immutable in amount: an owner editing a price
-      // would otherwise mean creating a new Price, archiving the old one, and
-      // keeping our row and Stripe's object in agreement forever. One system of
-      // record instead of two.
-      unit_amount: line.unitCents,
-      // US convention: tax is added at checkout, not folded into the figure.
-      tax_behavior: "exclusive",
-      product_data: {
-        name: `${line.productName} — ${line.productKind}`,
-        description: `Size ${line.sizeLabel}`,
-        tax_code: APPAREL_TAX_CODE,
-        metadata: { sku: line.sku, variant_id: line.variantId },
-      },
-    },
-  }));
+  const lineItems = buildLineItems(lines, currency, imagesByVariant);
 
   const shippingOptions: Stripe.Checkout.SessionCreateParams.ShippingOption[] =
     shippingCents > 0

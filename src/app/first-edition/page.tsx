@@ -6,7 +6,7 @@ import { WaitlistForm } from "@/components/waitlist/WaitlistForm";
 
 export const metadata: Metadata = pageMetadata({
   title: "First Edition — No-gi rash guards",
-  description: "The First Edition: no-gi rash guards built to a published standard, designed inside competition rulesets. Join the list for first access.",
+  description: "The First Edition: Guard Theory's first no-gi rash guards, in long sleeve and short sleeve. Join the list for first access.",
   path: "/first-edition",
 });
 
@@ -19,15 +19,7 @@ export const metadata: Metadata = pageMetadata({
 const COMMITMENTS = [
   {
     heading: "Made properly, or not made",
-    body: "We would rather make one garment properly than four adequately. What ships carries the specification it was designed to, and we say so on the page rather than implying it.",
-  },
-  {
-    heading: "Specifications published, not implied",
-    body: "Fabric weight, composition, seam construction and print method are stated on the product page. Nothing is described as premium in place of a number.",
-  },
-  {
-    heading: "Competition-legal by default",
-    body: "No-gi rulesets constrain what a rash guard may look like. Designing inside that constraint from the start is more useful than designing around it afterwards.",
+    body: "We would rather make one garment properly than four adequately.",
   },
 ];
 
@@ -54,8 +46,7 @@ export default function FirstEditionPage() {
               >
                 No-gi rash guards
               </Link>{" "}
-              built to a published standard and designed inside competition
-              rulesets rather than around them. The list gets it first.
+              in long sleeve and short sleeve. The list gets them first.
             </p>
 
             <ul className="m-0 mt-14 flex list-none flex-col gap-10 p-0">

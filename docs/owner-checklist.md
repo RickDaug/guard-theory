@@ -84,15 +84,19 @@ Leave the dashboard in **Test mode** for all of this.
    and PaymentIntents; everything else None. The key begins `rk_test_`.
    → **`STRIPE_SECRET_KEY`**
 
-   The code calls three things: create a Checkout Session, list Checkout
-   Sessions, create a Refund. If a test refund is refused for a missing
+   The code calls four things: create a Checkout Session, list Checkout
+   Sessions, list Refunds (to catch a refund made in the dashboard that the
+   webhook missed), create a Refund. If a test refund is refused for a missing
    permission, that is the key's scopes, not the code; Stripe's error names the
    permission.
 
 2. **Webhook.** Developers → Webhooks → Add endpoint.
    - URL: `https://guardtheory.net/api/webhooks/stripe`
-   - Events, exactly these three: `checkout.session.completed`,
-     `checkout.session.async_payment_succeeded`, `charge.refunded`
+   - Events, exactly these five: `checkout.session.completed`,
+     `checkout.session.async_payment_succeeded`, `charge.refunded`,
+     `charge.dispute.created`, `charge.dispute.closed`. On an endpoint that
+     already exists, add the two dispute events: without them a chargeback
+     never reaches the order, and it can be shipped while it is being disputed.
    - **API version: `2026-07-29.dahlia`.** On an older version the shipping
      address arrives somewhere the code does not look, and the failure shows up
      days later as a label that cannot be bought.
@@ -156,10 +160,24 @@ Ten required names to add: `STRIPE_SECRET_KEY`, `STRIPE_WEBHOOK_SECRET`,
 `PORTAL_PASSWORD_HASH`. `RESEND_API_KEY` and `RECEIPT_FROM_EMAIL` are already
 there.
 
+One name you should add: **`OWNER_ALERT_EMAIL`** — an address you read.
+Every fifteen minutes the site checks for anything that needs you (a payment
+with no order, a confirmation that did not send, a label that never finished,
+the missed-payment check itself failing) and emails you one short list of
+counts: at most once an hour, and the same list again only a day later. Without
+it nothing is sent, and you only find out by opening the portal. Settings in
+the portal shows whether it is on.
+
 One optional name: **`REPLY_TO_EMAIL`**. `hello@guardtheory.net` sends every
 message, and unless a mailbox or forwarder exists for it at your mail host, a
 customer who replies gets a bounce. Set this to an address you read and every
 message carries it as its reply-to until the forwarder is in place.
+
+Then check the lot: `npm run activation:check` reads every one of these (and
+Stripe, Shippo, the database and the cron) without changing anything or
+printing a value, and prints the fix for anything wrong.
+`docs/test-order-runbook.md` §0 says how to feed it the values, and the rest of
+that file is the test order itself, click by click.
 
 The merged code reads all of these, but a variable added here reaches the site
 only on the next deployment, not the running one. Until each is set, its path
@@ -257,10 +275,12 @@ quarterly.
 ### 12. Live-mode cutover
 
 Only after a test-mode order has gone the whole way: paid, confirmed by email,
-labelled, marked delivered, refunded.
+labelled, marked delivered, refunded — and a second one cancelled before it
+ships, to see the refund, the stock going back and the cancellation email
+together (`docs/owner-decisions.md` §15).
 
 - Stripe: switch to live mode. Create a **new** restricted key (`rk_live_`) and
-  a **new** webhook endpoint — same URL, same three events, same API version.
+  a **new** webhook endpoint — same URL, same five events, same API version.
   Live endpoints have their own signing secret. Replace **`STRIPE_SECRET_KEY`**
   and **`STRIPE_WEBHOOK_SECRET`** in Vercel — **in the Production environment
   only**. The code refuses a live key anywhere else: on a Preview or Development
@@ -290,6 +310,12 @@ privacy policy does not yet say because no period has been chosen — ask your
 accountant what the floor is.
 
 Do this before the live-mode cutover. It does not block a test-mode rehearsal.
+
+**Mostly done 2026-09-29.** The owner set seven business days to dispatch, a
+thirty-day return window, no prepaid label and no refund day count, exchanges
+shipped when the return arrives, no fault warranty, and no numbered lost or
+damaged parcel promise (§12, "OWNER-SUPPLIED 2026-09-29"). Still open: weekend
+orders (b), transit time (c), the contract-formation line (k), order retention (l).
 
 ---
 

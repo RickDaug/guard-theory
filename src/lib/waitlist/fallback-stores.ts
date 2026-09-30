@@ -89,7 +89,9 @@ export class MemoryWaitlistStore implements WaitlistStore {
     const alreadyOnList = this.emails.has(email);
     this.emails.add(email);
 
-    return { ok: true, alreadyOnList };
+    // Nothing to confirm against: without a database there is no row for a
+    // link to name, so development gets the form's flow and no email.
+    return { ok: true, alreadyOnList, confirm: null };
   }
 }
 

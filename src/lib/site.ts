@@ -20,6 +20,16 @@ export const SITE_URL = (
     : FALLBACK)
 ).replace(/\/$/, "");
 
+/**
+ * The live origin, written down once.
+ *
+ * SITE_URL above is wherever this build happens to be served from. This is the
+ * one place a message that cannot be recalled is allowed to point: the list
+ * send refuses to run unless SITE_URL is exactly this, so an unsubscribe link
+ * can never carry a preview deployment's hostname or localhost.
+ */
+export const PRODUCTION_ORIGIN = "https://guardtheory.net";
+
 export const SITE_NAME = "Guard Theory";
 
 export const SITE_TAGLINE =

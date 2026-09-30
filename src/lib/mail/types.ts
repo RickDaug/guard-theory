@@ -26,7 +26,25 @@ export type Email = {
   subject: string;
   /** Plain text. There is no HTML version, and that is a decision — see below. */
   body: string;
+  /**
+   * Sent to Resend as `Idempotency-Key`: the same key with the same body inside
+   * 24 hours returns the first send instead of sending again. Only for messages
+   * that must go at most once whoever asks — the order confirmation, which the
+   * webhook, a Stripe retry and the cron reconcile can all reach. Never on a
+   * deliberate resend from the portal, which is meant to go again.
+   */
+  idempotencyKey?: string;
 };
+
+/**
+ * `email_log.status`, as 0002_email_log.sql and 0008_email_not_delivered.sql
+ * allow it.
+ *
+ * "not-delivered" is the log-only provider: nothing failed, and nothing went.
+ * It is not "sent", so the confirmation path does not treat it as done and a
+ * later send, once a provider is connected, can find it and try again.
+ */
+export type EmailStatus = "sent" | "failed" | "not-delivered";
 
 export type SendResult =
   | { ok: true; providerId: string | null }

@@ -87,6 +87,19 @@ export const CATEGORIES = [
       "Finishing mechanics, the structures that make them work, and the control that precedes them - including what separates a blood choke from an air choke.",
   },
   {
+    // Added 2026-09-29 (owner-approved). Leg-lock material had been filed
+    // under submissions, no-gi-systems and defensive-concepts; the gi-legal
+    // locks do not belong under "No-Gi". Its legality differs by organisation,
+    // belt, age and gi/no-gi, so this page carries a sourced ruleset note:
+    // src/content/technique/rules-notes.ts.
+    slug: "leg-locks",
+    name: "Leg Locks",
+    summary:
+      "Entanglements that hold a leg still, and the locks finished from them.",
+    metaDescription:
+      "Leg entanglements and the locks finished from them: which joint each one loads, how to defend it, and why its legality changes with belt and ruleset.",
+  },
+  {
     slug: "defensive-concepts",
     name: "Defensive Concepts",
     summary:
@@ -118,6 +131,29 @@ export type Difficulty = "Foundational" | "Intermediate" | "Advanced";
 
 /** Where an entry is genuinely relevant. Most concepts are not equally both. */
 export type Relevance = "Gi and no-gi" | "No-gi first" | "Gi first";
+
+/**
+ * How an entry was produced and who has stood behind it.
+ *
+ * This is the publication gate. An entry drafted with research or writing
+ * assistance carries one of these from its first commit, and until `approvedBy`
+ * is set — by a person, in a commit, with a date — the entry is a draft: it
+ * renders at its address so it can be read on a preview, but it is unlisted,
+ * `noindex, nofollow`, emits no Article schema, and says at the top that
+ * nobody has yet signed it off. The three strings are a ledger, not a
+ * checkbox: tests/unit/technique-review.test.ts refuses any under 40
+ * characters. The process end to end is docs/technique-pipeline.md.
+ */
+export type TechniqueReview = {
+  /** How the draft was produced. Stated plainly; never hidden. */
+  drafted: string;
+  /** Independent fact-and-mechanics audit: who/what, date, verdict, what changed. */
+  factAudit: string;
+  /** Independent voice audit against AGENTS.md and BANNED_CONSTRUCTIONS. */
+  voiceAudit: string;
+  /** The owner's sign-off. null = unpublished draft. Set by a human, in a commit, with a date. */
+  approvedBy: { name: string; date: string } | null;
+};
 
 export type TechniqueEntry = {
   slug: string;
@@ -156,4 +192,13 @@ export type TechniqueEntry = {
   trainingProgression: string[];
   /** Slugs of other entries. Validated at build time. */
   relatedSlugs: string[];
+  /**
+   * The production and sign-off ledger. See TechniqueReview.
+   *
+   * Absent on the entries published before the gate existed (2026-09). Those
+   * are treated as approved: they went out under the process of their day,
+   * and inventing an approver and a date for them now would be a backdated
+   * signature. Every entry drafted after the gate carries one.
+   */
+  review?: TechniqueReview;
 };

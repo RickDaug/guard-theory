@@ -31,7 +31,7 @@
  */
 import { FIGURES } from "./figures/index.ts";
 import { ARTICLES } from "./journal/index.ts";
-import { ENTRIES } from "./technique/index.ts";
+import { ENTRIES, isPublishedEntry } from "./technique/index.ts";
 
 export type Collection = "journal" | "technique" | "figure";
 
@@ -341,6 +341,14 @@ export function crossLinksFor(
           : [undefined, undefined];
 
     if (!self || !other || other.collection === collection) continue;
+
+    // A technique draft is not offered from the other end. The draft's own
+    // page still renders its links out — `self` is never checked — so the
+    // person reading it on a preview sees what it will connect to.
+    if (other.collection === "technique") {
+      const entry = ENTRIES.find((e) => e.slug === other.slug);
+      if (entry && !isPublishedEntry(entry)) continue;
+    }
 
     const resolved = resolve(other, link.basis);
     if (resolved) out.push(resolved);

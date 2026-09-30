@@ -544,6 +544,7 @@ function listMailCarriesUnsubscribe(): true | string {
  */
 export const OWN_COOKIES: Record<string, string> = {
   "src/lib/portal/session.ts": "the sign-in session for our own portal",
+  "src/app/crew/sign-in/actions.ts": "a browser has signed in there before",
 };
 
 /* ------------------------------------------------------------------------ */

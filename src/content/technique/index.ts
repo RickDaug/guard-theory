@@ -7,10 +7,12 @@ import {
 import { armDrag } from "./entries/arm-drag.ts";
 import { bloodChokeVersusAirChoke } from "./entries/blood-choke-versus-air-choke.ts";
 import { butterflyHookAsLever } from "./entries/butterfly-hook-as-lever.ts";
+import { calfSlicerFoldsTheKnee } from "./entries/calf-slicer-folds-the-knee.ts";
 import { closedGuardPostureBattle } from "./entries/closed-guard-posture-battle.ts";
 import { connectionInOpenGuard } from "./entries/connection-in-open-guard.ts";
 import { deLaRivaHook } from "./entries/de-la-riva-hook.ts";
 import { elbowKneeEscape } from "./entries/elbow-knee-escape.ts";
+import { fiftyFiftyBothHeelsExposed } from "./entries/fifty-fifty-both-heels-exposed.ts";
 import { framesVersusBlocks } from "./entries/frames-versus-blocks.ts";
 import { gettingHipsUnderneath } from "./entries/getting-hips-underneath.ts";
 import { insidePosition } from "./entries/inside-position.ts";
@@ -21,10 +23,13 @@ import { legEntanglementAsControl } from "./entries/leg-entanglement-as-control.
 import { legLockDefenceKneeLine } from "./entries/leg-lock-defence-knee-line.ts";
 import { saddleTrapsTheKnee } from "./entries/saddle-traps-the-knee.ts";
 import { seatBeltAndHooks } from "./entries/seat-belt-and-hooks.ts";
+import { seatedGuardHandsInTheFight } from "./entries/seated-guard-hands-in-the-fight.ts";
 import { straightAnkleLockIsALever } from "./entries/straight-ankle-lock-is-a-lever.ts";
 import { sweepingTowardTheMissingPost } from "./entries/sweeping-toward-the-missing-post.ts";
+import { toeHoldFigureFourOnTheFoot } from "./entries/toe-hold-figure-four-on-the-foot.ts";
 import { twoOnOneControlsOneArm } from "./entries/two-on-one-controls-one-arm.ts";
 import { underhookHalfGuard } from "./entries/underhook-half-guard.ts";
+import { underhookOrOverhook } from "./entries/underhook-or-overhook.ts";
 
 /**
  * The registry. Entries are imported explicitly rather than globbed so that the
@@ -35,10 +40,12 @@ export const ENTRIES: TechniqueEntry[] = [
   armDrag,
   bloodChokeVersusAirChoke,
   butterflyHookAsLever,
+  calfSlicerFoldsTheKnee,
   closedGuardPostureBattle,
   connectionInOpenGuard,
   deLaRivaHook,
   elbowKneeEscape,
+  fiftyFiftyBothHeelsExposed,
   framesVersusBlocks,
   gettingHipsUnderneath,
   insidePosition,
@@ -49,10 +56,13 @@ export const ENTRIES: TechniqueEntry[] = [
   legLockDefenceKneeLine,
   saddleTrapsTheKnee,
   seatBeltAndHooks,
+  seatedGuardHandsInTheFight,
   straightAnkleLockIsALever,
   sweepingTowardTheMissingPost,
+  toeHoldFigureFourOnTheFoot,
   twoOnOneControlsOneArm,
   underhookHalfGuard,
+  underhookOrOverhook,
 ];
 
 export const ENTRIES_BY_SLUG = new Map(ENTRIES.map((e) => [e.slug, e]));

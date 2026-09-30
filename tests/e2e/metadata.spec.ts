@@ -528,3 +528,21 @@ test("the published date shown matches the date published", async ({ page }) => 
     ).toBe(expected);
   }
 });
+
+/**
+ * docs/internal-linking-map.md Rule P-5: a product page links to care and to
+ * returns in its own body, not only through the footer. Scoped to <main> so the
+ * footer's /policies/returns cannot satisfy it.
+ */
+test("every product page links to care and returns from its body", async ({ page }) => {
+  for (const path of ["/shop/theory-01-long-sleeve", "/shop/theory-01-short-sleeve"]) {
+    await page.goto(path, { waitUntil: "load" });
+    const hrefs = await page
+      .locator("main a[href]")
+      .evaluateAll((links) => links.map((link) => link.getAttribute("href")));
+    expect(hrefs, `${path} does not link to the care article`).toContain(
+      "/journal/how-to-wash-a-rash-guard",
+    );
+    expect(hrefs, `${path} does not link to the returns policy`).toContain("/policies/returns");
+  }
+});

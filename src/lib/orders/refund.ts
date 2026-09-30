@@ -40,6 +40,50 @@ const createStripeRefund: CreateRefund = async (input) => {
   );
 };
 
+/**
+ * What the owner is told when the request to Stripe did not come back with an
+ * answer. It is the truth: we do not know. The retry advice is safe because
+ * the idempotency key is derived from the order, the refunded figure on our
+ * row (which an unknown outcome does not change) and the amount — so the same
+ * amount from the portal is the same request, and Stripe answers it with the
+ * refund it already made rather than making a second one. Stripe keeps a key
+ * for 24 hours, which is why the advice says so.
+ */
+export const REFUND_OUTCOME_UNKNOWN =
+  "Stripe did not answer in time, so the refund may or may not have gone through — " +
+  "check the payment in the Stripe dashboard before trying again. Retrying the same amount " +
+  "from here within 24 hours is safe: it repeats the same request and cannot refund twice. " +
+  "Do not refund it again from the dashboard until you have checked.";
+
+/**
+ * Stripe's errors that mean the request was refused before any money moved.
+ * Everything else — StripeConnectionError (timeouts included), StripeAPIError
+ * (a 5xx), or something that is not a Stripe error at all — leaves the outcome
+ * unknown, and is reported as unknown. Guessing "refused" is the direction
+ * that causes a double refund.
+ *
+ * StripeIdempotencyError is deliberately NOT a refusal: the SDK retries a
+ * timed-out request with the same key, and if the first attempt is still being
+ * processed Stripe answers the retry with a 409 idempotency error — while the
+ * refund it is holding may well succeed.
+ */
+const DEFINITE_REFUSALS = new Set([
+  "StripeCardError",
+  "StripeInvalidRequestError",
+  "StripeAuthenticationError",
+  "StripePermissionError",
+  "StripeRateLimitError",
+]);
+
+export function refundOutcomeUnknown(error: unknown): boolean {
+  const type =
+    typeof error === "object" && error !== null && "type" in error
+      ? (error as { type: unknown }).type
+      : undefined;
+
+  return !(typeof type === "string" && DEFINITE_REFUSALS.has(type));
+}
+
 export type RefundOptions = {
   /**
    * What the portal page showed as already refunded when the form was
@@ -136,6 +180,17 @@ export async function refundOrder(
         "[guard-theory] refund failed:",
         error instanceof Error ? error.message : error,
       );
+
+      if (refundOutcomeUnknown(error)) {
+        // A timeout, a dropped connection or a 5xx: Stripe may have accepted
+        // the refund before the answer was lost. The row is left alone — the
+        // charge.refunded webhook and reconcileRefunds() bring it in line if
+        // the money did move — and the owner is told exactly that, because
+        // "nothing has been refunded" here invited a second refund from the
+        // dashboard.
+        return { ok: false, reason: REFUND_OUTCOME_UNKNOWN };
+      }
+
       return {
         ok: false,
         reason:
@@ -161,11 +216,21 @@ export async function refundOrder(
   });
 }
 
+/** What a refund sync found to bring in line. */
+export type RefundSyncOutcome =
+  /** An order carries that payment intent, and now agrees with Stripe. */
+  | "order"
+  /** No order, but an unfulfilled payment does: its reason now says so. */
+  | "unfulfilled"
+  /** Neither. Nothing was written. */
+  | "no-match";
+
 /**
  * Brings our copy back in line with Stripe's.
  *
- * Called from the `charge.refunded` webhook, so a refund issued in the Stripe
- * dashboard rather than the portal still shows up on the order.
+ * Called from the `charge.refunded` webhook and from reconcileRefunds, so a
+ * refund issued in the Stripe dashboard rather than the portal still shows up
+ * on the order — including one whose webhook was missed.
  *
  * `amount_refunded` on a charge only ever grows, but webhooks are not delivered
  * in order: the event for a first partial refund can arrive after the event for
@@ -174,16 +239,23 @@ export async function refundOrder(
  * least() caps it at the order total: 0007 has a CHECK saying a refund cannot
  * exceed what was paid, and a webhook that violated it would be retried for
  * three days rather than recorded.
+ *
+ * Zero matching orders used to be silent success. It is not: the order may
+ * simply not exist YET — its webhook failed, the reconciler creates it later
+ * with refunded_cents = 0, and the portal shows an unrefunded order that the
+ * owner then ships. So this says what it found, and the caller decides:
+ * syncRefundFromCharge (the webhook) throws so Stripe retries;
+ * reconcileRefunds counts it and tries again on its next run.
  */
-export async function syncRefundFromCharge(
+export async function applyRefundFromCharge(
   paymentIntentId: string,
   amountRefundedCents: number,
-): Promise<void> {
+): Promise<RefundSyncOutcome> {
   if (!Number.isSafeInteger(amountRefundedCents) || amountRefundedCents < 0) {
     throw new Error(`charge.refunded carried an unusable amount_refunded: ${amountRefundedCents}`);
   }
 
-  await query(
+  const orders = await query<{ id: string }>(
     `update "order"
         set refunded_cents = least(greatest(refunded_cents, $2::integer), total_cents),
             refund_status = case
@@ -195,7 +267,58 @@ export async function syncRefundFromCharge(
               when $2::integer > 0 then coalesce(flagged_reason, 'refunded')
               else flagged_reason
             end
-      where stripe_payment_intent = $1`,
+      where stripe_payment_intent = $1
+      returning id`,
     [paymentIntentId, amountRefundedCents],
   );
+
+  if (orders.length > 0) {
+    return "order";
+  }
+
+  // Money taken with no order: the portal lists it under "Needs you", and the
+  // owner deciding what to do about it needs to know Stripe has already
+  // refunded some or all of it. There is no column for that, so it goes on the
+  // reason the portal already prints. The note is replaced, not appended, so
+  // repeats do not stack. recordUnfulfilledPayment rewrites the reason when
+  // the reconciler sees the session again; reconcileRefunds runs after it in
+  // the same pass and puts the note back.
+  const payments = await query<{ id: string }>(
+    `update unfulfilled_payment
+        set reason = case
+              when $2::integer > 0 then
+                regexp_replace(reason, $3, '') || $4 || to_char($2::integer / 100.0, 'FM999999990.00')
+                  || coalesce(' ' || currency, '')
+              else reason
+            end
+      where stripe_payment_intent = $1
+      returning id`,
+    [paymentIntentId, amountRefundedCents, REFUNDED_NOTE_PATTERN, REFUNDED_NOTE],
+  );
+
+  return payments.length > 0 ? "unfulfilled" : "no-match";
+}
+
+const REFUNDED_NOTE = " — Stripe shows refunded: ";
+/** Matches a note written above, so the next one replaces it. */
+const REFUNDED_NOTE_PATTERN = " — Stripe shows refunded: .*$";
+
+/**
+ * The webhook's entry point. A refund for a payment we have no record of at
+ * all THROWS, so the webhook releases its claim, answers 500, and Stripe
+ * retries — by which time the reconciler has usually created the order, and
+ * the retry lands on it. Marking it processed lost the refund for good.
+ * (reconcileRefunds covers the case where Stripe's retries run out.)
+ */
+export async function syncRefundFromCharge(
+  paymentIntentId: string,
+  amountRefundedCents: number,
+): Promise<void> {
+  const outcome = await applyRefundFromCharge(paymentIntentId, amountRefundedCents);
+
+  if (outcome === "no-match") {
+    throw new Error(
+      `refund for ${paymentIntentId} matches no order or unfulfilled payment yet; leaving it for a retry`,
+    );
+  }
 }

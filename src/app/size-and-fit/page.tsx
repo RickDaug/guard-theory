@@ -173,14 +173,13 @@ export default function SizeAndFitPage() {
               {HAS_CHART ? (
                 <p className="mt-5 text-base text-steel">
                   If a garment does not match the measurements on this page, that
-                  is a fault. Return postage is ours, both ways, and we will
-                  replace it or refund you — whichever you prefer.
+                  is a fault, and the return postage is ours.
                 </p>
               ) : null}
               <p className="mt-5 text-base text-steel">
-                Size exchanges are free within thirty days, and we dispatch the
-                replacement as soon as the carrier scans your return rather than
-                waiting for it to reach us.
+                To change a size, return the garment within thirty days of
+                delivery. We ship the replacement, at our cost, when your
+                return arrives with us.
               </p>
               <Link
                 href="/policies/returns"

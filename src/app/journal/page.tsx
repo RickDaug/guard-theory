@@ -68,7 +68,14 @@ export default function JournalIndexPage() {
                     <p id={`article-${article.slug}-summary`} className="mt-4 grow text-sm text-steel">
                       {article.standfirst}
                     </p>
-                    <span className="notation mt-8 text-2xs text-steel">
+                    {/* `truncate`: the editorial byline is long enough to sit
+                        near a wrap point in a narrow card, and a notation line
+                        that wraps only once Martian Mono arrives is a layout
+                        shift (AGENTS.md). */}
+                    <span
+                      className="notation mt-8 truncate text-2xs text-steel"
+                      title={`${author ? `${author.name} · ` : ""}${readingTimeMinutes(article)} min · ${article.sources.length} sources`}
+                    >
                       {author ? `${author.name} · ` : ""}
                       {readingTimeMinutes(article)} min ·{" "}
                       {article.sources.length} sources

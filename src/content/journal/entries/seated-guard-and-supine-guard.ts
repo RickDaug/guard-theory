@@ -9,7 +9,7 @@ import type { PublishedArticle } from "../types.ts";
 export const seatedGuardAndSupineGuard: PublishedArticle = {
   status: "published",
   publishedAt: "2026-08-04",
-  authorId: "steven-p",
+  authorId: "guard-theory-editorial",
   slug: "seated-guard-and-supine-guard",
   category: "guard-systems",
   title: "Seated guard and supine guard are two different jobs",

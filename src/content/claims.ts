@@ -588,6 +588,34 @@ function specificationsArePublished(): true | string {
 
 const FAQ = "src/app/faq/page.tsx";
 const POLICIES = "src/content/policies/index.ts";
+const ORDER_CONFIRMED = "src/app/order/confirmed/page.tsx";
+const MAIL_TEMPLATES = "src/lib/mail/templates.ts";
+const SIZE_AND_FIT = "src/app/size-and-fit/page.tsx";
+
+/**
+ * The buyer-facing terms the owner supplied on 2026-09-29
+ * (docs/owner-decisions.md §12). Every figure the storefront prints about
+ * dispatch and returns must be one of these. Change a value here only with a
+ * new owner decision recorded there — never to make a sentence pass.
+ */
+export const OWNER_TERMS = {
+  decided: "2026-09-29",
+  dispatchWithin: "seven business days",
+  returnWindow: "thirty days",
+} as const;
+
+/**
+ * Journal articles the owner has confirmed a named person wrote, or read and
+ * agreed to put their name to: slug → author id. Empty, because on 2026-09-29
+ * no article had any record of it; every published piece carries the editorial
+ * byline. Add a slug here only on the owner's word, then change its authorId.
+ */
+export const OWNER_CONFIRMED_PERSON_BYLINES: Record<string, string> = {};
+
+/** Every "<verb> within <n> <unit>" figure in the files, as printed. */
+function figuresIn(read: (path: string) => string, files: string[], pattern: RegExp): string[] {
+  return files.flatMap((file) => [...read(file).matchAll(pattern)].map((m) => m[1] ?? ""));
+}
 
 export const CLAIMS: Claim[] = [
   {
@@ -610,7 +638,7 @@ export const CLAIMS: Claim[] = [
     // rash guards in general name fibres and weights freely; what this catches
     // is a percentage split or a GSM, which only ever describes one garment.
     id: "retired-invented-fabric-figures",
-    says: /d{2,3} ?gsm|d{1,2}% (recycled )?(polyester|elastane|spandex|nylon|polyamide)|four-thread flatlock|flatlock, four-thread|dyed into the fibre/i,
+    says: /\b\d{2,3} ?gsm\b|\b\d{1,2}% (recycled )?(polyester|elastane|spandex|nylon|polyamide)\b|four-thread flatlock|flatlock, four-thread|dyed into the fibre/i,
     kind: "retired",
     where: ["src/content/products/entries/theory-01-long-sleeve.ts", "src/content/products/entries/theory-01-short-sleeve.ts"],
     holds: specificationsArePublished,
@@ -662,6 +690,55 @@ export const CLAIMS: Claim[] = [
       return JSON.stringify(names) === JSON.stringify(stated)
         ? true
         : `the bylines on published articles are ${names.join(", ")}`;
+    },
+  },
+  {
+    // Owner decision 2026-09-29 (docs/owner-decisions.md §2): an article
+    // drafted with AI assistance carries the publication's byline, never a
+    // person's. Person bylines are allowed only where the owner confirmed one.
+    id: "journal-bylines-are-editorial",
+    says: /carry the Guard Theory editorial byline rather than a person's name/,
+    kind: "stated",
+    where: [POLICIES],
+    holds: () => {
+      const wrong = ARTICLES.filter(isPublished).filter((article) => {
+        const author = getAuthor(article.authorId);
+        if (!author) return true;
+        if (author.kind === "organization") return false;
+        return OWNER_CONFIRMED_PERSON_BYLINES[article.slug] !== article.authorId;
+      });
+      return wrong.length === 0
+        ? true
+        : `${wrong.map((a) => `${a.slug} (${a.authorId})`).join(", ")} carries a person's byline the owner has not confirmed`;
+    },
+  },
+  {
+    // Owner decision 2026-09-29 (docs/owner-decisions.md §12a): replaced the
+    // unconfirmed "two business days".
+    id: "dispatch-time-is-the-owners",
+    says: /dispatched within seven business days/,
+    kind: "stated",
+    where: [POLICIES, ORDER_CONFIRMED, MAIL_TEMPLATES],
+    holds: ({ read }) => {
+      const printed = figuresIn(read, [POLICIES, ORDER_CONFIRMED, MAIL_TEMPLATES], /dispatched within ([\w-]+ (?:business |working )?days)/gi);
+      const wrong = printed.filter((figure) => figure !== OWNER_TERMS.dispatchWithin);
+      return wrong.length === 0
+        ? true
+        : `the copy promises dispatch within ${wrong.join(", ")}; the owner's figure is ${OWNER_TERMS.dispatchWithin}`;
+    },
+  },
+  {
+    // Owner decision 2026-09-29 (docs/owner-decisions.md §12g).
+    id: "return-window-is-the-owners",
+    says: /within thirty days of delivery/,
+    kind: "stated",
+    where: [POLICIES, SIZE_AND_FIT],
+    holds: ({ read }) => {
+      const printed = figuresIn(read, [POLICIES, SIZE_AND_FIT], /within ([\w-]+ days) of delivery/gi);
+      const wrong = printed.filter((figure) => figure !== OWNER_TERMS.returnWindow);
+      return wrong.length === 0
+        ? true
+        : `the copy gives a return window of ${wrong.join(", ")}; the owner's is ${OWNER_TERMS.returnWindow}`;
     },
   },
   {
@@ -880,6 +957,27 @@ export const CLAIMS: Claim[] = [
       TRANSACTIONAL_MAIL.length === 0
         ? true
         : `order mail (${TRANSACTIONAL_MAIL.join(", ")}) carries no unsubscribe link; only the list's does`,
+  },
+  {
+    // Invented in 4364d22 and live from 2026-09-24. On 2026-09-29 the owner
+    // set seven business days for dispatch and a 30-day return window with no
+    // prepaid label, no day count on refunds, exchanges shipped when the return
+    // arrives, no open-ended fault warranty, and no numbered lost or damaged
+    // parcel promise (docs/owner-decisions.md §12). None of these may return
+    // without a new owner decision; there is nothing in the build to check.
+    id: "retired-unconfirmed-buyer-terms",
+    says: /dispatched within two business days|within five business days of the return|send (you )?a return label|repair, replace or refund|no delivery after twenty-one days|not ask you to return the damaged|return is scanned|scans your return|(has not|not) moved for seven days|Faults after thirty days|we pay both ways/i,
+    kind: "retired",
+    where: [POLICIES, ORDER_CONFIRMED, MAIL_TEMPLATES, SIZE_AND_FIT, FAQ],
+    holds: () => `the owner did not agree it; the terms decided on ${OWNER_TERMS.decided} replace it`,
+  },
+  {
+    id: "retired-person-bylines-on-ai-drafted-articles",
+    says: /Journal is written by the same people|a piece nobody will put their name to/i,
+    kind: "retired",
+    where: [POLICIES, FAQ],
+    holds: () =>
+      "the Journal is drafted with AI assistance and carries the editorial byline, not the names of the people who make the apparel",
   },
   {
     id: "retired-waitlist-collects-a-size",

@@ -1,5 +1,6 @@
 import { expect, test } from "@playwright/test";
 import { ARTICLES, isPublished } from "../../src/content/journal/index.ts";
+import { getAuthor } from "../../src/content/authors.ts";
 import { CATEGORIES as TECHNIQUE_CATEGORIES } from "../../src/content/technique/index.ts";
 import { isTechniqueCategoryIndexable } from "../../src/content/category-gate.ts";
 
@@ -317,8 +318,13 @@ test("article and entry structured data repeat the page, and add nothing", async
       `${path} states a dateModified the registry does not carry`,
     ).toBe(article.updatedAt);
 
-    const author = node!.author as { "@id"?: string; name?: string };
+    const author = node!.author as { "@id"?: string; "@type"?: string; name?: string };
     expect(author?.["@id"], `${path} author has no stable @id`).toMatch(/#author-/);
+    // An article drafted with AI assistance names the publication, never a
+    // Person (owner decision 2026-09-29, docs/owner-decisions.md §2).
+    expect(author["@type"], `${path} author type`).toBe(
+      getAuthor(article.authorId)?.kind === "organization" ? "Organization" : "Person",
+    );
     // The same person is the same node wherever they appear.
     const seen = authorIds.get(article.authorId);
     if (seen) expect(author["@id"]).toBe(seen);

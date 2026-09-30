@@ -53,6 +53,10 @@ function traps(calls: string[]): CronDeps {
     purgeIntents: note("purgeIntents", 0),
     sweepAttempts: note("sweepAttempts", 0),
     sweepSessions: note("sweepSessions", 0),
+    sweepWebhookEvents: note("sweepWebhookEvents", 0),
+    retryUndelivered: note("retryUndelivered", 0),
+    sendMissing: note("sendMissing", 0),
+    alert: note("alert", "none" as const),
     stripeConfigured: () => true,
     databaseConfigured: () => true,
   };
@@ -151,7 +155,16 @@ describe("what an authorised run does", () => {
     });
 
     assert.equal(response.status, 200);
-    assert.deepEqual(calls, ["sweepAttempts", "sweepSessions", "reconcile", "record"]);
+    assert.deepEqual(calls, [
+      "sweepAttempts",
+      "sweepSessions",
+      "sweepWebhookEvents",
+      "reconcile",
+      "record",
+      "retryUndelivered",
+      "sendMissing",
+      "alert",
+    ]);
 
     const before = Date.now();
     assert.ok(options?.deadlineMs && options.deadlineMs > before, "a deadline was set");
@@ -166,7 +179,9 @@ describe("what an authorised run does", () => {
       alreadyRecorded: 1,
       skipped: 1,
       truncated: false,
-      swept: { checkoutIntents: 4, loginAttempts: 0, portalSessions: 0 },
+      swept: { checkoutIntents: 4, loginAttempts: 0, portalSessions: 0, webhookEvents: 0 },
+      confirmations: { retried: 0, missing: 0 },
+      alert: "none",
     });
     assert.doesNotMatch(text, /@|cs_test_/, "counts only: no reason, no id");
   });

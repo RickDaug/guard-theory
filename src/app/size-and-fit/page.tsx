@@ -4,11 +4,27 @@ import Link from "next/link";
 import { Breadcrumbs } from "@/components/site/Breadcrumbs";
 import { FIT_NOTES, SIZE_CHART } from "@/content/products/size-chart";
 
-export const metadata: Metadata = pageMetadata({
-  title: "Rash guard size chart and fit guide",
-  description: "Guard Theory size chart: to-fit chest in inches and centimetres, garment measurements in centimetres, and how a no-gi rash guard should actually fit.",
-  path: "/size-and-fit",
-});
+/**
+ * The chart renders only when src/content/products/size-chart.ts has rows, and
+ * it can only have rows the owner supplied. Until then this page is the fit
+ * guide and says nothing about a chart — the one published here from 2026-08-04
+ * to 2026-09-29 was invented (docs/owner-decisions.md §3).
+ */
+const HAS_CHART = SIZE_CHART.length > 0;
+
+export const metadata: Metadata = pageMetadata(
+  HAS_CHART
+    ? {
+        title: "Rash guard size chart and fit guide",
+        description: "Guard Theory size chart: to-fit chest in inches and centimetres, garment measurements in centimetres, and how a no-gi rash guard should actually fit.",
+        path: "/size-and-fit",
+      }
+    : {
+        title: "How a rash guard should fit",
+        description: "How a no-gi rash guard should actually fit: the checks to run when you try one on, from where the hem sits in guard to a comfortable full exhale.",
+        path: "/size-and-fit",
+      },
+);
 
 const CHECKS = [
   "Tight enough that the hem does not travel when you sit in guard and stand up.",
@@ -28,11 +44,13 @@ export default function SizeAndFitPage() {
             Size and fit
           </h1>
           <p className="mt-8 text-lg text-steel">
-            Garment measurements, not a recommendation to size up or down. Find
-            the chest you actually are and the rest follows.
+            {HAS_CHART
+              ? "Garment measurements, not a recommendation to size up or down. Find the chest you actually are and the rest follows."
+              : "What to check when you try a rash guard on. For the general question — how a rash guard should fit on anyone’s garment — there is a longer piece in the Journal."}
           </p>
         </header>
 
+        {HAS_CHART ? (
         <section aria-labelledby="chart" className="mb-20">
           <h2 id="chart" className="display-condensed mb-8 text-2xl text-chalk">
             Size chart
@@ -119,6 +137,7 @@ export default function SizeAndFitPage() {
             ))}
           </ul>
         </section>
+        ) : null}
 
         <div className="grid gap-16 lg:grid-cols-12 lg:gap-20">
           <section aria-labelledby="quick" className="lg:col-span-7">
@@ -149,13 +168,15 @@ export default function SizeAndFitPage() {
           <aside className="lg:col-span-4 lg:col-start-9">
             <div className="border border-steel-dim p-7">
               <h2 className="display-condensed text-xl text-chalk">
-                If we get it wrong
+                {HAS_CHART ? "If we get it wrong" : "Size exchanges"}
               </h2>
-              <p className="mt-5 text-base text-steel">
-                If a garment does not match the measurements on this page, that
-                is a fault. Return postage is ours, both ways, and we will
-                replace it or refund you — whichever you prefer.
-              </p>
+              {HAS_CHART ? (
+                <p className="mt-5 text-base text-steel">
+                  If a garment does not match the measurements on this page, that
+                  is a fault. Return postage is ours, both ways, and we will
+                  replace it or refund you — whichever you prefer.
+                </p>
+              ) : null}
               <p className="mt-5 text-base text-steel">
                 Size exchanges are free within thirty days, and we dispatch the
                 replacement as soon as the carrier scans your return rather than

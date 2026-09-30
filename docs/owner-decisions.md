@@ -39,6 +39,52 @@ composition, GSM/fabric weight, construction details (seam type, print
 method), and country of manufacture.
 **Blocks:** `/size-and-fit`, product detail pages, technical flat callouts.
 
+**2026-09-29 — invented specifications and size chart removed.** Commit
+`4364d22` (2026-08-04, "build the site out as customer-ready") filled this gap
+with values nobody supplied, and they were live on guardtheory.net until this
+date. You confirmed that neither you nor the manufacturer provided any of them.
+Removed:
+
+- Fabric composition "82% recycled polyester, 18% elastane" (also the only
+  sustainability claim on the site), fabric weight "240 gsm", seam construction
+  "Flatlock, four-thread", print method "Full sublimation, dyed into the fibre",
+  fit "Athletic compression", and care "Cold wash, hang dry, no fabric softener".
+- The six-size chart (XS–XXL, to-fit chest in inches and cm, body length, long
+  and short sleeve in cm) and its fit notes on `/size-and-fit`.
+- The construction callouts on both flats (bound crew neck, raglan sleeve seam,
+  single-edge cuff, flatlock side seam, straight hem), the "Neck: Crew, bound"
+  line, and the registry size range XS–XXL.
+- Copy that depended on them: "the specification is published in full" (/shop,
+  the sleeve article, the short-sleeve page), "Fabric weight, composition, seam
+  construction and print method are stated on the product page"
+  (/first-edition), "apparel with published specifications" (/about), "Sizing
+  questions get an answer with actual measurements" (/contact), the FAQ's "full
+  chart", and "a garment that does not match our published measurements" in
+  the returns policy's who-pays list (the rest of that policy is unchanged —
+  it is §12). Also cut, as unsupplied claims about the garment: "designed inside
+  competition rulesets" (/, /first-edition, the long-sleeve page, the FAQ's
+  competition-legal answer) and "the drawings a factory is given" (/lookbook,
+  FAQ).
+
+How it is kept out: each product now has `specSource`, and the chart has
+`SIZE_CHART_SOURCE`; both are `null`. `tests/unit/content.test.ts` fails if a
+specification value (other than Sleeve), a construction callout, a size label or
+a chart row exists while the source is not `"owner"`, and the retired claims in
+`src/content/claims.ts` fail if the old sentences or figures reappear first.
+
+**Needed from you to put them back** (per garment): fabric composition, fabric
+weight (GSM), seam construction, print method, country of manufacture, neck
+finish, fit, care instructions, the construction details the flats should call
+out, the size range, and a size chart measured from production garments or
+taken from the manufacturer's graded spec. Also: are the garments designed to a
+competition ruleset (IBJJF/ADCC), and does a factory tech pack exist that the
+drawings reflect? When you supply them, set `specSource: "owner"` in the product
+entry (or enter them in the portal) and `SIZE_CHART_SOURCE = "owner"`.
+**Interim behaviour:** product pages show the drawing, the sleeve length and
+nothing else about construction; `/size-and-fit` is the fit guide with no chart.
+Portal go-live (PR #40) requires fabric weight, composition, seams and print
+method, so the two registry garments cannot go live until these are supplied.
+
 ## 4. Pricing
 
 **Decided 2026-08: prices are entered by the owner through the Crew Portal.**

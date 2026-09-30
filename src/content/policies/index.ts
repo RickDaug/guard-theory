@@ -213,7 +213,7 @@ export const POLICIES: Policy[] = [
         id: "who-pays",
         heading: "Who pays for return postage",
         paragraphs: [
-          "If the fault is ours — the wrong item, a manufacturing defect, or a garment that does not match our published measurements — we pay, and we pay both ways.",
+          "If the fault is ours — the wrong item or a manufacturing defect — we pay, and we pay both ways.",
           "If you have simply changed your mind, return postage is yours. We will always tell you which applies before you send anything back.",
         ],
       },

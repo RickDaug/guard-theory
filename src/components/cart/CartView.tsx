@@ -138,10 +138,22 @@ export function CartView() {
   }, [lines, repriced]);
 
   if (!settled && !cart) {
+    // Laid out exactly like the empty cart — the ordinary case, and what most
+    // readers see next — so the swap moves nothing. A one-line placeholder here
+    // grew by the height of the button when the answer arrived and pushed the
+    // footer down: 0.038 CLS on /cart in CI Lighthouse. The spacer is
+    // `invisible`, so it is neither seen, focused nor announced.
     return (
-      <p className="text-base text-steel" role="status">
-        Working out your total…
-      </p>
+      <div className="flex flex-col gap-6">
+        <p className="text-lg text-steel" role="status">
+          Working out your total…
+        </p>
+        <div>
+          <Button intent="outline" type="button" disabled tabIndex={-1} aria-hidden className="invisible">
+            Back to the shop
+          </Button>
+        </div>
+      </div>
     );
   }
 

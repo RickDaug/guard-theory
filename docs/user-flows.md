@@ -72,7 +72,7 @@ motion the state change is instant rather than merely faster.
 ## 4. Using the Technique Library
 
 ```
-/technique → 12 categories → category → entry
+/technique → 13 categories → category → entry
   entry reads in a fixed order:
     problem → objective → concept → mechanics → errors → safety →
     progression → related

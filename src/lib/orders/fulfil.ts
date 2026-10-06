@@ -4,6 +4,7 @@ import type { PoolClient } from "pg";
 import { query, transaction } from "../db/client.ts";
 import type { PricedLine } from "../cart/types.ts";
 import { orderStripeMode, stripeMode } from "../stripe/client.ts";
+import { raiseFlagSql, strongestFlag } from "./flags.ts";
 
 /**
  * Turning a paid Checkout Session into an order.
@@ -193,14 +194,14 @@ async function decrementStock(
  * key and the webhook secret are swapped by hand, one after the other: a live
  * payment verified while the key still said sk_test_ used to be stamped `test`,
  * hidden from real totals and treated as a rehearsal. The session wins, and a
- * disagreement is logged — there is no flag value for it (the
- * `flagged_reason` check constraint allows three), so the log is the signal.
+ * disagreement is logged and reported, so the order it makes is flagged
+ * `mode-mismatch` (0011_order_flags_and_tracking.sql) for the owner to see.
  *
  * A fixture or an object without `livemode` falls back to the key, as before.
  */
-function sessionMode(session: Stripe.Checkout.Session): "test" | "live" {
+function sessionMode(session: Stripe.Checkout.Session): { mode: "test" | "live"; mismatch: boolean } {
   if (typeof session.livemode !== "boolean") {
-    return orderStripeMode();
+    return { mode: orderStripeMode(), mismatch: false };
   }
 
   const mode = session.livemode ? "live" : "test";
@@ -214,7 +215,41 @@ function sessionMode(session: Stripe.Checkout.Session): "test" | "live" {
     );
   }
 
-  return mode;
+  return { mode, mismatch: keyMode !== mode };
+}
+
+/**
+ * Why a paid session does not match the cart it was priced from, or null.
+ *
+ * Stripe's totals are what the order records — they include tax, which we do
+ * not compute — but the SUBTOTAL is ours: the priced lines in the intent. A
+ * session whose subtotal differs, whose currency is not USD (the only one
+ * checkout offers), or which Stripe says needed no payment, was not made by
+ * startCheckout from this intent as it stands: another Checkout on the same
+ * account naming our intent as client_reference_id, or Adaptive Pricing
+ * converting the currency. The order is still made, because money may have
+ * been taken, and flagged `amount-mismatch` (0014) for the owner. Security
+ * audit 2026-09-29, S3-5.
+ */
+export function amountMismatch(
+  session: Pick<Stripe.Checkout.Session, "amount_subtotal" | "currency" | "payment_status">,
+  snapshot: { subtotal_cents: number },
+): string | null {
+  const problems: string[] = [];
+  if (session.payment_status === "no_payment_required") {
+    problems.push("Stripe says no payment was required");
+  }
+  if ((session.currency ?? "").toLowerCase() !== "usd") {
+    problems.push(`currency is ${session.currency ?? "missing"}, not usd`);
+  }
+  if (typeof session.amount_subtotal !== "number") {
+    problems.push("the session has no subtotal");
+  } else if (session.amount_subtotal !== Number(snapshot.subtotal_cents)) {
+    problems.push(
+      `subtotal ${session.amount_subtotal} does not match the priced ${snapshot.subtotal_cents}`,
+    );
+  }
+  return problems.length === 0 ? null : problems.join("; ");
 }
 
 /**
@@ -308,7 +343,7 @@ export async function fulfilCheckoutSession(
     return unfulfilled(session, "no email");
   }
 
-  const mode = sessionMode(session);
+  const { mode, mismatch } = sessionMode(session);
 
   type Early = { outcome: "intent-missing" } | { outcome: "paid-twice" };
 
@@ -323,8 +358,10 @@ export async function fulfilCheckoutSession(
       shipping_cents: number;
       subtotal_cents: number;
       consumed: boolean;
+      order_id: string | null;
     }>(
-      `select lines_json, shipping_cents, subtotal_cents, consumed_at is not null as consumed
+      `select lines_json, shipping_cents, subtotal_cents, consumed_at is not null as consumed,
+              order_id
          from checkout_intent where id = $1
           for update`,
       [intentId],
@@ -351,14 +388,31 @@ export async function fulfilCheckoutSession(
       // This cart already became an order, from a different session: two tabs,
       // two Checkout Sessions, both paid. Not a second order — that would take
       // the stock again for goods nobody asked for twice — but a payment to
-      // refund, written where the portal shows it. The flagged_reason check
-      // constraint has no value for this, and unfulfilled_payment is exactly
-      // "paid, and no order should be made from it".
+      // refund, written where the portal shows it: unfulfilled_payment is
+      // exactly "paid, and no order should be made from it". The FIRST order
+      // is flagged `duplicate-payment` as well, so whoever opens it before
+      // shipping sees that its buyer paid twice. Under the intent lock, so a
+      // replay flags it again to the same value and nothing else. Intents
+      // consumed before 0011 carry no order_id, and only the row is written.
+      if (snapshot.order_id) {
+        await client.query(`update "order" set ${raiseFlagSql("$2")} where id = $1`, [
+          snapshot.order_id,
+          "duplicate-payment",
+        ]);
+      }
       return { outcome: "paid-twice" as const };
     }
 
     const lines = snapshot.lines_json;
     const orderId = randomUUID();
+
+    const mismatchedAmount = amountMismatch(session, snapshot);
+    if (mismatchedAmount) {
+      console.error(
+        `[guard-theory] amount-mismatch: session ${session.id} ${mismatchedAmount}. ` +
+          "Recorded as Stripe charged it and flagged for the owner.",
+      );
+    }
 
     // Stripe's totals are authoritative — they include the tax it calculated,
     // which we deliberately do not compute ourselves.
@@ -401,7 +455,14 @@ export async function fulfilCheckoutSession(
           ? session.payment_intent
           : (session.payment_intent?.id ?? null),
         mode,
-        options.flagAs ?? null,
+        // Every reason that applies, and the one FLAG_PRECEDENCE ranks highest
+        // wins: a charge that does not match the cart outranks a half-swapped
+        // key, which outranks "recovered by the reconciler".
+        strongestFlag(
+          mismatchedAmount ? "amount-mismatch" : null,
+          mismatch ? "mode-mismatch" : null,
+          options.flagAs ?? null,
+        ),
       ],
     );
 
@@ -462,14 +523,20 @@ export async function fulfilCheckoutSession(
     }
 
     if (oversold) {
-      await client.query(`update "order" set flagged_reason = 'oversell' where id = $1`, [orderId]);
+      await client.query(`update "order" set ${raiseFlagSql("$2")} where id = $1`, [
+        orderId,
+        "oversell",
+      ]);
       console.error(
         `[guard-theory] order ${inserted.rows[0]!.number} oversold: paid after stock reached zero. ` +
           "Flagged for manual resolution in the portal.",
       );
     }
 
-    await client.query("update checkout_intent set consumed_at = now() where id = $1", [intentId]);
+    await client.query(
+      "update checkout_intent set consumed_at = now(), order_id = $2 where id = $1",
+      [intentId, orderId],
+    );
 
     // If this session was earlier written down as paid-with-no-order, it has
     // one now.

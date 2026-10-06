@@ -9,6 +9,7 @@ import {
 } from "./fulfil.ts";
 import { ensureOrderConfirmationSent } from "./confirmation.ts";
 import { syncRefundFromCharge } from "./refund.ts";
+import { syncDispute } from "./dispute.ts";
 
 /**
  * Stripe's webhook.
@@ -49,6 +50,11 @@ const HANDLED = new Set<string>([
   // So a refund issued in the Stripe dashboard rather than the portal still
   // shows up on the order. Without it the two records drift silently.
   "charge.refunded",
+  // A chargeback. The bank has taken the money back; the order is flagged so
+  // nobody ships it without reading that first (src/lib/orders/dispute.ts).
+  // Stripe only sends these once they are added to the endpoint's events.
+  "charge.dispute.created",
+  "charge.dispute.closed",
 ]);
 
 /**
@@ -177,6 +183,29 @@ export async function handleStripeWebhook(
 
       if (paymentIntent) {
         await syncRefundFromCharge(paymentIntent, charge.amount_refunded);
+      }
+
+      await markEventProcessed(event.id);
+      return new Response("ok", { status: 200 });
+    }
+
+    if (event.type === "charge.dispute.created" || event.type === "charge.dispute.closed") {
+      const dispute = event.data.object as Stripe.Dispute;
+      const paymentIntent =
+        typeof dispute.payment_intent === "string"
+          ? dispute.payment_intent
+          : dispute.payment_intent?.id;
+
+      if (paymentIntent) {
+        await syncDispute(
+          paymentIntent,
+          event.type === "charge.dispute.created" ? "created" : "closed",
+          dispute.status,
+        );
+      } else {
+        // Charges made through Checkout always have one. Said out loud rather
+        // than retried: no retry can supply it.
+        console.error(`[guard-theory] dispute ${dispute.id} has no payment intent; check Stripe`);
       }
 
       await markEventProcessed(event.id);

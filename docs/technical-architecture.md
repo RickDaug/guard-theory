@@ -105,22 +105,38 @@ unstyled screenshot. That class of false result is now impossible.
 downgrades Next to 9.3.3, which is not a fix. Revisit on the next Next.js
 patch release. Recorded here rather than silently ignored.
 
-**Content Security Policy ships enforcing, with one stated compromise.**
-Defined in `next.config.ts` and asserted in `tests/e2e/security.spec.ts`.
-`frame-ancestors`, `object-src`, `form-action`, `base-uri`, `font-src` and
-`connect-src` are all as strict as they go, and a test fails if any
-third-party origin ever appears in the policy — the site loads nothing it does
-not serve itself, verified by a test that watches every network request.
+**Content Security Policy ships enforcing, and `script-src` has no
+'unsafe-inline'.** Defined in `src/lib/csp.ts`, applied by `next.config.ts` and
+`src/proxy.ts`, and asserted in `tests/e2e/security.spec.ts` and
+`tests/unit/csp.test.ts`. `frame-ancestors`, `object-src`, `form-action`,
+`base-uri`, `font-src` and `connect-src` are all as strict as they go, and a
+test fails if any third-party origin ever appears in the policy — the site
+loads nothing it does not serve itself, verified by a test that watches every
+network request.
 
-The compromise is `script-src 'unsafe-inline'`. Next's App Router injects
-inline bootstrap and hydration scripts; removing it needs either a per-request
-nonce from middleware, which forces dynamic rendering and gives up the static
-prerendering the performance budget depends on, or build-time hashing of
-scripts Next generates. Structured data is unaffected either way: CSP applies
-to executable script, and `application/ld+json` is not executed.
+Next's App Router ships each page's RSC payload as inline
+`self.__next_f.push(...)` scripts whose text is that page's data, so there is
+no fixed hash list. Two mechanisms instead:
 
-This is the one place the security posture is weaker than it looks, which is
-why it is commented in the config, stated here, and not quietly omitted.
+- **Prerendered pages: per-page hashes.** `npm run build` is
+  `scripts/build.mjs`, which runs `next build` twice — once to collect the
+  SHA-256 of every inline script in every prerendered page, once to ship with
+  one CSP rule per page — and then fails unless every inline script of every
+  page is allowed by the policy that page is served with. Pages stay static and
+  CDN-cached. Patching the output after one build is not possible: on Vercel the
+  build adapter packages the output inside `next build`. The build ID is fixed
+  across both passes because it is inside every page's payload. Cost: build time
+  roughly doubles; request-time cost is zero.
+- **Per-request pages (`/cart`, `/crew`, `/order`, `/shop`, `/unsubscribe`):
+  a nonce** minted by the proxy, which Next stamps on its own scripts. These
+  were already dynamic, so this costs nothing. Nonces everywhere would have made
+  ~100 static pages render on every request.
+
+Remaining exceptions: `style-src` keeps 'unsafe-inline' (style injection cannot
+run script); `next dev` uses a permissive development-only policy; and a custom
+`PORTAL_PATH` — served by rewrite, which the proxy never sees — keeps the old
+'unsafe-inline' script policy on that path only. Structured data is unaffected:
+`application/ld+json` is not executed.
 
 **CI runs every gate on push and pull request** — `.github/workflows/ci.yml`.
 Fast gates first, then the browser suite, then Lighthouse in a second job that

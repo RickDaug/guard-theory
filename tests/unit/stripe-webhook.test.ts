@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import { randomUUID } from "node:crypto";
 import Stripe from "stripe";
-import { after, before, describe, it } from "node:test";
+import { after, before, describe, it, mock } from "node:test";
 
 import { handleStripeWebhook } from "../../src/lib/orders/webhook.ts";
 import { STALE_CLAIM_SECONDS } from "../../src/lib/orders/fulfil.ts";
@@ -401,6 +401,58 @@ describe("the Stripe webhook, with a valid signature", { skip: !HAS_DB && "no DA
       [session.id],
     );
     assert.deepEqual(rows[0], { refunded_cents: 5000, refund_status: "partial" });
+  });
+
+  it("a chargeback flags the order, waits for an order that is not there yet, and keeps its outcome", async () => {
+    const quiet = mock.method(console, "error", () => {});
+
+    try {
+      const intentId = await makeIntent();
+      const session = sessionObject({ client_reference_id: intentId });
+      const dispute = (type: string, status: string, id = `evt_${randomUUID()}`) => ({
+        id,
+        object: "event",
+        type,
+        data: {
+          object: {
+            id: `dp_${randomUUID()}`,
+            object: "dispute",
+            payment_intent: session.payment_intent,
+            status,
+          },
+        },
+      });
+      const state = async () =>
+        (
+          await query<{ flagged_reason: string | null; dispute_status: string | null }>(
+            `select flagged_reason, dispute_status from "order" where stripe_session_id = $1`,
+            [session.id],
+          )
+        )[0];
+
+      // Before the order exists: 500, so Stripe tries again — the refund rule.
+      const early = dispute("charge.dispute.created", "needs_response");
+      assert.equal((await handleStripeWebhook(signed(early))).status, 500);
+      const ledger = await query("select id from webhook_event where id = $1", [early.id]);
+      assert.equal(ledger.length, 0, "the claim is released for the retry");
+
+      assert.equal((await handleStripeWebhook(signed(completed(session)))).status, 200);
+      assert.equal((await handleStripeWebhook(signed(early))).status, 200, "the retry lands");
+      assert.deepEqual(await state(), { flagged_reason: "disputed", dispute_status: "open" });
+
+      // The owner reads it and clears the flag. The outcome is news again.
+      await query(`update "order" set flagged_reason = null where stripe_session_id = $1`, [session.id]);
+      const lost = dispute("charge.dispute.closed", "lost");
+      assert.equal((await handleStripeWebhook(signed(lost))).status, 200);
+      assert.deepEqual(await state(), { flagged_reason: "disputed", dispute_status: "lost" });
+
+      // A late "created" never reopens a decided dispute.
+      const late = dispute("charge.dispute.created", "needs_response");
+      assert.equal((await handleStripeWebhook(signed(late))).status, 200);
+      assert.equal((await state())!.dispute_status, "lost");
+    } finally {
+      quiet.mock.restore();
+    }
   });
 
   it("ignores event types it does not handle without claiming them", async () => {

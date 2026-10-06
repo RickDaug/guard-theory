@@ -22,6 +22,7 @@ export type ShipQueueRow = {
   number: string;
   status: "new" | "in_process";
   flagged_reason: string | null;
+  dispute_status: string | null;
   ship_name: string;
   ship_city: string;
   ship_state: string;
@@ -34,7 +35,7 @@ export type ShipQueueRow = {
 
 export async function listShipQueue(limit = 200): Promise<ShipQueueRow[]> {
   return query<ShipQueueRow>(
-    `select id, number, status, flagged_reason, ship_name, ship_city, ship_state,
+    `select id, number, status, flagged_reason, dispute_status, ship_name, ship_city, ship_state,
             stripe_mode, label_claimed_at, placed_at,
             greatest(0, floor(extract(epoch from now() - placed_at) / 60))::int as minutes_waiting
        from "order" ${WHERE}

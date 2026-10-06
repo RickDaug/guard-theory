@@ -2,10 +2,18 @@
 #
 # The weekly restore check. Run by .github/workflows/db-restore-check.yml.
 #
-# Takes the newest nightly backup, decrypts it, restores it into a scratch Neon
-# branch made for the purpose, and checks that what came back is what went in:
-# the same tables, and in every table the same number of rows the archive
-# carries. A backup nobody has restored is a belief, not a backup.
+# Takes the newest nightly backup, decrypts it, restores it into a NEW, EMPTY
+# database on a scratch Neon branch made for the purpose, and checks that what
+# came back is what went in: the same tables, and in every table the same
+# number of rows the archive carries. A backup nobody has restored is a belief,
+# not a backup.
+#
+# Why a new database and not the branch's own: a Neon branch is a copy of its
+# parent, data and all, so its neondb already holds every schema the dump
+# creates. Restoring over it proves only that Neon can branch — and Neon's own
+# schemas (neon_auth) make the restore fail outright on "schema already
+# exists" (run 37399557664, 2026-10-05). An empty database is what a real
+# disaster restore starts from, so that is what this restores into.
 #
 #   RESTORE_IN_DIR        The downloaded artifact: one guard-theory-*.pgc.gpg
 #                         and its .sha256.
@@ -52,6 +60,13 @@ BRANCH_LIMIT="${NEON_BRANCH_LIMIT:-10}"
 # Neon deletes the branch itself after this, if every other cleanup has failed.
 EXPIRES_IN_HOURS=4
 NEON_API="${NEON_API_BASE:-https://console.neon.tech/api/v2}"
+# Created on the scratch branch, restored into, deleted with the branch.
+RESTORE_DATABASE="restore_check"
+# Schemas Neon creates and manages itself. Not the app's (nothing in src/ or
+# migrations/ touches them), not in backups taken since backup-ci.sh started
+# excluding them, and skipped here so the 30 days of backups taken before that
+# still restore. Keep in step with NEON_MANAGED_SCHEMAS in backup-ci.sh.
+NEON_MANAGED_SCHEMAS=(neon_auth)
 
 [ -n "${RESTORE_IN_DIR:-}" ] || fail "RESTORE_IN_DIR is not set."
 [ -n "${BACKUP_PASSPHRASE:-}" ] || fail "the BACKUP_PASSPHRASE secret is not set."
@@ -156,7 +171,10 @@ for required in _migration waitlist_signup; do
     fail "the archive has no \"${required}\" table. This is not the production database."
 done
 
-echo "restore-check: the archive lists ${want_tables} tables"
+schemas="$(printf '%s
+' "$toc" | awk '$4 == "TABLE" && $5 != "DATA" { print $5 }' | sort -u | tr '
+' ' ')"
+echo "restore-check: the archive lists ${want_tables} tables in public; it has tables in: ${schemas% }"
 
 # ---------------------------------------------------------------------------
 # 3. The scratch branch.
@@ -165,7 +183,9 @@ echo "restore-check: the archive lists ${want_tables} tables"
 # Neon said without the key ever being anywhere but a header.
 api() {
   local method="$1" path="$2" body="${3:-}" status
-  local args=(-sS -X "$method" -o "$work/api.out" -w '%{http_code}'
+  # Bounded, so a Neon API that stops answering fails this step by name
+  # instead of holding the job until its timeout.
+  local args=(-sS --connect-timeout 15 --max-time 60 -X "$method" -o "$work/api.out" -w '%{http_code}'
     -H "Authorization: Bearer ${NEON_API_KEY}" -H "Accept: application/json")
   if [ -n "$body" ]; then
     args+=(-H "Content-Type: application/json" --data "$body")
@@ -246,8 +266,10 @@ echo "restore-check: made ${RESTORE_BRANCH_NAME}, off the default branch, expiri
 
 # The string reaches the container as an environment variable and is expanded
 # inside it, never an argument on this machine's process list.
-in_scratch() {
-  RESTORE_URL="$uri" docker run --quiet --rm -i -e RESTORE_URL -e SQL "$IMAGE" sh -c "$1"
+in_db() {
+  local url="$1"
+  shift
+  RESTORE_URL="$url" docker run --quiet --rm -i -e RESTORE_URL -e SQL "$IMAGE" sh -c "$1"
 }
 
 redacted() {
@@ -259,7 +281,7 @@ redacted() {
 # A new compute takes a moment to answer.
 ready=""
 for _ in $(seq 1 "${RESTORE_CONNECT_TRIES:-24}"); do
-  if SQL="select 1" in_scratch 'psql "$RESTORE_URL" -X -A -t -q -c "$SQL"' >/dev/null 2>"$work/psql.err" </dev/null; then
+  if SQL="select 1" in_db "$uri" 'psql "$RESTORE_URL" -X -A -t -q -c "$SQL"' >/dev/null 2>"$work/psql.err" </dev/null; then
     ready=1
     break
   fi
@@ -267,29 +289,56 @@ for _ in $(seq 1 "${RESTORE_CONNECT_TRIES:-24}"); do
 done
 [ -n "$ready" ] || { redacted "$work/psql.err"; fail "the scratch branch never accepted a connection."; }
 
-# The branch is a copy of production, so it is emptied first — otherwise this
-# proves only that Neon can branch. Then schema and rows, both from the file.
-SQL="drop schema public cascade; create schema public;" \
-  in_scratch 'psql "$RESTORE_URL" -X -q -v ON_ERROR_STOP=1 -c "$SQL"' \
+# A new database on the scratch branch: nothing in it but what template1 has,
+# which is what a restore after a disaster starts from. The branch's own
+# database, a copy of production, is not written to at all.
+SQL="create database ${RESTORE_DATABASE}" \
+  in_db "$uri" 'psql "$RESTORE_URL" -X -q -v ON_ERROR_STOP=1 -c "$SQL"' \
   >/dev/null 2>"$work/psql.err" </dev/null || {
   redacted "$work/psql.err"
-  fail "could not empty the scratch branch."
+  fail "could not create an empty database on the scratch branch."
 }
 
-in_scratch 'pg_restore --no-owner --no-privileges --exit-on-error --dbname="$RESTORE_URL"' \
+# The same connection string with only the database name changed:
+# postgresql://user:pass@host/neondb?sslmode=require -> .../restore_check?sslmode=require
+uri_path="${uri%%\?*}"
+uri_query="${uri#"$uri_path"}"
+uri_base="${uri_path%/*}"
+if [ -z "${uri_path##*/}" ] || [ "${uri_base#*://}" = "$uri_base" ] || [ "${uri_base#*@}" != "$host" ]; then
+  fail "could not find the database name in the scratch branch's connection string."
+fi
+restore_uri="${uri_base}/${RESTORE_DATABASE}${uri_query}"
+echo "::add-mask::${restore_uri}"
+
+# Prove it is empty: not a single table outside the system catalogs.
+present="$(SQL="select count(*) from information_schema.tables where table_schema not in ('pg_catalog', 'information_schema')" \
+  in_db "$restore_uri" 'psql "$RESTORE_URL" -X -A -t -q -v ON_ERROR_STOP=1 -c "$SQL"' \
+  2>"$work/psql.err" </dev/null | tr -d '[:space:]')" || {
+  redacted "$work/psql.err"
+  fail "could not look inside the new database."
+}
+[ "$present" = "0" ] || fail "the new database is not empty (${present:-no answer} tables). Stopping."
+
+# Schema and rows, both from the file.
+exclude=""
+for schema in "${NEON_MANAGED_SCHEMAS[@]}"; do
+  exclude="${exclude} --exclude-schema=${schema}"
+done
+
+in_db "$restore_uri" "pg_restore --no-owner --no-privileges --exit-on-error${exclude} --dbname=\"\$RESTORE_URL\"" \
   <"$plain" >/dev/null 2>"$work/pg_restore.err" || {
   redacted "$work/pg_restore.err"
   fail "pg_restore failed. The backup does not restore."
 }
 
-echo "restore-check: restored"
+echo "restore-check: restored into an empty database"
 
 # ---------------------------------------------------------------------------
 # 5. What came back.
 
 count_sql="select table_name || '|' || (xpath('/row/c/text()', query_to_xml(format('select count(*) as c from public.%I', table_name), false, true, '')))[1]::text from information_schema.tables where table_schema = 'public' and table_type = 'BASE TABLE' order by 1"
 
-SQL="$count_sql" in_scratch 'psql "$RESTORE_URL" -X -A -t -q -v ON_ERROR_STOP=1 -c "$SQL"' \
+SQL="$count_sql" in_db "$restore_uri" 'psql "$RESTORE_URL" -X -A -t -q -v ON_ERROR_STOP=1 -c "$SQL"' \
   </dev/null 2>"$work/psql.err" | sort >"$work/got-rows" || {
   redacted "$work/psql.err"
   fail "could not count the restored tables."

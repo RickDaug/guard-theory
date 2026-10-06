@@ -33,7 +33,7 @@ trap 'rm -f "$out"' EXIT
 
 # Prints the HTTP status; the body is left in $out.
 call() {
-  curl -sS -X "$1" -o "$out" -w '%{http_code}' \
+  curl -sS --connect-timeout 15 --max-time 60 -X "$1" -o "$out" -w '%{http_code}' \
     -H "Authorization: Bearer ${NEON_API_KEY}" -H "Accept: application/json" \
     "${NEON_API}/projects/${NEON_PROJECT_ID}$2" || echo "000"
 }

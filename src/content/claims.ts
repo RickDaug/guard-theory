@@ -822,6 +822,19 @@ export const CLAIMS: Claim[] = [
     },
   },
   {
+    // Audit 2026-09-29 (published apparel Journal, 3.3): a statement about our
+    // own catalogue inside an article, true only while both tops are listed.
+    id: "journal-sleeve-both-lengths",
+    says: /Guard Theory makes both lengths/,
+    kind: "stated",
+    where: ["src/content/journal/entries/long-sleeve-or-short-sleeve.ts"],
+    holds: () => {
+      const slugs = new Set(PRODUCTS.map((product) => product.slug));
+      const missing = ["theory-01-long-sleeve", "theory-01-short-sleeve"].filter((slug) => !slugs.has(slug));
+      return missing.length === 0 ? true : `the catalogue no longer lists ${missing.join(" or ")}`;
+    },
+  },
+  {
     // Owner decision 2026-09-29 (docs/owner-decisions.md §12a): replaced the
     // unconfirmed "two business days".
     id: "dispatch-time-is-the-owners",

@@ -10,7 +10,7 @@ import type { PublishedArticle } from "../types.ts";
 export const theRearNakedStrangleFromBackControl: PublishedArticle = {
   status: "published",
   publishedAt: "2026-08-04",
-  authorId: "steven-p",
+  authorId: "guard-theory-editorial",
   slug: "the-rear-naked-strangle-from-back-control",
   category: "technique-notes",
   title: "The rear naked strangle from back control",

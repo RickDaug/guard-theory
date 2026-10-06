@@ -9,9 +9,12 @@ import type { ConstructionPoint } from "@/content/products/types";
  *
  * Guard Theory's product imagery is drawn rather than photographed. That is a
  * design decision, not a placeholder, and the copy states it as a standard
- * rather than as an apology: a production flat is what a factory is actually
- * given, it states construction instead of implying quality, and it says how the
- * garment is built — which is the part a photograph cannot show.
+ * rather than as an apology: a drawing shows how a garment is built, which is
+ * the part a photograph cannot show.
+ *
+ * The callouts are construction facts, so they appear only when a product has
+ * owner-supplied construction points. With none, the drawing stands alone and
+ * no key or caption is rendered (docs/owner-decisions.md §3).
  *
  * When real photography exists it will sit alongside this, not replace it —
  * the flat is the part that says how the garment is built.
@@ -116,7 +119,7 @@ export function GarmentFlat({
           strokeWidth={1.5}
         />
 
-        {/* Raglan seams, doubled to indicate flatlock */}
+        {/* Raglan seams, drawn doubled */}
         <g fill="none" stroke="var(--color-steel-dim)" strokeWidth={1.25}>
           <path d="M 378 100 C 392 125, 400 150, 404 176" />
           <path d="M 373 102 C 387 127, 395 152, 399 178" />
@@ -194,6 +197,7 @@ export function GarmentFlat({
         })}
       </Plate>
 
+      {points.length > 0 ? (
       <figcaption className="mt-8">
         <ul className="m-0 flex list-none flex-wrap gap-x-6 gap-y-3 p-0">
           {points.map((point) => {
@@ -238,6 +242,7 @@ export function GarmentFlat({
           )}
         </p>
       </figcaption>
+      ) : null}
     </figure>
   );
 }

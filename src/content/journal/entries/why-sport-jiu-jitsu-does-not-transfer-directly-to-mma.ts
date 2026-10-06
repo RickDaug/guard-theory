@@ -14,7 +14,7 @@ import type { PublishedArticle } from "../types.ts";
 export const whySportJiuJitsuDoesNotTransferDirectlyToMma: PublishedArticle = {
   status: "published",
   publishedAt: "2026-08-04",
-  authorId: "rick-r",
+  authorId: "guard-theory-editorial",
   slug: "why-sport-jiu-jitsu-does-not-transfer-directly-to-mma",
   category: "mma-and-jiu-jitsu",
   title: "Why sport jiu-jitsu does not transfer directly to MMA",

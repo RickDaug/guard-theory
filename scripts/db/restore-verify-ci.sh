@@ -47,6 +47,9 @@
 # shellcheck disable=SC2016
 
 set -euo pipefail
+# One collation for every sort and comm below. got-tables is also re-sorted on
+# its own: rows sorted as "name|count" are not in name order ("a|5" vs "a_b|3").
+export LC_ALL=C
 umask 077
 
 fail() {
@@ -344,7 +347,7 @@ SQL="$count_sql" in_db "$restore_uri" 'psql "$RESTORE_URL" -X -A -t -q -v ON_ERR
   fail "could not count the restored tables."
 }
 
-cut -d'|' -f1 "$work/got-rows" >"$work/got-tables"
+cut -d'|' -f1 "$work/got-rows" | sort >"$work/got-tables"
 got_tables="$(wc -l <"$work/got-tables" | tr -d '[:space:]')"
 
 if ! cmp -s "$work/want-tables" "$work/got-tables"; then

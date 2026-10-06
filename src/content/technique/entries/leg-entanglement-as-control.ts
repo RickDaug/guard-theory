@@ -2,7 +2,7 @@ import type { TechniqueEntry } from "../types.ts";
 
 export const legEntanglementAsControl: TechniqueEntry = {
   slug: "leg-entanglement-as-control",
-  category: "submissions",
+  category: "leg-locks",
   title: "The leg entanglement as a control position",
   summary:
     "A leg lock is held together by what your legs are doing to their hip and knee, which makes the entanglement a position to win before it is a submission.",

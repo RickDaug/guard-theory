@@ -305,6 +305,14 @@ deletes the route.
 section; search for the quoted words if they have drifted.
 **Interim behaviour:** the sentences stand as published.
 
+**Yearly re-read, added 2026-09-29:** the ruleset note on `/technique/leg-locks`
+(`src/content/technique/rules-notes.ts`) states what the IBJJF rule book (June
+2024) and ADCC's published rules allow, read on its `asOf` date. No test can
+read a rule book on someone else's server. Re-read the cited documents at least
+once a year, and whenever IBJJF or ADCC announce a rule change; update the
+statements and `asOf` together, or cut a statement that can no longer be
+sourced.
+
 **OWNER-SUPPLIED 2026-09-29, related:** the Journal byline promise ("a piece
 nobody will put their name to is not worth reading", and "the Journal is written
 by the same people" who make the apparel) is replaced. AI-assisted articles

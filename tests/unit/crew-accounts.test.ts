@@ -299,6 +299,39 @@ describe("crew accounts, in Postgres", { skip: !HAS_DB && "no DATABASE_URL" }, (
     await query("delete from setting where key = $1", [SHARED_PASSWORD_DISABLED_KEY]);
   });
 
+  it("two owners turning each other off at once cannot leave nobody able to sign in", async () => {
+    // Only this test's two owners may be usable, or "the last owner" means nothing.
+    await query("update crew_user set password_hash = null where id = any($1) and role = 'owner'", [users]);
+    const a = await newUser("owner");
+    const b = await newUser("owner");
+    await setPasswordWithToken(await issueToken(a.id, "invite"), PASSWORD);
+    await setPasswordWithToken(await issueToken(b.id, "invite"), PASSWORD);
+    const usable = await query<{ id: string }>(
+      "select id from crew_user where role = 'owner' and active and password_hash is not null",
+    );
+    assert.deepEqual(usable.map((row) => row.id).sort(), [a.id, b.id].sort());
+
+    assert.deepEqual(await disableSharedPassword(), { ok: true });
+
+    try {
+      // Both checks used to run before either write, so both passed.
+      const results = await Promise.all([deactivateUser(a.id, b.id), deactivateUser(b.id, a.id)]);
+      assert.equal(results.filter((result) => result.ok).length, 1, JSON.stringify(results));
+      const left = await query<{ n: number }>(
+        "select count(*)::int as n from crew_user where role = 'owner' and active and password_hash is not null",
+      );
+      assert.equal(left[0]!.n, 1);
+
+      // The same race through a demotion and a turn-off.
+      await reactivateUser(a.id);
+      await reactivateUser(b.id);
+      const mixed = await Promise.all([changeRole(a.id, "crew", b.id), deactivateUser(b.id, a.id)]);
+      assert.equal(mixed.filter((result) => result.ok).length, 1, JSON.stringify(mixed));
+    } finally {
+      await query("delete from setting where key = $1", [SHARED_PASSWORD_DISABLED_KEY]);
+    }
+  });
+
   it("the order history records who did what, and keeps the name after the account goes", async () => {
     const crew = await newUser("crew");
     const orderId = randomUUID();

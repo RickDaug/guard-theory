@@ -1,4 +1,5 @@
 import { createHash, randomBytes, randomUUID } from "node:crypto";
+import type { PoolClient } from "pg";
 import { query, queryOne, transaction } from "../db/client.ts";
 import { hashPassword } from "./auth.ts";
 import { isRole, type Role } from "./roles.ts";
@@ -175,6 +176,37 @@ export async function countUsableOwners(exceptId?: string): Promise<number> {
   return row?.n ?? 0;
 }
 
+/**
+ * THE LAST-OWNER RULE, UNDER A LOCK. Turning off or demoting an owner, and
+ * turning off the shared password, each ask "will someone still be able to
+ * sign in as owner?" and then act. Asked outside the write, two owners turning
+ * each other off at the same moment both saw "one other owner left", both
+ * went ahead, and nobody could sign in. So each of those runs its check and
+ * its write in one transaction that first locks every owner row: the second
+ * waits for the first to commit and then counts what the first left.
+ */
+async function lockOwners(client: PoolClient): Promise<void> {
+  await client.query("select id from crew_user where role = 'owner' order by id for update");
+}
+
+async function usableOwnersIn(client: PoolClient, exceptId?: string): Promise<number> {
+  const result = await client.query<{ n: number }>(
+    `select count(*)::int as n from crew_user
+      where role = 'owner' and active and password_hash is not null and id is distinct from $1`,
+    [exceptId ?? null],
+  );
+  return result.rows[0]?.n ?? 0;
+}
+
+async function sharedDisabledIn(client: PoolClient): Promise<boolean> {
+  const result = await client.query<{ value: string }>("select value from setting where key = $1", [
+    SHARED_PASSWORD_DISABLED_KEY,
+  ]);
+  return result.rows[0]?.value === "true";
+}
+
+const LAST_OWNER = "That is the last owner who can sign in. Make someone else an owner first.";
+
 /* ------------------------------------------------------------------------ */
 /* The shared password, and the limiter's secret                              */
 /* ------------------------------------------------------------------------ */
@@ -193,24 +225,29 @@ export async function isSharedPasswordDisabled(): Promise<boolean> {
  * a button: whoever is locked out cannot press it. See docs/provisioning.md.
  */
 export async function disableSharedPassword(): Promise<{ ok: true } | { ok: false; reason: string }> {
-  if ((await countUsableOwners()) === 0) {
-    return {
-      ok: false,
-      reason:
-        "There is no owner account with a password yet. Create one for yourself, set its password from the link, and sign in with it first.",
-    };
-  }
+  const disabled = await transaction(async (client) => {
+    await lockOwners(client);
 
-  await transaction(async (client) => {
+    if ((await usableOwnersIn(client)) === 0) {
+      return false;
+    }
+
     await client.query(
       `insert into setting (key, value, updated_at) values ($1, 'true', now())
        on conflict (key) do update set value = 'true', updated_at = now()`,
       [SHARED_PASSWORD_DISABLED_KEY],
     );
     await client.query("delete from admin_session where user_id is null");
+    return true;
   });
 
-  return { ok: true };
+  return disabled
+    ? { ok: true }
+    : {
+        ok: false,
+        reason:
+          "There is no owner account with a password yet. Create one for yourself, set its password from the link, and sign in with it first.",
+      };
 }
 
 /**
@@ -389,21 +426,24 @@ export async function deactivateUser(id: string, actingUserId: string | null): P
   if (id === actingUserId) {
     return { ok: false, reason: "You cannot turn off your own account while signed in to it." };
   }
-  const target = await queryOne<{ role: string; active: boolean }>(
-    "select role, active from crew_user where id = $1",
-    [id],
-  );
-  if (!target) return { ok: false, reason: "That person no longer exists." };
-  if (target.role === "owner" && (await isSharedPasswordDisabled()) && (await countUsableOwners(id)) === 0) {
-    return { ok: false, reason: "That is the last owner who can sign in. Make someone else an owner first." };
-  }
 
-  await transaction(async (client) => {
+  const refusal = await transaction(async (client) => {
+    await lockOwners(client);
+    const target = (
+      await client.query<{ role: string }>("select role from crew_user where id = $1 for update", [id])
+    ).rows[0];
+    if (!target) return "That person no longer exists.";
+    if (target.role === "owner" && (await sharedDisabledIn(client)) && (await usableOwnersIn(client, id)) === 0) {
+      return LAST_OWNER;
+    }
+
     await client.query("update crew_user set active = false where id = $1", [id]);
     await client.query("delete from admin_session where user_id = $1", [id]);
     await client.query("delete from crew_token where user_id = $1 and used_at is null", [id]);
+    return null;
   });
-  return { ok: true };
+
+  return refusal ? { ok: false, reason: refusal } : { ok: true };
 }
 
 export async function reactivateUser(id: string): Promise<Change> {
@@ -415,23 +455,29 @@ export async function changeRole(id: string, role: Role, actingUserId: string | 
   if (id === actingUserId) {
     return { ok: false, reason: "You cannot change your own role. Another owner can." };
   }
-  const target = await queryOne<{ role: string }>("select role from crew_user where id = $1", [id]);
-  if (!target) return { ok: false, reason: "That person no longer exists." };
-  if (
-    target.role === "owner" &&
-    role === "crew" &&
-    (await isSharedPasswordDisabled()) &&
-    (await countUsableOwners(id)) === 0
-  ) {
-    return { ok: false, reason: "That is the last owner who can sign in. Make someone else an owner first." };
-  }
 
   // The role is read from this row on every request, so it takes effect at
   // once; the sessions are ended anyway so nobody keeps a page of controls
   // they no longer have.
-  await transaction(async (client) => {
+  const refusal = await transaction(async (client) => {
+    await lockOwners(client);
+    const target = (
+      await client.query<{ role: string }>("select role from crew_user where id = $1 for update", [id])
+    ).rows[0];
+    if (!target) return "That person no longer exists.";
+    if (
+      target.role === "owner" &&
+      role === "crew" &&
+      (await sharedDisabledIn(client)) &&
+      (await usableOwnersIn(client, id)) === 0
+    ) {
+      return LAST_OWNER;
+    }
+
     await client.query("update crew_user set role = $2 where id = $1", [id, role]);
     await client.query("delete from admin_session where user_id = $1", [id]);
+    return null;
   });
-  return { ok: true };
+
+  return refusal ? { ok: false, reason: refusal } : { ok: true };
 }

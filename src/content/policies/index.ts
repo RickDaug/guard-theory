@@ -145,13 +145,13 @@ export const POLICIES: Policy[] = [
     title: "Shipping",
     summary: "Where we ship, what it costs, and how long it takes.",
     metaDescription:
-      "We ship within the United States, at a flat rate shown in your cart. Dispatched within two business days, three to five in transit. A lost parcel is ours.",
+      "We ship within the United States, at a flat rate shown in your cart. Orders are dispatched within seven business days, with tracking sent by email.",
     sections: [
       {
         id: "dispatch",
         heading: "Dispatch",
         paragraphs: [
-          "Orders are packed and dispatched within two business days. You will receive a dispatch confirmation with a tracking number as soon as the parcel leaves us.",
+          "Orders are packed and dispatched within seven business days of the order. You will receive a dispatch confirmation with a tracking number as soon as the parcel leaves us.",
           "Orders placed on a weekend or a public holiday are treated as placed on the next business day.",
         ],
       },
@@ -174,15 +174,14 @@ export const POLICIES: Policy[] = [
         heading: "Delivery times",
         paragraphs: [
           "Orders typically arrive within three to five business days of dispatch.",
-          "These are carrier estimates rather than guarantees. If a parcel has not moved for seven days, contact us and we will open a trace with the carrier — you do not need to chase it yourself.",
+          "These are carrier estimates rather than guarantees.",
         ],
       },
       {
         id: "problems",
         heading: "If something goes wrong",
         paragraphs: [
-          "A parcel lost in transit is our problem, not yours. If tracking shows no delivery after twenty-one days, we will replace the order or refund it in full, whichever you prefer.",
-          "If a parcel arrives damaged, photograph it before opening if you can, and contact us. We will replace it and we will not ask you to return the damaged goods.",
+          "If tracking stops moving, or a parcel arrives damaged, contact us with your order number and we will work it out with the carrier. If a parcel arrives damaged, photograph it before opening if you can.",
         ],
       },
     ],
@@ -190,15 +189,15 @@ export const POLICIES: Policy[] = [
   {
     slug: "returns",
     title: "Returns",
-    summary: "Thirty days, and we cover the cost when the fault is ours.",
+    summary: "Thirty days from delivery, and we cover the postage when the fault is ours.",
     metaDescription:
-      "Thirty days, no reason required, refunded within five business days of the return arriving. Free size exchanges, and we pay both ways when the fault is ours.",
+      "Return within thirty days of delivery. If you changed your mind the return postage is yours; if we sent the wrong item or it arrived faulty, it is ours.",
     sections: [
       {
         id: "window",
         heading: "Thirty days",
         paragraphs: [
-          "Return anything within thirty days of delivery for a full refund. You do not need to give a reason.",
+          "Return anything within thirty days of delivery for a refund. You do not need to give a reason, and there is no restocking fee.",
           "Items must be unworn, unwashed and in the condition you received them, with any tags attached. Trying a garment on is fine — that is what the thirty days are for. Training in it is not.",
         ],
       },
@@ -206,29 +205,29 @@ export const POLICIES: Policy[] = [
         id: "how",
         heading: "How to return something",
         paragraphs: [
-          "Contact us with your order number and we will send a return label and instructions. Refunds are issued to the original payment method within five business days of the return arriving.",
+          "Contact us with your order number and we will send return instructions. Refunds are issued to the original payment method once the return has arrived and been checked.",
         ],
       },
       {
         id: "who-pays",
         heading: "Who pays for return postage",
         paragraphs: [
-          "If the fault is ours — the wrong item, a manufacturing defect, or a garment that does not match our published measurements — we pay, and we pay both ways.",
-          "If you have simply changed your mind, return postage is yours. We will always tell you which applies before you send anything back.",
+          "If you have simply changed your mind, return postage is yours.",
+          "If the fault is ours — we sent the wrong item, or it arrived defective — the postage is ours. We will always tell you which applies before you send anything back.",
         ],
       },
       {
         id: "exchanges",
         heading: "Exchanges",
         paragraphs: [
-          "Size exchanges are free within the thirty-day window, one per order. We dispatch the replacement as soon as the return is scanned by the carrier rather than waiting for it to reach us.",
+          "To change a size, return the garment within the thirty days in the same way. We ship the replacement, at our cost, when your return arrives with us.",
         ],
       },
       {
-        id: "faulty",
-        heading: "Faults after thirty days",
+        id: "rights",
+        heading: "Your rights",
         paragraphs: [
-          "A seam failure or a print defect is a fault, not wear. Contact us with a photograph and we will repair, replace or refund it. Your statutory rights are not affected by anything on this page.",
+          "Your statutory rights are not affected by anything on this page.",
         ],
       },
     ],
@@ -245,7 +244,7 @@ export const POLICIES: Policy[] = [
         heading: "What this site sets",
         paragraphs: [
           "Nothing, for a reader. There is no analytics, no advertising pixel and no consent banner, because there is nothing to consent to.",
-          "The one cookie this site sets is the sign-in session for our own portal. It is set only when one of us signs in there, it expires on its own, and a reader is never given one.",
+          "The only cookies this site sets are for our own portal: the sign-in session for our own portal, and a signed note that a browser has signed in there before, which lets that browser still sign in while someone else is guessing passwords. Both are set only when one of us signs in there, both expire on their own, and a reader is never given either.",
           "That is a design decision rather than an oversight. If we ever need a cookie for readers, this page will say what it is and what it does, and it will not be set before you agree.",
         ],
       },
@@ -315,6 +314,14 @@ export const POLICIES: Policy[] = [
         ],
       },
       {
+        id: "bylines",
+        heading: "Bylines",
+        paragraphs: [
+          "Journal articles are researched and drafted with AI assistance, so they carry the Guard Theory editorial byline rather than a person's name. A person's name goes on a piece only when that person wrote it or has read it and agreed to put their name to it.",
+          "The rules on this page apply to every article, whoever drafted it, and every article lists the sources its claims are traced to.",
+        ],
+      },
+      {
         id: "dates",
         heading: "Dates",
         paragraphs: [
@@ -325,8 +332,39 @@ export const POLICIES: Policy[] = [
         id: "independence",
         heading: "Independence",
         paragraphs: [
-          "Guard Theory makes apparel and the Journal is written by the same people. Where an article touches something we sell, it says so.",
+          "Guard Theory makes apparel and publishes the Journal. Where an article touches something we sell, it says so.",
           "Reference material — the Technique Library, the historical writing — carries no commercial links in its body. That is what makes it worth citing.",
+        ],
+      },
+    ],
+  },
+  {
+    slug: "corrections",
+    title: "Corrections",
+    summary: "What happens when something we published turns out to be wrong.",
+    metaDescription:
+      "A factual error is corrected in the piece itself, with a dated note saying what the earlier version said. How to point one out, and which pieces carry a note.",
+    sections: [
+      {
+        id: "in-the-piece",
+        heading: "In the piece",
+        paragraphs: [
+          "When a Journal article or an Influential Figures entry gets a fact wrong, the piece is corrected and a note is added to it. The note opens with the word Correction and the date, says what the earlier version said, and says what changed. It stays in the piece.",
+          "We do not quietly edit a page and pretend it never said what it said.",
+        ],
+      },
+      {
+        id: "dates",
+        heading: "Dates",
+        paragraphs: [
+          "A correction does not change the date a piece was published. A corrected Journal article also gives search engines the date of its latest correction as the date it was last modified.",
+        ],
+      },
+      {
+        id: "telling-us",
+        heading: "Pointing one out",
+        paragraphs: [
+          "Tell us through the contact form, choosing “A correction to something we published”. Point at the specific claim and, if you have one, the source that says otherwise.",
         ],
       },
     ],

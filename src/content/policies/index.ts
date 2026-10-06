@@ -343,6 +343,37 @@ export const POLICIES: Policy[] = [
     ],
   },
   {
+    slug: "corrections",
+    title: "Corrections",
+    summary: "What happens when something we published turns out to be wrong.",
+    metaDescription:
+      "A factual error is corrected in the piece itself, with a dated note saying what the earlier version said. How to point one out, and which pieces carry a note.",
+    sections: [
+      {
+        id: "in-the-piece",
+        heading: "In the piece",
+        paragraphs: [
+          "When a Journal article or an Influential Figures entry gets a fact wrong, the piece is corrected and a note is added to it. The note opens with the word Correction and the date, says what the earlier version said, and says what changed. It stays in the piece.",
+          "We do not quietly edit a page and pretend it never said what it said.",
+        ],
+      },
+      {
+        id: "dates",
+        heading: "Dates",
+        paragraphs: [
+          "A correction does not change the date a piece was published. A corrected Journal article also gives search engines the date of its latest correction as the date it was last modified.",
+        ],
+      },
+      {
+        id: "telling-us",
+        heading: "Pointing one out",
+        paragraphs: [
+          "Tell us through the contact form, choosing “A correction to something we published”. Point at the specific claim and, if you have one, the source that says otherwise.",
+        ],
+      },
+    ],
+  },
+  {
     slug: "affiliate-disclosure",
     title: "Affiliate disclosure",
     summary: "We have no affiliate relationships.",

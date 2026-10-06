@@ -1,8 +1,10 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { stripeKeyRefusal, stripeMode } from "@/lib/stripe/client";
+import { checkStripeMode } from "@/lib/stripe/mode-check";
 import { portalUrl } from "@/lib/portal/routes";
 import { getSession } from "@/lib/portal/session";
+import { signOut } from "./sign-in/actions";
 
 export const metadata: Metadata = {
   robots: { index: false, follow: false, nocache: true },
@@ -20,6 +22,12 @@ export const metadata: Metadata = {
  * an environment flag, because a flag can be set wrongly and then believed. An
  * unreadable key is shown as unknown rather than assumed to be test — a mode we
  * cannot determine is a mode we cannot safely take money in.
+ *
+ * The prefix is then cross-checked with Stripe itself (`balance.retrieve()`'s
+ * `livemode`, cached ten minutes; src/lib/stripe/mode-check.ts). A mismatch is
+ * the loudest banner there is, in every mode, live included. When live and
+ * Stripe agrees, there is still no banner: going live is meant to be noticed by
+ * the banner disappearing.
  */
 
 const NAV = [
@@ -33,10 +41,22 @@ const NAV = [
   { href: "/learn", label: "Learn" },
 ];
 
-function ModeBanner() {
+async function ModeBanner() {
   const mode = stripeMode();
   const refusal = stripeKeyRefusal();
   const production = process.env.VERCEL_ENV === "production";
+  const check = await checkStripeMode();
+
+  if (check.state === "mismatch") {
+    return (
+      <p
+        role="alert"
+        className="border-b-2 border-signal-lift bg-graphite px-6 py-3 text-center text-sm text-chalk md:px-12"
+      >
+        {`STRIPE MODE MISMATCH. The key reads as ${check.keyMode}; Stripe says ${check.stripeSays}. Do not trust any order, total or banner here until the key is checked.`}
+      </p>
+    );
+  }
 
   if (mode === "live" && !refusal) {
     return null;
@@ -64,6 +84,13 @@ function ModeBanner() {
           ? "TEST MODE ON THE LIVE SITE. Checkout works and takes no money: a real customer can place an order that is not real. Switch to the live key before opening."
           : "Test mode. Orders taken here are not real and no money moves."
         : "Stripe is not configured, or its key is not readable. Nothing can be sold."}
+      {mode === "test"
+        ? check.state === "match"
+          ? " Stripe says: test — matches."
+          : check.state === "unreachable"
+            ? " Stripe could not be asked to confirm."
+            : null
+        : null}
     </p>
   );
 }
@@ -105,6 +132,21 @@ export default async function CrewLayout({ children }: { children: React.ReactNo
                   </Link>
                 </li>
               ))}
+              <li>
+                {/*
+                  signOut existed with nothing calling it, so the only way out
+                  was waiting twelve hours or signing in again elsewhere. A form
+                  rather than a link: signing out changes state, so it is a POST.
+                */}
+                <form action={signOut}>
+                  <button
+                    type="submit"
+                    className="display-plain inline-flex min-h-6 cursor-pointer items-center border-0 bg-transparent p-0 text-sm text-steel transition-colors duration-[140ms] ease-[var(--ease-control)] hover:text-chalk"
+                  >
+                    Sign out
+                  </button>
+                </form>
+              </li>
             </ul>
           </nav>
         </div>

@@ -29,6 +29,18 @@ technical reviewer will be credited separately.
 **Blocks:** `Person` schema, article bylines, the editorial policy page.
 **Note:** nothing will be published under a fabricated name.
 
+**OWNER-SUPPLIED 2026-09-29 — bylines on AI-assisted writing.** Every Journal
+article researched and drafted with AI assistance is published under the
+**Guard Theory editorial** byline (`guard-theory-editorial` in
+`src/content/authors.ts`, an `Organization` in structured data), not under
+Rick R or Steven P. The editorial policy's "Bylines" section says so. No
+published article had any record of being written, or read and approved, by
+either named person, so all 20 moved to the editorial byline. To give one back
+to a person, add its slug to `OWNER_CONFIRMED_PERSON_BYLINES` in
+`src/content/claims.ts` and change its `authorId`. The claim
+`journal-bylines-are-editorial` fails otherwise. Drafts in open PRs (#18, #56,
+#61) should use the editorial byline when they publish.
+
 ## 3. Product specifications and measurements
 
 No garment measurements exist yet. The Size and Fit guide currently cannot be
@@ -38,6 +50,52 @@ written truthfully.
 composition, GSM/fabric weight, construction details (seam type, print
 method), and country of manufacture.
 **Blocks:** `/size-and-fit`, product detail pages, technical flat callouts.
+
+**2026-09-29 — invented specifications and size chart removed.** Commit
+`4364d22` (2026-08-04, "build the site out as customer-ready") filled this gap
+with values nobody supplied, and they were live on guardtheory.net until this
+date. You confirmed that neither you nor the manufacturer provided any of them.
+Removed:
+
+- Fabric composition "82% recycled polyester, 18% elastane" (also the only
+  sustainability claim on the site), fabric weight "240 gsm", seam construction
+  "Flatlock, four-thread", print method "Full sublimation, dyed into the fibre",
+  fit "Athletic compression", and care "Cold wash, hang dry, no fabric softener".
+- The six-size chart (XS–XXL, to-fit chest in inches and cm, body length, long
+  and short sleeve in cm) and its fit notes on `/size-and-fit`.
+- The construction callouts on both flats (bound crew neck, raglan sleeve seam,
+  single-edge cuff, flatlock side seam, straight hem), the "Neck: Crew, bound"
+  line, and the registry size range XS–XXL.
+- Copy that depended on them: "the specification is published in full" (/shop,
+  the sleeve article, the short-sleeve page), "Fabric weight, composition, seam
+  construction and print method are stated on the product page"
+  (/first-edition), "apparel with published specifications" (/about), "Sizing
+  questions get an answer with actual measurements" (/contact), the FAQ's "full
+  chart", and "a garment that does not match our published measurements" in
+  the returns policy's who-pays list (the rest of that policy is unchanged —
+  it is §12). Also cut, as unsupplied claims about the garment: "designed inside
+  competition rulesets" (/, /first-edition, the long-sleeve page, the FAQ's
+  competition-legal answer) and "the drawings a factory is given" (/lookbook,
+  FAQ).
+
+How it is kept out: each product now has `specSource`, and the chart has
+`SIZE_CHART_SOURCE`; both are `null`. `tests/unit/content.test.ts` fails if a
+specification value (other than Sleeve), a construction callout, a size label or
+a chart row exists while the source is not `"owner"`, and the retired claims in
+`src/content/claims.ts` fail if the old sentences or figures reappear first.
+
+**Needed from you to put them back** (per garment): fabric composition, fabric
+weight (GSM), seam construction, print method, country of manufacture, neck
+finish, fit, care instructions, the construction details the flats should call
+out, the size range, and a size chart measured from production garments or
+taken from the manufacturer's graded spec. Also: are the garments designed to a
+competition ruleset (IBJJF/ADCC), and does a factory tech pack exist that the
+drawings reflect? When you supply them, set `specSource: "owner"` in the product
+entry (or enter them in the portal) and `SIZE_CHART_SOURCE = "owner"`.
+**Interim behaviour:** product pages show the drawing, the sleeve length and
+nothing else about construction; `/size-and-fit` is the fit guide with no chart.
+Portal go-live (PR #40) requires fabric weight, composition, seams and print
+method, so the two registry garments cannot go live until these are supplied.
 
 ## 4. Pricing
 
@@ -192,6 +250,29 @@ section; search for the quoted words if they have drifted.
 **2026-09-24:** commerce merged (PR #3), so every figure in this table and every
 promise in §13 is now live on guardtheory.net as written — `docs/owner-checklist.md` step 13.
 
+### OWNER-SUPPLIED 2026-09-29 — answers to rows a and d–j
+
+These are the owner's decisions. Do not flag them again as invented. The
+figures are held in `OWNER_TERMS` in `src/content/claims.ts`. The claims
+`dispatch-time-is-the-owners` and `return-window-is-the-owners` assert them,
+and `retired-unconfirmed-buyer-terms` fails the build if any replaced wording
+comes back.
+
+| Row | Decision | Now printed as |
+|---|---|---|
+| a | Dispatch **within 7 business days** of the order. US shipping only, as the checkout already enforces | "dispatched within seven business days": shipping policy, `/order/confirmed`, order confirmation email |
+| d | No numbered trace promise | the "seven days" trace is cut from the shipping policy and the shipped email: "If tracking stops moving … we will work it out with the carrier" |
+| e, f | No numbered lost-parcel or damaged-parcel promise. Contact us and we work it out with the carrier | the 21-day replace-or-refund and "we will not ask you to return the damaged goods" are cut |
+| g | **30-day** return window from delivery, no reason needed, **no restocking fee** | "within thirty days of delivery" |
+| h | No day count on refunds. Refunds go to the original payment method once the return has arrived and been checked | "five business days" cut |
+| i | Change of mind: **the buyer pays** return postage. Our fault (wrong item, defective on arrival): **we pay**. **No prepaid return label** is promised, because nothing in the build buys one | "we will send return instructions" |
+| j | Size exchange: the buyer returns the item and **the replacement ships, at our cost, when the return arrives**, not on carrier scan | returns policy "Exchanges", `/size-and-fit` |
+| (new) | **The open-ended fault warranty is removed** ("Faults after thirty days … we will repair, replace or refund it") | replaced by "Your statutory rights are not affected by anything on this page." |
+
+Rows **b** (weekend orders count from the next business day), **c** (three to
+five business days in transit, labelled a carrier estimate), **k** and **l**
+were not part of this decision and are still open. Row m is the checklist's.
+
 ## 13. Promises about process that nothing in the build carries out
 
 Found by the claims sweep (2026-09-18). These are sentences about what *we will
@@ -210,7 +291,7 @@ figures. The two sections do not overlap.)
 | c | Contact messages are "kept while we deal with them and for as long afterwards as we need to answer a follow-up" | `src/content/policies/index.ts:74` | Kept indefinitely. | decide a period, or confirm the wording is as specific as you want it |
 | d | "A person reads every message", and "answers it specifically" | `src/app/contact/page.tsx:9`, `:25`; `src/components/contact/ContactForm.tsx:78` | A message is a row in `contact_message`. Nothing notifies anyone that it arrived, and on `main` there is no screen that shows it. | confirm someone is checking the table, or have messages forwarded by email now that Resend is connected |
 | e | The optional waitlist answers "exist so the first production run is split sensibly between sleeve lengths rather than guessed at" | `src/content/policies/index.ts:58` | Stored; nothing reads them. In August you removed the size question because a brand surveying the public on what to produce reads as undecided (§5) — this sentence gives that same reason for the questions that stayed. The sweep removed the word "sizes" from it, because the field is gone, and left the purpose alone. | state the purpose you want given, or confirm this one |
-| f | "Factual errors get corrected in the piece with a dated note" | `src/app/faq/page.tsx:61` | An article can carry `updatedAt`, which is emitted as `dateModified`. There is no field for a correction note and no article has one yet, so the promise is untested. | confirm; the note field gets built the first time it is needed |
+| f | "Factual errors get corrected in the piece with a dated note" | `src/app/faq/page.tsx:61` | An article can carry `updatedAt`, which is emitted as `dateModified`. There is no field for a correction note and no article has one yet, so the promise is untested. | confirm; the note field gets built the first time it is needed. **Built 2026-09-29/30 (PRs #65, #67–#70):** corrected Journal articles and Figures entries carry a dated "Correction, …" note in the piece and an `updatedAt` (Journal emits it as `dateModified`). `/policies/corrections` describes exactly that and lists the corrected pieces from the registries; `corrections-*` claims in `src/content/claims.ts` hold the notes and dates together. |
 | g | "The list is told first, and told once" / "Once, when the First Edition opens" / "One message when it opens, and nothing else" | `src/app/faq/page.tsx:17`, `:29`; `src/app/first-edition/page.tsx:67`; `src/components/waitlist/WaitlistForm.tsx:126-127`; `src/app/shop/[slug]/page.tsx:110` | Nothing sends on `main`. The draft announcement send (PR #2) skips anyone `email_log` says already has it, which is what would enforce "once" — if a second, different message is ever wanted, these sentences forbid it. | confirm one message is the promise |
 | h | Tape "comes first" among accessories; spats and shorts follow the rash guards | `src/app/faq/page.tsx:57`; `src/app/shop/page.tsx:18-26` | §11 above still lists the accessory order as undecided. | answer §11, and the copy follows |
 
@@ -223,6 +304,11 @@ deletes the route.
 **Needed:** an answer per row. Line numbers are as of the commit that added this
 section; search for the quoted words if they have drifted.
 **Interim behaviour:** the sentences stand as published.
+
+**OWNER-SUPPLIED 2026-09-29, related:** the Journal byline promise ("a piece
+nobody will put their name to is not worth reading", and "the Journal is written
+by the same people" who make the apparel) is replaced. AI-assisted articles
+carry the Guard Theory editorial byline (§2). Rows a–h above are still open.
 
 
 ## 14. A mistyped product address is blank until JavaScript runs

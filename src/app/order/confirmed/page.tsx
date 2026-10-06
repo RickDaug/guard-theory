@@ -142,8 +142,8 @@ export default async function OrderConfirmedPage({
       {order ? (
         <p className="text-base text-steel">
           {mailDelivers
-            ? "Orders are packed and dispatched within two business days. You will get a second email with a tracking number when the parcel leaves us."
-            : "Orders are packed and dispatched within two business days."}
+            ? "Orders are packed and dispatched within seven business days. You will get a second email with a tracking number when the parcel leaves us."
+            : "Orders are packed and dispatched within seven business days."}
         </p>
       ) : null}
     </UtilityPage>

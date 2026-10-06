@@ -1,6 +1,8 @@
 import type { Metadata } from "next";
 import { SignInForm } from "./SignInForm";
 import { safeNextPath } from "@/lib/portal/routes";
+import { isDatabaseConfigured } from "@/lib/db/client";
+import { isSharedPasswordDisabled } from "@/lib/portal/users";
 
 export const metadata: Metadata = {
   title: "Crew Portal",
@@ -15,18 +17,26 @@ export const dynamic = "force-dynamic";
 export default async function SignInPage({
   searchParams,
 }: {
-  searchParams: Promise<{ next?: string | string[] }>;
+  searchParams: Promise<{ next?: string | string[]; set?: string | string[] }>;
 }) {
   const params = await searchParams;
   const raw = params.next;
   const next = Array.isArray(raw) ? raw[0] : raw;
+  const sharedAvailable =
+    Boolean(process.env.PORTAL_PASSWORD_HASH?.trim()) &&
+    isDatabaseConfigured() &&
+    !(await isSharedPasswordDisabled().catch(() => false));
 
   return (
     <main id="main" className="px-6 py-24 md:px-12">
       <div className="mx-auto max-w-[26rem]">
         <p className="notation text-2xs text-orchid">Crew Portal</p>
         <h1 className="display-condensed mt-6 mb-12 text-3xl text-chalk">Sign in</h1>
-        <SignInForm next={safeNextPath(next) ?? undefined} />
+        <SignInForm
+          next={safeNextPath(next) ?? undefined}
+          sharedAvailable={sharedAvailable}
+          notice={params.set === "1" ? "Your password is saved. Sign in with it." : undefined}
+        />
       </div>
     </main>
   );

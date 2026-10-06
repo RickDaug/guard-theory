@@ -368,3 +368,41 @@ export function contactForward(
     ].join("\n"),
   };
 }
+
+/**
+ * A crew member's set-password link: the invite when the owner adds them, or a
+ * reset the owner starts. Carries the link and nothing else that unlocks
+ * anything — there is no password in it, because nobody but its owner ever
+ * chooses or sees one. `link` is absolute (src/app/crew/users/actions.ts).
+ */
+export function crewSetPassword(
+  to: string,
+  displayName: string,
+  username: string,
+  link: string,
+  purpose: "invite" | "reset",
+  expiresInHours: number,
+): Email {
+  return {
+    to,
+    subject:
+      purpose === "invite"
+        ? "Your Guard Theory Crew Portal account"
+        : "Choose a new password for the Guard Theory Crew Portal",
+    body: [
+      `${displayName.trim() || "Hello"},`,
+      "",
+      purpose === "invite"
+        ? "You have been given an account on the Guard Theory Crew Portal, where orders are packed and shipped. Open this link to choose your password:"
+        : "The owner has asked for your Crew Portal password to be reset. Open this link to choose a new one:",
+      "",
+      link,
+      "",
+      `Your username is ${username}.`,
+      "",
+      `The link works once, for ${expiresInHours} hours. If you were not expecting this, ignore it and tell the owner.`,
+      "",
+      "Guard Theory",
+    ].join("\n"),
+  };
+}

@@ -236,8 +236,20 @@ export const STORED: Record<string, Record<string, Disclosure>> = {
 
   /* The portal. These rows are about whoever signs in to it — the owner — never a reader. */
   admin_session: internal(
-    ["token_hash", "created_at", "expires_at", "last_seen", "ip", "user_agent"],
-    "the portal sign-in session: a hash of the owner's session token, its lifetime, and the address and browser it was opened from",
+    ["token_hash", "created_at", "expires_at", "last_seen", "ip", "user_agent", "user_id"],
+    "the portal sign-in session: a hash of a crew member's session token, whose it is, its lifetime, and the address and browser it was opened from",
+  ),
+  crew_user: internal(
+    ["id", "username", "email", "display_name", "role", "password_hash", "active", "created_at", "last_sign_in_at"],
+    "the portal's own crew accounts — people the owner adds to pack orders, never a reader; the password is an scrypt hash",
+  ),
+  crew_token: internal(
+    ["token_hash", "user_id", "purpose", "created_at", "expires_at", "used_at", "delivery"],
+    "a crew member's one-time set-password link: a hash of the token, never the token, and whether its email went",
+  ),
+  order_event: internal(
+    ["id", "order_id", "kind", "detail", "actor_user_id", "actor_name", "created_at"],
+    "which crew member did what to an order in the portal; about the crew, not the buyer",
   ),
   login_attempt: internal(
     ["id", "key_hash", "succeeded", "attempted_at"],
@@ -583,6 +595,9 @@ export const TRANSACTIONAL_MAIL = [
   // Sent to us, not to a reader: a contact message forwarded to the owner's
   // inbox, with the sender as Reply-To. Nobody joined a list to get it.
   "contactForward",
+  // Sent to someone the owner added to the Crew Portal: a one-time link to
+  // choose their password. Staff mail, not list mail.
+  "crewSetPassword",
 ];
 
 function listMailCarriesUnsubscribe(): true | string {

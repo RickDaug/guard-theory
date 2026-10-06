@@ -44,6 +44,7 @@ const NOINDEX = [
   "/search",
   "/maintenance",
   "/unsubscribe",
+  "/first-edition/confirm",
   "/cart",
   "/order/confirmed",
 ];

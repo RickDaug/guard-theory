@@ -53,7 +53,7 @@ export const sideControlPinsTwoEscapes: TechniqueEntry = {
     drafted:
       "assisted draft, 2026-09-29, from technique batch 2 target list (A); written by a Claude Code agent from the research brief and the batch-1 audit findings.",
     factAudit:
-      "Fact audit, assisted (Claude Code agent), 2026-09-29: bridge-into/shrimp-away and head/near-hip controls confirmed and consistent with escaping-side-control; fix applied: 'two ways out' reworded to two movements (coreConcept, and the summary to match) so it does not contradict that entry's second door.",
+      "Fact audit, assisted (Claude Code agent), 2026-09-29: bridge-into/shrimp-away and head/near-hip controls confirmed and consistent with escaping-side-control; fix applied: 'two ways out' reworded to two movements (coreConcept, and the summary to match) so it does not contradict that entry's second door. Fact re-check, assisted (Claude Code agent), 2026-10-06: alternative names side mount and cross side, and knee on belly / knee on stomach, confirmed against Wikipedia and BJJEE usage; no scoring claims are made, no changes.",
     voiceAudit:
       "Voice audit, assisted (Claude Code agent), 2026-09-29: mechanics clean (title 43, meta 157); fixes applied: templated 'Holding it means' closer cut; claim about how escapes are taught replaced with the two movements themselves; 'many rooms also call' attribution and the fixed last-step frame rewritten.",
     approvedBy: null,

@@ -53,7 +53,7 @@ export const passingHalfGuardFromTheHead: TechniqueEntry = {
     drafted:
       "assisted draft, 2026-09-29, from technique batch 2 target list (A); written by a Claude Code agent from the research brief and the batch-1 audit findings.",
     factAudit:
-      "Fact audit, assisted (Claude Code agent), 2026-09-29: all ledger rows checked, no changes required; underhook side matches underhook-half-guard; the flagged deep-half weight-back row confirmed as hedged and consistent with deep-half-guard.",
+      "Fact audit, assisted (Claude Code agent), 2026-09-29: all ledger rows checked, no changes required; underhook side matches underhook-half-guard; the flagged deep-half weight-back row confirmed as hedged and consistent with deep-half-guard. Fact re-check, assisted (Claude Code agent), 2026-10-06: no rules, scoring, naming or history claims; content is mechanics and coaching only, no changes.",
     voiceAudit:
       "Voice audit, assisted (Claude Code agent), 2026-09-29: mechanics clean (title 37, meta 150); fixes applied: coreConcept opener no longer uses the library's recurring 'matter of order' frame (duplicate 'last thing to leave' line cut from the opening); safety note reordered to lead with the knee so it does not open like the other crossface notes.",
     approvedBy: null,

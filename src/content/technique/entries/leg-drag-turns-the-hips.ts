@@ -49,7 +49,7 @@ export const legDragTurnsTheHips: TechniqueEntry = {
     drafted:
       "assisted draft, 2026-09-29, from technique batch 2 target list (A); written by a Claude Code agent from the research brief and the batch-1 audit findings.",
     factAudit:
-      "Fact audit, assisted (Claude Code agent), 2026-09-29: drag-across-the-centre-line and hip/shin pin mechanics confirmed; fix applied: the side named for the blocking knee (keyMechanics[3]) cut as ambiguous, knee placed against the seat and lower back (training step 2 matched); owner or coach to confirm if a side is wanted.",
+      "Fact audit, assisted (Claude Code agent), 2026-09-29: drag-across-the-centre-line and hip/shin pin mechanics confirmed; fix applied: the side named for the blocking knee (keyMechanics[3]) cut as ambiguous, knee placed against the seat and lower back (training step 2 matched); owner or coach to confirm if a side is wanted. Fact re-check, assisted (Claude Code agent), 2026-10-06: no rules, scoring, naming or history claims; content is mechanics and coaching only, no changes.",
     voiceAudit:
       "Voice audit, assisted (Claude Code agent), 2026-09-29: mechanics clean (title 34, meta 149); fixes applied: 'That is the whole mechanism' announcement rewritten as the mechanism; two setup-and-payoff sentences cut from the opening; one filler 'simply' removed; fixed 'notice which' last step rewritten.",
     approvedBy: null,

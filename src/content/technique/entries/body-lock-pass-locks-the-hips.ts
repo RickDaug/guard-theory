@@ -52,7 +52,7 @@ export const bodyLockPassLocksTheHips: TechniqueEntry = {
     drafted:
       "assisted draft, 2026-09-29, from technique batch 2 target list (A); written by a Claude Code agent from the research brief and the batch-1 audit findings.",
     factAudit:
-      "Fact audit, assisted (Claude Code agent), 2026-09-29: all ledger rows checked; lock height, hip-to-hip contact and pass stages confirmed as general mechanics; safety note meets the structure/load/who standard; optional fix applied, 'nowhere to go' softened to 'little room'.",
+      "Fact audit, assisted (Claude Code agent), 2026-09-29: all ledger rows checked; lock height, hip-to-hip contact and pass stages confirmed as general mechanics; safety note meets the structure/load/who standard; optional fix applied, 'nowhere to go' softened to 'little room'. Fact re-check, assisted (Claude Code agent), 2026-10-06: no rules, scoring, naming or history claims; content is mechanics and coaching only, no changes.",
     voiceAudit:
       "Voice audit, assisted (Claude Code agent), 2026-09-29: mechanics clean (no dashes or banned constructions, title 35, meta 153, British spelling); fixes applied: opening triad that duplicated the leg drag's ankle/step-around beat cut to one image; 'answers that by' formula removed; 'many no-gi coaches' attribution and the fixed 'notice where' last step rewritten.",
     approvedBy: null,

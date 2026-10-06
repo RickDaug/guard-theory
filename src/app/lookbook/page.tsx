@@ -7,16 +7,17 @@ import { PRODUCTS } from "@/content/products";
 
 export const metadata: Metadata = pageMetadata({
   title: "Lookbook",
-  description: "The First Edition as drawn: a production flat for each garment, to the standard the factory is handed and the measurements come from.",
+  description: "The First Edition as drawn: a flat drawing of each Guard Theory no-gi rash guard, long sleeve and short sleeve, with a link to each garment.",
   path: "/lookbook",
 });
 
 /**
  * The range, drawn.
  *
- * Production flats rather than photography: a flat states construction and
- * carries the measurements, which is what someone choosing between two
- * garments actually needs. Photography joins it, it does not replace it.
+ * Flats rather than photography. The flats once claimed to be what "the
+ * factory is handed" and "what the measurements come from"; neither was
+ * supplied (docs/owner-decisions.md §3), so the page now says only what the
+ * drawing is.
  */
 export default function LookbookPage() {
   return (
@@ -32,11 +33,9 @@ export default function LookbookPage() {
               href="/about#how"
               className="text-chalk underline decoration-steel-dim underline-offset-[5px] transition-colors duration-[140ms] ease-[var(--ease-control)] hover:decoration-signal-lift"
             >
-              drawn to production standard
+              drawn flat
             </Link>
-            . A flat is what the
-            factory is handed and what the measurements come from — the part of
-            a lookbook you can actually check.
+            .
           </p>
         </header>
 

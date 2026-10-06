@@ -200,14 +200,22 @@ somebody presses **Run workflow** on it. It:
    one session, and PgBouncer in transaction mode hands each statement to a
    different one. A host containing `-pooler` is refused before anything
    connects;
-3. refuses a dump under 4 KB, lists the archive with `pg_restore`, and refuses
+3. **leaves out `neon_auth`**, the schema Neon Auth creates and manages. The app
+   does not use it (nothing in `src/` or `migrations/` names it), and any Neon
+   database that already has it — every branch of production, any new project
+   with Neon Auth switched on — refuses a dump that creates it again: `schema
+   "neon_auth" already exists`. That is how the restore check failed on
+   2026-10-05 (run 37399557664). The list is `NEON_MANAGED_SCHEMAS` in
+   `scripts/db/backup-ci.sh`, and the job refuses an archive that still holds
+   any of them;
+4. refuses a dump under 4 KB, lists the archive with `pg_restore`, and refuses
    one that has no data for `_migration` or `waitlist_signup` — exit 0 is not
    proof of a backup;
-4. encrypts it with `gpg --symmetric` (AES-256), decrypts it again and compares
+5. encrypts it with `gpg --symmetric` (AES-256), decrypts it again and compares
    the result with the original;
-5. runs a separate guard that reads the first bytes of every file about to be
+6. runs a separate guard that reads the first bytes of every file about to be
    uploaded and **refuses anything that is not a gpg-encrypted file**;
-6. uploads it as a workflow artifact with `retention-days: 30`.
+7. uploads it as a workflow artifact with `retention-days: 30`.
 
 It never prints the connection string, and an error from `pg_dump` is printed
 with the host and any URL removed.
@@ -216,7 +224,7 @@ with the host and any URL removed.
 2026-09-18). Its Actions logs are readable by anyone, and its artifacts can be
 downloaded by anyone signed in to GitHub. So the encrypted file should be
 thought of as published, and the passphrase as the only thing protecting the
-names and addresses inside it. That is why step 5 exists, why the passphrase
+names and addresses inside it. That is why step 6 exists, why the passphrase
 must be 32 characters or more, and why it must never be reused from anywhere
 else. Making the repository private would take the files off public download;
 that is the owner's call.
@@ -289,14 +297,18 @@ sha256sum -c *.sha256
 # 3. Decrypt. gpg asks for the passphrase; it is not put on the command line.
 gpg --output dump.pgc --decrypt guard-theory-*.pgc.gpg
 
-# 4. A scratch branch off production, and its direct connection string.
+# 4. A scratch branch off production, a NEW EMPTY database on it, and that
+#    database's direct connection string. The branch's own neondb is a copy of
+#    production — schemas, rows and Neon's own neon_auth — so restoring into it
+#    proves only that Neon can branch, and fails on "already exists". A new
+#    database is what a restore after a disaster starts from.
 npx neonctl branches create --project-id cold-resonance-51949822 --name restore-drill
-SCRATCH=$(npx neonctl connection-string restore-drill --project-id cold-resonance-51949822)
+npx neonctl databases create --project-id cold-resonance-51949822 --branch restore-drill --name restore_check
+SCRATCH=$(npx neonctl connection-string restore-drill --project-id cold-resonance-51949822 --database-name restore_check)
 
-# 5. The branch is a copy of production, so empty it first — otherwise this
-#    proves only that Neon can branch. Then schema and rows, both from the file.
-psql "$SCRATCH" -c 'drop schema public cascade; create schema public;'
-pg_restore --no-owner --no-privileges --exit-on-error --dbname "$SCRATCH" dump.pgc
+# 5. Schema and rows, both from the file. --exclude-schema is for backups taken
+#    before 2026-10-05, which still carry neon_auth; newer ones do not.
+pg_restore --no-owner --no-privileges --exit-on-error --exclude-schema=neon_auth --dbname "$SCRATCH" dump.pgc
 
 # 6. Look at it.
 psql "$SCRATCH" -c 'select count(*) from waitlist_signup' -c 'select max(name) from _migration'
@@ -306,12 +318,15 @@ npx neonctl branches delete restore-drill --project-id cold-resonance-51949822
 cd ../.. && rm -rf restore
 ```
 
-Check `echo "$SCRATCH"` names the scratch branch's host before step 5 — that
-`drop schema` is the one destructive line here.
+Check `echo "$SCRATCH"` names the scratch branch's host and ends
+`/restore_check?…` before step 5. Nothing here drops anything.
 
-For a real restore the target is production's unpooled string instead of
-`$SCRATCH`, after the drill above has succeeded against the same file, and with
-the site in maintenance so nothing writes underneath it.
+For a real restore the target is an **empty** database — a new Neon project, or
+a new database on production's branch that the app is then pointed at — after
+the drill above has succeeded against the same file, and with the site in
+maintenance so nothing writes underneath it. Never restore over a database that
+still holds tables: `--exit-on-error` stops at the first one that exists, and
+without it the archive's rows are appended to what is there.
 
 ### The weekly restore check (automated)
 
@@ -331,10 +346,15 @@ Script: `scripts/db/restore-verify-ci.sh`. It:
    asked for, an id that is not the default's, Neon's `default: false`, and a
    host that is none of the default branch's hosts — and masks its connection
    string, password and host in the log the moment they are known;
-5. empties the branch's `public` schema, `pg_restore`s the dump into it, and
-   fails unless the restored tables are exactly the archive's tables, every
-   table's row count equals the archive's, and `_migration` has between one row
-   and the number of files in `migrations/`;
+5. creates a **new, empty database** (`restore_check`) on the branch, checks it
+   has no tables at all, `pg_restore`s the dump into it (skipping `neon_auth`,
+   for backups taken before the nightly job left it out), and fails unless the
+   restored tables are exactly the archive's tables, every table's row count
+   equals the archive's, and `_migration` has between one row and the number of
+   files in `migrations/`. The branch's own database — a copy of production —
+   is never written to: restoring over it proved only that Neon can branch,
+   and failed on Neon's `neon_auth` the first time it was run for real
+   (2026-10-05);
 6. deletes the branch in a step that runs whatever happened, then clears any
    `restore-check/*` branch an earlier run left behind. Only `restore-check/*`
    branches that are not the default are ever deleted; `tests/unit/restore-verify-ci.test.ts`

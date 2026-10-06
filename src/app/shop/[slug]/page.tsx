@@ -8,6 +8,7 @@ import { ButtonLink } from "@/components/ui/Button";
 import { BuyBox } from "@/components/product/BuyBox";
 import { GarmentFlat } from "@/components/product/GarmentFlat";
 import { PRODUCTS, STATUS_LABEL } from "@/content/products";
+import { ORIGIN_LABEL, productOrigin } from "@/content/products/origin";
 import { SIZE_CHART } from "@/content/products/size-chart";
 import {
   effectivePriceCents,
@@ -90,6 +91,17 @@ export default async function ProductPage({ params }: Params) {
   const priceCents = effectivePriceCents(product);
   const showOffer = hasPublishableOffer(product);
   const other = PRODUCTS.filter((p) => p.slug !== product.slug);
+  // 16 CFR 303.34: the listing states the origin in the FTC's form. Only
+  // from a value the owner typed; with none, the page says nothing about
+  // origin, and the portal's go-live check keeps the product off sale.
+  const origin = productOrigin(product.specifications);
+  // The origin line is printed as its disclosure, not as the raw value, so the
+  // specification never says less (or other) than the sentence above it.
+  const specifications = product.specifications
+    .map((spec) =>
+      spec.label === ORIGIN_LABEL ? { ...spec, value: origin ? origin.disclosure : null } : spec,
+    )
+    .filter((spec) => spec.value);
 
   return (
     <main id="main" tabIndex={-1} className="px-6 py-16 md:px-12">
@@ -108,6 +120,9 @@ export default async function ProductPage({ params }: Params) {
                 description: product.summary,
                 sku: product.commerce.variants[0]?.sku,
                 url: absoluteUrl(`/shop/${product.slug}`),
+                // Only when the owner's value names a country; an unnamed
+                // import names none, and nothing is guessed.
+                ...(origin?.country ? { countryOfOrigin: origin.country } : {}),
                 offers: {
                   "@type": "Offer",
                   price: toDecimalString(priceCents),
@@ -210,6 +225,12 @@ export default async function ProductPage({ params }: Params) {
               </div>
             )}
 
+            {origin ? (
+              <p className="mt-6 text-sm text-chalk" data-origin-disclosure="">
+                {origin.disclosure}
+              </p>
+            ) : null}
+
             <section aria-labelledby="specs" className="mt-14">
               <h2 id="specs" className="display-condensed mb-6 text-xl text-chalk">
                 Specification
@@ -222,7 +243,7 @@ export default async function ProductPage({ params }: Params) {
                   {/* A line with no value is not a line: a null means nobody has
                       supplied that fact, and the page says nothing about it
                       rather than printing a blank or a placeholder. */}
-                  {product.specifications.filter((spec) => spec.value).map((spec) => (
+                  {specifications.map((spec) => (
                     <tr key={spec.label} className="border-b border-steel-dim">
                       <th
                         scope="row"

@@ -55,7 +55,7 @@ const FAQS = [
   },
   {
     q: "I found a mistake in an article.",
-    a: "Tell us and point at the claim. Factual errors get corrected in the piece with a dated note — we do not quietly edit a page and pretend it never said what it said.",
+    a: "Tell us and point at the claim. Factual errors get corrected in the piece with a dated note — we do not quietly edit a page and pretend it never said what it said. The corrections policy lists every piece that carries one.",
   },
 ];
 

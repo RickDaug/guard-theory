@@ -10,6 +10,7 @@ import {
 } from "../../src/content/section-descriptions.ts";
 import { CATEGORIES } from "../../src/content/technique/index.ts";
 import { ARTICLES, isPublished } from "../../src/content/journal/index.ts";
+import { FIGURES } from "../../src/content/figures/index.ts";
 
 const MAIL = "src/lib/mail/templates.ts";
 const POLICY = "src/content/policies/index.ts";
@@ -292,5 +293,29 @@ describe("the guard can fail", () => {
       contextFor(null, { [map]: raw(map).replace("strokeWidth={live ? 3 : 2}", "strokeWidth={2}") }),
     );
     assert.match(String(verdict), /changes stroke colour when active and not stroke weight/);
+  });
+
+  it("objects when a corrected piece's date and its note disagree", () => {
+    const claim = byId("corrections-dated-note-in-the-piece");
+    assert.equal(claim.holds(contextFor(null)), true);
+    const figure = FIGURES.find((f) => f.updatedAt);
+    assert.ok(figure, "no figure carries a correction to test against");
+    const original = figure.updatedAt;
+    try {
+      figure.updatedAt = "2026-10-01";
+      assert.match(String(claim.holds(contextFor(null))), /latest correction note is dated/);
+      figure.updatedAt = undefined;
+      assert.match(String(claim.holds(contextFor(null))), /carries a correction note and no updatedAt/);
+    } finally {
+      figure.updatedAt = original;
+    }
+  });
+
+  it("objects when the contact form stops offering a correction topic", () => {
+    const form = "src/lib/contact/form-state.ts";
+    const verdict = byId("corrections-through-the-contact-form").holds(
+      contextFor(null, { [form]: raw(form).replace("A correction to something we published", "Something else") }),
+    );
+    assert.match(String(verdict), /no longer offers the topic/);
   });
 });

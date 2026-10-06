@@ -1,7 +1,9 @@
 "use server";
 
+import { headers } from "next/headers";
 import { getProduct } from "@/content/products";
 import { priceCart } from "@/lib/cart/price";
+import { CHECKOUT_BUCKET, callerKey, takeRateLimit } from "@/lib/rate-limit-db";
 import { startCheckout } from "@/lib/stripe/start";
 import type { CartLine, CheckoutStart, PricedCart } from "@/lib/cart/types";
 
@@ -15,8 +17,15 @@ import type { CartLine, CheckoutStart, PricedCart } from "@/lib/cart/types";
  *
  * The client sends variant ids and quantities. It gets back figures. At no
  * point does an amount travel in the other direction.
+ *
+ * `previousIntentId` is the intent the browser was last given. Re-pricing an
+ * unchanged cart hands it back rather than writing another row, and only a new
+ * intent counts against the caller's rate limit.
  */
-export async function priceCartAction(lines: CartLine[]): Promise<PricedCart> {
+export async function priceCartAction(
+  lines: CartLine[],
+  previousIntentId?: string | null,
+): Promise<PricedCart> {
   const safe = Array.isArray(lines)
     ? lines.filter(
         (line): line is CartLine =>
@@ -24,10 +33,23 @@ export async function priceCartAction(lines: CartLine[]): Promise<PricedCart> {
       )
     : [];
 
-  return priceCart(safe, (slug) => {
-    const product = getProduct(slug);
-    return product ? { name: product.name, kind: product.kind } : undefined;
-  });
+  return priceCart(
+    safe,
+    (slug) => {
+      const product = getProduct(slug);
+      return product ? { name: product.name, kind: product.kind } : undefined;
+    },
+    {
+      previousIntentId: typeof previousIntentId === "string" ? previousIntentId : null,
+      callerKey: await currentCallerKey(),
+    },
+  );
+}
+
+/** A keyed hash of the caller's address. The address itself goes no further. */
+async function currentCallerKey(): Promise<string> {
+  const list = await headers();
+  return callerKey(list.get("x-forwarded-for")?.split(",")[0]?.trim());
 }
 
 /**
@@ -39,5 +61,12 @@ export async function priceCartAction(lines: CartLine[]): Promise<PricedCart> {
  * in src/lib/stripe/start.ts. `form-action` stays `'self'`.
  */
 export async function startCheckoutAction(intentId: string): Promise<CheckoutStart> {
+  // Each call can create a Stripe Checkout Session, so each call is counted.
+  const gate = await takeRateLimit(CHECKOUT_BUCKET, await currentCallerKey());
+
+  if (!gate.allowed) {
+    return { ok: false, problem: "busy" };
+  }
+
   return startCheckout(intentId);
 }

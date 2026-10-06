@@ -3,9 +3,10 @@ name: Database restore check
 # Once a week, proves the newest nightly backup restores.
 #
 # Downloads the newest artifact from "Database backup", decrypts it, restores
-# it into a scratch Neon branch made for the purpose, checks that every table
-# and every table's row count matches what the archive carries, and deletes
-# the branch. The script is scripts/db/restore-verify-ci.sh; what it replaces
+# it into a new, empty database on a scratch Neon branch made for the purpose
+# (never the branch's own database, which is a copy of production), checks
+# that every table and every table's row count matches what the archive
+# carries, and deletes the branch. The script is scripts/db/restore-verify-ci.sh; what it replaces
 # and what still needs a person is in docs/database-runbook.md.
 #
 # THIS REPOSITORY IS PUBLIC, and so is this log. It prints counts and nothing
@@ -110,7 +111,8 @@ jobs:
         timeout-minutes: 5
         run: bash scripts/db/restore-verify-cleanup.sh
 
-      # Pulls postgres:<major>-alpine, waits for a fresh compute, restores.
+      # Pulls postgres:<major>-alpine, waits for a fresh compute, makes an
+      # empty database on it, restores into that.
       - name: Restore into a scratch branch and compare
         timeout-minutes: 15
         env:

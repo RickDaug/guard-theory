@@ -47,6 +47,7 @@ const PORTAL_PAGES = [
   ["/crew/settings", /settings/i],
   ["/crew/list", /first edition/i],
   ["/crew/learn", /learn/i],
+  ["/crew/users", /^crew$/i],
 ] as const;
 
 /**
@@ -152,6 +153,22 @@ async function expectEveryDoorShut(request: APIRequestContext, cookie: string): 
  * the control: without it, "refused" could just as well mean "malformed".
  */
 async function postClearFlag(request: APIRequestContext, cookie: string): Promise<string> {
+  return postAction(request, cookie, "clearFlag", "crew/orders/actions", { "0": '["$K1"]' });
+}
+
+/**
+ * Any portal server action, by name, POSTed with a given cookie. `multipart` is
+ * React's reply encoding of the arguments: `{"0": '["$K1"]'}` for one empty
+ * FormData, and for a useActionState action (previous state, then the form)
+ * `{"0": '[{"status":"idle","message":""},"$K1"]', "1_id": "…"}`.
+ */
+async function postAction(
+  request: APIRequestContext,
+  cookie: string,
+  exportedName: string,
+  file: string,
+  multipart: Record<string, string>,
+): Promise<string> {
   const manifest = JSON.parse(
     readFileSync(path.join(process.cwd(), ".next", "server", "server-reference-manifest.json"), "utf8"),
   ) as {
@@ -169,11 +186,11 @@ async function postClearFlag(request: APIRequestContext, cookie: string): Promis
   // the entry. Either shape is read.
   const id = Object.entries(manifest.node).find(([, entry]) =>
     [entry, ...Object.values(entry.workers)].some(
-      (meta) => meta.exportedName === "clearFlag" && meta.filename?.includes("crew/orders/actions"),
+      (meta) => meta.exportedName === exportedName && meta.filename?.includes(file),
     ),
   )?.[0];
 
-  expect(id, "clearFlag not found in the build manifest").toBeTruthy();
+  expect(id, `${exportedName} not found in the build manifest`).toBeTruthy();
 
   const response = await request.post("/crew/orders", {
     headers: {
@@ -181,7 +198,7 @@ async function postClearFlag(request: APIRequestContext, cookie: string): Promis
       Cookie: cookie,
       Origin: "http://127.0.0.1:3100",
     },
-    multipart: { "0": '["$K1"]' },
+    multipart,
     maxRedirects: 0,
   });
 
@@ -231,7 +248,7 @@ test.describe.serial("a signed-in session", () => {
 
     // The ops screens are new, so they get the public site's axe pass as well:
     // status text on graphite is exactly where a colour that clears on ink fails.
-    for (const route of ["/crew", "/crew/orders/ship", "/crew/settings"]) {
+    for (const route of ["/crew", "/crew/orders/ship", "/crew/settings", "/crew/users"]) {
       await page.goto(route, { waitUntil: "load" });
       const results = await new AxeBuilder({ page })
         .withTags(["wcag2a", "wcag2aa", "wcag21a", "wcag21aa", "wcag22aa"])
@@ -425,6 +442,184 @@ test.describe.serial("a signed-in session", () => {
     await withDatabase((db) => db.query("delete from product where slug = $1", [slug]));
 
     await context.close();
+  });
+
+  // The owner's request of 2026-10-05: user names and passwords for employees
+  // who handle orders and print labels. Signed in as the shared-password owner
+  // (the session saved above), which is exactly the rollout's first step.
+  test("the owner adds a crew member, who sets a password, prints a label and cannot refund", async ({
+    browser,
+  }) => {
+    const stamp = Date.now().toString(36);
+    const username = `e2e-crew-${stamp}`;
+    const orderId = `e2e-crew-order-${stamp}`;
+    const labelUrl = `https://labels.example/e2e-${stamp}.pdf`;
+
+    // An order waiting to ship, with a label already bought and a flag on it.
+    await withDatabase(async (db) => {
+      await db.query(
+        `insert into "order" (id, status, flagged_reason, email, ship_name, ship_line1, ship_city, ship_state,
+                              ship_postal, subtotal_cents, shipping_cents, tax_cents, total_cents,
+                              stripe_session_id, stripe_mode, label_url, tracking_number, tracking_carrier)
+         values ($1, 'in_process', 'reconciled', 'buyer@example.com', 'Sam Fadda', '1 Test Street',
+                 'Los Angeles', 'CA', '90015', 4000, 700, 0, 4700, $2, 'test', $3, '9400100000000000000000', 'USPS')`,
+        [orderId, `cs_test_e2e_${stamp}`, labelUrl],
+      );
+      await db.query(
+        `insert into order_item (id, order_id, product_name, product_kind, size_label, sku, unit_cents, quantity)
+         values ($1, $2, 'Theory 01', 'Rash guard', 'M', 'E2E-M', 4000, 2)`,
+        [`${orderId}-item`, orderId],
+      );
+    });
+
+    try {
+      // 1. The owner adds them. No mail provider in this run, so the link is
+      //    shown once, to hand over in person.
+      const ownerContext = await browser.newContext({ storageState: saved });
+      const owner = await ownerContext.newPage();
+      await owner.goto("/crew/users", { waitUntil: "load" });
+      await expect(owner.getByRole("heading", { level: 1, name: "Crew" })).toBeVisible();
+
+      const add = owner.locator("form", { has: owner.getByRole("heading", { name: "Add someone" }) });
+      await add.getByLabel(/^Name/).fill("E2E Crew");
+      await add.getByLabel("Username").fill(username);
+      await add.getByLabel(/^Email/).fill(`${username}@example.com`);
+      await add.getByLabel("Role").selectOption("crew");
+      await add.getByRole("button", { name: "Add and send their link" }).click();
+
+      await expect(owner.getByRole("status").filter({ hasText: "Added." })).toContainText(
+        /No email provider is connected|The link is on its way/,
+      );
+      const shown = owner.locator("[data-one-time-link]");
+      await expect(shown).toBeVisible();
+      const link = new URL((await shown.textContent())!.trim());
+      expect(link.pathname).toBe("/crew/set-password");
+
+      // Only a hash of it is stored, and no password exists yet.
+      const stored = await withDatabase((db) =>
+        db.query<{ token_hash: string; password_hash: string | null; delivery: string }>(
+          `select t.token_hash, u.password_hash, t.delivery
+             from crew_user u join crew_token t on t.user_id = u.id where u.username = $1`,
+          [username],
+        ),
+      );
+      expect(stored.rows).toHaveLength(1);
+      expect(stored.rows[0]!.token_hash).toBe(tokenHash(link.searchParams.get("t")!));
+      expect(stored.rows[0]!.password_hash).toBeNull();
+      expect(stored.rows[0]!.delivery).toBe("not-delivered");
+
+      // 2. They choose a password from the link, in their own browser.
+      const crewContext = await browser.newContext({
+        extraHTTPHeaders: { "X-Forwarded-For": freshAddress() },
+      });
+      const crew = await crewContext.newPage();
+      const password = `e2e crew passphrase ${stamp}`;
+      await crew.goto(`${link.pathname}${link.search}`, { waitUntil: "load" });
+      await expect(crew.getByRole("heading", { level: 1, name: "Choose your password" })).toBeVisible();
+      await crew.getByLabel("New password").fill(password);
+      await crew.getByLabel("The same password again").fill(password);
+      await crew.getByRole("button", { name: "Save my password" }).click();
+      await crew.waitForURL(/\/crew\/sign-in\?set=1/);
+      await expect(crew.getByRole("status").filter({ hasText: "Your password is saved" })).toBeVisible();
+
+      // The link is spent.
+      await crew.goto(`${link.pathname}${link.search}`, { waitUntil: "load" });
+      await expect(crew.getByText("This link has been used or has run out.")).toBeVisible();
+
+      // 3. They sign in with their username.
+      await crew.goto("/crew/sign-in", { waitUntil: "load" });
+      await crew.getByLabel(/^Username/).fill(username);
+      await crew.getByLabel(/password/i).fill(password);
+      await crew.getByRole("button", { name: /^sign in$/i }).click();
+      await crew.waitForURL(/\/crew(\?|$)/);
+      await expect(crew.getByRole("heading", { level: 1, name: /today/i })).toBeVisible();
+
+      // The owner's sections are not offered, and not reachable either.
+      const nav = crew.getByRole("navigation", { name: "Portal" });
+      await expect(nav.getByRole("link", { name: "To ship" })).toBeVisible();
+      for (const hidden of ["Crew", "Settings", "Messages", "First Edition", "Categories"]) {
+        await expect(nav.getByRole("link", { name: hidden, exact: true })).toHaveCount(0);
+      }
+      for (const route of ["/crew/users", "/crew/settings", "/crew/messages", "/crew/orders/export"]) {
+        await crew.goto(route, { waitUntil: "load" });
+        expect(new URL(crew.url()).pathname, `${route} opened for crew`).toBe("/crew");
+      }
+
+      // 4. The order: they can print the label and the packing slip, and there
+      //    is no refund, cancel or flag control for them.
+      await crew.goto(`/crew/orders/${orderId}`, { waitUntil: "load" });
+      await expect(crew.getByRole("link", { name: "Print label (4x6 PDF)" })).toBeVisible();
+      await expect(crew.getByRole("button", { name: "Refund" })).toHaveCount(0);
+      await expect(crew.getByRole("button", { name: /^Cancel/ })).toHaveCount(0);
+      await expect(crew.getByRole("button", { name: "I have dealt with this" })).toHaveCount(0);
+
+      const crewCookie = (await crewContext.cookies()).find((c) => SESSION_COOKIE.test(c.name))!;
+      const cookie = `${crewCookie.name}=${crewCookie.value}`;
+      const printed = await crewContext.request.get(`/crew/orders/${orderId}/label`, {
+        headers: { Cookie: cookie },
+        maxRedirects: 0,
+      });
+      expect(printed.status()).toBe(303);
+      expect(printed.headers()["location"]).toBe(labelUrl);
+
+      await crew.reload({ waitUntil: "load" });
+      const history = crew.locator("section", { has: crew.getByRole("heading", { name: "History" }) });
+      await expect(history).toContainText("Label opened to print");
+      await expect(history).toContainText("by E2E Crew");
+
+      await crew.goto(`/crew/orders/${orderId}/packing-slip`, { waitUntil: "load" });
+      const slip = crew.locator("main");
+      await expect(slip).toContainText("Theory 01");
+      await expect(slip).toContainText("For Sam Fadda");
+      await expect(crew.getByRole("button", { name: "Print" })).toBeVisible();
+      expect(await slip.textContent()).not.toMatch(/\$\d/);
+
+      // 5. The server is the lock, not the hidden buttons: owner-only actions
+      //    POSTed with the crew cookie throw, and change nothing. A crew action
+      //    with the same cookie answers cleanly — the control.
+      const refused = await postAction(crewContext.request, cookie, "issueRefund", "crew/orders/actions", {
+        "0": '[{"status":"idle","message":""},"$K1"]',
+        "1_id": orderId,
+        "1_amount": "1",
+      });
+      expect(refused, "a crew session issued a refund").toMatch(ACTION_THREW);
+      expect(
+        await postAction(crewContext.request, cookie, "clearFlag", "crew/orders/actions", {
+          "0": '["$K1"]',
+          "1_id": orderId,
+        }),
+      ).toMatch(ACTION_THREW);
+      expect(
+        await postAction(crewContext.request, cookie, "labelLink", "crew/orders/actions", { "0": '["$K1"]' }),
+        "a crew action was refused to crew",
+      ).not.toMatch(ACTION_THREW);
+
+      const after = await withDatabase((db) =>
+        db.query<{ refunded_cents: number; flagged_reason: string | null }>(
+          `select refunded_cents, flagged_reason from "order" where id = $1`,
+          [orderId],
+        ),
+      );
+      expect(after.rows[0]).toEqual({ refunded_cents: 0, flagged_reason: "reconciled" });
+
+      // 6. Turned off by the owner: signed out at once.
+      await owner.reload({ waitUntil: "load" });
+      await owner
+        .locator(`[data-crew-user="${username}"]`)
+        .getByRole("button", { name: /Turn off and sign out/ })
+        .click();
+      await expect(owner.locator(`[data-crew-user="${username}"]`)).toContainText("Turned off");
+      await crew.goto("/crew/orders", { waitUntil: "load" });
+      expect(new URL(crew.url()).pathname).toBe("/crew/sign-in");
+
+      await crewContext.close();
+      await ownerContext.close();
+    } finally {
+      await withDatabase(async (db) => {
+        await db.query(`delete from "order" where id = $1`, [orderId]);
+        await db.query("delete from crew_user where username = $1", [username]);
+      });
+    }
   });
 
   test("the session cookie is httpOnly, Secure, SameSite=Lax and host-only", async ({

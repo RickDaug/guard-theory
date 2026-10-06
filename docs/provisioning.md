@@ -563,6 +563,61 @@ Shippo's mock tracking numbers — `SHIPPO_DELIVERED`, `SHIPPO_TRANSIT`,
 **Never set the plaintext password as an environment variable.** The build wants
 the hash and only the hash.
 
+### Adding someone to the crew (employees)
+
+Since migration 0020 the portal has its own accounts. Each person gets a
+username and chooses their own password; nobody — you included — ever sees,
+types or emails anyone else's password.
+
+**Roles.** *Crew* see orders, the To ship queue and each order; buy, print and
+release labels; print packing slips; save tracking; mark orders being
+prepared, shipped and delivered; and read the products. *Owner* does all of
+that plus refunds, cancels, restocks, flags, products, prices, photographs,
+categories, settings, the First Edition list, messages, the sales export and
+the Crew page. The server checks the role on every action; crew are not merely
+shown fewer buttons.
+
+**Before the first deploy that carries this:** apply migration
+`0020_crew_accounts.sql` to Neon (`npm run db:migrate:production`), *then*
+merge. The new code reads `crew_user` on every sign-in and every portal page.
+
+**Rollout, in this order:**
+
+1. Sign in exactly as today: leave **Username** empty (or type `owner`) and
+   use the shared password. That is the `PORTAL_PASSWORD_HASH` sign-in, and it
+   keeps working throughout, so you cannot be locked out by the rollout.
+2. Open **Crew** in the portal's navigation. Add **yourself** first, with role
+   **Owner** and an email you read. You get a link; open it and choose your
+   password (12 characters or more; three or four ordinary words is good).
+3. Sign out, and sign in with your new username and password.
+4. Add each employee with role **Crew**. Each gets an email with a one-time
+   link (72 hours). If `RESEND_API_KEY` is not set, or the send fails, the
+   page shows you the link once instead — hand it to them in person; it is not
+   shown again and is not stored anywhere readable.
+5. When you are signed in with your own owner account, **Crew → Turn off the
+   shared password**. It refuses while no owner account with a password exists.
+   It also ends every session the shared password had open.
+
+**Day to day, from the Crew page:** *Send … a new invite* (they never set a
+password; the old link stops working), *Reset … password* (emails a new link;
+their current password works until they choose a new one — turn them off as
+well if you think it is known to someone else), *Turn off and sign out* (takes
+effect immediately, on every device), *Turn on*, and *Make owner / Make crew*
+(which signs them out so they come back with the new role). Nobody can turn off
+or demote themselves, and with the shared password off, the last owner who can
+sign in cannot be removed.
+
+**Turning the shared password back on** is deliberately not a button —
+whoever needs it is locked out. In the Neon SQL editor:
+`delete from setting where key = 'portal_shared_password_disabled';`
+It needs `PORTAL_PASSWORD_HASH` to still be set. Once you have your own owner
+account you may also delete `PORTAL_PASSWORD_HASH` from Vercel; the portal then
+keys its sign-in limiter on a random secret it keeps in the database.
+
+**Who did what.** Every label bought or printed, tracking saved, status
+change, refund, cancel and restock done from the portal is listed under
+**History** on the order, with the person's name.
+
 **There is no `PORTAL_SESSION_SECRET`.** `docs/commerce-plan.md` §14, on the
 commerce branch, lists one for signing a session cookie. The code reads no such
 variable: the cookie carries a random token, and the session it names is a row
@@ -647,7 +702,7 @@ integration; the rest you add by hand.
 | `SHIP_FROM_NAME` `_STREET1` `_CITY` `_STATE` `_ZIP` | 5 | yes — all five | no |
 | `SHIP_FROM_STREET2` `_PHONE` `_EMAIL` `_COUNTRY` | 5 | optional | no |
 | `SHIP_PARCEL_LENGTH_IN` `_WIDTH_IN` `_HEIGHT_IN` `_WEIGHT_OZ` | 5 | optional, defaulted | no |
-| `PORTAL_PASSWORD_HASH` | 6 | yes — fails closed without it | no |
+| `PORTAL_PASSWORD_HASH` | 6 | yes until you have your own owner account (see "Adding someone to the crew"); after that optional — the shared owner sign-in | no |
 | `PORTAL_PATH` | 6 | optional, build time — defaults to `/crew` | no |
 | `BLOB_READ_WRITE_TOKEN` | 7 | yes, before anything new goes live — added by connecting the Blob store; read at build time too, so redeploy after | no |
 | `NEXT_PUBLIC_BLOB_HOSTNAME` | 7 | optional, build time — only to override the host derived from the token | no |

@@ -51,7 +51,7 @@ export const underhookOrOverhook: TechniqueEntry = {
     drafted:
       "assisted draft, 2026-09-29, from technique batch 3 target list (1)",
     factAudit:
-      "Fact audit, assisted (Claude Code agent), 2026-09-29: underhook/overhook mechanics, pummelling and double-underhook-to-body-lock confirmed, consistent with whizzer-is-an-overhook-on-the-hip and no-gi-grips-are-on-a-timer; REVISE (1), fix applied: overhook-to-arm-in-guillotine pairing removed as mechanically misleading.",
+      "Fact audit, assisted (Claude Code agent), 2026-09-29: underhook/overhook mechanics, pummelling and double-underhook-to-body-lock confirmed, consistent with whizzer-is-an-overhook-on-the-hip and no-gi-grips-are-on-a-timer; REVISE (1), fix applied: overhook-to-arm-in-guillotine pairing removed as mechanically misleading. Fact re-check, assisted (Claude Code agent), 2026-10-06: no rule, history or naming claim beyond standard terms (whizzer, pummelling, double underhooks); consistent with whizzer-is-an-overhook-on-the-hip; no change.",
     voiceAudit:
       "Voice audit, assisted (Claude Code agent), 2026-09-29: mechanics clean; REVISE (7), fixes applied: question title replaced by the steer/trap division the entry teaches; 'lift, turn... press down' line paraphrasing whizzer-is-an-overhook-on-the-hip cut and the summary moved off inside-position's steer/wrap line; page-announcing POS closer and 'early and often' cut; 'pummelling' corrected to the British 'pummelling'; recall-style last step made an instruction.",
     approvedBy: null,

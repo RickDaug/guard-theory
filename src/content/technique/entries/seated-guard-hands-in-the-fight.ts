@@ -11,7 +11,7 @@ export const seatedGuardHandsInTheFight: TechniqueEntry = {
   difficulty: "Foundational",
   relevance: "No-gi first",
   positionAndProblem:
-    "You lie back to play guard against someone standing over you, reach for their sleeves out of habit, and find nothing to hold. Their hands are free, your feet slide off sweaty shins, and each time they step round you have to turn on your back to follow. Many of the supine open guards were built on cloth: a sleeve or lapel grip keeps the passer attached while the legs do the rest. Without that attachment, the flat-backed player has feet that push and hands that cannot reach. The seated guard answers by sitting up. Your seat stays on the mat, your chest comes up toward theirs, and your hands come back into the exchange, where they can take the ties and wraps that still hold without a gi.",
+    "You lie back to play guard against someone standing over you, reach for their sleeves out of habit, and find nothing to hold. Their hands are free, your feet slide off sweaty shins, and each time they step round you have to turn on your back to follow. Many supine open guards, as played in the gi, depend on cloth: a sleeve or lapel grip keeps the passer attached while the legs do the rest. Without that attachment, the flat-backed player has feet that push and hands that cannot reach. The seated guard answers by sitting up. Your seat stays on the mat, your chest comes up toward theirs, and your hands come back into the exchange, where they can take the ties and wraps that still hold without a gi.",
   objective:
     "Sit upright with your head near the height of theirs, your feet connected to their legs and your hands fighting for a tie, and use each connection to leave the seated position for a sweep, a leg or their back.",
   coreConcept:
@@ -53,7 +53,7 @@ export const seatedGuardHandsInTheFight: TechniqueEntry = {
     drafted:
       "assisted draft, 2026-09-29, from technique batch 3 target list (1)",
     factAudit:
-      "Fact audit, assisted (Claude Code agent), 2026-09-29: posture, head-height contest and connection list confirmed against the corrected Journal seated-guard-and-supine-guard and two-on-one-controls-one-arm; posted-hand orientation (fingers away from the opponent) confirmed as the wrist-safe one; no rule stated, correctly. PASS, no changes required.",
+      "Fact audit, assisted (Claude Code agent), 2026-09-29: posture, head-height contest and connection list confirmed against the corrected Journal seated-guard-and-supine-guard and two-on-one-controls-one-arm; posted-hand orientation (fingers away from the opponent) confirmed as the wrist-safe one; no rule stated, correctly. PASS, no changes required. Fact re-check, assisted (Claude Code agent), 2026-10-06: no rule claim, consistent with the corrected Journal seated-guard-and-supine-guard (no stalling claim made here); 'were built on cloth', an unsourced history claim, reduced to how those guards work in the gi.",
     voiceAudit:
       "Voice audit, assisted (Claude Code agent), 2026-09-29: mechanics clean; REVISE (5), fixes applied: title moved off the wh-template; 'worth having... not because' slogan and grips-timer 'spends' vocabulary cut; run-on safety opener split and generic chin line cut; push-flat chin-tuck line shared with butterfly-guard-under-pressure and guard-retention cut; 'near the height of theirs' kept to two uses.",
     approvedBy: null,

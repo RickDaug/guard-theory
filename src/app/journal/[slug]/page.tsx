@@ -107,9 +107,10 @@ export default async function ArticlePage({ params }: Params) {
         // og:image. See SHARE_IMAGE_OBJECT.
         image: SHARE_IMAGE_OBJECT,
         datePublished: article.publishedAt,
-        // Only when a revision was really recorded. No article carries one
-        // yet, so none states a dateModified; repeating datePublished under
-        // that name would be a claim that the piece has been revised.
+        // Only when a revision was really recorded: `updatedAt` is the date of
+        // the piece's latest correction note (src/content/corrections.ts).
+        // Repeating datePublished under that name would be a claim that the
+        // piece has been revised.
         ...(article.updatedAt ? { dateModified: article.updatedAt } : {}),
         articleSection: category.name,
         ...(author

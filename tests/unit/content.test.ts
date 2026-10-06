@@ -35,6 +35,7 @@ import {
   journalCategoryCount,
   techniqueCategoryCount,
 } from "../../src/content/category-gate.ts";
+import { RULES_NOTES } from "../../src/content/technique/rules-notes.ts";
 
 /**
  * Content integrity. These are the failures that would otherwise reach a page
@@ -420,6 +421,85 @@ describe("editorial voice", () => {
       }
     }
   });
+
+  it("keeps banned constructions out of technique category copy and ruleset notes", () => {
+    for (const category of CATEGORIES) {
+      const note = RULES_NOTES[category.slug];
+      const text = [
+        category.name,
+        category.summary,
+        category.metaDescription,
+        ...(note
+          ? [note.heading, note.intro, note.closing, ...note.statements.map((s) => s.text)]
+          : []),
+      ].join(" ");
+      for (const pattern of BANNED) {
+        assert.ok(
+          !pattern.test(text),
+          `technique category ${category.slug} contains a banned construction matching ${pattern}`,
+        );
+      }
+    }
+  });
+});
+
+/**
+ * Ruleset notes (src/content/technique/rules-notes.ts). A legality statement
+ * with no rule document behind it is the invented fact AGENTS.md forbids, and
+ * one on a leg-lock page is also a safety problem. What a test can hold is the
+ * shape: every statement names a source that exists, every source parses, and
+ * the date it was read is a real day that has already happened.
+ */
+describe("ruleset notes on technique category pages", () => {
+  it("gives the leg-locks page one", () => {
+    assert.ok(RULES_NOTES["leg-locks"], "the leg-locks category has no ruleset note");
+  });
+
+  for (const [slug, note] of Object.entries(RULES_NOTES)) {
+    if (!note) continue;
+
+    it(`${slug}: files the note under a real category`, () => {
+      assert.ok(CATEGORIES.some((c) => c.slug === slug), `${slug} is not a category`);
+    });
+
+    it(`${slug}: sources every statement to a listed document`, () => {
+      const ids = new Set(note.sources.map((source) => source.id));
+      assert.equal(ids.size, note.sources.length, `${slug} repeats a source id`);
+      assert.ok(note.statements.length > 0, `${slug} has an empty ruleset note`);
+      for (const statement of note.statements) {
+        assert.ok(
+          ids.has(statement.source),
+          `${slug}: "${statement.text.slice(0, 60)}..." cites unknown source ${statement.source}`,
+        );
+      }
+      for (const source of note.sources) {
+        assert.ok(
+          note.statements.some((statement) => statement.source === source.id),
+          `${slug} lists ${source.id} but no statement cites it`,
+        );
+      }
+    });
+
+    it(`${slug}: lists sources with a real URL, a title and a locator`, () => {
+      for (const source of note.sources) {
+        assert.doesNotThrow(() => new URL(source.url), `${slug}: unparseable URL ${source.url}`);
+        assert.equal(new URL(source.url).protocol, "https:", `${slug}: ${source.url} is not https`);
+        assert.ok(source.title.length > 0 && source.locator.length > 0, `${slug}: ${source.id} is incomplete`);
+      }
+    });
+
+    it(`${slug}: dates the reading on a real day that has already happened`, () => {
+      assert.match(note.asOf, /^\d{4}-\d{2}-\d{2}$/, `${slug}: malformed asOf ${note.asOf}`);
+      const read = new Date(`${note.asOf}T00:00:00Z`);
+      assert.ok(!Number.isNaN(read.getTime()), `${slug}: impossible asOf ${note.asOf}`);
+      assert.equal(read.toISOString().slice(0, 10), note.asOf, `${slug}: impossible asOf ${note.asOf}`);
+      assert.ok(read.getTime() <= Date.now(), `${slug}: asOf ${note.asOf} is in the future`);
+    });
+
+    it(`${slug}: tells the reader to check their own event's rules`, () => {
+      assert.match(note.closing, /rules/i);
+    });
+  }
 });
 
 /**

@@ -5,21 +5,50 @@ import {
   type TechniqueReview,
 } from "./types.ts";
 import { armDrag } from "./entries/arm-drag.ts";
+import { armbarIsHipToShoulderDistance } from "./entries/armbar-is-hip-to-shoulder-distance.ts";
+import { backRetentionFollowingTheTurn } from "./entries/back-retention-following-the-turn.ts";
 import { bloodChokeVersusAirChoke } from "./entries/blood-choke-versus-air-choke.ts";
+import { butterflyGuardUnderPressure } from "./entries/butterfly-guard-under-pressure.ts";
 import { butterflyHookAsLever } from "./entries/butterfly-hook-as-lever.ts";
+import { closedGuardAttacksShareOneAngle } from "./entries/closed-guard-attacks-share-one-angle.ts";
 import { closedGuardPostureBattle } from "./entries/closed-guard-posture-battle.ts";
 import { connectionInOpenGuard } from "./entries/connection-in-open-guard.ts";
+import { deLaRivaBackTake } from "./entries/de-la-riva-back-take.ts";
 import { deLaRivaHook } from "./entries/de-la-riva-hook.ts";
+import { deepHalfGuard } from "./entries/deep-half-guard.ts";
+import { defendingTheGuillotine } from "./entries/defending-the-guillotine.ts";
+import { doubleLegIsALevelChange } from "./entries/double-leg-is-a-level-change.ts";
 import { elbowKneeEscape } from "./entries/elbow-knee-escape.ts";
+import { escapingBackControl } from "./entries/escaping-back-control.ts";
+import { escapingSideControl } from "./entries/escaping-side-control.ts";
+import { escapingTurtle } from "./entries/escaping-turtle.ts";
 import { framesVersusBlocks } from "./entries/frames-versus-blocks.ts";
 import { gettingHipsUnderneath } from "./entries/getting-hips-underneath.ts";
+import { granbyRollTurnsPressure } from "./entries/granby-roll-turns-pressure.ts";
+import { guardRetentionIsTheKneeBetween } from "./entries/guard-retention-is-the-knee-between.ts";
+import { guillotineIsABrokenPosture } from "./entries/guillotine-is-a-broken-posture.ts";
+import { headAndArmStrangles } from "./entries/head-and-arm-strangles.ts";
+import { heelHookIsRotation } from "./entries/heel-hook-is-rotation.ts";
 import { insidePosition } from "./entries/inside-position.ts";
+import { kimuraIsAGripFirst } from "./entries/kimura-is-a-grip-first.ts";
 import { kneeCutPass } from "./entries/knee-cut-pass.ts";
 import { kneeShield } from "./entries/knee-shield.ts";
 import { legEntanglementAsControl } from "./entries/leg-entanglement-as-control.ts";
+import { mountIsAHipPin } from "./entries/mount-is-a-hip-pin.ts";
+import { noGiGripsAreOnATimer } from "./entries/no-gi-grips-are-on-a-timer.ts";
+import { omoplataIsAKimuraWithTheLeg } from "./entries/omoplata-is-a-kimura-with-the-leg.ts";
+import { positionalHierarchy } from "./entries/positional-hierarchy.ts";
+import { pressurePassingVersusLoosePassing } from "./entries/pressure-passing-versus-loose-passing.ts";
+import { rearNakedStrangle } from "./entries/rear-naked-strangle.ts";
+import { retentionLadderFrameAngleInvertRecover } from "./entries/retention-ladder-frame-angle-invert-recover.ts";
 import { seatBeltAndHooks } from "./entries/seat-belt-and-hooks.ts";
+import { singleLegForJiuJitsu } from "./entries/single-leg-for-jiu-jitsu.ts";
+import { snapDownToFrontHeadlock } from "./entries/snap-down-to-front-headlock.ts";
 import { sweepingTowardTheMissingPost } from "./entries/sweeping-toward-the-missing-post.ts";
+import { triangleClosesAtTheShoulder } from "./entries/triangle-closes-at-the-shoulder.ts";
 import { underhookHalfGuard } from "./entries/underhook-half-guard.ts";
+import { whizzerIsAnOverhookOnTheHip } from "./entries/whizzer-is-an-overhook-on-the-hip.ts";
+import { wrestlingUpTechnicalStandUp } from "./entries/wrestling-up-technical-stand-up.ts";
 
 /**
  * The registry. Entries are imported explicitly rather than globbed so that the
@@ -28,21 +57,50 @@ import { underhookHalfGuard } from "./entries/underhook-half-guard.ts";
  */
 export const ENTRIES: TechniqueEntry[] = [
   armDrag,
+  armbarIsHipToShoulderDistance,
+  backRetentionFollowingTheTurn,
   bloodChokeVersusAirChoke,
+  butterflyGuardUnderPressure,
   butterflyHookAsLever,
+  closedGuardAttacksShareOneAngle,
   closedGuardPostureBattle,
   connectionInOpenGuard,
+  deLaRivaBackTake,
   deLaRivaHook,
+  deepHalfGuard,
+  defendingTheGuillotine,
+  doubleLegIsALevelChange,
   elbowKneeEscape,
+  escapingBackControl,
+  escapingSideControl,
+  escapingTurtle,
   framesVersusBlocks,
   gettingHipsUnderneath,
+  granbyRollTurnsPressure,
+  guardRetentionIsTheKneeBetween,
+  guillotineIsABrokenPosture,
+  headAndArmStrangles,
+  heelHookIsRotation,
   insidePosition,
+  kimuraIsAGripFirst,
   kneeCutPass,
   kneeShield,
   legEntanglementAsControl,
+  mountIsAHipPin,
+  noGiGripsAreOnATimer,
+  omoplataIsAKimuraWithTheLeg,
+  positionalHierarchy,
+  pressurePassingVersusLoosePassing,
+  rearNakedStrangle,
+  retentionLadderFrameAngleInvertRecover,
   seatBeltAndHooks,
+  singleLegForJiuJitsu,
+  snapDownToFrontHeadlock,
   sweepingTowardTheMissingPost,
+  triangleClosesAtTheShoulder,
   underhookHalfGuard,
+  whizzerIsAnOverhookOnTheHip,
+  wrestlingUpTechnicalStandUp,
 ];
 
 export const ENTRIES_BY_SLUG = new Map(ENTRIES.map((e) => [e.slug, e]));

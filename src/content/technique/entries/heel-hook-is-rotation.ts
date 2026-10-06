@@ -2,7 +2,7 @@ import type { TechniqueEntry } from "../types.ts";
 
 export const heelHookIsRotation: TechniqueEntry = {
   slug: "heel-hook-is-rotation",
-  category: "no-gi-systems",
+  category: "leg-locks",
   title: "The heel hook is rotation at the knee",
   summary:
     "A heel hook uses the heel as a handle to turn the lower leg while the thigh is held still, so the force arrives at the knee as rotation, which is what separates it from an ankle lock and what makes it dangerous.",

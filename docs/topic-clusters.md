@@ -29,7 +29,7 @@ has **no `/figures/[slug]` route**. Every route named below exists in `src/app/`
 
 | Pillar | Status | Why it is the pillar |
 | --- | --- | --- |
-| `/technique` | **Built** | The structural hub. Twelve category pages, twelve entries. This is the asset no competitor has (`competitor-research.md` §3, Tier 1). |
+| `/technique` | **Built** | The structural hub. Thirteen category pages (`leg-locks` added 2026-09-29). This is the asset no competitor has (`competitor-research.md` §3, Tier 1). |
 | The `guard-systems` flagship currently being written | **In progress, slug unknown** | The brand thesis in essay form. Everything in the Library should link up into it. |
 | `/manifesto` | **Built** | The short version of the same argument. Earns links rather than converting. |
 

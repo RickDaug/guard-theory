@@ -114,15 +114,27 @@ export default async function ArticlePage({ params }: Params) {
         articleSection: category.name,
         ...(author
           ? {
-              author: {
-                "@type": "Person",
-                // One node per author across every article, rather than
-                // twenty unrelated people who share a name. An identifier, not
-                // an address: there is no author page, so there is no `url`.
-                "@id": absoluteUrl(`/#author-${author.id}`),
-                name: author.name,
-                description: author.bio,
-              },
+              author:
+                author.kind === "organization"
+                  ? {
+                      // The editorial byline is the publication, not a person:
+                      // an article drafted with AI assistance must not assert
+                      // in schema that a named human wrote it.
+                      "@type": "Organization",
+                      "@id": absoluteUrl(`/#author-${author.id}`),
+                      name: author.name,
+                      description: author.bio,
+                      parentOrganization: { "@id": absoluteUrl("/#organization") },
+                    }
+                  : {
+                      "@type": "Person",
+                      // One node per author across every article, rather than
+                      // twenty unrelated people who share a name. An identifier, not
+                      // an address: there is no author page, so there is no `url`.
+                      "@id": absoluteUrl(`/#author-${author.id}`),
+                      name: author.name,
+                      description: author.bio,
+                    },
             }
           : {}),
         isPartOf: { "@id": absoluteUrl("/#website") },
@@ -190,7 +202,7 @@ export default async function ArticlePage({ params }: Params) {
                 {published && author ? (
                   <p className="mt-6 text-base text-slate">
                     By <span className="text-ink">{author.name}</span>,{" "}
-                    {author.role.toLowerCase()} · Published{" "}
+                    {author.kind === "person" ? author.role.toLowerCase() : author.role} · Published{" "}
                     <time dateTime={(article as { publishedAt: string }).publishedAt}>
                       {new Date(
                         (article as { publishedAt: string }).publishedAt,

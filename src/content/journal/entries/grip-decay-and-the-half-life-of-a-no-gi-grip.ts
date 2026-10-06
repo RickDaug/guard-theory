@@ -10,7 +10,7 @@ import type { PublishedArticle } from "../types.ts";
 export const gripDecayAndTheHalfLifeOfANoGiGrip: PublishedArticle = {
   status: "published",
   publishedAt: "2026-08-04",
-  authorId: "steven-p",
+  authorId: "guard-theory-editorial",
   slug: "grip-decay-and-the-half-life-of-a-no-gi-grip",
   category: "technique-notes",
   title: "Grip decay, and the half-life of a no-gi grip",

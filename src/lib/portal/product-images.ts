@@ -155,3 +155,44 @@ export async function removeImage(
 
   return { ok: true, url };
 }
+
+/**
+ * Deleting a product, or archiving it when it has been sold.
+ *
+ * A product with order history is archived, so past orders keep their meaning;
+ * its photographs stay, because the archived row still points at them. One
+ * with no history is deleted, and `product_image` goes with it by cascade —
+ * which, before this, left every photograph's file public in the Blob store
+ * with no row anywhere naming it, so nobody could find it to delete. The URLs
+ * are returned for the caller to delete from storage once this transaction
+ * has committed, exactly as removeImage does for one photograph.
+ */
+export async function deleteOrArchiveProduct(
+  client: PoolClient,
+  productId: string,
+): Promise<{ archived: boolean; urls: string[] }> {
+  const sold = await client.query<{ n: number }>(
+    `select count(*)::int as n
+       from order_item oi
+       join variant v on v.id = oi.variant_id
+      where v.product_id = $1`,
+    [productId],
+  );
+
+  if ((sold.rows[0]?.n ?? 0) > 0) {
+    await client.query(
+      `update product set status = 'archived', archived_at = now(), updated_at = now()
+        where id = $1`,
+      [productId],
+    );
+    return { archived: true, urls: [] };
+  }
+
+  const images = await client.query<{ blob_url: string }>(
+    "select blob_url from product_image where product_id = $1 order by sort_index, id",
+    [productId],
+  );
+  await client.query("delete from product where id = $1", [productId]);
+
+  return { archived: false, urls: images.rows.map((row) => row.blob_url) };
+}

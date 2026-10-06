@@ -23,7 +23,13 @@ import { storagePath } from "../../src/lib/images/storage.ts";
 import { buildLineItems } from "../../src/lib/stripe/checkout.ts";
 import { productPhotographs, type ProductView } from "../../src/lib/catalogue/types.ts";
 import { EditRefused, createDraftProduct, type EditResult } from "../../src/lib/portal/product-edit.ts";
-import { addImage, moveImage, removeImage, setImageAlt } from "../../src/lib/portal/product-images.ts";
+import {
+  addImage,
+  deleteOrArchiveProduct,
+  moveImage,
+  removeImage,
+  setImageAlt,
+} from "../../src/lib/portal/product-images.ts";
 import { closePool, isDatabaseConfigured, query, transaction } from "../../src/lib/db/client.ts";
 import type { PricedLine } from "../../src/lib/cart/types.ts";
 
@@ -436,6 +442,21 @@ describe("photograph rows against the database", { skip: !isDatabaseConfigured()
       (error) => error instanceof EditRefused && /photograph/.test(error.refusal),
     );
     assert.deepEqual(await order(id), ["0:only.jpg"], "the refused removal was not rolled back");
+  });
+
+  it("deleting an unsold product hands back every photograph's file, so none is left public and unnamed", async () => {
+    const id = await draft();
+    await add(id, "first");
+    await add(id, "second");
+    const outcome = await transaction((client) => deleteOrArchiveProduct(client, id));
+    assert.deepEqual(outcome, {
+      archived: false,
+      urls: [`https://${HOST}/first.jpg`, `https://${HOST}/second.jpg`],
+    });
+    const left = await query("select 1 from product_image where product_id = $1", [id]);
+    assert.equal(left.length, 0);
+    const product = await query("select 1 from product where id = $1", [id]);
+    assert.equal(product.length, 0);
   });
 
   it("does not touch another product's photographs", async () => {

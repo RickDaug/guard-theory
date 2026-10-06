@@ -36,7 +36,13 @@ import { isImageStorageConnected } from "@/lib/images/host";
 import { prepareUpload } from "@/lib/images/process";
 import { deleteImage, storeImage } from "@/lib/images/storage";
 import { checkFileSize, readAltText } from "@/lib/images/validate";
-import { addImage, moveImage, removeImage, setImageAlt } from "@/lib/portal/product-images";
+import {
+  addImage,
+  deleteOrArchiveProduct,
+  moveImage,
+  removeImage,
+  setImageAlt,
+} from "@/lib/portal/product-images";
 
 /**
  * Product management.
@@ -423,29 +429,25 @@ export async function deleteProduct(formData: FormData): Promise<void> {
     return;
   }
 
-  try {
-    const sold = await queryOne<{ n: number }>(
-      `select count(*)::int as n
-         from order_item oi
-         join variant v on v.id = oi.variant_id
-        where v.product_id = $1`,
-      [id],
-    );
+  let urls: string[] = [];
 
-    if ((sold?.n ?? 0) > 0) {
-      await query(
-        `update product set status = 'archived', archived_at = now(), updated_at = now()
-          where id = $1`,
-        [id],
-      );
-    } else {
-      await query("delete from product where id = $1", [id]);
-    }
+  try {
+    ({ urls } = await transaction((client) => deleteOrArchiveProduct(client, id)));
   } catch (error) {
     console.error(
       "[guard-theory] could not delete product:",
       error instanceof Error ? error.message : error,
     );
+  }
+
+  // After the commit, as removing one photograph does: a deleted product's
+  // files would otherwise stay public with no row left that names them.
+  // Logged by deleteImage when storage will not; with no storage connected
+  // there is no token to delete with, so the URLs are logged for the owner.
+  for (const url of urls) {
+    if (!isImageStorageConnected() || !(await deleteImage(url))) {
+      console.error(`[guard-theory] a deleted product's photograph is still in storage: ${url}`);
+    }
   }
 
   revalidatePath("/shop");

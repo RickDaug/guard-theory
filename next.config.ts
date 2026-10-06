@@ -229,6 +229,16 @@ const nextConfig: NextConfig = {
         destination: "https://guardtheory.net/:path*",
         permanent: true,
       },
+      {
+        // 2026-09-29: the leg-locks category was created and this entry moved
+        // into it from submissions. It had been live and in the sitemap since
+        // 2026-09-24, so its old address is kept as a one-hop 308.
+        // tests/unit/technique-redirects.test.ts holds every /technique/
+        // redirect to a live destination and a dead source.
+        source: "/technique/submissions/leg-entanglement-as-control",
+        destination: "/technique/leg-locks/leg-entanglement-as-control",
+        permanent: true,
+      },
     ];
   },
 };

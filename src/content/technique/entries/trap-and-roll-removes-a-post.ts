@@ -52,7 +52,7 @@ export const trapAndRollRemovesAPost: TechniqueEntry = {
     drafted:
       "Assisted draft, 2026-09-29, from technique batch 2 target list (D5, trap-and-roll-removes-a-post); written by a Claude Code agent from the target list, the house style fingerprint and the PR #22/#23 audit findings.",
     factAudit:
-      "Fact audit, assisted (Claude Code agent), 2026-09-29: same-side arm-and-foot trap and roll over the trapped-side shoulder confirmed against published upa instruction; weight-forward/sat-back rule rescoped to a posted or reaching hand (core, mechanics, error, drill, live round) to remove the contradiction with elbow-knee-escape and mount-is-a-hip-pin; 'side of the neck' cut; 'the other mount escape' removed.",
+      "Fact audit, assisted (Claude Code agent), 2026-09-29: same-side arm-and-foot trap and roll over the trapped-side shoulder confirmed against published upa instruction; weight-forward/sat-back rule rescoped to a posted or reaching hand (core, mechanics, error, drill, live round) to remove the contradiction with elbow-knee-escape and mount-is-a-hip-pin; 'side of the neck' cut; 'the other mount escape' removed. Fact re-check, assisted (Claude Code agent), 2026-10-06: upa / bridge and roll / trap and roll naming and the same-side arm-and-foot trap checked against the Wikipedia mount (grappling) article; no changes.",
     voiceAudit:
       "Voice audit, assisted (Claude Code agent), 2026-09-29: mechanics clean (meta 155); title and opening no longer define the entry by the elbow-knee escape (pointer sentence cut, 'upa' in title); opener that duplicated elbow-knee-escape's word for word rewritten; live-rounds step varied.",
     approvedBy: null,

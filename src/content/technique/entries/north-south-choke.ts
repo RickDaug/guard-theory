@@ -51,7 +51,7 @@ export const northSouthChoke: TechniqueEntry = {
     drafted:
       "Assisted draft, 2026-09-29, from technique batch 2 target list (D4, north-south-choke); written by a Claude Code agent from the target list, the house style fingerprint and the PR #22/#23 audit findings.",
     factAudit:
-      "Fact audit, assisted (Claude Code agent), 2026-09-29: all ledger rows checked, no changes required; arm-and-chest blood-choke mechanics consistent with blood-choke-versus-air-choke; palm-to-palm grip kept as a hedge; optional 'no amount of arm strength' rewording applied.",
+      "Fact audit, assisted (Claude Code agent), 2026-09-29: all ledger rows checked, no changes required; arm-and-chest blood-choke mechanics consistent with blood-choke-versus-air-choke; palm-to-palm grip kept as a hedge; optional 'no amount of arm strength' rewording applied. Fact re-check, assisted (Claude Code agent), 2026-10-06: no attribution or origin claim present (none added; the Marcelo Garcia figure entry says no source credits him with inventing it); no changes.",
     voiceAudit:
       "Voice audit, assisted (Claude Code agent), 2026-09-29: mechanics clean (title 40, meta 158); walls opener that rebuilt the batch-1 triangle's line rewritten plainly and the walls metaphor dropped throughout; 'It is tempting to' throat-clearing cut; 'no amount of' and a blood-choke clause copied from the rear naked strangle entry reworded; 'many gyms' cut; live-rounds step varied.",
     approvedBy: null,

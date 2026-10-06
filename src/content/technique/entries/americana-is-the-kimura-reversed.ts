@@ -11,7 +11,7 @@ export const americanaIsTheKimuraReversed: TechniqueEntry = {
   difficulty: "Foundational",
   relevance: "Gi and no-gi",
   positionAndProblem:
-    "From side control their far arm comes up to push on your jaw, bent at the elbow, the hand beside their head. You pin the wrist to the mat, thread your other arm under their upper arm, take hold of your own wrist and start to turn. Their elbow slides up the mat toward their ear, the arm lengthens, and the pressure you were building goes into a stretched arm that no longer rotates. The americana, also called the keylock and usually identified with judo's ude garami, needs an elbow that stays bent and a hand that travels toward their hips.",
+    "From side control their far arm comes up to push on your jaw, bent at the elbow, the hand beside their head. You pin the wrist to the mat, thread your other arm under their upper arm, take hold of your own wrist and start to turn. Their elbow slides up the mat toward their ear, the arm lengthens, and the pressure you were building goes into a stretched arm that no longer rotates. The americana, also called the keylock, is one form of what judo calls ude garami, a name judo also uses for the kimura, and it needs an elbow that stays bent and a hand that travels toward their hips.",
   objective:
     "Pin a bent arm with the hand above the elbow and the shoulder flat, then turn the upper arm outward by sliding the hand toward the hips while the elbow lifts.",
   coreConcept:
@@ -53,7 +53,7 @@ export const americanaIsTheKimuraReversed: TechniqueEntry = {
     drafted:
       "Assisted draft, 2026-09-29, from technique batch 2 target list (D3, americana-is-the-kimura-reversed); written by a Claude Code agent from the target list, the house style fingerprint and the PR #22/#23 audit findings.",
     factAudit:
-      "Fact audit, assisted (Claude Code agent), 2026-09-29: shared figure-four and opposite rotations confirmed (americana outward, kimura inward, consistent with kimura-is-a-grip-first); keylock/ude garami naming confirmed; one safety-note absolute hedged ('faster than the attacker intends'); optional 'simply lifts' hedged to 'tends to lift'.",
+      "Fact audit, assisted (Claude Code agent), 2026-09-29: shared figure-four and opposite rotations confirmed (americana outward, kimura inward, consistent with kimura-is-a-grip-first); keylock/ude garami naming confirmed; one safety-note absolute hedged ('faster than the attacker intends'); optional 'simply lifts' hedged to 'tends to lift'. Fact re-check, assisted (Claude Code agent), 2026-10-06: naming corrected from 'usually identified with judo's ude garami' to one form of ude garami, a judo name that also covers the kimura (gyaku ude garami), per the ude-garami naming summary on Wikipedia; rotation directions and side-control/mount framing unchanged.",
     voiceAudit:
       "Voice audit, assisted (Claude Code agent), 2026-09-29: mechanics clean (meta 158); title moved off the submissions page's 'one A, N Bs' template; wry POS closer cut; safety opener no longer shares the batch's 'takes the load' shape; doubled 'which is why' and filler 'simply' trimmed; 'many coaches describe' naming cut; live-rounds step reworded off the batch's 'notice whether' shape.",
     approvedBy: null,

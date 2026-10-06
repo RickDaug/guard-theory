@@ -59,7 +59,7 @@ export const theArmDragAsASystem: DraftArticle = {
       heading: "Why the drag survives without a sleeve",
       paragraphs: [
         "No-gi rule books take away every handle a gi guard is built on. ADCC forbids holding the T-shirt or the shorts, and the IBJJF makes grabbing any part of the uniform in no-gi a serious foul. The Journal's piece on de la Riva traces what that did to one guard: the hook survived and the sleeve and trouser grips around it had to be replaced.",
-        "The arm drag never had those grips to lose. Both of its handles are on the body: a wrist, which the hand can close around, and the back of the arm above the elbow, which the other hand cups. A technique that came from wrestling was built for opponents who wear nothing to hold, and so it transfers to a no-gi match with no parts missing. A plausible reading, and it is ours, is that this suited a grappler who, on BJJ Heroes' account, first trained without the gi as a brown belt: of everything in a gi game, it was the piece that did not have to be rebuilt.",
+        "The arm drag never had those grips to lose. Both of its handles are on the body: a wrist, which the hand can close around, and the back of the arm above the elbow, which the other hand cups. Neither handle depends on cloth, so the drag transfers to a no-gi match with no parts missing. A plausible reading, and it is ours, is that this suited a grappler who, on BJJ Heroes' account, first trained without the gi as a brown belt: of everything in a gi game, it was the piece that did not have to be rebuilt.",
       ],
     },
     {

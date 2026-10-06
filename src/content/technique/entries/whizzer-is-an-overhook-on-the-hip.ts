@@ -52,7 +52,7 @@ export const whizzerIsAnOverhookOnTheHip: TechniqueEntry = {
     drafted:
       "Assisted draft, 2026-09-25, from docs/agent-handoffs/technique-program-2026-09 (brief 04, whizzer-is-an-overhook-on-the-hip); written by a Claude Code agent from the research brief and the house style fingerprint.",
     factAudit:
-      "Fact audit, assisted (Claude Code agent), 2026-09-28: all ledger rows checked, no changes; whizzer and underhook mechanics and the shoulder safety note confirmed.",
+      "Fact audit, assisted (Claude Code agent), 2026-09-28: all ledger rows checked, no changes; whizzer and underhook mechanics and the shoulder safety note confirmed. Fact re-check, assisted (Claude Code agent), 2026-10-06: terminology only (whizzer, dogfight) stated as gym usage; no changes.",
     voiceAudit:
       "Voice audit, assisted (Claude Code agent), 2026-09-28: REVISE (4), all applied; the filler triad on the name cut, 'about a second' and 'honest' removed, the coined 'whizzerer' replaced, 'most gyms' hedged; safety note reopened on the shoulder and its load.",
     approvedBy: null,

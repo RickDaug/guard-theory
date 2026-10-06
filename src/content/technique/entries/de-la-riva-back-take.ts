@@ -53,7 +53,7 @@ export const deLaRivaBackTake: TechniqueEntry = {
     drafted:
       "Assisted draft, 2026-09-25, from docs/agent-handoffs/technique-program-2026-09 (brief 04, de-la-riva-back-take); written by a Claude Code agent from the research brief and the house style fingerprint.",
     factAudit:
-      "Fact audit, assisted (Claude Code agent), 2026-09-28: all ledger rows checked, no changes; berimbolo reported as terminology; knee and neck safety notes confirmed.",
+      "Fact audit, assisted (Claude Code agent), 2026-09-28: all ledger rows checked, no changes; berimbolo reported as terminology; knee and neck safety notes confirmed. Fact re-check, assisted (Claude Code agent), 2026-10-06: no rules, history or naming claims beyond berimbolo as gym terminology; no changes.",
     voiceAudit:
       "Voice audit, assisted (Claude Code agent), 2026-09-28: PASS; the optional batch change applied, so the safety note opens on the knee and its load rather than on 'the structure'.",
     approvedBy: null,

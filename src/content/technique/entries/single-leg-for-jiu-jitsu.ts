@@ -53,7 +53,7 @@ export const singleLegForJiuJitsu: TechniqueEntry = {
     drafted:
       "Assisted draft, 2026-09-25, from docs/agent-handoffs/technique-program-2026-09 (brief 04, single-leg-for-jiu-jitsu); written by a Claude Code agent from the research brief and the house style fingerprint.",
     factAudit:
-      "Fact audit, assisted (Claude Code agent), 2026-09-28: shot, lift and finish mechanics confirmed; the wrestling-scoring claim corrected for folkstyle mat scoring; the 'most grapplers' frequency claim hedged to 'many'.",
+      "Fact audit, assisted (Claude Code agent), 2026-09-28: shot, lift and finish mechanics confirmed; the wrestling-scoring claim corrected for folkstyle mat scoring; the 'most grapplers' frequency claim hedged to 'many'. Fact re-check, assisted (Claude Code agent), 2026-10-06: no rule-book citations; 'lets the bottom player pull guard' holds generally, though the ADCC rules page penalises a guard pull within three seconds of one's own shot; no changes.",
     voiceAudit:
       "Voice audit, assisted (Claude Code agent), 2026-09-28: REVISE (3), all applied; frequency hedged, the 'honest difference' sentence stated plainly, the wry referee closer cut; safety note reopened on the caught knee without the three-structures count.",
     approvedBy: null,

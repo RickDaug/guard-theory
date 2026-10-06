@@ -250,7 +250,7 @@ used as an anchor by any of those four inbound links. Each describes the destina
 **Zero commercial links.** No `/first-edition`, no `/shop`, no PDP — Rule G4. This is the page we
 want other sites to cite, and a product link in the body is the thing that stops them.
 
-**Inbound links:** `/technique` (hub intro), all twelve `/technique/[category]` pages
+**Inbound links:** `/technique` (hub intro), all thirteen `/technique/[category]` pages
 ("Further reading"), `/manifesto`, `/about`. That is heavy inbound by design — this is the
 cluster's pillar and should be the most internally-linked page on the site.
 

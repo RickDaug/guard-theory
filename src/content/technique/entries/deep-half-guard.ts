@@ -55,7 +55,7 @@ export const deepHalfGuard: TechniqueEntry = {
     drafted:
       "Assisted draft, 2026-09-25, from docs/agent-handoffs/technique-program-2026-09 (brief 04, deep-half-guard); written by a Claude Code agent from the research brief and the house style fingerprint.",
     factAudit:
-      "Fact audit, assisted (Claude Code agent), 2026-09-28: all ledger rows checked, no changes required; deep-half base, exits and crossface/kimura exposure confirmed. Optional note taken: the safety note now tells partners to agree on a verbal tap, since the trapped arm cannot tap.",
+      "Fact audit, assisted (Claude Code agent), 2026-09-28: all ledger rows checked, no changes required; deep-half base, exits and crossface/kimura exposure confirmed. Optional note taken: the safety note now tells partners to agree on a verbal tap, since the trapped arm cannot tap. Fact re-check, assisted (Claude Code agent), 2026-10-06: no naming or history attribution beyond 'many gyms call this deep half guard'; consistent with the Kesting glossary as cited in the Journal piece on half guard; no changes.",
     voiceAudit:
       "Voice audit, assisted (Claude Code agent), 2026-09-28: PASS. Optional note taken: the core closer 'The position is entered in order to leave it' was cut, as it repeated the last key mechanic.",
     approvedBy: null,

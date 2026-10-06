@@ -27,6 +27,12 @@ describe("the cart's rate limit, statically", () => {
     assert.ok(!key.includes("203.0.113.9"));
   });
 
+  it("keys an IPv6 caller by its /64, so rotating addresses is one caller", () => {
+    assert.equal(callerKey("2001:db8:5:6::1"), callerKey("2001:db8:5:6:ffff:1:2:3"));
+    assert.notEqual(callerKey("2001:db8:5:6::1"), callerKey("2001:db8:5:7::1"));
+    assert.equal(callerKey("::ffff:203.0.113.9"), callerKey("203.0.113.9"));
+  });
+
   it("a reused intent always has time left to be turned into a checkout", () => {
     assert.ok(INTENT_REUSE_MINUTES > 0);
     assert.ok(CHECKOUT_INTENT_TTL_MINUTES - INTENT_REUSE_MINUTES >= 10);

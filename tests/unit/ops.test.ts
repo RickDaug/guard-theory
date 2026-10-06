@@ -36,6 +36,7 @@ import {
   queryTimeoutMs,
 } from "../../src/lib/db/client.ts";
 import type { MailProvider } from "../../src/lib/mail/types.ts";
+import type { ModeCheck } from "../../src/lib/stripe/mode-check.ts";
 
 /**
  * Ops: the owner alert, the health readers, the sweeps, the ship queue, and
@@ -165,7 +166,9 @@ describe("the owner alert, end to end with a stand-in provider", () => {
     return { mail, sent };
   }
 
-  function harness(options: { delivers?: boolean; ok?: boolean; env?: NodeJS.ProcessEnv } = {}) {
+  function harness(
+    options: { delivers?: boolean; ok?: boolean; env?: NodeJS.ProcessEnv; modeCheck?: ModeCheck } = {},
+  ) {
     const { mail, sent } = provider(options.delivers ?? true, options.ok ?? true);
     let stored: AlertState | null = null;
     let now = NOW;
@@ -181,6 +184,7 @@ describe("the owner alert, end to end with a stand-in provider", () => {
           provider: () => mail,
           stripeConfigured: () => false,
           lastReconcile: async () => null,
+          modeCheck: async () => options.modeCheck ?? { state: "not-connected" },
           stored: async () => problems,
           readState: async () => stored,
           writeState: async (state) => {
@@ -223,6 +227,17 @@ describe("the owner alert, end to end with a stand-in provider", () => {
     h.setProblems([problem("unfulfilled:1"), problem("label:2", "label")]);
     assert.equal(await h.run(), "sent");
     assert.equal(h.sent.length, 2);
+  });
+
+  it("tells the owner when Stripe disagrees with the key about the mode", async () => {
+    const h = harness({
+      modeCheck: { state: "mismatch", keyMode: "test", stripeSays: "live", checkedAt: NOW },
+    });
+    h.setProblems([]);
+
+    assert.equal(await h.run(), "sent");
+    assert.match(h.sent[0]!.body, /Stripe disagrees with the key about test or live mode/);
+    assert.deepEqual(h.writes.at(-1)?.keys, ["stripe-mode:test:live"]);
   });
 
   it("forgets what it said once everything is clear, so the next problem is news", async () => {

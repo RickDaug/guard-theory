@@ -1,5 +1,5 @@
 import { getSession } from "@/lib/portal/session";
-import { portalUrl } from "@/lib/portal/routes";
+import { isCrossSiteRequest, portalUrl } from "@/lib/portal/routes";
 import { getOrder } from "@/lib/orders/manage";
 import { query } from "@/lib/db/client";
 import { isShippoConfigured, refreshLabelUrl } from "@/lib/shipping/shippo";
@@ -28,7 +28,7 @@ function redirectTo(location: string): Response {
  * Crew and owner alike: printing labels is the crew's job.
  */
 export async function GET(
-  _request: Request,
+  request: Request,
   { params }: { params: Promise<{ id: string }> },
 ): Promise<Response> {
   const session = await getSession();
@@ -38,6 +38,13 @@ export async function GET(
   }
 
   const { id } = await params;
+
+  // A link on another site's page: no Shippo call, no history line in this
+  // person's name. They land on the order, where the button works.
+  if (isCrossSiteRequest(request.headers)) {
+    return redirectTo(portalUrl(/^[A-Za-z0-9_-]{1,64}$/.test(id) ? `/orders/${id}` : "/orders"));
+  }
+
   const order = /^[A-Za-z0-9_-]{1,64}$/.test(id) ? await getOrder(id) : undefined;
 
   if (!order) {

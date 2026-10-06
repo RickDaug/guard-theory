@@ -24,6 +24,7 @@ import {
 } from "../../src/lib/portal/users.ts";
 import { findSession, insertSession } from "../../src/lib/portal/session-store.ts";
 import { SHARED_OWNER_NAME } from "../../src/lib/portal/roles.ts";
+import { isCrossSiteRequest } from "../../src/lib/portal/routes.ts";
 import { listOrderEvents, recordOrderEvent } from "../../src/lib/orders/events.ts";
 import { crewSetPassword } from "../../src/lib/mail/templates.ts";
 import {
@@ -88,6 +89,26 @@ describe("password and username rules (no database)", () => {
     const source = readFileSync(new URL("../../src/app/crew/users/actions.ts", import.meta.url), "utf8");
     assert.doesNotMatch(source, /formData\.get\("password"\)|text\(formData, "password"\)/);
     assert.doesNotMatch(source, /hashPassword|password_hash/);
+  });
+});
+
+describe("the label route will not act for another site's page", () => {
+  it("lets the portal's own link and a typed address through, and refuses any other site", () => {
+    const from = (site?: string) => new Headers(site ? { "sec-fetch-site": site } : {});
+    assert.equal(isCrossSiteRequest(from("same-origin")), false);
+    assert.equal(isCrossSiteRequest(from("none")), false);
+    assert.equal(isCrossSiteRequest(from()), false, "no header is not evidence of another site");
+    assert.equal(isCrossSiteRequest(from("cross-site")), true);
+    assert.equal(isCrossSiteRequest(from("same-site")), true, "a sibling subdomain is not this site");
+  });
+
+  it("checks before it calls Shippo or writes the order's history", () => {
+    const source = readFileSync("src/app/crew/orders/[id]/label/route.ts", "utf8");
+    const check = source.indexOf("isCrossSiteRequest(request.headers)");
+    assert.ok(check > 0, "the label route no longer checks Sec-Fetch-Site");
+    for (const effect of ["refreshLabelUrl(", "recordOrderEvent(", "getOrder("]) {
+      assert.ok(check < source.indexOf(effect, source.indexOf("export async function GET")), `${effect} runs first`);
+    }
   });
 });
 

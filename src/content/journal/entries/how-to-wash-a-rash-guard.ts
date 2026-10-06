@@ -9,7 +9,7 @@ import type { PublishedArticle } from "../types.ts";
 export const howToWashARashGuard: PublishedArticle = {
   status: "published",
   publishedAt: "2026-08-04",
-  authorId: "steven-p",
+  authorId: "guard-theory-editorial",
   slug: "how-to-wash-a-rash-guard",
   category: "equipment-and-apparel",
   title: "How to wash a rash guard",

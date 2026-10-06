@@ -13,7 +13,7 @@ import type { PublishedArticle } from "../types.ts";
 export const theKimuraAsAControlBeforeItIsAFinish: PublishedArticle = {
   status: "published",
   publishedAt: "2026-08-04",
-  authorId: "steven-p",
+  authorId: "guard-theory-editorial",
   slug: "the-kimura-as-a-control-before-it-is-a-finish",
   category: "technique-notes",
   title: "The kimura as a control before it is a finish",

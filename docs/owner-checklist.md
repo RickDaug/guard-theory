@@ -291,6 +291,12 @@ accountant what the floor is.
 
 Do this before the live-mode cutover. It does not block a test-mode rehearsal.
 
+**Mostly done 2026-09-29.** The owner set seven business days to dispatch, a
+thirty-day return window, no prepaid label and no refund day count, exchanges
+shipped when the return arrives, no fault warranty, and no numbered lost or
+damaged parcel promise (§12, "OWNER-SUPPLIED 2026-09-29"). Still open: weekend
+orders (b), transit time (c), the contract-formation line (k), order retention (l).
+
 ---
 
 ## What the assistant does after each step

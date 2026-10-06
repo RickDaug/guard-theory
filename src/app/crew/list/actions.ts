@@ -1,7 +1,7 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
-import { requireSession } from "@/lib/portal/session";
+import { requireRole } from "@/lib/portal/session";
 import { portalUrl } from "@/lib/portal/routes";
 import { findBannedConstructions, BANNED_IN_EMAIL } from "@/content/editorial-voice";
 import type { PortalFormState } from "@/lib/portal/form-state";
@@ -61,7 +61,7 @@ export async function sendAnnouncement(
   _previous: PortalFormState,
   formData: FormData,
 ): Promise<PortalFormState> {
-  await requireSession();
+  await requireRole("owner");
 
   const subject = String(formData.get("subject") ?? "").trim();
   const body = String(formData.get("body") ?? "").trim();
@@ -145,7 +145,7 @@ export async function continueAnnouncement(
   _previous: PortalFormState,
   formData: FormData,
 ): Promise<PortalFormState> {
-  await requireSession();
+  await requireRole("owner");
 
   const campaignId = String(formData.get("campaign") ?? "");
   if (!campaignId || !isDatabaseConfigured()) {

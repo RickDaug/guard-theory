@@ -200,13 +200,14 @@ describe("the product actions", () => {
   // Source-level, because the actions need a request and a session.
   const action = readFileSync(new URL("../../src/app/crew/products/actions.ts", import.meta.url), "utf8");
 
-  it("every exported action checks the session before anything else", () => {
+  it("every exported action checks for the OWNER before anything else", () => {
     const bodies = action.split(/^export async function /m).slice(1);
     assert.ok(bodies.length >= 8, `found ${bodies.length} actions`);
     for (const body of bodies) {
       const name = body.slice(0, body.indexOf("("));
       const opening = body.slice(body.indexOf("{", body.indexOf(")")) + 1).trimStart();
-      assert.match(opening, /^await requireSession\(\);/, `${name} does not start with requireSession()`);
+      // Owner, not crew: crew see the catalogue and change none of it.
+      assert.match(opening, /^await requireRole\("owner"\);/, `${name} does not start with requireRole("owner")`);
     }
   });
 

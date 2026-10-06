@@ -26,7 +26,7 @@ export default async function SalesExportPage({
 }: {
   searchParams: Promise<{ error?: string | string[] }>;
 }) {
-  await requirePortalPage(portalUrl("/orders/export"));
+  await requirePortalPage(portalUrl("/orders/export"), "owner");
 
   const params = await searchParams;
   const error = exportErrorMessage(Array.isArray(params.error) ? params.error[0] : params.error);

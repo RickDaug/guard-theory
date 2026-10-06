@@ -8,6 +8,7 @@ import { ContentForm } from "./ContentForm";
 import { ImagesEditor } from "./ImagesEditor";
 import { isImageStorageConnected, isStoredImageUrl } from "@/lib/images/host";
 import { getProduct } from "@/content/products";
+import { formatMoney } from "@/lib/money";
 
 export const dynamic = "force-dynamic";
 
@@ -51,7 +52,7 @@ type ImageRow = {
  * change a number.
  */
 export default async function ProductsPage() {
-  await requirePortalPage(portalUrl("/products"));
+  const session = await requirePortalPage(portalUrl("/products"));
 
   if (!isDatabaseConfigured()) {
     return (
@@ -86,6 +87,49 @@ export default async function ProductsPage() {
   );
 
   const storageConnected = isImageStorageConnected();
+
+  // Crew read the catalogue — what exists, in which sizes, how many are left —
+  // and change none of it. Every product action also refuses them itself.
+  if (session.role !== "owner") {
+    return (
+      <main id="main" className="px-6 py-16 md:px-12">
+        <div className="mx-auto max-w-[70rem]">
+          <h1 className="display-condensed mb-12 text-3xl text-chalk">Products</h1>
+          {products.length === 0 ? (
+            <p className="text-lg text-steel">No products yet.</p>
+          ) : (
+            <ul className="m-0 flex list-none flex-col gap-px bg-steel-dim p-0">
+              {products.map((product) => {
+                const registry = getProduct(product.slug);
+                const sizes = variants.filter((variant) => variant.product_id === product.id);
+                const price =
+                  product.price_cents === null
+                    ? "No price"
+                    : formatMoney(product.sale_cents ?? product.price_cents);
+
+                return (
+                  <li key={product.id} className="flex flex-col gap-3 bg-ink px-6 py-5">
+                    <p className="flex flex-wrap items-baseline gap-x-6 gap-y-1">
+                      <span className="display-plain text-base text-chalk">
+                        {registry?.name ?? product.db_name ?? product.slug}
+                      </span>{" "}
+                      <span className="text-sm text-steel">{product.status === "active" ? "Live" : product.status === "sold-out" ? "Sold out" : "Draft"}</span>{" "}
+                      <span className="text-sm text-chalk tabular-nums">{price}</span>
+                    </p>
+                    <p className="text-sm text-steel">
+                      {sizes.length === 0
+                        ? "No sizes yet."
+                        : sizes.map((size) => `${size.size_label}: ${size.stock} left`).join(" · ")}
+                    </p>
+                  </li>
+                );
+              })}
+            </ul>
+          )}
+        </div>
+      </main>
+    );
+  }
 
   return (
     <main id="main" className="px-6 py-16 md:px-12">

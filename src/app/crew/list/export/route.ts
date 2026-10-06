@@ -31,7 +31,7 @@ type Row = {
  * list, and someone would eventually paste it into a mail tool.
  */
 export async function GET(): Promise<Response> {
-  const denied = await requirePortalRoute();
+  const denied = await requirePortalRoute("owner");
 
   if (denied) {
     return denied;

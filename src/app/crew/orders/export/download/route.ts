@@ -21,7 +21,7 @@ export const dynamic = "force-dynamic";
  * reason — never a bare 4xx/5xx, which tells the owner nothing.
  */
 export async function GET(request: Request): Promise<Response> {
-  const denied = await requirePortalRoute();
+  const denied = await requirePortalRoute("owner");
 
   if (denied) {
     return denied;

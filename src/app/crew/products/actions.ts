@@ -4,7 +4,7 @@ import { revalidatePath } from "next/cache";
 import { randomUUID } from "node:crypto";
 import type { PoolClient } from "pg";
 import { query, queryOne, transaction } from "@/lib/db/client";
-import { requireSession } from "@/lib/portal/session";
+import { requireRole } from "@/lib/portal/session";
 import type { PortalFormState } from "@/lib/portal/form-state";
 import {
   applyStockEdits,
@@ -41,7 +41,7 @@ import { addImage, moveImage, removeImage, setImageAlt } from "@/lib/portal/prod
 /**
  * Product management.
  *
- * EVERY ACTION CALLS requireSession() FIRST.
+ * EVERY ACTION CALLS requireRole("owner") FIRST.
  *
  * Not because the proxy might be misconfigured, but because Server Actions are
  * POSTs to the page route rather than routes of their own — a proxy matcher is
@@ -99,7 +99,7 @@ export async function saveProduct(
   _previous: ProductFormState,
   formData: FormData,
 ): Promise<ProductFormState> {
-  await requireSession();
+  await requireRole("owner");
 
   const id = text(formData, "id");
 
@@ -286,7 +286,7 @@ export async function createProduct(
   _previous: PortalFormState,
   formData: FormData,
 ): Promise<PortalFormState> {
-  await requireSession();
+  await requireRole("owner");
 
   const parsed = readNewProduct(formData);
 
@@ -309,7 +309,7 @@ export async function saveProductContent(
   _previous: PortalFormState,
   formData: FormData,
 ): Promise<PortalFormState> {
-  await requireSession();
+  await requireRole("owner");
 
   const id = text(formData, "id");
 
@@ -330,7 +330,7 @@ export async function addProductSize(
   _previous: PortalFormState,
   formData: FormData,
 ): Promise<PortalFormState> {
-  await requireSession();
+  await requireRole("owner");
 
   const id = text(formData, "id");
   const sizeLabel = readSizeLabel(formData.get("sizeLabel"));
@@ -358,7 +358,7 @@ export async function changeProductSize(
   _previous: PortalFormState,
   formData: FormData,
 ): Promise<PortalFormState> {
-  await requireSession();
+  await requireRole("owner");
 
   const id = text(formData, "id");
   const variantId = text(formData, "variantId");
@@ -415,7 +415,7 @@ export async function changeProductSize(
  * answer questions about. Archiving costs nothing and keeps the record whole.
  */
 export async function deleteProduct(formData: FormData): Promise<void> {
-  await requireSession();
+  await requireRole("owner");
 
   const id = text(formData, "id");
 
@@ -455,7 +455,7 @@ export async function saveCategory(
   _previous: PortalFormState,
   formData: FormData,
 ): Promise<PortalFormState> {
-  await requireSession();
+  await requireRole("owner");
 
   const name = text(formData, "name");
 
@@ -500,7 +500,7 @@ export async function saveCategory(
 
 /** Up and down rather than drag: a drag needs a keyboard equivalent anyway. */
 export async function moveCategory(formData: FormData): Promise<void> {
-  await requireSession();
+  await requireRole("owner");
 
   const id = text(formData, "id");
   const direction = text(formData, "direction");
@@ -567,7 +567,7 @@ export async function uploadProductImage(
   _previous: PortalFormState,
   formData: FormData,
 ): Promise<PortalFormState> {
-  await requireSession();
+  await requireRole("owner");
 
   if (!isImageStorageConnected()) {
     return { status: "error", message: STORAGE_NOT_CONNECTED };
@@ -655,7 +655,7 @@ export async function changeProductImage(
   _previous: PortalFormState,
   formData: FormData,
 ): Promise<PortalFormState> {
-  await requireSession();
+  await requireRole("owner");
 
   const id = text(formData, "id");
   const imageId = text(formData, "imageId");

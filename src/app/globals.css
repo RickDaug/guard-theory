@@ -256,3 +256,18 @@
     transform: translateY(0);
   }
 }
+
+/*
+ * The packing slip (src/app/crew/orders/[id]/packing-slip) is the one page
+ * meant for paper: no ground, no site chrome, and its own text set to black
+ * with print: utilities. Scoped by :has() so no other page's printing changes.
+ */
+@media print {
+  body:has([data-packing-slip]) {
+    background: none;
+  }
+
+  body:has([data-packing-slip]) :is(header, footer, .skip-link) {
+    display: none;
+  }
+}

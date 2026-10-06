@@ -26,6 +26,15 @@ import { isShippoConfigured } from "@/lib/shipping/shippo";
 import { orderParcelWeight, weightWarning } from "@/lib/shipping/weight";
 import { emailStatusView } from "@/lib/portal/email-status";
 import { DISPUTE_LABEL, FLAG_EXPLANATION, isFlagReason, type DisputeStatus } from "@/lib/orders/flags";
+import { EVENT_LABEL, listOrderEvents } from "@/lib/orders/events";
+
+function when(at: Date): string {
+  return new Intl.DateTimeFormat("en-US", {
+    dateStyle: "medium",
+    timeStyle: "short",
+    timeZone: "UTC",
+  }).format(new Date(at));
+}
 
 export const dynamic = "force-dynamic";
 
@@ -51,7 +60,10 @@ const NEXT_LABEL: Record<string, string> = {
 
 export default async function OrderPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
-  await requirePortalPage(portalUrl(`/orders/${id}`));
+  const session = await requirePortalPage(portalUrl(`/orders/${id}`));
+  // Crew see the order and do the shipping; money and flags are the owner's.
+  // Hiding these is presentation — each action checks the role itself.
+  const owner = session.role === "owner";
 
   const order = await getOrder(id);
 
@@ -60,10 +72,11 @@ export default async function OrderPage({ params }: { params: Promise<{ id: stri
   }
 
   const labelDue = (order.status === "new" || order.status === "in_process") && !order.tracking_number;
-  const [items, emails, weight] = await Promise.all([
+  const [items, emails, weight, events] = await Promise.all([
     getOrderItems(order.id),
     orderEmails(order.id),
     labelDue ? orderParcelWeight(order.id) : Promise.resolve(null),
+    listOrderEvents(order.id),
   ]);
   const remaining = order.total_cents - order.refunded_cents;
   const next = ALLOWED_TRANSITIONS[order.status];
@@ -114,12 +127,16 @@ export default async function OrderPage({ params }: { params: Promise<{ id: stri
                 ? FLAG_EXPLANATION[order.flagged_reason]
                 : "This order needs a look."}
             </p>
-            <form action={clearFlag} className="mt-4">
-              <input type="hidden" name="id" value={order.id} />
-              <Button type="submit" intent="quiet">
-                I have dealt with this
-              </Button>
-            </form>
+            {owner ? (
+              <form action={clearFlag} className="mt-4">
+                <input type="hidden" name="id" value={order.id} />
+                <Button type="submit" intent="quiet">
+                  I have dealt with this
+                </Button>
+              </form>
+            ) : (
+              <p className="mt-4 text-sm text-steel">Ask the owner before shipping this one.</p>
+            )}
           </div>
         ) : null}
 
@@ -208,11 +225,31 @@ export default async function OrderPage({ params }: { params: Promise<{ id: stri
           </h2>
 
           <div className="flex flex-col gap-10">
+            <div className="flex flex-wrap items-center gap-x-8 gap-y-4">
+              {order.label_url || order.shippo_transaction_id ? (
+                // A route of ours, not Shippo's link: it fetches a freshly
+                // signed URL (the stored one expires) and records who printed.
+                <a
+                  href={portalUrl(`/orders/${order.id}/label`)}
+                  target="_blank"
+                  rel="noopener"
+                  className="display-plain inline-flex min-h-6 items-center border border-steel-mid px-5 py-3 text-base text-chalk no-underline hover:border-chalk"
+                >
+                  Print label (4x6 PDF)
+                </a>
+              ) : null}
+              <Link
+                href={portalUrl(`/orders/${order.id}/packing-slip`)}
+                className="display-plain inline-flex min-h-6 items-center text-sm text-chalk underline underline-offset-[6px]"
+              >
+                Print packing slip
+              </Link>
+            </div>
+
             {order.status === "new" || order.status === "in_process" ? (
               <>
                 <LabelControl
                   id={order.id}
-                  labelUrl={order.label_url}
                   configured={isShippoConfigured()}
                   weightOz={weight?.weightOz ?? null}
                   weightWarning={weight ? weightWarning(weight) : null}
@@ -245,6 +282,7 @@ export default async function OrderPage({ params }: { params: Promise<{ id: stri
               <div className="flex flex-wrap gap-8">
                 {next.map((to) =>
                   to === "cancelled" ? (
+                    owner ? (
                     <CancelControl
                       key={to}
                       id={order.id}
@@ -256,6 +294,7 @@ export default async function OrderPage({ params }: { params: Promise<{ id: stri
                           : "Cancel this order"
                       }
                     />
+                    ) : null
                   ) : (
                     <AdvanceControl
                       key={to}
@@ -268,7 +307,13 @@ export default async function OrderPage({ params }: { params: Promise<{ id: stri
               </div>
             )}
 
-            {order.dispute_status === "lost" ? (
+            {!owner ? (
+              remaining < order.total_cents ? (
+                <p className="text-base text-steel">
+                  {remaining > 0 ? "Part of this order has been refunded." : "This order has been refunded in full."}
+                </p>
+              ) : null
+            ) : order.dispute_status === "lost" ? (
               <>
               <p className="max-w-[46rem] text-base text-steel">
                 {shipped
@@ -300,6 +345,26 @@ export default async function OrderPage({ params }: { params: Promise<{ id: stri
               </>
             )}
           </div>
+        </section>
+
+        <section aria-labelledby="history" className="mt-16">
+          <h2 id="history" className="display-condensed mb-6 text-xl text-chalk">
+            History
+          </h2>
+          <ol className="m-0 flex list-none flex-col gap-3 p-0">
+            <li className="flex flex-wrap items-baseline gap-x-6 gap-y-1">
+              <span className="text-base text-chalk">Paid and placed</span>{" "}
+              <span className="text-sm text-steel">{when(order.placed_at)}</span>
+            </li>
+            {events.map((event) => (
+              <li key={event.id} className="flex flex-wrap items-baseline gap-x-6 gap-y-1">
+                <span className="text-base text-chalk">
+                  {event.detail ? `${EVENT_LABEL[event.kind]}, ${event.detail}` : EVENT_LABEL[event.kind]}
+                </span>{" "}
+                <span className="text-sm text-steel">{`by ${event.actor_name} · ${when(event.created_at)}`}</span>
+              </li>
+            ))}
+          </ol>
         </section>
 
         <section aria-labelledby="messages" className="mt-16">

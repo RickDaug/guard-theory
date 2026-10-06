@@ -165,7 +165,9 @@ echo "restore-check: the archive lists ${want_tables} tables"
 # Neon said without the key ever being anywhere but a header.
 api() {
   local method="$1" path="$2" body="${3:-}" status
-  local args=(-sS -X "$method" -o "$work/api.out" -w '%{http_code}'
+  # Bounded, so a Neon API that stops answering fails this step by name
+  # instead of holding the job until its timeout.
+  local args=(-sS --connect-timeout 15 --max-time 60 -X "$method" -o "$work/api.out" -w '%{http_code}'
     -H "Authorization: Bearer ${NEON_API_KEY}" -H "Accept: application/json")
   if [ -n "$body" ]; then
     args+=(-H "Content-Type: application/json" --data "$body")

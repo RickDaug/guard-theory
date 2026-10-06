@@ -22,6 +22,12 @@ name: Database restore check
 # and says so rather than waiting.
 #
 # GitHub only runs a `schedule` from the default branch.
+#
+# Every step has its own timeout, so a stall names the step it stalled in.
+# A job that is cancelled at the job timeout with NO steps at all never reached
+# a runner: GitHub could not give it one ("The job was not acquired by Runner
+# of type hosted even after multiple attempts", in the run's annotations, as on
+# 2026-10-05). That is GitHub's side, not this file; run it again by hand.
 
 on:
   schedule:
@@ -49,6 +55,7 @@ jobs:
 
     steps:
       - uses: actions/checkout@v4
+        timeout-minutes: 5
         with:
           sparse-checkout: |
             scripts/db/restore-verify-ci.sh
@@ -58,6 +65,7 @@ jobs:
           persist-credentials: false
 
       - name: Secrets and variable are set
+        timeout-minutes: 1
         env:
           HAS_PASSPHRASE: ${{ secrets.BACKUP_PASSPHRASE != '' }}
           HAS_NEON_KEY: ${{ secrets.NEON_API_KEY != '' }}
@@ -73,6 +81,7 @@ jobs:
           fi
 
       - name: Download the newest backup
+        timeout-minutes: 5
         env:
           GH_TOKEN: ${{ github.token }}
           REPO: ${{ github.repository }}
@@ -98,9 +107,12 @@ jobs:
       # A run that died before its cleanup leaves a branch that counts against
       # the ten. Clear those first. Only restore-check/* is ever deleted.
       - name: Clear scratch branches left by earlier runs
+        timeout-minutes: 5
         run: bash scripts/db/restore-verify-cleanup.sh
 
+      # Pulls postgres:<major>-alpine, waits for a fresh compute, restores.
       - name: Restore into a scratch branch and compare
+        timeout-minutes: 15
         env:
           BACKUP_PASSPHRASE: ${{ secrets.BACKUP_PASSPHRASE }}
           RESTORE_BRANCH_NAME: restore-check/${{ github.run_id }}-${{ github.run_attempt }}
@@ -109,8 +121,10 @@ jobs:
 
       - name: Delete the scratch branch
         if: always()
+        timeout-minutes: 5
         run: bash scripts/db/restore-verify-cleanup.sh
 
       - name: Remove the downloaded file
         if: always()
+        timeout-minutes: 1
         run: rm -rf "${{ runner.temp }}/restore-in"

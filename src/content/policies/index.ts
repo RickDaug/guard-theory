@@ -246,7 +246,7 @@ export const POLICIES: Policy[] = [
         heading: "What this site sets",
         paragraphs: [
           "Nothing, for a reader. There is no analytics, no advertising pixel and no consent banner, because there is nothing to consent to.",
-          "The one cookie this site sets is the sign-in session for our own portal. It is set only when one of us signs in there, it expires on its own, and a reader is never given one.",
+          "The only cookies this site sets are for our own portal: the sign-in session for our own portal, and a signed note that a browser has signed in there before, which lets that browser still sign in while someone else is guessing passwords. Both are set only when one of us signs in there, both expire on their own, and a reader is never given either.",
           "That is a design decision rather than an oversight. If we ever need a cookie for readers, this page will say what it is and what it does, and it will not be set before you agree.",
         ],
       },
@@ -336,6 +336,37 @@ export const POLICIES: Policy[] = [
         paragraphs: [
           "Guard Theory makes apparel and publishes the Journal. Where an article touches something we sell, it says so.",
           "Reference material — the Technique Library, the historical writing — carries no commercial links in its body. That is what makes it worth citing.",
+        ],
+      },
+    ],
+  },
+  {
+    slug: "corrections",
+    title: "Corrections",
+    summary: "What happens when something we published turns out to be wrong.",
+    metaDescription:
+      "A factual error is corrected in the piece itself, with a dated note saying what the earlier version said. How to point one out, and which pieces carry a note.",
+    sections: [
+      {
+        id: "in-the-piece",
+        heading: "In the piece",
+        paragraphs: [
+          "When a Journal article or an Influential Figures entry gets a fact wrong, the piece is corrected and a note is added to it. The note opens with the word Correction and the date, says what the earlier version said, and says what changed. It stays in the piece.",
+          "We do not quietly edit a page and pretend it never said what it said.",
+        ],
+      },
+      {
+        id: "dates",
+        heading: "Dates",
+        paragraphs: [
+          "A correction does not change the date a piece was published. A corrected Journal article also gives search engines the date of its latest correction as the date it was last modified.",
+        ],
+      },
+      {
+        id: "telling-us",
+        heading: "Pointing one out",
+        paragraphs: [
+          "Tell us through the contact form, choosing “A correction to something we published”. Point at the specific claim and, if you have one, the source that says otherwise.",
         ],
       },
     ],

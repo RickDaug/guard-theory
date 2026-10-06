@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { Breadcrumbs } from "@/components/site/Breadcrumbs";
+import { correctedPieces } from "@/content/corrections";
 import { POLICIES, getPolicy } from "@/content/policies";
 import { withContactLinks } from "@/content/policies/contact-links";
 import { pageMetadata } from "@/lib/metadata";
@@ -33,6 +34,7 @@ export default async function PolicyPage({ params }: Params) {
   if (!policy) notFound();
 
   const others = POLICIES.filter((p) => p.slug !== policy.slug);
+  const corrected = policy.slug === "corrections" ? correctedPieces() : [];
 
   return (
     <main id="main" tabIndex={-1} className="px-6 py-16 md:px-12">
@@ -79,20 +81,46 @@ export default async function PolicyPage({ params }: Params) {
               ))}
             </div>
 
-            {/* The editorial policy says how a piece is checked; this is where
-                a reader who has found something wrong goes. No corrections
-                policy is invented here — it is a route, not a promise. */}
+            {/* The editorial policy says how a piece is checked; the
+                corrections policy is where a reader who has found something
+                wrong goes. */}
             {policy.slug === "editorial" ? (
               <p className="mt-14 max-w-[36rem] text-base text-steel">
                 Found a mistake in something we published?{" "}
                 <Link
-                  href="/contact"
+                  href="/policies/corrections"
                   className="text-chalk underline decoration-steel-dim underline-offset-[5px] transition-colors duration-[140ms] ease-[var(--ease-control)] hover:decoration-signal-lift"
                 >
-                  Tell us, and point at the claim
+                  How corrections work
                 </Link>
                 .
               </p>
+            ) : null}
+
+            {/* Derived from the pieces themselves (src/content/corrections.ts),
+                so it cannot list a piece with no note or miss one that has. */}
+            {policy.slug === "corrections" && corrected.length > 0 ? (
+              <section id="corrected" className="mt-12">
+                <h2 className="display-condensed text-xl text-chalk">
+                  Pieces carrying a correction
+                </h2>
+                <ul className="m-0 mt-5 flex max-w-[36rem] list-none flex-col gap-3 p-0">
+                  {corrected.map((piece) => (
+                    <li key={piece.href} className="text-base text-steel">
+                      <Link
+                        href={piece.href}
+                        className="text-chalk underline decoration-steel-dim underline-offset-[5px] transition-colors duration-[140ms] ease-[var(--ease-control)] hover:decoration-signal-lift"
+                      >
+                        {piece.title}
+                      </Link>
+                      {", "}
+                      {piece.kind === "journal" ? "Journal" : "Influential figures"}
+                      {", corrected "}
+                      {piece.noteDates.join(" and ")}
+                    </li>
+                  ))}
+                </ul>
+              </section>
             ) : null}
           </article>
 

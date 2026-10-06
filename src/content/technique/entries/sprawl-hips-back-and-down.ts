@@ -52,7 +52,7 @@ export const sprawlHipsBackAndDown: TechniqueEntry = {
     drafted:
       "assisted draft, 2026-09-29, from technique batch 3 target list (2)",
     factAudit:
-      "Fact audit, assisted (Claude Code agent), 2026-09-29: hips-back-and-down mechanics, shoulders-not-head landing and whizzer/front-headlock follow-ups confirmed against double-leg-is-a-level-change and snap-down-to-front-headlock (the settled headlock's chest on head and upper back is compatible with the sprawl's landing, and both entries now say so); REVISE (3), fixes applied: 'shoulders cannot' hedged; shooter head-position sentence given its subject; toe landing made unambiguous.",
+      "Fact audit, assisted (Claude Code agent), 2026-09-29: hips-back-and-down mechanics, shoulders-not-head landing and whizzer/front-headlock follow-ups confirmed against double-leg-is-a-level-change and snap-down-to-front-headlock (the settled headlock's chest on head and upper back is compatible with the sprawl's landing, and both entries now say so); REVISE (3), fixes applied: 'shoulders cannot' hedged; shooter head-position sentence given its subject; toe landing made unambiguous. Fact re-check, assisted (Claude Code agent), 2026-10-06: mechanics only, no rule or history claim; no change.",
     voiceAudit:
       "Voice audit, assisted (Claude Code agent), 2026-09-29: mechanics clean; REVISE (4), fixes applied: 'starting point rather than an ending' slogan and a fourth statement of get-up-after-the-shot cut; broken-subject safety sentence and colon reveal rewritten (fact wording); missing comma fixed; 'cannot drive forward' hedged to match snap-down-to-front-headlock; chest-on-head lines scoped to the moving shot; recall-style last step made an instruction.",
     approvedBy: null,

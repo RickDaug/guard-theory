@@ -194,11 +194,23 @@ export type TransitionResult =
  * the send fails the order has still moved — the customer can be told again
  * from the portal, but an order stuck in the wrong state because a mail server
  * was down is a worse problem, and a harder one to notice.
+ *
+ * The write is a compare-and-set: it only lands if the order is still in the
+ * status that was read and checked against the table. It used to be a plain
+ * `where id = $1`, so a double-click on "Mark shipped" passed the check twice,
+ * wrote twice and emailed the customer twice; and a Shippo DELIVERED landing
+ * between the read and the write had `shipped` written straight over it — a
+ * transition the table forbids and the SQL did not. Now exactly one request
+ * gets a row back, and only that request sends the email.
  */
 export async function transitionOrder(
   orderId: string,
   to: OrderStatus,
 ): Promise<TransitionResult> {
+  if (!Object.hasOwn(STATUS_LABEL, to)) {
+    return { ok: false, reason: "That is not a status an order can have." };
+  }
+
   const order = await getOrder(orderId);
 
   if (!order) {
@@ -230,14 +242,28 @@ export async function transitionOrder(
           ? "delivered_at"
           : null;
 
-  await query(
-    `update "order" set status = $2${stamp ? `, ${stamp} = now()` : ""} where id = $1`,
-    [orderId, to],
+  // `returning *` so the email is built from the row as it now is, not as it
+  // was read: the tracking number in particular can change in between.
+  const moved = await queryOne<OrderRow>(
+    `update "order" set status = $2${stamp ? `, ${stamp} = now()` : ""}
+      where id = $1 and status = $3
+        and ($2 <> 'shipped' or tracking_number is not null)
+      returning *`,
+    [orderId, to, order.status],
   );
+
+  if (!moved) {
+    return {
+      ok: false,
+      reason:
+        "This order changed while you were looking at it — someone else moved it, or it was clicked twice. " +
+        "Reload to see where it is now. Nothing was sent.",
+    };
+  }
 
   let emailed = false;
   const items = await getOrderItems(orderId);
-  const shape = toEmailShape(order, items);
+  const shape = toEmailShape(moved, items);
 
   if (to === "in_process") {
     emailed = await sendEmail("order-in-process", orderInProcess(shape), orderId);
@@ -245,9 +271,9 @@ export async function transitionOrder(
     emailed = await sendEmail(
       "order-shipped",
       orderShipped(shape, {
-        number: order.tracking_number!,
-        url: order.tracking_url,
-        carrier: order.tracking_carrier,
+        number: moved.tracking_number!,
+        url: moved.tracking_url,
+        carrier: moved.tracking_carrier,
       }),
       orderId,
     );

@@ -1,4 +1,5 @@
 import { getAuthor } from "./authors.ts";
+import { noteDate, piecesWithCorrections } from "./corrections.ts";
 import { FIGURES } from "./figures/index.ts";
 import { ARTICLES, isPublished } from "./journal/index.ts";
 import { PRODUCTS } from "./products/index.ts";
@@ -210,6 +211,12 @@ export const STORED: Record<string, Record<string, Disclosure>> = {
   login_attempt: internal(
     ["id", "key_hash", "succeeded", "attempted_at"],
     "the portal's sign-in limiter: a keyed hash of the attempt's address, never the address, deleted after a day",
+  ),
+
+  /* The cart's abuse limiter. About a request, never a person. */
+  rate_limit: internal(
+    ["bucket", "key_hash", "window_start", "hits"],
+    "the cart's rate limiter: a count of requests per keyed hash of the address, never the address, deleted after a day",
   ),
 };
 
@@ -539,6 +546,7 @@ function listMailCarriesUnsubscribe(): true | string {
  */
 export const OWN_COOKIES: Record<string, string> = {
   "src/lib/portal/session.ts": "the sign-in session for our own portal",
+  "src/app/crew/sign-in/actions.ts": "a browser has signed in there before",
 };
 
 /* ------------------------------------------------------------------------ */
@@ -611,6 +619,30 @@ function figuresIn(read: (path: string) => string, files: string[], pattern: Reg
   return files.flatMap((file) => [...read(file).matchAll(pattern)].map((m) => m[1] ?? ""));
 }
 
+/**
+ * A corrected piece says so in the piece: every Journal article or Figures
+ * entry with an `updatedAt` carries a "Correction, <date>:" note, every note
+ * belongs to a piece with an `updatedAt`, and `updatedAt` is the date of the
+ * latest note. The corrections policy and the FAQ both promise this.
+ */
+function correctionsAreDatedInThePiece(): true | string {
+  const wrong = piecesWithCorrections().flatMap((piece) => {
+    const where = `${piece.kind === "journal" ? "journal" : "figures"}/${piece.slug}`;
+    if (piece.noteDates.length === 0) {
+      return [`${where} has an updatedAt of ${piece.updatedAt} and no "Correction, <date>:" note`];
+    }
+    if (!piece.updatedAt) return [`${where} carries a correction note and no updatedAt`];
+    const latest = [...piece.noteDates].sort((a, b) => Date.parse(b) - Date.parse(a))[0];
+    return noteDate(piece.updatedAt) === latest
+      ? []
+      : [`${where} has an updatedAt of ${piece.updatedAt} but its latest correction note is dated ${latest}`];
+  });
+  return wrong.length === 0 ? true : wrong.join("; ");
+}
+
+const JOURNAL_ARTICLE_PAGE = "src/app/journal/[slug]/page.tsx";
+const CONTACT_TOPICS = "src/lib/contact/form-state.ts";
+
 export const CLAIMS: Claim[] = [
   {
     // Retired 2026-09-29: printed on /first-edition, /shop and in the sleeve
@@ -659,6 +691,37 @@ export const CLAIMS: Claim[] = [
     },
   },
   {
+    // Restored 2026-10-05: the Corrections policy was cut in August while the
+    // FAQ kept promising dated notes; the notes have existed since 2026-09-29.
+    id: "corrections-dated-note-in-the-piece",
+    says: /(Factual errors get corrected in the piece with a dated note|The note opens with the word Correction and the date)/,
+    kind: "stated",
+    where: [FAQ, POLICIES],
+    holds: correctionsAreDatedInThePiece,
+  },
+  {
+    id: "corrections-date-modified",
+    says: /A corrected Journal article also gives search engines the date of its latest correction as the date it was last modified/,
+    kind: "stated",
+    where: [POLICIES],
+    holds: ({ read }) => {
+      if (!read(JOURNAL_ARTICLE_PAGE).includes("dateModified: article.updatedAt")) {
+        return `${JOURNAL_ARTICLE_PAGE} no longer emits updatedAt as dateModified`;
+      }
+      return correctionsAreDatedInThePiece();
+    },
+  },
+  {
+    id: "corrections-through-the-contact-form",
+    says: /choosing “A correction to something we published”/,
+    kind: "stated",
+    where: [POLICIES],
+    holds: ({ read }) =>
+      read(CONTACT_TOPICS).includes('label: "A correction to something we published"')
+        ? true
+        : `the contact form no longer offers the topic "A correction to something we published" (${CONTACT_TOPICS})`,
+  },
+  {
     id: "faq-journal-authors",
     // "Every PUBLISHED article": a draft is readable at its address, on the
     // index and in search, and by design carries no byline and no date until
@@ -704,6 +767,19 @@ export const CLAIMS: Claim[] = [
       return wrong.length === 0
         ? true
         : `${wrong.map((a) => `${a.slug} (${a.authorId})`).join(", ")} carries a person's byline the owner has not confirmed`;
+    },
+  },
+  {
+    // Audit 2026-09-29 (published apparel Journal, 3.3): a statement about our
+    // own catalogue inside an article, true only while both tops are listed.
+    id: "journal-sleeve-both-lengths",
+    says: /Guard Theory makes both lengths/,
+    kind: "stated",
+    where: ["src/content/journal/entries/long-sleeve-or-short-sleeve.ts"],
+    holds: () => {
+      const slugs = new Set(PRODUCTS.map((product) => product.slug));
+      const missing = ["theory-01-long-sleeve", "theory-01-short-sleeve"].filter((slug) => !slugs.has(slug));
+      return missing.length === 0 ? true : `the catalogue no longer lists ${missing.join(" or ")}`;
     },
   },
   {

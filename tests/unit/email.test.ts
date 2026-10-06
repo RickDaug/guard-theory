@@ -6,7 +6,8 @@ import {
   BANNED_IN_EMAIL,
   findBannedConstructions,
 } from "../../src/content/editorial-voice.ts";
-import { readReplyTo, resendPayload } from "../../src/lib/mail/index.ts";
+import { readReplyTo, resendHeaders, resendPayload } from "../../src/lib/mail/index.ts";
+import { confirmationIdempotencyKey } from "../../src/lib/orders/confirmation.ts";
 import {
   announcement,
   orderConfirmation,
@@ -191,5 +192,35 @@ describe("replies can be routed somewhere that exists", () => {
     } finally {
       warn.mock.restore();
     }
+  });
+});
+
+describe("a retried confirmation cannot go twice", () => {
+  // Resend dedupes on the Idempotency-Key header for 24 hours: the same key and
+  // the same body returns the first send's id instead of sending again. The
+  // webhook, a Stripe retry of it, and the cron reconcile can all arrive at the
+  // same order's confirmation; without the key, each is a new email.
+  const EMAIL = { to: "buyer@example.com", subject: "Order 1042", body: "..." };
+
+  it("sends the key as a header when the message carries one", () => {
+    const headers = resendHeaders("re_key", { ...EMAIL, idempotencyKey: "order-confirmation/abc" });
+    assert.equal(headers["Idempotency-Key"], "order-confirmation/abc");
+    assert.equal(headers.Authorization, "Bearer re_key");
+  });
+
+  it("sends no key when the message has none, so a deliberate resend still goes", () => {
+    assert.ok(!("Idempotency-Key" in resendHeaders("re_key", EMAIL)));
+  });
+
+  it("the key is not part of the body", () => {
+    const payload = resendPayload("hello@guardtheory.net", null, { ...EMAIL, idempotencyKey: "k" });
+    assert.ok(!JSON.stringify(payload).includes("idempotency"));
+  });
+
+  it("one key per order, stable across calls, inside Resend's 256-character limit", () => {
+    const id = "0b8f6f7e-6a53-4c43-9f0e-3a2c9d1e8b11";
+    assert.equal(confirmationIdempotencyKey(id), confirmationIdempotencyKey(id));
+    assert.notEqual(confirmationIdempotencyKey(id), confirmationIdempotencyKey(`${id}x`));
+    assert.ok(confirmationIdempotencyKey(id).length <= 256);
   });
 });

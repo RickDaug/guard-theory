@@ -1,12 +1,19 @@
 import assert from "node:assert/strict";
-import { describe, it } from "node:test";
+import { randomUUID } from "node:crypto";
+import { after, describe, it } from "node:test";
 
 import {
   ALLOWED_TRANSITIONS,
   STATUS_LABEL,
   canTransition,
+  transitionOrder,
   type OrderStatus,
 } from "../../src/lib/orders/manage.ts";
+import { closePool, isDatabaseConfigured, query } from "../../src/lib/db/client.ts";
+
+const HAS_DB = isDatabaseConfigured();
+// Mail goes to the dev provider; email_log still records every attempt.
+delete process.env.RESEND_API_KEY;
 
 const ALL: OrderStatus[] = ["new", "in_process", "shipped", "delivered", "cancelled"];
 
@@ -85,5 +92,91 @@ describe("an order moves in one direction", () => {
       assert.ok(STATUS_LABEL[status], `${status} has no label`);
       assert.doesNotMatch(STATUS_LABEL[status], /_/, "a label is not a column name");
     }
+  });
+});
+
+describe("moving an order is a compare-and-set", { skip: !HAS_DB && "no DATABASE_URL" }, () => {
+  const created: string[] = [];
+
+  after(async () => {
+    await query(`delete from email_log where order_id = any($1::text[])`, [created]);
+    await query(`delete from "order" where id = any($1::text[])`, [created]);
+    await closePool();
+  });
+
+  async function makeOrder(status: OrderStatus, tracking: string | null = null): Promise<string> {
+    const id = randomUUID();
+    created.push(id);
+    await query(
+      `insert into "order" (
+         id, email, ship_name, ship_line1, ship_city, ship_state, ship_postal,
+         subtotal_cents, shipping_cents, tax_cents, total_cents,
+         stripe_session_id, stripe_payment_intent, stripe_mode, status, tracking_number
+       ) values ($1, 'buyer@example.com', 'Sam Fadda', '1 Test Street', 'Los Angeles', 'CA', '90015',
+                 8900, 700, 0, 9600, $2, $3, 'test', $4, $5)`,
+      [id, `cs_test_${randomUUID()}`, `pi_${randomUUID()}`, status, tracking],
+    );
+    return id;
+  }
+
+  const emails = async (id: string, template: string) =>
+    (
+      await query<{ n: number }>(
+        `select count(*)::int as n from email_log where order_id = $1 and template = $2`,
+        [id, template],
+      )
+    )[0]!.n;
+
+  it("a double click on Mark shipped moves it once and emails once", async () => {
+    const id = await makeOrder("in_process", "9400100000000000000999");
+
+    const results = await Promise.all([
+      transitionOrder(id, "shipped"),
+      transitionOrder(id, "shipped"),
+    ]);
+
+    assert.equal(results.filter((r) => r.ok).length, 1, JSON.stringify(results));
+    assert.equal(await emails(id, "order-shipped"), 1, "the customer is told once");
+  });
+
+  it("a double click on In process emails once", async () => {
+    const id = await makeOrder("new");
+
+    const results = await Promise.all([
+      transitionOrder(id, "in_process"),
+      transitionOrder(id, "in_process"),
+      transitionOrder(id, "in_process"),
+    ]);
+
+    assert.equal(results.filter((r) => r.ok).length, 1);
+    assert.equal(await emails(id, "order-in-process"), 1);
+  });
+
+  it("Mark shipped racing a Shippo DELIVERED never writes shipped over delivered", async () => {
+    const id = await makeOrder("in_process", "9400100000000000000888");
+
+    // The webhook's write, landing between transitionOrder's read and its write.
+    const [result] = await Promise.all([
+      transitionOrder(id, "shipped"),
+      query(`update "order" set status = 'delivered' where id = $1`, [id]),
+    ]);
+
+    const row = (await query<{ status: string }>(`select status from "order" where id = $1`, [id]))[0]!;
+    // Whichever landed first, the order never goes backwards from delivered.
+    assert.equal(row.status, "delivered", JSON.stringify(result));
+  });
+
+  it("refuses a status outside the table in words, not with a TypeError", async () => {
+    // The portal form posts `to` as free text. STATUS_LABEL[to].toLowerCase()
+    // used to throw on anything outside the table.
+    const id = await makeOrder("new");
+    const result = await transitionOrder(id, "shipped; drop" as OrderStatus);
+    assert.equal(result.ok, false);
+  });
+
+  it("still moves an order nobody else is touching", async () => {
+    const id = await makeOrder("new");
+    assert.deepEqual((await transitionOrder(id, "in_process")).ok, true);
+    assert.deepEqual((await transitionOrder(id, "cancelled")).ok, true);
   });
 });

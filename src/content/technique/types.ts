@@ -87,6 +87,19 @@ export const CATEGORIES = [
       "Finishing mechanics, the structures that make them work, and the control that precedes them - including what separates a blood choke from an air choke.",
   },
   {
+    // Added 2026-09-29 (owner-approved). Leg-lock material had been filed
+    // under submissions, no-gi-systems and defensive-concepts; the gi-legal
+    // locks do not belong under "No-Gi". Its legality differs by organisation,
+    // belt, age and gi/no-gi, so this page carries a sourced ruleset note:
+    // src/content/technique/rules-notes.ts.
+    slug: "leg-locks",
+    name: "Leg Locks",
+    summary:
+      "Entanglements that hold a leg still, and the locks finished from them.",
+    metaDescription:
+      "Leg entanglements and the locks finished from them: which joint each one loads, how to defend it, and why its legality changes with belt and ruleset.",
+  },
+  {
     slug: "defensive-concepts",
     name: "Defensive Concepts",
     summary:

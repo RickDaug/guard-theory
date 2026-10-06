@@ -40,6 +40,8 @@ const PASSPHRASE = randomBytes(32).toString("hex");
 const SCRATCH_PASSWORD = "scratch-password-hunter2";
 const SCRATCH_HOST = "ep-scratch-456.us-east-1.aws.neon.tech";
 const SCRATCH_URI = `postgresql://neondb_owner:${SCRATCH_PASSWORD}@${SCRATCH_HOST}/neondb?sslmode=require`;
+// The empty database the check makes on the scratch branch and restores into.
+const RESTORE_URI = SCRATCH_URI.replace("/neondb?", "/restore_check?");
 const MAIN_HOST = "ep-main-123.us-east-1.aws.neon.tech";
 const BRANCH_NAME = "restore-check/42-1";
 
@@ -194,7 +196,7 @@ function assertNoSecret(output: string): void {
 }
 
 function assertNothingWritten(calls: string): void {
-  assert.ok(!calls.includes("drop schema"), "the scratch branch was emptied");
+  assert.ok(!calls.includes("create database"), "a database was created");
   assert.ok(!calls.includes("pg_restore into"), "something was restored");
 }
 
@@ -228,9 +230,23 @@ describe("the weekly restore check", { skip: SKIP }, () => {
 
     // Every write went to the scratch host, and none anywhere else.
     const writes = result.calls.split("\n").filter((l) => l.startsWith("docker "));
-    assert.ok(writes.some((l) => l.includes("drop schema")));
-    assert.ok(writes.some((l) => l.includes("pg_restore into")));
     for (const line of writes) assert.ok(line.includes(SCRATCH_HOST), line);
+
+    // The branch's own database, a copy of production, is only asked to make a
+    // new, empty one. Nothing is dropped; the emptiness check, the restore and
+    // the count all go to the new database, in that order.
+    assert.ok(!result.calls.includes("drop "), result.calls);
+    const at = (needle: string, uri: string) =>
+      writes.findIndex((l) => l.includes(needle) && l.includes(` into ${uri}`));
+    const madeDb = at("create database restore_check", SCRATCH_URI);
+    const emptyCheck = at("count(*) from information_schema", RESTORE_URI);
+    const restored = at("pg_restore into", RESTORE_URI);
+    const counted = at("select table_name", RESTORE_URI);
+    assert.ok(madeDb >= 0 && emptyCheck > madeDb && restored > emptyCheck && counted > restored, result.calls);
+    assert.match(writes[restored]!, /--exclude-schema=neon_auth/);
+
+    assert.match(result.output, /restored into an empty database/);
+    assert.ok(result.output.includes(`::add-mask::${RESTORE_URI}`));
 
     assert.equal(readFileSync(envFile, "utf8").trim(), "RESTORE_BRANCH_ID=br-scratch");
     assert.match(readFileSync(summary, "utf8"), /Restore check passed/);
@@ -306,6 +322,44 @@ describe("the weekly restore check", { skip: SKIP }, () => {
       assertNoSecret(result.output);
       assertNothingWritten(result.calls);
     });
+  });
+
+  it("refuses to restore into a new database that is not empty", () => {
+    const result = check({ FAKE_PRESENT: "4" });
+    assert.equal(result.status, 1, result.output);
+    assert.match(result.output, /new database is not empty \(4 tables\)/);
+    assert.ok(!result.calls.includes("pg_restore into"), result.calls);
+    assertNoSecret(result.output);
+  });
+
+  it("refuses a connection string with no database name to swap", () => {
+    const result = check({
+      FAKE_CREATED: created({
+        connection_uris: [{ connection_uri: SCRATCH_URI.replace("/neondb?", "?") }],
+      }),
+    });
+    assert.equal(result.status, 1, result.output);
+    assert.match(result.output, /could not find the database name/);
+    assert.ok(!result.calls.includes("pg_restore into"), result.calls);
+    assertNoSecret(result.output);
+  });
+
+  it("still restores a backup taken before neon_auth was left out, skipping that schema", () => {
+    const toc = [
+      "5; 2615 16389 SCHEMA - neon_auth neondb_owner",
+      TOC,
+      "213; 1259 16420 TABLE neon_auth users_sync neondb_owner",
+      "218; 0 16420 TABLE DATA neon_auth users_sync neondb_owner",
+    ].join("\n");
+    const copy = path.join(tmp, "copy-with-neon-auth.sql");
+    writeFileSync(copy, [COPY, "COPY neon_auth.users_sync (id) FROM stdin;", "u1", "\\.", ""].join("\n"));
+
+    const result = check({ FAKE_TOC: toc, FAKE_COPY: posix(copy) });
+
+    assert.equal(result.status, 0, result.output);
+    assert.match(result.output, /lists 3 tables in public; it has tables in: neon_auth public/);
+    assert.match(result.output, /3 tables restored, every row count matches/);
+    assert.match(result.calls, /pg_restore into .* --exclude-schema=neon_auth/);
   });
 
   it("creates nothing when the branch limit is reached", () => {

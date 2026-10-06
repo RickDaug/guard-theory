@@ -9,6 +9,8 @@
 #   FAKE_COPY            a file: what `pg_restore --data-only --file=-` prints
 #   FAKE_RESTORED        what the row-count query prints (table|count lines)
 #   FAKE_RESTORE_ERROR   if set, pg_restore prints it to stderr and fails
+#   FAKE_PRESENT         what the "is the new database empty" count prints;
+#                        default 0
 
 case "$*" in
   *"pg_restore --list"*)
@@ -21,7 +23,7 @@ case "$*" in
     ;;
   *"pg_restore --no-owner"*)
     cat >/dev/null
-    echo "docker pg_restore into ${RESTORE_URL:-nothing}" >>"${FAKE_LOG:-/dev/null}"
+    echo "docker pg_restore into ${RESTORE_URL:-nothing} with: $*" >>"${FAKE_LOG:-/dev/null}"
     if [ -n "${FAKE_RESTORE_ERROR:-}" ]; then
       echo "$FAKE_RESTORE_ERROR" >&2
       exit 1
@@ -31,6 +33,7 @@ case "$*" in
     echo "docker psql ${SQL:0:40} into ${RESTORE_URL:-nothing}" >>"${FAKE_LOG:-/dev/null}"
     case "$SQL" in
       *query_to_xml*) printf '%s\n' "${FAKE_RESTORED:-}" ;;
+      *"not in ('pg_catalog'"*) printf '%s\n' "${FAKE_PRESENT:-0}" ;;
       *) : ;;
     esac
     ;;

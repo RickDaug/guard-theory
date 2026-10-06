@@ -66,6 +66,11 @@ export type RateLimitDecision = { allowed: true } | { allowed: false; retryAfter
  * every instance — which a per-process random salt would not be. Hashing an
  * IPv4 address without a secret is no protection at all; there are only four
  * billion of them.
+ *
+ * It is the caller's NETWORK that is hashed (addressNetwork): an IPv4 address
+ * as itself, an IPv6 address by its /64. A single IPv6 host is handed a whole
+ * /64 and can rotate through it, so the full address would be no per-caller
+ * limit at all.
  */
 export function callerKey(address: string | null | undefined): string {
   return addressKey(address, `rate-limit|${databaseUrl() ?? ""}`);

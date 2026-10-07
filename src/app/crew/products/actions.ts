@@ -26,10 +26,12 @@ import {
   removeSize,
   renameSize,
   saveContent,
+  setSizeWeight,
   storefrontProblemsFor,
   storefrontRefusal,
   type EditResult,
 } from "@/lib/portal/product-edit";
+import { WEIGHT_INVALID, readWeightOz } from "@/lib/shipping/weight";
 
 /**
  * Product management.
@@ -339,8 +341,8 @@ export async function addProductSize(
 }
 
 /**
- * Renaming or removing one size. One form with two buttons, so the row has one
- * answer; `op` is the button that was pressed.
+ * Renaming, removing or weighing one size. One form with three buttons, so the
+ * row has one answer; `op` is the button that was pressed.
  */
 export async function changeProductSize(
   _previous: PortalFormState,
@@ -358,6 +360,22 @@ export async function changeProductSize(
 
   if (op === "remove") {
     return edit("remove size", (client) => removeSize(client, id, variantId), "Size removed.");
+  }
+
+  if (op === "weight") {
+    const weightOz = readWeightOz(formData.get("weightOz"));
+
+    if (weightOz === "invalid") {
+      return { status: "error", message: WEIGHT_INVALID };
+    }
+
+    return edit(
+      "set size weight",
+      (client) => setSizeWeight(client, id, variantId, weightOz),
+      weightOz === null
+        ? "Weight cleared. Labels for orders with this size use the fixed weight."
+        : `Weight saved: ${weightOz} oz.`,
+    );
   }
 
   if (op !== "rename") {

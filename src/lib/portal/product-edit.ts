@@ -1,6 +1,7 @@
 import { randomUUID } from "node:crypto";
 import type { PoolClient } from "pg";
 import { getProduct, type Specification } from "../../content/products/index.ts";
+import { ORIGIN_LABEL, readOrigin } from "../../content/products/origin.ts";
 import { PUBLISHED_SPECIFICATIONS } from "../../content/products/published-specs.ts";
 import { SIZE_CHART } from "../../content/products/size-chart.ts";
 
@@ -14,7 +15,7 @@ import { SIZE_CHART } from "../../content/products/size-chart.ts";
  * NOTHING HERE WRITES A FACT THE OWNER DID NOT TYPE.
  *
  * A new product is a draft with no price, no sizes and no specification
- * values. The four specification labels the site promises are offered as empty
+ * values. The specification labels the site promises are offered as empty
  * rows — a label is a question, not an answer — and an empty value is stored as
  * NULL. The only things derived rather than typed are the web address (from the
  * name, if left empty) and the SKU (from the web address and the size), which
@@ -223,9 +224,19 @@ export type StorefrontCheck = {
  * means it may.
  *
  * Each line is something the site already says about every product it shows:
- * a price where a price is expected, a size to choose, the four specification
- * lines (PUBLISHED_SPECIFICATIONS), and — once the owner has supplied a size
- * chart — sizes the size and fit guide actually has a row for.
+ * a price where a price is expected, a size to choose, the promised
+ * specification lines (PUBLISHED_SPECIFICATIONS), and — once the owner has
+ * supplied a size chart — sizes the size and fit guide actually has a row for.
+ *
+ * Two of those lines are the law, not just the site's promise:
+ *   - the country of manufacture, in a form the listing can state as the FTC
+ *     requires ("Made in USA", "Imported", or both — 16 CFR 303.34; see
+ *     src/content/products/origin.ts). A value that cannot be stated that way,
+ *     such as a bare "USA", is refused here rather than guessed at.
+ *   - the fabric composition. The specification shows fabric lines, so the
+ *     full fibre content must be shown too (15 U.S.C. §70b(c)). It is required
+ *     unconditionally, which covers every product that says anything about
+ *     its fabric.
  */
 export function storefrontProblems(
   check: StorefrontCheck,
@@ -243,6 +254,15 @@ export function storefrontProblems(
     if (!check.specs.some((spec) => spec.label === label && spec.value)) {
       problems.push(`a ${label.toLowerCase()}`);
     }
+  }
+
+  const origin = check.specs.find((spec) => spec.label === ORIGIN_LABEL && spec.value);
+  const read = origin ? readOrigin(origin.value) : null;
+
+  if (read && !read.ok) {
+    problems.push(
+      `a country of manufacture the listing can state as "Made in USA", "Made in USA of imported fabric", "Imported" or a country (${read.reason})`,
+    );
   }
 
   if (check.sizeLabels.length === 0) {
@@ -385,7 +405,7 @@ async function refuseUnlessWhole(client: PoolClient, productId: string): Promise
 
 /**
  * A new product: a draft, always. No price, no sizes, no specification values.
- * The four promised specification labels are created as empty rows so the
+ * The promised specification labels are created as empty rows so the
  * editor shows what is still to be filled in.
  *
  * The status is a literal here, not a parameter. Nothing a form posts can make

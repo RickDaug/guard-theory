@@ -43,8 +43,16 @@ export function getWaitlistStore(): WaitlistStore {
 }
 
 export { unsubscribeByToken, type UnsubscribeResult } from "./postgres-store.ts";
+export {
+  confirmByToken,
+  purgeUnconfirmed,
+  sendConfirmation,
+  type ConfirmResult,
+  type Delivery,
+} from "./confirm.ts";
 
 export type {
+  ConfirmTarget,
   ProductInterest,
   SleevePreference,
   StoreResult,

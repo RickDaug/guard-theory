@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, useSyncExternalStore, useTransition } from "react";
+import { useEffect, useRef, useState, useSyncExternalStore, useTransition } from "react";
 import { priceCartAction, startCheckoutAction } from "@/app/cart/actions";
 import {
   getCartSnapshot,
@@ -42,6 +42,7 @@ const PROBLEMS: Record<CheckoutProblem, string> = {
   "cart-changed":
     "Something in your cart changed while it was open — a price, or how many are left. Nothing has been charged. The figures below are the current ones; check them and carry on when ready.",
   "no-intent": "That checkout was incomplete. Start again from here.",
+  busy: "Checkout has been started several times in a short while. Nothing has been charged. Try again in a few minutes.",
 };
 
 function DroppedNotice({ cart }: { cart: PricedCart }) {
@@ -77,6 +78,9 @@ export function CartView() {
   // Bumped to price the cart again without the cart itself having changed.
   const [repriced, setRepriced] = useState(0);
   const [leaving, startLeaving] = useTransition();
+  // The intent this browser was last given. Sent back when re-pricing, so an
+  // unchanged cart keeps its intent instead of writing a new one each render.
+  const lastIntent = useRef<string | null>(null);
 
   function checkout(intentId: string) {
     setProblem(null);
@@ -112,8 +116,9 @@ export function CartView() {
     // body — a synchronous setState here cascades a render on every change to
     // the cart. While a re-price is in flight the previous figures stay on
     // screen, which is also the calmer thing to look at.
-    priceCartAction(lines)
+    priceCartAction(lines, lastIntent.current)
       .then((priced) => {
+        lastIntent.current = priced.intentId;
         if (!cancelled) {
           setCart(priced);
           setFailed(false);

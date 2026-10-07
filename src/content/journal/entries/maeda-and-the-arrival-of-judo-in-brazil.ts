@@ -9,7 +9,8 @@ import type { PublishedArticle } from "../types.ts";
 export const maedaAndTheArrivalOfJudoInBrazil: PublishedArticle = {
   status: "published",
   publishedAt: "2026-08-04",
-  authorId: "rick-r",
+  updatedAt: "2026-09-29",
+  authorId: "guard-theory-editorial",
   slug: "maeda-and-the-arrival-of-judo-in-brazil",
   category: "bjj-history",
   title: "Maeda, and the arrival of judo in Brazil",
@@ -32,10 +33,10 @@ export const maedaAndTheArrivalOfJudoInBrazil: PublishedArticle = {
       id: "a-kodokan-man-on-the-road",
       heading: "A Kodokan man on the road",
       paragraphs: [
-        "Japan's National Diet Library, in a column written as part of its centenary project on Japanese emigration to Brazil, has Maeda enrolling at the Kodokan in 1897, defeating ten consecutive opponents the following year, reaching third dan in 1901, and becoming one of the institution's leading young men. The same column has him leaving for the United States and then for Britain, Belgium, France and Spain, and acquiring the name he is remembered by, Conde Koma, in Barcelona.",
-        "That is a career in the professional fight business of the 1900s and 1910s, not a diplomatic posting. He was one of a set of Japanese grapplers working the theatres and music halls of Europe and the Americas at a moment when audiences would pay to watch a small foreigner throw a large local.",
-        "The label on what he taught is itself contested. Roberto Pedreira, who built his work on Brazilian and Japanese newspaper archives, puts it bluntly: Maeda was a Kodokan judoka, not a jiu-jitsu practitioner, and what came out of his club was judo. Robert Drysdale, who made a documentary on the same period, argues the same distinction and adds that jiu-jitsu was simply the word the public used at the time. This matters more than it sounds. In the 1910s the two names were not cleanly separated in Japan and were used interchangeably almost everywhere else, so a period newspaper calling something jiu-jitsu tells you what the sub-editor wrote and nothing about what was being practised.",
-        "One further correction, small but load-bearing, comes from Drysdale: Maeda was never a personal student of Kano Jigoro. The image of an emissary despatched by the founder to seed the art abroad is a later tidying-up of a man who was, on Drysdale's reading, doing what most professional athletes do, which is making a living from the thing he was good at.",
+        "Japan's National Diet Library, in a column written as part of its centenary project on Japanese emigration to Brazil, has Maeda enrolling at the Kodokan in 1897, defeating ten consecutive opponents the following year, reaching third dan in 1901, and becoming one of the institution's leading young men. The same column says he left Japan as the companion of Tsunejiro Tomita, whom the Kodokan was sending to the United States to promote judo, and then has him moving on to Britain, Belgium, France and Spain, and acquiring the name he is remembered by, Conde Koma, in Barcelona.",
+        "What followed that first trip was a career in the professional fight business of the 1900s and 1910s, not a diplomatic posting. He was one of a set of Japanese grapplers working the theatres and music halls of Europe and the Americas, and in Lima a bullring, at a moment when audiences would pay to watch a small foreigner throw a large local.",
+        "The label on what he taught is itself contested. Roberto Pedreira, who built his work on Brazilian and Japanese newspaper archives, puts it bluntly: Maeda was a Kodokan judoka, not a jiu-jitsu practitioner, and what came out of his club was judo. Jose Cairus makes a related point: Maeda used the generic label jiu-jitsu, rather than judo, in keeping with his status at the time as a prizefighter. This matters more than it sounds. In the 1910s the two names were not cleanly separated in Japan and were used interchangeably almost everywhere else, so a period newspaper calling something jiu-jitsu tells you what the sub-editor wrote and nothing about what was being practised.",
+        "One further correction, small but load-bearing, comes from Robert Drysdale, who made a documentary on the same period and says flatly that Maeda \"was never a student of Jigoro Kano\". He was a Kodokan student taught by Kano's instructors, which is a different thing from a personal pupil. The image of an emissary despatched by the founder to seed the art in Brazil is a later tidying-up of a man who was, on Drysdale's reading, doing what most professional athletes do, which is making a living from the thing he was good at.",
       ],
     },
     {
@@ -44,7 +45,7 @@ export const maedaAndTheArrivalOfJudoInBrazil: PublishedArticle = {
       paragraphs: [
         "Here is a claim that ought to be simple. When did Maeda first appear in Brazil?",
         "The National Diet Library column says he arrived at the port of Santos in 1914 and settled permanently in Belem in 1915. Jose Cairus, in a peer-reviewed history of the period, has him reaching Brazil in 1914 after travelling through Argentina and Uruguay, and establishing himself in Belem late in 1915, where a school was set up at the Teatro Moderno. Drysdale, working from Brazilian press records, dates his official first appearance to 25 September 1914 in Sao Paulo and states plainly that this is not the 14 November date in Porto Alegre that circulates online; he notes a possible earlier appearance in July of that year from a source he says cannot be confirmed. He puts the arrival in Belem in October 1915.",
-        "Notice the shape of this. Three serious sources agree on the years and disagree on the ports, the months and the sequence. A widely repeated date, drawn from a passport reportedly held in Belem, is rejected outright by one researcher working from newspapers.",
+        "Notice the shape of this. Three serious sources agree on the years and disagree on the ports, the months and the sequence. A widely repeated date, 14 November 1914 in Porto Alegre, is rejected outright by one researcher working from newspapers.",
         "Nothing important hangs on whether it was Santos or Sao Paulo. What hangs on it is a habit of mind. If the year a man stepped off a boat cannot be pinned down to a month by people who have spent years in the archives, the confident specificity of most published accounts of his teaching is not confidence earned from evidence.",
       ],
     },
@@ -53,7 +54,7 @@ export const maedaAndTheArrivalOfJudoInBrazil: PublishedArticle = {
       heading: "The fight record that is not a record",
       paragraphs: [
         "The most repeated fact about Maeda is that he fought a thousand times and never lost. The National Diet Library column repeats a version of it: that in matches where he wore a judogi, he won all thousand without a loss. Other retellings inflate the figure to two thousand.",
-        "Pedreira's answer, given in a published question-and-answer on the myths that have attached to Maeda, is that the number of verifiable legitimate contests could be counted on three or four hands, and that even some of those are questionable. Most of what was billed as a fight was an exhibition, sometimes against his own students, sometimes on a professional wrestling card where the outcome was not in doubt to anybody backstage. Accounts of his time in Europe include losses under catch-as-catch-can rules.",
+        "Pedreira's answer, given in a published question-and-answer on the myths that have attached to Maeda, is that the number of verifiable legitimate contests could be counted on three or four hands, and that even some of those are questionable. Most of what was billed as a fight was an exhibition, sometimes against his own touring judoka, sometimes on a professional wrestling card where the outcome was not in doubt to anybody backstage. His catch-as-catch-can record, in a 1908 tournament and one further match, Pedreira describes as moderately successful.",
         "There is no contradiction to resolve here so much as a category confusion to name. A travelling prizefighter's advertised record was a marketing document. Counting it as a competition result is like counting a poster as a scorecard. Nobody was falsifying anything by modern standards, because there were no modern standards; there was no sanctioning body, no unified record, and no reason for a promoter in Manaus to care what a promoter in Liverpool had printed.",
         "This is the claim in the whole story that is least defensible and most repeated, which is a useful thing to know about the story.",
       ],
@@ -64,9 +65,9 @@ export const maedaAndTheArrivalOfJudoInBrazil: PublishedArticle = {
       paragraphs: [
         "Now the load-bearing question, and the one where the three most careful accounts split three ways.",
         "Cairus's version is the most conventional of them and it is still narrower than the popular one. He places Gastao Gracie as a partner in the American Circus in Belem in 1916 and manager of a wrestler, which is how the family came into contact with the fight business. He has Carlos Gracie beginning at the Teatro Moderno dojo sometime in 1916, and describes the apprenticeship as being under Maeda and his senior local student Jacyntho Ferro, lasting no more than three years. The Gracies' time in the Amazon, on his account, ends between 1919 and 1920. Cairus quotes Carlos's own recollection, given in an interview sixty-five years afterwards: \"I was physically frail and had an inferiority complex, but I learnt the secrets of jiu-jitsu under the paternal supervision of the Japanese master.\"",
-        "Drysdale's version keeps the room and removes the master. Of five Brazilians he identifies as having been promoted by Maeda, only Ferro appears in the sources as actually teaching, and everything from the period indicates Ferro was Maeda's right-hand man doing most of the instruction. His conclusion is that Ferro is the likely source of Carlos Gracie's grappling knowledge. He is careful to say that he is not claiming Carlos and Maeda never met, only that this is what the available evidence supports.",
+        "Drysdale's version keeps the room and removes the master. Of five Brazilians he identifies as having been promoted by Maeda, only Ferro appears in the sources as actually teaching, and \"everything we have from that period seems to indicate that Ferro was Maeda's right-hand man, and was doing most of the teaching\". Asked how long Carlos trained with Ferro, he says it is impossible to say.",
         "Pedreira goes furthest. His position is that Carlos took some lessons from Jacyntho Ferro, that Ferro was one of Maeda's students, and that there is no evidence Carlos ever met Maeda at all.",
-        "Set those side by side and the honest summary is this. That Carlos Gracie learned in Maeda's club in Belem, around 1916 to 1919, is supported. That he learned from Ferro is supported by all three. That he learned directly from Maeda is asserted by Carlos himself decades later, accepted with qualification by Cairus, doubted by Drysdale, and denied by Pedreira. A sixty-five-year-old recollection by the person with the most to gain from it is evidence, but it is the weakest kind, and it is the kind the popular version rests on.",
+        "Set those side by side and the honest summary is this. That Carlos Gracie learned in Maeda's club in Belem, around 1916 to 1919, is supported. That he learned from Ferro is stated by Cairus and Pedreira and is consistent with Drysdale's account of who did the teaching. That he learned directly from Maeda is asserted by Carlos himself decades later, accepted with qualification by Cairus, left unsupported by Drysdale's account, and denied by Pedreira. The National Diet Library column, for its part, has Maeda teaching Carlos directly for about four years, with a move to Rio in 1925, which does not fit Cairus's 1919-20 departure. A sixty-five-year-old recollection by the person with the most to gain from it is evidence, but it is the weakest kind, and it is the kind the popular version rests on.",
         "There is a further detail in Cairus that deserves more attention than it gets. He reports that in 1928 Maeda told Hajime Otake he had never awarded a black belt to any student in Brazil, and treats the absence of black-belt graduates from the Amazon years as telling you something real about what the teaching there was.",
         "Drysdale's archival work points the other way, at least partly. He describes five Brazilians promoted by Maeda: Waldemar Lopes, Raphael Gomes, Jacyntho Ferro, Dr Matheus Pereira and Guilherme de la Rocque. The rank recorded in the press was primeiro galao, first stripe or first rank, and Drysdale is explicit that nobody now knows precisely what that meant. It could correspond roughly to a modern brown belt, since judo counted kyu grades downwards to first kyu; it could mean first-degree black belt on the judo pattern; or Maeda may simply have run his own grading scheme. The one thing Drysdale treats as certain is that the promotions happened and that these men had reached some level of mastery of what Maeda taught.",
         "Both can be true. A man can promote students within a system of his own devising and still, ten years later and speaking to a fellow Japanese, describe himself as having awarded no Kodokan black belt. The interesting part is not the contradiction but what it reveals: the ranks that later became the spine of an entire sport's authority claims were, at the origin point, improvised and undocumented enough that experts cannot now say what they signified.",
@@ -77,8 +78,8 @@ export const maedaAndTheArrivalOfJudoInBrazil: PublishedArticle = {
       heading: "The other line out of Belem",
       paragraphs: [
         "The Gracie line is not the only one claimed out of Maeda's club, and the alternative is worth stating because its existence is itself disputed.",
-        "Luiz Franca Filho is generally described as having learned from Japanese instructors in Brazil, including Maeda, before settling on the outskirts of Rio de Janeiro and teaching, among others, a young marine named Oswaldo Fadda. Fadda's students went on to form what is usually called the most successful non-Gracie lineage in the sport, associated with Bonsucesso and with teaching in poorer neighbourhoods rather than in the wealthy centre of Rio.",
-        "Two cautions attach to that paragraph. Franca's direct link to Maeda is asserted in community reference sources and disputed by others; and Drysdale has publicly questioned whether the Fadda line is properly described as non-Gracie at all. This article is not in a position to settle either question, and readers should treat the Franca-Fadda lineage as a genuine and important second thread that has been documented less carefully than it deserves rather than as a clean counter-narrative.",
+        "Luiz Franca Filho is generally described as having learned from Japanese instructors in Brazil, including Maeda, before settling on the outskirts of Rio de Janeiro and teaching, among others, a young marine named Oswaldo Fadda. Fadda's students went on to form what is usually called the most successful non-Gracie lineage in the sport, associated with Bento Ribeiro, in Rio's northern suburbs, and with teaching in poorer neighbourhoods rather than in the wealthy centre of Rio.",
+        "Two cautions attach to that paragraph. Franca's direct link to Maeda is asserted in community reference sources and disputed by others; and Drysdale has publicly questioned whether the Fadda line is properly described as non-Gracie at all. In a 2019 article he cited a 1938 newspaper that lists Franca as representing the Gracie academy, and wrote that \"the claim that it is a lineage outside of the Gracie family\" lacks any supporting evidence at the moment; in a 2020 interview, asked about it as a non-Gracie lineage, he called the lineage \"problematic\" because nobody can trace where Franca learned. This article is not in a position to settle either question, and readers should treat the Franca-Fadda lineage as a genuine and important second thread that has been documented less carefully than it deserves rather than as a clean counter-narrative.",
       ],
     },
     {
@@ -96,7 +97,8 @@ export const maedaAndTheArrivalOfJudoInBrazil: PublishedArticle = {
       paragraphs: [
         "None of this diminishes anybody. Carlos Gracie learning from Jacyntho Ferro instead of from Maeda changes a line on a certificate and nothing about what the Gracie family subsequently built. A handful of verifiable contests instead of a thousand advertised ones still describes a man who crossed three continents fighting strangers for money in an era with no medical supervision.",
         "What it should change is how you read the next confident paragraph you are given about where any of this came from. Three tests do most of the work. Does the account name its evidence, or does it only name its conclusion? When two sources disagree, does it tell you, or does it pick? And does its certainty go up as the documentation gets thinner, which is the direction certainty should never travel?",
-        "Applied to Maeda, those tests leave you with less than you started with, and with a clearer idea of what you actually know. Judo arrived in Brazil in 1914 in the luggage of a professional fighter who was not sent by anybody. A club in Belem taught a small number of Brazilians for a few years. What happened next is genuinely remarkable, and it does not need the myth to be remarkable.",
+        "Applied to Maeda, those tests leave you with less than you started with, and with a clearer idea of what you actually know. Judo arrived in Brazil in 1914 in the luggage of a professional fighter who had left Japan a decade earlier on a Kodokan promotional trip and had been working for himself ever since. A club in Belem taught a small number of Brazilians for a few years. What happened next is genuinely remarkable, and it does not need the myth to be remarkable.",
+        "Correction, 29 September 2026: an earlier version of this article attributed to Drysdale the conclusion that Ferro was the likely source of Carlos Gracie's knowledge, and a caveat that he was not claiming Carlos and Maeda never met. The first was his interviewer's question, and the second does not appear in the interview; both have been corrected. It also placed the Fadda lineage in Bonsucesso rather than Bento Ribeiro, credited Drysdale with a point about the word jiu-jitsu that Cairus makes, tied the Porto Alegre date to a passport no source mentions, said Maeda lost under catch rules, and said he was sent by nobody, when his first trip abroad was a Kodokan one. Each has been corrected, and sources have been added for Drysdale's position on the Fadda lineage.",
       ],
     },
   ],
@@ -125,7 +127,7 @@ export const maedaAndTheArrivalOfJudoInBrazil: PublishedArticle = {
       title: "Interview: Robert Drysdale on the first five Brazilians promoted by Mitsuyo Maeda",
       publisher: "BJJ Heroes",
       url: "https://www.bjjheroes.com/interview/robert-drysdale-on-the-first-5-brazilians-promoted-by-mitsuyo-maeda",
-      accessed: "2026-08-03",
+      accessed: "2026-09-29",
     },
     {
       title:
@@ -144,15 +146,40 @@ export const maedaAndTheArrivalOfJudoInBrazil: PublishedArticle = {
       title: "Oswaldo Fadda, facts and biography",
       publisher: "BJJ Heroes",
       url: "https://www.bjjheroes.com/bjj-fighters/oswaldo-fadda-facts-and-bio",
-      accessed: "2026-08-03",
+      accessed: "2026-09-29",
+    },
+    {
+      title:
+        "Robert Drysdale, \"Is the Fadda lineage a Non-Gracie lineage?\", 1 January 2019: cites Jornal do Brasil, 2 November 1938, listing \"Luis Franca (A. Gracie)\", and a 1956 article calling Franca one of \"Helio Gracie's best students\" (archived copy)",
+      publisher: "Global Training Report, via the Internet Archive",
+      url: "https://web.archive.org/web/20200115191155/http://global-training-report.com/drysdale_2019_1.htm",
+      accessed: "2026-09-29",
+    },
+    {
+      title: "Drysdale Questions If Fadda lineage is a Non-Gracie lineage (7 January 2019)",
+      publisher: "BJJ Eastern Europe",
+      url: "https://www.bjjee.com/articles/drysdale-explains-fadda-lineage-a-non-gracie-lineage/",
+      accessed: "2026-09-29",
+    },
+    {
+      title: "Robert Drysdale: The Fadda Lineage Could Actually Be a Gracie One! (interview, 10 October 2019)",
+      publisher: "BJJ Eastern Europe",
+      url: "https://www.bjjee.com/articles/robert-drysdale-the-fadda-lineage-could-actually-be-a-gracie-one/",
+      accessed: "2026-09-29",
+    },
+    {
+      title: "Drysdale on Fadda/Franca Lineage: 'No Evidence That They Learned From Maeda' (10 May 2020)",
+      publisher: "BJJ Eastern Europe",
+      url: "https://www.bjjee.com/articles/drysdale-faddafranca-lineage-no-evidence-learned-maeda/",
+      accessed: "2026-09-29",
     },
   ],
   relatedSlugs: ["how-no-gi-rulesets-reshaped-technique-selection"],
   contestedNotes: [
     "Maeda's first appearance in Brazil is dated differently by serious sources: the National Diet Library places his arrival at the port of Santos in 1914; Cairus has him reaching Brazil in 1914 via Argentina and Uruguay; Drysdale dates the official first appearance to 25 September 1914 in Sao Paulo and explicitly rejects the widely circulated 14 November 1914 Porto Alegre date. All three agree he settled in Belem in 1915.",
     "The claim that Maeda fought a thousand or more contests without defeat is repeated by the National Diet Library column and contradicted by Pedreira, who states that verifiable legitimate contests could be counted on three or four hands and that some of those are questionable. No unified competition record exists for the period.",
-    "Whether Carlos Gracie was taught directly by Maeda is unresolved. Cairus describes an apprenticeship under Maeda and his senior student Jacyntho Ferro of no more than three years from 1916; Drysdale concludes Ferro is the likely source of Carlos's knowledge while stating he is not claiming the two never met; Pedreira states there is no evidence Carlos ever met Maeda. Carlos's own account is a recollection given sixty-five years later.",
+    "Whether Carlos Gracie was taught directly by Maeda is unresolved. Cairus describes an apprenticeship under Maeda and his senior student Jacyntho Ferro of no more than three years from 1916; Drysdale identifies Ferro as the one Maeda student the sources show teaching, and doing most of it, and says it is impossible to say how long Carlos trained with him; the National Diet Library column has Carlos learning from Maeda for about four years; Pedreira states there is no evidence Carlos ever met Maeda. Carlos's own account is a recollection given sixty-five years later.",
     "Cairus reports that in 1928 Maeda told Hajime Otake he had never awarded a black belt to any Brazilian student. Drysdale documents five Brazilians promoted by Maeda to a rank the press recorded as primeiro galao, and states that its modern equivalent is unknown. These accounts are not necessarily incompatible, but they cannot both be reported as settled.",
-    "Luiz Franca's direct link to Maeda is asserted in community reference sources and disputed elsewhere, and Robert Drysdale has publicly questioned whether the Franca-Fadda lineage should be described as non-Gracie. This article does not treat that lineage question as settled.",
+    "Luiz Franca's direct link to Maeda is asserted in community reference sources and disputed elsewhere, and Robert Drysdale has publicly questioned whether the Franca-Fadda lineage should be described as non-Gracie, citing a 1938 newspaper that lists Franca as representing the Gracie academy and a 1956 one calling him one of Helio Gracie's best students. This article does not treat that lineage question as settled.",
   ],
 };

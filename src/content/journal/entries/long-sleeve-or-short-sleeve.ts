@@ -18,7 +18,8 @@ import type { PublishedArticle } from "../types.ts";
 export const longSleeveOrShortSleeve: PublishedArticle = {
   status: "published",
   publishedAt: "2026-08-19",
-  authorId: "steven-p",
+  updatedAt: "2026-09-29",
+  authorId: "guard-theory-editorial",
   slug: "long-sleeve-or-short-sleeve",
   category: "equipment-and-apparel",
   title: "Long sleeve or short sleeve",
@@ -39,7 +40,7 @@ export const longSleeveOrShortSleeve: PublishedArticle = {
       paragraphs: [
         "The IBJJF rule book sets out no-gi attire at clause 8.1.16. On shirts it requires \"a shirt of elastic material (skin tight) long enough to cover the torso all the way to the waistband of the shorts, colored black, white, or black and white, and with at least 10% of the rank color(belt) to which the athlete belongs\", and permits shirts that are entirely the rank colour instead.",
         "There is no sleeve requirement in that clause, or anywhere else in the document that applies to no-gi. The word appears often in the rule book and every occurrence is a gi clause — sleeve length at 8.1.7, sleeve width and slack in the measurement list, sleeve grips in the prohibitions. We went through the extracted text of the whole PDF to be sure of that, because it is an absence and absences are easy to assert carelessly. The longer version of this reading is in our piece on the no-gi uniform rules.",
-        "The other ruleset most no-gi competitors will meet is the ADCC's. Its published rules and regulations page sets out match structure, scoring, penalties and a list of prohibited techniques. It contains no uniform requirement at all — no attire section, no mention of a rash guard. Clothing appears twice: once to say \"Gi (Kimono), Wrestling shoes are optional\", and once in the prohibition on \"No use holding of the T-Shirt or shorts\", which is a grip rule. The page carries no version number and no revision date, which is worth knowing before you rely on any summary of it.",
+        "The other ruleset most no-gi competitors will meet is the ADCC's. Its published rules and regulations page sets out match structure, scoring, penalties and a list of prohibited techniques. It contains no uniform requirement at all — no attire section, no mention of a rash guard. Clothing is mentioned only in passing: \"Gi (Kimono), Wrestling shoes are optional\", a ban on slippery substances \"on body or clothing\", and the prohibition on \"No use holding of the T-Shirt or shorts\", which is a grip rule. The page carries no version number and no revision date, which is worth knowing before you rely on any summary of it.",
         "So: two rulesets, neither of which regulates sleeve length. If a shop, a coach or a product page tells you one length is required for competition, ask which clause. There is not one.",
       ],
     },
@@ -48,7 +49,7 @@ export const longSleeveOrShortSleeve: PublishedArticle = {
       heading: "The heat argument, and what the research actually says",
       paragraphs: [
         "The intuitive claim is that a long sleeve is hotter. It is plausible and it may well be true of your experience. It is not something the literature currently establishes, and it is worth being precise about what has and has not been measured, because this is where most writing on the subject quietly invents a number.",
-        "The largest recent synthesis of the compression-garment research is a systematic scoping review by Weakley and colleagues in Sports Medicine in 2021, covering 183 studies. Thermoregulation was the subject of nineteen of them — around ten per cent of the field. Their summary of that subset is that compression garments increase skin temperature at the point of coverage, and that these changes do not influence core body temperature, sweat rate or body mass loss. In hot environmental conditions, between 32 and 40 degrees, they describe the evidence as conflicting.",
+        "The largest recent synthesis of the compression-garment research is a systematic scoping review by Weakley and colleagues in Sports Medicine, published online in 2021, covering 183 studies. Thermoregulation was the subject of nineteen of them — around ten per cent of the field. Their summary of that subset is that compression garments increase skin temperature at the point of coverage, and that these changes do not influence core body temperature, sweat rate or body mass loss. In hot environmental conditions, between 32 and 40 degrees, they describe the evidence as conflicting.",
         "The other relevant body of work is on sports clothing generally. A 2022 narrative review in Sports Medicine - Open by Di Domenico, Hoffmann and Collins looked at fabric and fit in exercise in the heat and found the picture unsettled in the same way. On materials it reports that \"few studies have identified significant differences in thermo-physiological...measures between natural and synthetic fabrics\". On fit — the question closest to this one — it states plainly that \"very few studies have compared the impact of tight-fitted and loose-fitted clothing on thermoregulation...during exercise in the heat\". Its overall verdict on the field is that \"Disparities across methodologies, and insufficient applications of thermal-physiological and perceptual strain, have led to mixed findings\".",
         "The one property that review found more consistent than fabric type was air permeability — how readily a fabric exchanges air. That points somewhere useful and slightly awkward for the question in the title: the variable with the better evidence behind it is a property of the fabric, not the length of the sleeve. A tightly knitted long sleeve and a loosely knitted long sleeve are not the same garment, and comparing a long sleeve to a short sleeve almost never holds fabric constant.",
         "None of this research put a rash guard on a grappler. That is the same position we took on compression and recovery in how a BJJ rash guard should fit, and nothing found for this article changes it. We are not going to tell you a long sleeve will make you hotter by some amount, because nobody has measured that.",
@@ -86,7 +87,7 @@ export const longSleeveOrShortSleeve: PublishedArticle = {
       paragraphs: [
         "Guard Theory makes both lengths, which is a disclosure rather than a recommendation: we have an interest in you concluding that the question is genuine. It is also why this piece leans as hard as it does on the primary documents. The most useful thing we can do with the question is publish the reasoning and let you disagree with it.",
         "What we will not do is settle it with a claim we cannot support. Both lengths are legal under both rulesets we have read. The thermal literature is thin and mixed and does not cover grappling. The protective argument is a medical one and is not ours to make. The one difference we are confident about is what your forearm presents to a grip, and you can test that yourself this week.",
-        "The specification for both garments is published in full on each product page — fabric, weight, seam construction, print method — because that is what you are actually choosing between once the sleeve question stops being a rule and starts being a preference.",
+        "Correction, 29 September 2026: an earlier version of this article said clothing appears twice on the ADCC rules page. It appears in a third place too, a ban on slippery substances on body or clothing, and the sentence has been corrected. The page still sets no uniform requirement.",
       ],
     },
   ],
@@ -100,14 +101,14 @@ export const longSleeveOrShortSleeve: PublishedArticle = {
     },
     {
       title:
-        "ADCC Rules and Regulations: contains no uniform or attire requirement; clothing appears only as \"Gi (Kimono), Wrestling shoes are optional\" and in the grip prohibition on holding the T-shirt or shorts. Published without a version number or revision date",
+        "ADCC Rules and Regulations: contains no uniform or attire requirement; clothing is mentioned only in \"Gi (Kimono), Wrestling shoes are optional\", the ban on slippery substances \"on body or clothing\", and the grip prohibition on holding the T-shirt or shorts. Published without a version number or revision date",
       publisher: "Abu Dhabi Combat Club",
       url: "https://adcombat.com/adcc-rules-regulations/",
-      accessed: "2026-08-19",
+      accessed: "2026-09-29",
     },
     {
       title:
-        "Weakley J, Broatch J, O'Riordan S, Morrison M, Maniar N, Halson SL. Putting the Squeeze on Compression Garments: Current Evidence and Recommendations for Future Research: A Systematic Scoping Review. Sports Medicine 2021;52(5):1141-1160. doi:10.1007/s40279-021-01604-9. 183 studies, of which 19 thermoregulatory",
+        "Weakley J, Broatch J, O'Riordan S, Morrison M, Maniar N, Halson SL. Putting the Squeeze on Compression Garments: Current Evidence and Recommendations for Future Research: A Systematic Scoping Review. Sports Medicine 2022;52(5):1141-1160 (online 2021). doi:10.1007/s40279-021-01604-9. 183 studies, of which 19 thermoregulatory",
       publisher: "Sports Medicine, via PubMed Central",
       url: "https://pmc.ncbi.nlm.nih.gov/articles/PMC9023423/",
       accessed: "2026-08-19",

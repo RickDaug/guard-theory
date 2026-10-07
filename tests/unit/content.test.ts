@@ -6,6 +6,7 @@ import {
   ENTRIES,
   entriesInCategory,
   findDanglingRelatedSlugs,
+  isPublishedEntry,
 } from "../../src/content/technique/index.ts";
 import {
   ARTICLES,
@@ -16,7 +17,12 @@ import {
 } from "../../src/content/journal/index.ts";
 import { FIGURES } from "../../src/content/figures/index.ts";
 import { POLICIES } from "../../src/content/policies/index.ts";
-import { PRODUCTS } from "../../src/content/products/index.ts";
+import { DRAWN_SPECIFICATION_LABELS, PRODUCTS } from "../../src/content/products/index.ts";
+import {
+  FIT_NOTES,
+  SIZE_CHART,
+  SIZE_CHART_SOURCE,
+} from "../../src/content/products/size-chart.ts";
 import {
   CROSS_LINKS,
   crossLinksFor,
@@ -97,6 +103,18 @@ describe("the three-entry gate on category pages", () => {
         (a) => a.category === category.slug && isPublished(a),
       ).length;
       assert.equal(journalCategoryCount(category.slug), published);
+    }
+  });
+
+  it("counts signed-off technique entries only", () => {
+    // The same reasoning as the Journal: a draft entry is noindex and
+    // unlisted until a person signs it off, so it cannot be one of the three
+    // that open its category page.
+    for (const category of CATEGORIES) {
+      const published = ENTRIES.filter(
+        (e) => e.category === category.slug && isPublishedEntry(e),
+      ).length;
+      assert.equal(techniqueCategoryCount(category.slug), published);
     }
   });
 });
@@ -182,7 +200,9 @@ describe("technique library integrity", () => {
     );
   });
 
-  it("gives every category at least one entry", () => {
+  it("gives every category at least one published entry", () => {
+    // entriesInCategory lists signed-off entries only, so a category whose
+    // one entry is an unsigned draft is empty here — and empty on the page.
     const empty = CATEGORIES.filter(
       (category) => entriesInCategory(category.slug).length === 0,
     ).map((category) => category.slug);
@@ -360,14 +380,53 @@ describe("editorial voice", () => {
    */
   const BANNED = BANNED_CONSTRUCTIONS;
 
+  /**
+   * Everything a reader or a crawler can see. The metaDescription is here
+   * because it was not: the sweep covered nine fields of technique copy and
+   * skipped the one field written expressly for a search result, which is the
+   * field most likely to be written in a hurry to fit 160 characters.
+   */
+  const journalCopy = (article: (typeof ARTICLES)[number]) =>
+    [
+      article.title,
+      article.metaDescription ?? "",
+      article.standfirst,
+      ...article.sections.flatMap((s) => [s.heading, ...s.paragraphs]),
+      ...article.contestedNotes,
+    ].join(" ");
+
+  const techniqueCopy = (entry: (typeof ENTRIES)[number]) =>
+    [
+      entry.title,
+      entry.summary,
+      entry.metaDescription ?? "",
+      entry.positionAndProblem,
+      entry.objective,
+      entry.coreConcept,
+      entry.safetyNote,
+      ...entry.keyMechanics,
+      ...entry.commonErrors,
+      ...entry.trainingProgression,
+    ].join(" ");
+
+  it("reads the metaDescription as copy, not metadata", () => {
+    // The guard can fail: a banned phrase that appears only in the
+    // metaDescription has to reach the text the patterns run over.
+    const [entry] = ENTRIES;
+    assert.ok(entry);
+    const planted = { ...entry, metaDescription: "It is important to note this." };
+    assert.ok(BANNED.some((pattern) => pattern.test(techniqueCopy(planted))));
+    assert.ok(!BANNED.some((pattern) => pattern.test(techniqueCopy(entry))));
+
+    const [article] = ARTICLES;
+    assert.ok(article);
+    const plantedArticle = { ...article, metaDescription: "A legendary guard." };
+    assert.ok(BANNED.some((pattern) => pattern.test(journalCopy(plantedArticle))));
+  });
+
   it("keeps banned constructions out of Journal copy", () => {
     for (const article of ARTICLES) {
-      const text = [
-        article.title,
-        article.standfirst,
-        ...article.sections.flatMap((s) => [s.heading, ...s.paragraphs]),
-        ...article.contestedNotes,
-      ].join(" ");
+      const text = journalCopy(article);
 
       for (const pattern of BANNED) {
         assert.ok(
@@ -380,17 +439,7 @@ describe("editorial voice", () => {
 
   it("keeps banned constructions out of technique copy", () => {
     for (const entry of ENTRIES) {
-      const text = [
-        entry.title,
-        entry.summary,
-        entry.positionAndProblem,
-        entry.objective,
-        entry.coreConcept,
-        entry.safetyNote,
-        ...entry.keyMechanics,
-        ...entry.commonErrors,
-        ...entry.trainingProgression,
-      ].join(" ");
+      const text = techniqueCopy(entry);
 
       for (const pattern of BANNED) {
         assert.ok(
@@ -445,6 +494,38 @@ describe("article titles fit a results page", () => {
       assert.ok(
         article.metaTitle.length < article.title.length,
         `journal/${article.slug} has a metaTitle no shorter than its headline — delete it`,
+      );
+    }
+  });
+});
+
+/**
+ * Technique entries have no metaTitle: `[slug]/page.tsx` passes `entry.title`
+ * to the same `%s · Guard Theory` template, so the title itself has to fit.
+ * The Journal check above never covered them, and the first audit found one
+ * at 42 characters — three from the cut — with nothing to say so.
+ */
+describe("technique titles fit a results page", () => {
+  const SUFFIX = " · Guard Theory";
+  const LIMIT = 60;
+  const TITLE_LIMIT = LIMIT - SUFFIX.length;
+
+  const fits = (title: string) => (title + SUFFIX).length <= LIMIT;
+
+  it("leaves 45 characters for the title", () => {
+    // The guard can fail: one character over the line is rejected.
+    assert.equal(TITLE_LIMIT, 45);
+    assert.ok(fits("x".repeat(TITLE_LIMIT)));
+    assert.ok(!fits("x".repeat(TITLE_LIMIT + 1)));
+  });
+
+  it("keeps every entry title within it", () => {
+    for (const entry of ENTRIES) {
+      assert.ok(
+        fits(entry.title),
+        `technique/${entry.slug} has a ${entry.title.length}-character title; with ` +
+          `"${SUFFIX}" appended it passes the ${LIMIT} a results page shows. ` +
+          `Keep it to ${TITLE_LIMIT}.`,
       );
     }
   });
@@ -554,5 +635,52 @@ describe("meta descriptions fit what search and social display", () => {
           `the copy on the page — if it is not changing anything, delete it`,
       );
     }
+  });
+});
+
+/**
+ * Product facts need a supplier.
+ *
+ * From 2026-08-04 to 2026-09-29 the product pages published a fabric
+ * composition, a GSM, a seam type, a print method, a fit and care line, and a
+ * six-size measurement chart that nobody supplied — the owner confirmed it.
+ * "Never invent a fact" was a rule; this makes it a check. A specification
+ * value (other than what the drawing itself shows) and a chart row can only
+ * exist when the registry records that the owner supplied them.
+ */
+describe("product facts come from the owner or not at all", () => {
+  for (const product of PRODUCTS) {
+    it(`${product.slug} states no specification, construction or size range the owner did not supply`, () => {
+      if (product.specSource === "owner") return;
+      const unsupplied = product.specifications.filter(
+        (spec) => spec.value !== null && !DRAWN_SPECIFICATION_LABELS.includes(spec.label),
+      );
+      assert.deepEqual(
+        unsupplied.map((spec) => `${spec.label}: ${spec.value}`),
+        [],
+        `${product.slug} carries specification values with specSource ${String(product.specSource)}. ` +
+          `Set them to null, or record that the owner supplied them (specSource: "owner"). ` +
+          `See docs/owner-decisions.md §3.`,
+      );
+      assert.deepEqual(
+        product.constructionPoints.map((point) => point.label),
+        [],
+        `${product.slug} asserts construction details with no owner source.`,
+      );
+      assert.deepEqual(
+        product.sizeLabels,
+        [],
+        `${product.slug} lists a size range with no owner source.`,
+      );
+    });
+  }
+
+  it("publishes no size chart the owner did not supply", () => {
+    if (SIZE_CHART_SOURCE === "owner") {
+      assert.ok(SIZE_CHART.length > 0, "SIZE_CHART_SOURCE is \"owner\" but the chart is empty");
+      return;
+    }
+    assert.deepEqual(SIZE_CHART, [], "size chart rows exist without SIZE_CHART_SOURCE: \"owner\"");
+    assert.deepEqual(FIT_NOTES, [], "fit notes describe a pattern nobody supplied");
   });
 });

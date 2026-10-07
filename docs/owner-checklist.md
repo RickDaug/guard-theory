@@ -84,15 +84,19 @@ Leave the dashboard in **Test mode** for all of this.
    and PaymentIntents; everything else None. The key begins `rk_test_`.
    → **`STRIPE_SECRET_KEY`**
 
-   The code calls three things: create a Checkout Session, list Checkout
-   Sessions, create a Refund. If a test refund is refused for a missing
+   The code calls four things: create a Checkout Session, list Checkout
+   Sessions, list Refunds (to catch a refund made in the dashboard that the
+   webhook missed), create a Refund. If a test refund is refused for a missing
    permission, that is the key's scopes, not the code; Stripe's error names the
    permission.
 
 2. **Webhook.** Developers → Webhooks → Add endpoint.
    - URL: `https://guardtheory.net/api/webhooks/stripe`
-   - Events, exactly these three: `checkout.session.completed`,
-     `checkout.session.async_payment_succeeded`, `charge.refunded`
+   - Events, exactly these five: `checkout.session.completed`,
+     `checkout.session.async_payment_succeeded`, `charge.refunded`,
+     `charge.dispute.created`, `charge.dispute.closed`. On an endpoint that
+     already exists, add the two dispute events: without them a chargeback
+     never reaches the order, and it can be shipped while it is being disputed.
    - **API version: `2026-07-29.dahlia`.** On an older version the shipping
      address arrives somewhere the code does not look, and the failure shows up
      days later as a label that cannot be bought.
@@ -155,6 +159,14 @@ Ten required names to add: `STRIPE_SECRET_KEY`, `STRIPE_WEBHOOK_SECRET`,
 `SHIPPO_API_TOKEN`, `SHIPPO_WEBHOOK_TOKEN`, the five `SHIP_FROM_*`, and
 `PORTAL_PASSWORD_HASH`. `RESEND_API_KEY` and `RECEIPT_FROM_EMAIL` are already
 there.
+
+One name you should add: **`OWNER_ALERT_EMAIL`** — an address you read.
+Every fifteen minutes the site checks for anything that needs you (a payment
+with no order, a confirmation that did not send, a label that never finished,
+the missed-payment check itself failing) and emails you one short list of
+counts: at most once an hour, and the same list again only a day later. Without
+it nothing is sent, and you only find out by opening the portal. Settings in
+the portal shows whether it is on.
 
 One optional name: **`REPLY_TO_EMAIL`**. `hello@guardtheory.net` sends every
 message, and unless a mailbox or forwarder exists for it at your mail host, a
@@ -290,6 +302,12 @@ privacy policy does not yet say because no period has been chosen — ask your
 accountant what the floor is.
 
 Do this before the live-mode cutover. It does not block a test-mode rehearsal.
+
+**Mostly done 2026-09-29.** The owner set seven business days to dispatch, a
+thirty-day return window, no prepaid label and no refund day count, exchanges
+shipped when the return arrives, no fault warranty, and no numbered lost or
+damaged parcel promise (§12, "OWNER-SUPPLIED 2026-09-29"). Still open: weekend
+orders (b), transit time (c), the contract-formation line (k), order retention (l).
 
 ---
 

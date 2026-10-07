@@ -8,7 +8,8 @@ import type { PublishedArticle } from "../types.ts";
 export const howABjjRashGuardShouldFit: PublishedArticle = {
   status: "published",
   publishedAt: "2026-08-04",
-  authorId: "steven-p",
+  updatedAt: "2026-09-29",
+  authorId: "guard-theory-editorial",
   slug: "how-a-bjj-rash-guard-should-fit",
   category: "equipment-and-apparel",
   title: "How a BJJ rash guard should fit",
@@ -31,7 +32,7 @@ export const howABjjRashGuardShouldFit: PublishedArticle = {
       paragraphs: [
         "Almost everything published about rash guard fit is somebody's preference. There is one exception, and it is worth quoting exactly. The IBJJF Rule Book, version 6.1, section 8.1.16, states that for no-gi both genders \"must wear a shirt of elastic material (skin tight) long enough to cover the torso all the way to the waistband of the shorts, colored black, white, or black and white, and with at least 10% of the rank color(belt) to which the athlete belongs.\" Shirts entirely in the athlete's rank colour are also permitted.",
         "Two useful things fall out of that sentence. Skin tight is the standard, not a style choice. And length is defined by a landmark on you rather than by a number on a chart: the hem has to reach the waistband of your shorts.",
-        "Note what the rule does not do. It gives no method for measuring skin tight, and none for measuring the ten per cent. This is a conspicuous gap when you read it next to the gi rules in the same document, which specify a physical measuring tool with regulated dimensions. The no-gi shirt gets an inspector's eye instead, and the rule book gives each athlete three uniform inspections to get an approval. If you are competing under IBJJF rules, that discretion is worth planning around rather than arguing with.",
+        "Note what the rule does not do. It gives no method for measuring skin tight, and none for measuring the ten per cent. This is a conspicuous gap when you read it next to the gi rules in the same document, which specify a physical measuring tool with regulated dimensions. The no-gi shirt gets an inspector's eye instead. The rule book's allowance of three uniform inspections sits in its gi section, so do not assume a second chance at a no-gi check. If you are competing under IBJJF rules, that discretion is worth planning around rather than arguing with.",
         "It is also a competition rule. It binds you at an IBJJF event and nowhere else. Your gym may require a rash guard, may not, and may have its own view about sleeve length. Ask before your first class rather than after it.",
       ],
     },
@@ -65,7 +66,7 @@ export const howABjjRashGuardShouldFit: PublishedArticle = {
       heading: "Why two size charts disagree",
       paragraphs: [
         "You are a medium in one brand and a large in another and you have not changed. This is normal and it has a boring explanation.",
-        "ISO 8559-1:2017 defines anthropometric measurements for clothing: where the tape goes, what counts as a chest girth, how a body is described in numbers. It standardises the measuring. It does not standardise the labelling. Each brand maps measured bodies onto its own patterns, which were drafted around a particular fit intention, and the letter on the label is a pointer into that company's block rather than a description of you.",
+        "ISO 8559-1:2017 defines anthropometric measurements for clothing: where the tape goes, what counts as a chest girth, how a body is described in numbers. It standardises the measuring. Labelling is covered by a separate part of the series, ISO 8559-2, and like every ISO standard it is voluntary. Each brand maps measured bodies onto its own patterns, which were drafted around a particular fit intention, and the letter on the label is a pointer into that company's block rather than a description of you.",
         "So measure yourself once and stop guessing. Chest, at the fullest point, tape level. Waist. Then the two that almost nobody takes and that decide checks one and four: torso length, from the bony bump at the base of your neck down to your waistband, and sleeve length, from the centre back of the neck, over the point of the shoulder, to the wrist bone. Read every chart against those four numbers separately. Do not carry a size across brands.",
         "If your torso is long for your chest, you will fail check one at the size that fits your chest, every time, in most brands. The fix is to shop on garment length where a brand publishes it and treat the chest measurement as the compromise, not the other way round.",
         "If you are genuinely between two sizes, decide it on which check fails rather than on how it feels standing up. If both hem checks pass at the smaller size and the only complaint is that it feels close across the chest, close across the chest is the specification you were buying. If a hem check fails, no amount of stretch will fix it, because the problem is that the garment is short and stretching it upward makes it shorter still.",
@@ -88,6 +89,7 @@ export const howABjjRashGuardShouldFit: PublishedArticle = {
         "Most bad fit is an annoyance. A hem that rides up leaves a wad of fabric at your collarbone under a crossface, which is distracting rather than dangerous. A seam that runs through the armpit can chafe raw over a hard week, and if that keeps happening the garment is the wrong shape for you and no amount of tolerating it will change the seam.",
         "A smaller number of cases are worth taking seriously rather than tolerating. A top that genuinely restricts the shoulder changes how you frame, and you will compensate somewhere else without deciding to. Compensation you have not noticed is a reasonable description of how a lot of people accumulate shoulder and neck complaints. If a garment produces numbness or pins and needles in the hands, or makes your breathing feel restricted rather than merely snug, that is not a sizing conversation. Take it off, and if it persists without the garment, take it to a clinician.",
         "For everything in between, the most useful reader of your fit problem is a coach who has watched you roll. They have seen which shoulder you drop, where your top rides up, and which of the five checks you are actually failing, and they will tell you in about ten seconds. Bring the question to the mat rather than to a product page.",
+        "Correction, 29 September 2026: an earlier version of this article said the IBJJF rule book gives each athlete three uniform inspections. That allowance is written into the gi inspection rules, not the no-gi clause, and the sentence has been corrected.",
       ],
     },
   ],
@@ -118,6 +120,13 @@ export const howABjjRashGuardShouldFit: PublishedArticle = {
       publisher: "International Organization for Standardization",
       url: "https://www.iso.org/standard/61686.html",
       accessed: "2026-08-03",
+    },
+    {
+      title:
+        "ISO 8559-2:2025, Size designation of clothes, Part 2: Primary and secondary dimension indicators",
+      publisher: "International Organization for Standardization",
+      url: "https://www.iso.org/standard/85590.html",
+      accessed: "2026-09-29",
     },
     {
       title:

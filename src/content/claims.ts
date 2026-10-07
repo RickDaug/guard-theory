@@ -3,11 +3,13 @@ import { noteDate, piecesWithCorrections } from "./corrections.ts";
 import { FIGURES } from "./figures/index.ts";
 import { ARTICLES, isPublished } from "./journal/index.ts";
 import { PRODUCTS } from "./products/index.ts";
+import { PUBLISHED_SPECIFICATIONS } from "./products/published-specs.ts";
 import { SIZE_CHART, SIZE_CHART_SOURCE } from "./products/size-chart.ts";
 import { numberWord } from "./section-descriptions.ts";
-import { ENTRIES } from "./technique/index.ts";
+import { ENTRIES, PUBLISHED_ENTRIES } from "./technique/index.ts";
 import { buildSearchIndex } from "../lib/search/index.ts";
 import * as mailTemplates from "../lib/mail/templates.ts";
+import { PENDING_RETENTION_DAYS } from "../lib/waitlist/confirm.ts";
 
 /**
  * What the site says about itself, tied to the thing that makes it true.
@@ -103,6 +105,10 @@ export const STORED: Record<string, Record<string, Disclosure>> = {
     unsubscribed_at: { internal: "set when the reader unsubscribes; nothing is collected to set it" },
     unsubscribe_token: { internal: "a random token we generate for the unsubscribe link" },
     source: { internal: "which of our own code paths wrote the row" },
+    consent_state: { says: "whether and when you confirmed your address" },
+    confirmed_at: { says: "whether and when you confirmed your address" },
+    confirmation_sent_at: { internal: "when we last sent the confirmation link" },
+    confirmation_delivery: { internal: "whether that confirmation email was sent, failed, or only logged" },
   },
   contact_message: {
     id: { internal: "a random identifier we generate" },
@@ -519,7 +525,14 @@ function processorsMatchPolicy(context: ClaimContext): true | string {
  * sentence is retired below until there is no transactional mail.
  */
 export const LIST_MAIL = ["announcement"];
-export const TRANSACTIONAL_MAIL = ["orderConfirmation", "orderInProcess", "orderShipped"];
+export const TRANSACTIONAL_MAIL = [
+  "orderConfirmation",
+  "orderInProcess",
+  "orderShipped",
+  // Sent to an address that is not on the list yet, because someone asked for
+  // it to be. It says that ignoring it is enough, which is true.
+  "waitlistConfirmation",
+];
 
 function listMailCarriesUnsubscribe(): true | string {
   const problems: string[] = [];
@@ -529,6 +542,19 @@ function listMailCarriesUnsubscribe(): true | string {
     if (LIST_MAIL.includes(name)) {
       if (!template.toString().includes("/unsubscribe?t=")) {
         problems.push(`the list template "${name}" no longer builds an unsubscribe link`);
+      }
+      // "One-click": the body link opens a confirm page (a GET must not write),
+      // so the one click is RFC 8058's — the mail client's own button. Checked
+      // on a built message, not the source: the headers come from
+      // src/lib/mail/list-unsubscribe.ts.
+      const built = (template as (...args: string[]) => { headers?: Record<string, string> })(
+        "someone@example.com",
+        "claims-check-token",
+        "Subject",
+        "Body",
+      );
+      if (built.headers?.["List-Unsubscribe-Post"] !== "List-Unsubscribe=One-Click") {
+        problems.push(`the list template "${name}" no longer sends List-Unsubscribe-Post (RFC 8058 one-click)`);
       }
     } else if (!TRANSACTIONAL_MAIL.includes(name)) {
       problems.push(
@@ -558,13 +584,6 @@ export const OWN_COOKIES: Record<string, string> = {
 const productHas = (pattern: RegExp) =>
   PRODUCTS.length > 0 &&
   PRODUCTS.every((product) => Object.keys(product).some((key) => pattern.test(key)));
-
-const PUBLISHED_SPECIFICATIONS = [
-  "Fabric weight",
-  "Fabric composition",
-  "Seam construction",
-  "Print method",
-];
 
 /**
  * Specification values and chart rows count only when the owner supplied them.
@@ -623,9 +642,21 @@ export const OWNER_TERMS = {
  */
 export const OWNER_CONFIRMED_PERSON_BYLINES: Record<string, string> = {};
 
+const SHIPPING_TERMS = "src/content/policies/shipping-terms.ts";
+
+/**
+ * The file as a reader sees it: the copy renders the dispatch window from
+ * DISPATCH_WITHIN in shipping-terms.ts, so the placeholder is replaced with
+ * that constant's value before anything reads a figure out of it.
+ */
+function printed(read: (path: string) => string, file: string): string {
+  const value = read(SHIPPING_TERMS).match(/DISPATCH_WITHIN = "([^"]+)"/)?.[1] ?? "(DISPATCH_WITHIN not found)";
+  return read(file).replaceAll("${DISPATCH_WITHIN}", value);
+}
+
 /** Every "<verb> within <n> <unit>" figure in the files, as printed. */
 function figuresIn(read: (path: string) => string, files: string[], pattern: RegExp): string[] {
-  return files.flatMap((file) => [...read(file).matchAll(pattern)].map((m) => m[1] ?? ""));
+  return files.flatMap((file) => [...printed(read, file).matchAll(pattern)].map((m) => m[1] ?? ""));
 }
 
 /**
@@ -795,7 +826,9 @@ export const CLAIMS: Claim[] = [
     // Owner decision 2026-09-29 (docs/owner-decisions.md §12a): replaced the
     // unconfirmed "two business days".
     id: "dispatch-time-is-the-owners",
-    says: /dispatched within seven business days/,
+    // The copy prints the figure through DISPATCH_WITHIN (shipping-terms.ts);
+    // `holds` resolves it and compares the printed figure with the owner's.
+    says: /dispatched within (seven business days|\$\{DISPATCH_WITHIN\})/,
     kind: "stated",
     where: [POLICIES, ORDER_CONFIRMED, MAIL_TEMPLATES],
     holds: ({ read }) => {
@@ -830,6 +863,40 @@ export const CLAIMS: Claim[] = [
       read("src/app/technique/[category]/[slug]/page.tsx").includes("{COACH_DISCLAIMER}")
         ? true
         : "the technique entry page no longer renders COACH_DISCLAIMER",
+  },
+  {
+    id: "editorial-technique-sign-off",
+    // The publication gate, as the editorial policy describes it. Each half
+    // of the sentence is checked against the code that makes it true: "a
+    // named person has ... signed it off in the source" against the registry,
+    // "unlisted" against the sitemap and the search index, "marked as a
+    // draft" against the entry page. See src/content/technique/index.ts.
+    says: /nothing is published until a named person has read it and signed it off in the source. Until then it is unlisted and marked as a draft/,
+    kind: "stated",
+    where: [POLICIES],
+    holds: ({ read }) => {
+      const unsigned = PUBLISHED_ENTRIES.filter(
+        (entry) =>
+          entry.review !== undefined &&
+          (entry.review.approvedBy === null || entry.review.approvedBy.name.trim() === ""),
+      );
+      if (unsigned.length > 0) {
+        return `${unsigned.map((e) => e.slug).join(", ")} counts as published without a named sign-off`;
+      }
+      const page = read("src/app/technique/[category]/[slug]/page.tsx");
+      if (!page.includes("isPublishedEntry(") || !page.includes("review.drafted")) {
+        return "the technique entry page no longer marks a draft as a draft";
+      }
+      const sitemap = read("src/app/sitemap.ts");
+      if (!sitemap.includes("publishedEntryPaths(") || /\bENTRIES\b/.test(sitemap)) {
+        return "the sitemap lists technique entries without going through the publication gate";
+      }
+      const search = read("src/lib/search/index.ts");
+      if (!search.includes("publishedEntries(entries)")) {
+        return "the search index lists technique entries without going through the publication gate";
+      }
+      return true;
+    },
   },
   {
     id: "search-names-every-collection",
@@ -1067,5 +1134,23 @@ export const CLAIMS: Claim[] = [
       (columnsByTable(context).waitlist_signup ?? []).some((column) => /size/i.test(column))
         ? true
         : "the waitlist has not asked for a size since 2026-08; there is no field and no column",
+  },
+  {
+    id: "privacy-unconfirmed-deleted",
+    says: /An address that is never confirmed is not on the list, and it is deleted (\d+) days after we send the link/,
+    kind: "stated",
+    where: [POLICIES],
+    holds: ({ match, read }) => {
+      if (match?.[1] !== String(PENDING_RETENTION_DAYS)) {
+        return `the policy says ${match?.[1]} days and PENDING_RETENTION_DAYS in src/lib/waitlist/confirm.ts is ${PENDING_RETENTION_DAYS}`;
+      }
+      if (!read("src/app/first-edition/actions.ts").includes("purgeUnconfirmed(")) {
+        return "nothing calls purgeUnconfirmed any more, so unconfirmed addresses are kept indefinitely";
+      }
+      if (!read("src/app/crew/list/actions.ts").includes("consent_state in ('confirmed', 'legacy')")) {
+        return "the announcement no longer limits itself to confirmed (and legacy) addresses, so an unconfirmed one is on the list after all";
+      }
+      return true;
+    },
   },
 ];

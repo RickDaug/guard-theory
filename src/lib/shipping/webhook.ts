@@ -158,6 +158,21 @@ export function refuseShippoWebhook(): Response {
   return new Response(null, { status: 404 });
 }
 
+/**
+ * An address reduced to its network for logging: IPv4 to its /24
+ * (`203.0.113.0/24`), IPv6 to its /48. Anything unparseable is not echoed.
+ */
+export function coarseAddress(ip: string): string {
+  const v4 = /^(\d{1,3})\.(\d{1,3})\.(\d{1,3})\.(\d{1,3})$/.exec(ip);
+  if (v4) return `${v4[1]}.${v4[2]}.${v4[3]}.0/24`;
+  if (/^[0-9a-f:]+$/i.test(ip) && ip.includes(":")) {
+    const head = ip.split("::")[0]!.split(":").filter(Boolean).slice(0, 3);
+    while (head.length < 3) head.push("0");
+    return `${head.join(":")}::/48`;
+  }
+  return "(unrecognised address)";
+}
+
 export async function handleShippoWebhook(request: Request, token: string): Promise<Response> {
   if (!secretMatches(token)) {
     return refuseShippoWebhook();
@@ -169,7 +184,10 @@ export async function handleShippoWebhook(request: Request, token: string): Prom
     // Logged, not blocked. The published list carries no date, and silently
     // dropping real deliveries because Shippo added an address is worse than
     // accepting a request that already knew the secret.
-    console.warn(`[guard-theory] Shippo webhook from an unlisted address: ${ip}`);
+    // The network, not the address: enough to tell whether Shippo has added a
+    // range, without putting a caller's IP into the logs (security audit
+    // 2026-09-29, S3-10).
+    console.warn(`[guard-theory] Shippo webhook from an unlisted network: ${coarseAddress(ip)}`);
   }
 
   let payload: TrackingPayload;

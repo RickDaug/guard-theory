@@ -204,6 +204,39 @@ describe("the guard can fail", () => {
     assert.match(String(added), /"@vercel\/analytics" is now a runtime dependency/);
   });
 
+  it("objects when the backup stops going to GitHub, or is kept longer than the policy says", () => {
+    const workflow = ".github/workflows/db-backup.yml";
+    const policy = "src/content/policies/index.ts";
+
+    const unnamed = byId("privacy-who-else-handles-it").holds(
+      contextFor(null, { [policy]: raw(policy).replace("GitHub stores", "A company stores") }),
+    );
+    assert.match(String(unnamed), /GitHub handles reader data/);
+
+    const longer = byId("privacy-backups-kept-fourteen-days").holds(
+      contextFor(null, { [workflow]: raw(workflow).replace("retention-days: 14", "retention-days: 90") }),
+    );
+    assert.match(String(longer), /keeps the artifact for 90 days, not fourteen/);
+  });
+
+  it("objects when the cart limiter keeps its rows longer, or keeps the address", () => {
+    const limiter = "src/lib/rate-limit-db.ts";
+    const longer = byId("privacy-rate-limit-hash-kept-a-day").holds(
+      contextFor(null, {
+        [limiter]: raw(limiter).replace("RATE_LIMIT_RETENTION_HOURS = 24;", "RATE_LIMIT_RETENTION_HOURS = 720;"),
+      }),
+    );
+    assert.match(String(longer), /no longer deletes its rows after 24 hours/);
+
+    const migration = "migrations/0010_rate_limit.sql";
+    const raw_ip = byId("privacy-rate-limit-hash-kept-a-day").holds(
+      contextFor(null, {
+        [migration]: raw(migration).replace("key_hash     text        not null,", "key_hash text not null, ip text,"),
+      }),
+    );
+    assert.match(String(raw_ip), /looks like it holds the address itself/);
+  });
+
   it("objects when the cookies policy stops naming the portal's session cookie", () => {
     const policy = "src/content/policies/index.ts";
     const verdict = byId("no-cookies-no-tracking").holds(

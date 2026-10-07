@@ -1,5 +1,7 @@
+import type { PoolClient } from "pg";
 import { query, transaction } from "../db/client.ts";
 import { stripe, isStripeConfigured } from "../stripe/client.ts";
+import { restockOrderLines, type RestockOutcome } from "./restock.ts";
 
 /**
  * Refunds.
@@ -18,6 +20,24 @@ import { stripe, isStripeConfigured } from "../stripe/client.ts";
 
 export type RefundResult =
   | { ok: true; refundedCents: number; status: "partial" | "full" }
+  | { ok: false; reason: string };
+
+/**
+ * A refund from the portal, and what it put back on the shelf.
+ *
+ * `restock` is null when nothing was asked of the shelf. `restockFailed` is
+ * set when the money moved and the stock write then failed: the refund stands
+ * (it is recorded, and it cannot be un-made), and the owner is told to set the
+ * stock by hand rather than being shown an error for a refund that happened.
+ */
+export type PortalRefundResult =
+  | {
+      ok: true;
+      refundedCents: number;
+      status: "partial" | "full";
+      restock: RestockOutcome | null;
+      restockFailed: boolean;
+    }
   | { ok: false; reason: string };
 
 /** What actually moves the money. Injectable so the rest can be tested offline. */
@@ -93,12 +113,108 @@ export type RefundOptions = {
    */
   expectedRefundedCents?: number;
   createRefund?: CreateRefund;
+  /**
+   * For an order that has SHIPPED: which lines go back in stock, by order_item
+   * id, and how many. The owner ticks these after the return has arrived and
+   * been checked; nothing is restocked that was not ticked (owner decision 6).
+   * Refused on an order that has not shipped — there, a full refund puts
+   * everything back on its own and a part refund puts nothing back.
+   */
+  restock?: ReadonlyMap<string, number>;
 };
+
+/**
+ * Statuses in which the parcel has not left: stock is still on the shelf.
+ * `cancelled` is here for orders cancelled before cancel.ts existed, which
+ * kept both the money and the stock; a full refund of one of those puts the
+ * stock back too. An order cancelled since has had its stock put back
+ * already, and restocked_quantity stops it going back twice.
+ */
+const UNSHIPPED = new Set(["new", "in_process", "cancelled"]);
+/** Statuses in which the parcel has gone: stock comes back only by hand. */
+const SHIPPED = new Set(["shipped", "delivered"]);
 
 export async function refundOrder(
   orderId: string,
   amountCents?: number,
   options: RefundOptions = {},
+): Promise<PortalRefundResult> {
+  const wantsRestock = options.restock !== undefined && [...options.restock.values()].some((n) => n > 0);
+
+  // One transaction, with the order row locked for the whole of it. It used to
+  // be read, call Stripe, write — with nothing held in between, so two requests
+  // both read "nothing refunded yet" and the second write overwrote the first.
+  // The lock is held across the Stripe call on purpose: the `charge.refunded`
+  // webhook for this very refund queues behind it and then agrees with it.
+  // Everything inside uses `client`; the pool has one connection and asking it
+  // for another from in here would wait for ever.
+  return transaction<PortalRefundResult>(async (client) => {
+    // Locked before anything is decided, so the status the restock rule reads
+    // is the status the refund is made against.
+    const locked = await client.query<{ status: string }>(
+      `select status from "order" where id = $1 for update`,
+      [orderId],
+    );
+    const status = locked.rows[0]?.status;
+
+    if (wantsRestock && status !== undefined && !SHIPPED.has(status)) {
+      return {
+        ok: false,
+        reason:
+          "This order has not shipped, so its stock is still on the shelf. Nothing was refunded. " +
+          "Refund it in full, or cancel it, and the stock goes back on its own.",
+      };
+    }
+
+    const money = await refundWithin(client, orderId, amountCents, options);
+
+    if (!money.ok) {
+      return money;
+    }
+
+    // Money has moved and is recorded. What follows must not undo that record
+    // if it fails, so it runs behind a savepoint.
+    let restock: RestockOutcome | null = null;
+    let restockFailed = false;
+    const request =
+      status !== undefined && UNSHIPPED.has(status) && money.status === "full"
+        ? ("taken" as const)
+        : wantsRestock
+          ? options.restock!
+          : null;
+
+    if (request) {
+      await client.query("savepoint restock");
+      try {
+        restock = await restockOrderLines(client, orderId, request);
+        await client.query("release savepoint restock");
+      } catch (error) {
+        await client.query("rollback to savepoint restock");
+        restockFailed = true;
+        console.error(
+          "[guard-theory] refund recorded but restock failed:",
+          error instanceof Error ? error.message : error,
+        );
+      }
+    }
+
+    return { ...money, restock, restockFailed };
+  });
+}
+
+/**
+ * The money half of a refund, inside a transaction the caller owns.
+ *
+ * The order row is locked here (again, if the caller already has it — a
+ * second `for update` in the same transaction is free). Shared by refundOrder
+ * and by cancelOrder, so a cancel refunds by exactly the same rules, with the
+ * same idempotency key and the same truthful answer when Stripe goes quiet.
+ */
+export async function refundWithin(
+  client: PoolClient,
+  orderId: string,
+  amountCents: number | undefined,
+  options: Pick<RefundOptions, "expectedRefundedCents" | "createRefund"> = {},
 ): Promise<RefundResult> {
   if (!options.createRefund && !isStripeConfigured()) {
     return { ok: false, reason: "Stripe is not configured, so nothing can be refunded." };
@@ -110,110 +226,101 @@ export async function refundOrder(
 
   const createRefund = options.createRefund ?? createStripeRefund;
 
-  // One transaction, with the order row locked for the whole of it. It used to
-  // be read, call Stripe, write — with nothing held in between, so two requests
-  // both read "nothing refunded yet" and the second write overwrote the first.
-  // The lock is held across the Stripe call on purpose: the `charge.refunded`
-  // webhook for this very refund queues behind it and then agrees with it.
-  // Everything inside uses `client`; the pool has one connection and asking it
-  // for another from in here would wait for ever.
-  return transaction<RefundResult>(async (client) => {
-    const found = await client.query<{
-      stripe_payment_intent: string | null;
-      total_cents: number;
-      refunded_cents: number;
-    }>(
-      `select stripe_payment_intent, total_cents, refunded_cents
-         from "order" where id = $1 for update`,
-      [orderId],
+  const found = await client.query<{
+    stripe_payment_intent: string | null;
+    total_cents: number;
+    refunded_cents: number;
+  }>(
+    `select stripe_payment_intent, total_cents, refunded_cents
+       from "order" where id = $1 for update`,
+    [orderId],
+  );
+
+  const order = found.rows[0];
+
+  if (!order) {
+    return { ok: false, reason: "That order no longer exists." };
+  }
+
+  if (!order.stripe_payment_intent) {
+    return {
+      ok: false,
+      reason: "This order has no payment on it, so there is nothing to refund.",
+    };
+  }
+
+  if (
+    options.expectedRefundedCents !== undefined &&
+    options.expectedRefundedCents !== order.refunded_cents
+  ) {
+    return {
+      ok: false,
+      reason:
+        "The refunded amount on this order changed after this page loaded, so nothing was refunded. Reload and check the figures first.",
+    };
+  }
+
+  const remaining = order.total_cents - order.refunded_cents;
+
+  if (remaining <= 0) {
+    return { ok: false, reason: "This order has already been refunded in full." };
+  }
+
+  const amount = amountCents === undefined ? remaining : amountCents;
+
+  if (amount > remaining) {
+    // Stripe would refuse this too. Catching it here is a sentence rather
+    // than an API error, and it stops a typo becoming a support conversation.
+    return { ok: false, reason: "That is more than is left to refund on this order." };
+  }
+
+  try {
+    await createRefund({
+      paymentIntent: order.stripe_payment_intent,
+      amountCents: amount,
+      orderId,
+      // Keyed on the order and the running total, so a genuine second
+      // partial refund is still allowed and a replay of this one is not.
+      idempotencyKey: `refund:${orderId}:${order.refunded_cents}:${amount}`,
+    });
+  } catch (error) {
+    console.error(
+      "[guard-theory] refund failed:",
+      error instanceof Error ? error.message : error,
     );
 
-    const order = found.rows[0];
-
-    if (!order) {
-      return { ok: false, reason: "That order no longer exists." };
+    if (refundOutcomeUnknown(error)) {
+      // A timeout, a dropped connection or a 5xx: Stripe may have accepted
+      // the refund before the answer was lost. The row is left alone — the
+      // charge.refunded webhook and reconcileRefunds() bring it in line if
+      // the money did move — and the owner is told exactly that, because
+      // "nothing has been refunded" here invited a second refund from the
+      // dashboard.
+      return { ok: false, reason: REFUND_OUTCOME_UNKNOWN };
     }
 
-    if (!order.stripe_payment_intent) {
-      return {
-        ok: false,
-        reason: "This order has no payment on it, so there is nothing to refund.",
-      };
-    }
+    return {
+      ok: false,
+      reason:
+        "Stripe refused that refund. Nothing has been refunded — check the Stripe dashboard. " +
+        "Stripe remembers a refused request for a day, so the same amount will be refused again " +
+        "until then; a different amount, or the dashboard, is not affected.",
+    };
+  }
 
-    if (
-      options.expectedRefundedCents !== undefined &&
-      options.expectedRefundedCents !== order.refunded_cents
-    ) {
-      return {
-        ok: false,
-        reason:
-          "The refunded amount on this order changed after this page loaded, so nothing was refunded. Reload and check the figures first.",
-      };
-    }
+  const refundedCents = order.refunded_cents + amount;
+  const status = refundedCents >= order.total_cents ? "full" : "partial";
 
-    const remaining = order.total_cents - order.refunded_cents;
+  await client.query(
+    `update "order"
+        set refunded_cents = $2,
+            refund_status = $3,
+            flagged_reason = coalesce(flagged_reason, 'refunded')
+      where id = $1`,
+    [orderId, refundedCents, status],
+  );
 
-    if (remaining <= 0) {
-      return { ok: false, reason: "This order has already been refunded in full." };
-    }
-
-    const amount = amountCents === undefined ? remaining : amountCents;
-
-    if (amount > remaining) {
-      // Stripe would refuse this too. Catching it here is a sentence rather
-      // than an API error, and it stops a typo becoming a support conversation.
-      return { ok: false, reason: "That is more than is left to refund on this order." };
-    }
-
-    try {
-      await createRefund({
-        paymentIntent: order.stripe_payment_intent,
-        amountCents: amount,
-        orderId,
-        // Keyed on the order and the running total, so a genuine second
-        // partial refund is still allowed and a replay of this one is not.
-        idempotencyKey: `refund:${orderId}:${order.refunded_cents}:${amount}`,
-      });
-    } catch (error) {
-      console.error(
-        "[guard-theory] refund failed:",
-        error instanceof Error ? error.message : error,
-      );
-
-      if (refundOutcomeUnknown(error)) {
-        // A timeout, a dropped connection or a 5xx: Stripe may have accepted
-        // the refund before the answer was lost. The row is left alone — the
-        // charge.refunded webhook and reconcileRefunds() bring it in line if
-        // the money did move — and the owner is told exactly that, because
-        // "nothing has been refunded" here invited a second refund from the
-        // dashboard.
-        return { ok: false, reason: REFUND_OUTCOME_UNKNOWN };
-      }
-
-      return {
-        ok: false,
-        reason:
-          "Stripe refused that refund. Nothing has been refunded — check the Stripe dashboard. " +
-          "Stripe remembers a refused request for a day, so the same amount will be refused again " +
-          "until then; a different amount, or the dashboard, is not affected.",
-      };
-    }
-
-    const refundedCents = order.refunded_cents + amount;
-    const status = refundedCents >= order.total_cents ? "full" : "partial";
-
-    await client.query(
-      `update "order"
-          set refunded_cents = $2,
-              refund_status = $3,
-              flagged_reason = coalesce(flagged_reason, 'refunded')
-        where id = $1`,
-      [orderId, refundedCents, status],
-    );
-
-    return { ok: true, refundedCents, status };
-  });
+  return { ok: true, refundedCents, status };
 }
 
 /** What a refund sync found to bring in line. */

@@ -7,7 +7,7 @@
  */
 
 /**
- * Three order messages, the list announcement, the waitlist's double opt-in
+ * Four order messages, the list announcement, the waitlist's double opt-in
  * confirmation, and "test".
  *
  * "test" is what `scripts/mail/test-send.ts` logs under. It must not be
@@ -19,6 +19,7 @@ export type EmailTemplate =
   | "order-confirmation"
   | "order-in-process"
   | "order-shipped"
+  | "order-cancelled"
   | "announcement"
   | "waitlist-confirmation"
   | "test";

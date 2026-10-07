@@ -69,7 +69,13 @@ describe("refunds", { skip: !HAS_DB && "no DATABASE_URL" }, () => {
     const { calls, createRefund } = recorder();
 
     const first = await refundOrder(id, 2000, { createRefund });
-    assert.deepEqual(first, { ok: true, refundedCents: 2000, status: "partial" });
+    assert.deepEqual(first, {
+      ok: true,
+      refundedCents: 2000,
+      status: "partial",
+      restock: null,
+      restockFailed: false,
+    });
     assert.deepEqual(await state(id), {
       refunded_cents: 2000,
       refund_status: "partial",
@@ -77,7 +83,14 @@ describe("refunds", { skip: !HAS_DB && "no DATABASE_URL" }, () => {
     });
 
     const rest = await refundOrder(id, undefined, { createRefund });
-    assert.deepEqual(rest, { ok: true, refundedCents: 9600, status: "full" });
+    assert.deepEqual(rest, {
+      ok: true,
+      refundedCents: 9600,
+      status: "full",
+      // Unshipped, so a full refund puts back what was taken: here, no lines.
+      restock: { restocked: [], orphaned: [] },
+      restockFailed: false,
+    });
 
     const more = await refundOrder(id, 1, { createRefund });
     assert.equal(more.ok, false);
@@ -182,7 +195,13 @@ describe("refunds", { skip: !HAS_DB && "no DATABASE_URL" }, () => {
       },
     });
 
-    assert.deepEqual(retried, { ok: true, refundedCents: 2000, status: "partial" });
+    assert.deepEqual(retried, {
+      ok: true,
+      refundedCents: 2000,
+      status: "partial",
+      restock: null,
+      restockFailed: false,
+    });
     assert.equal(keys.length, 2);
     assert.equal(keys[0], keys[1], "Stripe dedupes on the key: one refund, answered twice");
   });

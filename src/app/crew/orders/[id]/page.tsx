@@ -14,10 +14,13 @@ import { formatMoney } from "@/lib/money";
 import { Button } from "@/components/ui/Button";
 import {
   AdvanceControl,
+  CancelControl,
   LabelControl,
   RefundControl,
   ResendControl,
+  RestockControl,
   TrackingControl,
+  type RestockableLine,
 } from "./OrderControls";
 import { isShippoConfigured } from "@/lib/shipping/shippo";
 import { orderParcelWeight, weightWarning } from "@/lib/shipping/weight";
@@ -37,13 +40,13 @@ const TEMPLATE_LABEL: Record<string, string> = {
   "order-confirmation": "Confirmation",
   "order-in-process": "Being prepared",
   "order-shipped": "Shipped",
+  "order-cancelled": "Cancelled",
 };
 
 const NEXT_LABEL: Record<string, string> = {
   in_process: "Mark as being prepared",
   shipped: "Mark as shipped",
   delivered: "Mark as delivered",
-  cancelled: "Cancel this order",
 };
 
 export default async function OrderPage({ params }: { params: Promise<{ id: string }> }) {
@@ -64,6 +67,18 @@ export default async function OrderPage({ params }: { params: Promise<{ id: stri
   ]);
   const remaining = order.total_cents - order.refunded_cents;
   const next = ALLOWED_TRANSITIONS[order.status];
+  const shipped = order.status === "shipped" || order.status === "delivered";
+  // Only a parcel that has gone can come back. Before that, stock follows the
+  // money on its own: a cancel or a full refund puts it back.
+  const restockable: RestockableLine[] = shipped
+    ? items
+        .map((item) => ({
+          itemId: item.id,
+          label: `${item.product_name}, size ${item.size_label}`,
+          left: item.quantity - item.restocked_quantity,
+        }))
+        .filter((line) => line.left > 0)
+    : [];
 
   return (
     <main id="main" className="px-6 py-16 md:px-12">
@@ -115,11 +130,11 @@ export default async function OrderPage({ params }: { params: Promise<{ id: stri
             </h2>
             <ul className="m-0 flex list-none flex-col gap-4 p-0">
               {items.map((item) => (
-                <li key={item.sku} className="flex justify-between gap-6">
+                <li key={item.id} className="flex justify-between gap-6">
                   <span className="text-base text-chalk">
                     {`${item.product_name} — ${item.product_kind}, size ${item.size_label}${
                       item.quantity > 1 ? ` × ${item.quantity}` : ""
-                    }`}
+                    }${item.restocked_quantity > 0 ? ` (${item.restocked_quantity} back in stock)` : ""}`}
                   </span>
                   <span className="text-base text-chalk tabular-nums">
                     {formatMoney(item.unit_cents * item.quantity, order.currency)}
@@ -228,14 +243,26 @@ export default async function OrderPage({ params }: { params: Promise<{ id: stri
               <p className="text-base text-steel">Nothing further. This order is finished.</p>
             ) : (
               <div className="flex flex-wrap gap-8">
-                {next.map((to) => (
-                  <AdvanceControl
-                    key={to}
-                    id={order.id}
-                    to={to}
-                    label={NEXT_LABEL[to] ?? to}
-                  />
-                ))}
+                {next.map((to) =>
+                  to === "cancelled" ? (
+                    <CancelControl
+                      key={to}
+                      id={order.id}
+                      label={
+                        remaining > 0
+                          ? `Cancel and refund ${formatMoney(remaining, order.currency)}`
+                          : "Cancel this order"
+                      }
+                    />
+                  ) : (
+                    <AdvanceControl
+                      key={to}
+                      id={order.id}
+                      to={to}
+                      label={NEXT_LABEL[to] ?? to}
+                    />
+                  ),
+                )}
               </div>
             )}
 
@@ -244,9 +271,20 @@ export default async function OrderPage({ params }: { params: Promise<{ id: stri
                 id={order.id}
                 remainingLabel={formatMoney(remaining, order.currency)}
                 refundedCents={order.refunded_cents}
+                restockLines={restockable}
+                stockNote={
+                  shipped
+                    ? undefined
+                    : "A full refund puts the stock back. A part refund does not."
+                }
               />
             ) : (
-              <p className="text-base text-steel">This order has been refunded in full.</p>
+              <>
+                <p className="text-base text-steel">This order has been refunded in full.</p>
+                {restockable.length > 0 ? (
+                  <RestockControl id={order.id} lines={restockable} />
+                ) : null}
+              </>
             )}
           </div>
         </section>

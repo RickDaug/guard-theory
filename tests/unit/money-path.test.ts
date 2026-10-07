@@ -451,7 +451,13 @@ describe("one order, from the cart to the reconciler", { skip: !HAS_DB && "no DA
     };
 
     const partial = await refundOrder(orderId, 2000, { createRefund, expectedRefundedCents: 0 });
-    assert.deepEqual(partial, { ok: true, refundedCents: 2000, status: "partial" });
+    assert.deepEqual(partial, {
+      ok: true,
+      refundedCents: 2000,
+      status: "partial",
+      restock: null,
+      restockFailed: false,
+    });
 
     // Stripe's charge.refunded for that refund: the running total, the same figure.
     assert.equal((await handleStripeWebhook(signed(chargeRefunded(2000)))).status, 200);
@@ -471,7 +477,14 @@ describe("one order, from the cart to the reconciler", { skip: !HAS_DB && "no DA
     };
 
     const rest = await refundOrder(orderId, undefined, { createRefund, expectedRefundedCents: 2000 });
-    assert.deepEqual(rest, { ok: true, refundedCents: total, status: "full" });
+    assert.deepEqual(rest, {
+      ok: true,
+      refundedCents: total,
+      status: "full",
+      // Shipped: nothing goes back on the shelf until the owner ticks it.
+      restock: null,
+      restockFailed: false,
+    });
     assert.deepEqual(refunds, [total - 2000], "only what was left is refunded");
 
     // The earlier, smaller running total arriving late changes nothing.

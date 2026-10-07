@@ -182,6 +182,7 @@ export const STORED: Record<string, Record<string, Disclosure>> = {
     in_process_at: { internal: "when the owner started on it" },
     shipped_at: { internal: "when it was dispatched" },
     delivered_at: { internal: "when the carrier reported delivery" },
+    cancelled_at: { internal: "when the order was cancelled and refunded" },
   },
   order_item: {
     id: { internal: "a random identifier we generate" },
@@ -193,6 +194,8 @@ export const STORED: Record<string, Record<string, Disclosure>> = {
     sku: { says: "what you bought" },
     unit_cents: { says: "what you paid" },
     quantity: { says: "what you bought" },
+    stock_taken: { internal: "how many of the line were taken from stock when it was paid for" },
+    restocked_quantity: { internal: "how many of the line have been put back in stock after a cancel or a return" },
   },
   checkout_intent: internal(
     ["id", "lines_json", "subtotal_cents", "shipping_cents", "created_at", "consumed_at", "order_id"],
@@ -550,6 +553,7 @@ export const TRANSACTIONAL_MAIL = [
   "orderConfirmation",
   "orderInProcess",
   "orderShipped",
+  "orderCancelled",
   // Sent to an address that is not on the list yet, because someone asked for
   // it to be. It says that ignoring it is enough, which is true.
   "waitlistConfirmation",

@@ -12,10 +12,13 @@ import {
 } from "@/lib/orders/manage";
 import type { OrderStatus } from "@/lib/orders/manage";
 import { refundOrder } from "@/lib/orders/refund";
+import { cancelOrder } from "@/lib/orders/cancel";
+import { describeRestock, restockReturn, type RestockOutcome } from "@/lib/orders/restock";
 import { reconcileStripeSessions, recordReconcileRun } from "@/lib/orders/reconcile";
 import { getMailProvider, sendEmail } from "@/lib/mail";
 import { resendOutcome } from "@/lib/portal/email-status";
 import {
+  orderCancelled,
   orderConfirmation,
   orderInProcess,
   orderShipped,
@@ -36,6 +39,7 @@ import {
 } from "@/lib/orders/label";
 import { orderParcelWeight, weightWarning } from "@/lib/shipping/weight";
 import type { PortalFormState } from "@/lib/portal/form-state";
+import { formatMoney } from "@/lib/money";
 
 /** Every action authorises itself. A proxy matcher is not a boundary for these. */
 
@@ -77,6 +81,124 @@ export async function advanceOrder(
     message: result.emailed
       ? "Moved, and the customer has been told."
       : "Moved. The email did not send — there is a Resend button on the order.",
+  };
+}
+
+/**
+ * The ticks on a return: `restock:<order_item id>` = how many go back. Only
+ * positive whole numbers are kept; the library caps each at what is left.
+ */
+function restockTicks(formData: FormData): Map<string, number> {
+  const ticks = new Map<string, number>();
+
+  for (const [key, value] of formData.entries()) {
+    if (!key.startsWith("restock:") || typeof value !== "string") continue;
+    const itemId = key.slice("restock:".length);
+    if (!/^[A-Za-z0-9-]{1,64}$/.test(itemId) || !/^\d{1,4}$/.test(value.trim())) continue;
+    const count = Number(value.trim());
+    if (count > 0) ticks.set(itemId, count);
+  }
+
+  return ticks;
+}
+
+/** The stock half of a success message, or nothing when no stock moved. */
+function restockSentence(restock: RestockOutcome | null, failed: boolean): string {
+  if (failed) {
+    return " The stock could not be updated, so set it by hand in Products.";
+  }
+
+  if (!restock) return "";
+
+  const parts: string[] = [];
+
+  if (restock.restocked.length > 0) {
+    parts.push(` Back in stock: ${describeRestock(restock.restocked)}.`);
+  }
+
+  if (restock.orphaned.length > 0) {
+    parts.push(
+      ` Not put back, because that size no longer exists in Products: ${describeRestock(restock.orphaned)}.`,
+    );
+  }
+
+  return parts.join("");
+}
+
+/**
+ * Cancel and refund, as one action (src/lib/orders/cancel.ts). If the refund
+ * does not go through, nothing is cancelled and the reason is shown.
+ */
+export async function cancelAndRefund(
+  _previous: PortalFormState,
+  formData: FormData,
+): Promise<PortalFormState> {
+  await requireSession();
+
+  const id = text(formData, "id");
+
+  if (!id || id.length > 64) {
+    return { status: "error", message: "That order could not be identified." };
+  }
+
+  const result = await cancelOrder(id);
+
+  if (!result.ok) {
+    return { status: "error", message: result.reason };
+  }
+
+  revalidateOrders(id);
+
+  const order = await getOrder(id);
+  const money =
+    result.refundedCents > 0 && order
+      ? `Cancelled, and ${formatMoney(result.refundedCents, order.currency)} refunded to the card it came from.`
+      : "Cancelled. It had already been refunded in full.";
+  const label = result.hasLabel
+    ? " This order has a label: void it in Shippo to get the postage back."
+    : "";
+  const mail = result.emailed
+    ? " The customer has been told."
+    : " The email did not send — there is a Send again button under Messages.";
+
+  return {
+    status: "success",
+    message: `${money}${restockSentence(result.restock, result.restockFailed)}${label}${mail}`,
+  };
+}
+
+/** A return arrived after the order was already refunded in full. */
+export async function restockReturned(
+  _previous: PortalFormState,
+  formData: FormData,
+): Promise<PortalFormState> {
+  await requireSession();
+
+  const id = text(formData, "id");
+
+  if (!id || id.length > 64) {
+    return { status: "error", message: "That order could not be identified." };
+  }
+
+  const ticks = restockTicks(formData);
+
+  if (ticks.size === 0) {
+    return { status: "error", message: "Tick what came back and is fit to sell again." };
+  }
+
+  const result = await restockReturn(id, ticks);
+
+  if (!result.ok) {
+    return { status: "error", message: result.reason };
+  }
+
+  revalidateOrders(id);
+
+  const sentence = restockSentence(result.restock, false).trim();
+
+  return {
+    status: "success",
+    message: sentence || "Nothing was put back. Those items are already back in stock.",
   };
 }
 
@@ -201,7 +323,12 @@ export async function issueRefund(
   const seen = text(formData, "refundedCents");
   const expectedRefundedCents = /^\d{1,12}$/.test(seen) ? Number(seen) : undefined;
 
-  const result = await refundOrder(id, amountCents, { expectedRefundedCents });
+  const ticks = restockTicks(formData);
+
+  const result = await refundOrder(id, amountCents, {
+    expectedRefundedCents,
+    ...(ticks.size > 0 ? { restock: ticks } : {}),
+  });
 
   if (!result.ok) {
     return { status: "error", message: result.reason };
@@ -209,12 +336,14 @@ export async function issueRefund(
 
   revalidateOrders(id);
 
+  const money =
+    result.status === "full"
+      ? "Refunded in full. The money goes back to the card it came from."
+      : "Partly refunded. The money goes back to the card it came from.";
+
   return {
     status: "success",
-    message:
-      result.status === "full"
-        ? "Refunded in full. The money goes back to the card it came from."
-        : "Partly refunded. The money goes back to the card it came from.",
+    message: `${money}${restockSentence(result.restock, result.restockFailed)}`,
   };
 }
 
@@ -251,6 +380,17 @@ export async function resendEmail(
         url: order.tracking_url,
         carrier: order.tracking_carrier,
       }),
+      order.id,
+    );
+  } else if (template === "order-cancelled") {
+    if (order.status !== "cancelled") {
+      return { status: "error", message: "This order is not cancelled." };
+    }
+    // Resent as a record of where the money stands: everything has been
+    // refunded, and none of it by this message.
+    sent = await sendEmail(
+      "order-cancelled",
+      orderCancelled(shape, { refundedCents: 0, earlierRefundCents: order.refunded_cents }),
       order.id,
     );
   } else {

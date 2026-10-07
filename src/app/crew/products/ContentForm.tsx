@@ -24,7 +24,7 @@ const BLANK_ROWS = 3;
 /**
  * The words and the specification of a product made in the portal. Nothing is
  * pre-filled but what was saved: an empty value is "not yet specified", and the
- * product cannot go on the storefront until the four promised lines have one.
+ * product cannot go on the storefront until the promised lines have one.
  */
 export function ContentForm({ id, name, kind, summary, description, specs }: Props) {
   const { state, onSubmit, pending, version } = useKeptForm(saveProductContent);
@@ -80,6 +80,11 @@ export function ContentForm({ id, name, kind, summary, description, specs }: Pro
           <legend className="display-plain mb-2 text-sm text-steel">Specification</legend>
           <p className="mb-4 text-sm text-steel">
             Clear a label to remove its line. A line with no value is shown as not yet specified.
+          </p>
+          <p className="mb-4 text-sm text-steel">
+            Country of manufacture must match the garment&rsquo;s label. Write &ldquo;Made in USA&rdquo;
+            (US fabric), &ldquo;Made in USA of imported fabric&rdquo;, &ldquo;Imported&rdquo;, or the
+            country it was sewn in. The product page states it, and the law requires it before sale.
           </p>
           <div className="flex flex-col gap-3">
             {rows.map((spec, index) => (

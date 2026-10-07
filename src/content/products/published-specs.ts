@@ -1,5 +1,7 @@
 /**
- * The specification lines the site says every product page states.
+ * The specification lines the site says every product page states — the four
+ * manufacturing lines and, since the country-of-origin change, the origin line
+ * the FTC requires in every online listing.
  *
  * Since 2026-09-29 (#64) no page promises these: the values published before
  * then were invented, and the sentence saying they "are stated on the product
@@ -14,4 +16,9 @@ export const PUBLISHED_SPECIFICATIONS = [
   "Fabric composition",
   "Seam construction",
   "Print method",
+  // 16 CFR 303.34: an online listing must say "Made in USA", "Imported" or
+  // both. The line holds the owner's value; src/content/products/origin.ts
+  // turns it into that sentence. Same string as ORIGIN_LABEL, which
+  // tests/unit/origin.test.ts asserts.
+  "Country of manufacture",
 ] as const;

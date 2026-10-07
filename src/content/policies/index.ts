@@ -9,6 +9,8 @@
  * docs/owner-decisions.md rather than announced to the reader on every page.
  */
 
+import { DISPATCH_WITHIN } from "./shipping-terms.ts";
+
 export type PolicySection = {
   id: string;
   heading: string;
@@ -46,7 +48,7 @@ export const POLICIES: Policy[] = [
         id: "what-we-collect",
         heading: "What we collect",
         paragraphs: [
-          "If you join the First Edition list we collect your first name and email address, and — only if you choose to give them — how long you have been training, your preferred sleeve length, and which products interest you. We also record when you joined and that you agreed to be emailed, and when we email you we keep a record of which message was sent.",
+          "If you join the First Edition list we collect your first name and email address, and — only if you choose to give them — how long you have been training, your preferred sleeve length, and which products interest you. We also record when you joined, that you agreed to be emailed, and whether and when you confirmed your address from the link we email you. When we email you we keep a record of which message was sent.",
           "If you contact us we collect your name, email address and whatever you write to us.",
           "If you place an order we collect your email address, the name and postal address the parcel is going to, and a phone number for the shipping label. We keep those with a record of what you bought, what you paid, and each email we sent you about the order. Your card details are typed into our payment provider's page, not ours. They never reach us and we do not store them.",
           "That is the entire list. We do not ask for a date of birth, and we do not ask for an address or a phone number unless something is being posted to you.",
@@ -72,7 +74,7 @@ export const POLICIES: Policy[] = [
         id: "how-long",
         heading: "How long we keep it",
         paragraphs: [
-          "Waitlist details are kept until the First Edition has been released and you have been told, or until you ask us to delete them. Messages sent through the contact form are kept while we deal with them and for as long afterwards as we need to answer a follow-up. Ask us to delete either and we will.",
+          "Waitlist details are kept until the First Edition has been released and you have been told, or until you ask us to delete them. An address that is never confirmed is not on the list, and it is deleted 30 days after we send the link. Messages sent through the contact form are kept while we deal with them and for as long afterwards as we need to answer a follow-up. Ask us to delete either and we will.",
         ],
       },
       {
@@ -145,13 +147,13 @@ export const POLICIES: Policy[] = [
     title: "Shipping",
     summary: "Where we ship, what it costs, and how long it takes.",
     metaDescription:
-      "We ship within the United States, at a flat rate shown in your cart. Orders are dispatched within seven business days, with tracking sent by email.",
+      `We ship within the United States, at a flat rate shown in your cart. Orders are dispatched within ${DISPATCH_WITHIN}, with tracking sent by email.`,
     sections: [
       {
         id: "dispatch",
         heading: "Dispatch",
         paragraphs: [
-          "Orders are packed and dispatched within seven business days of the order. You will receive a dispatch confirmation with a tracking number as soon as the parcel leaves us.",
+          `Orders are packed and dispatched within ${DISPATCH_WITHIN} of the order. You will receive a dispatch confirmation with a tracking number as soon as the parcel leaves us.`,
           "Orders placed on a weekend or a public holiday are treated as placed on the next business day.",
         ],
       },
@@ -326,6 +328,13 @@ export const POLICIES: Policy[] = [
         heading: "Dates",
         paragraphs: [
           "Nothing is backdated. An article carries the date it was genuinely published, and that is the date shown to you and to search engines alike. Substantive revisions add a modified date rather than overwriting the original.",
+        ],
+      },
+      {
+        id: "sign-off",
+        heading: "Drafting and sign-off",
+        paragraphs: [
+          "A Technique Library entry may be drafted with research and writing assistance. Every entry is then fact-audited and voice-audited, each independently of the draft, and nothing is published until a named person has read it and signed it off in the source. Until then it is unlisted and marked as a draft.",
         ],
       },
       {

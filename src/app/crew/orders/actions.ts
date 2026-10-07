@@ -37,6 +37,7 @@ import {
   recordBoughtLabel,
   releaseLabelClaim,
 } from "@/lib/orders/label";
+import { orderParcelWeight, weightWarning } from "@/lib/shipping/weight";
 import type { PortalFormState } from "@/lib/portal/form-state";
 import { formatMoney } from "@/lib/money";
 
@@ -506,6 +507,21 @@ export async function buyLabel(
   }
 
   let label;
+  let weight;
+
+  try {
+    // Summed from the sizes' weights; the fixed weight, and a sentence saying
+    // so, when any line has none. Read inside the try: a failure here is
+    // before Shippo, so the claim is released below like any refusal.
+    weight = await orderParcelWeight(order.id);
+  } catch (error) {
+    console.error(
+      "[guard-theory] could not read the parcel weight:",
+      error instanceof Error ? error.message : error,
+    );
+    await releaseLabelClaim(order.id).catch(() => {});
+    return { status: "error", message: "We could not read this order's weights. Nothing has been bought." };
+  }
 
   try {
     label = await buyUspsLabel(
@@ -521,6 +537,7 @@ export async function buyLabel(
         email: order.email,
       },
       order.id,
+      weight.weightOz,
     );
   } catch (error) {
     console.error(
@@ -553,7 +570,9 @@ export async function buyLabel(
 
   return {
     status: "success",
-    message: `Label bought, ${label.amount} ${label.currency}. Print it, then mark this shipped.`,
+    message: weight.measured
+      ? `Label bought for ${weight.weightOz} oz, ${label.amount} ${label.currency}. Print it, then mark this shipped.`
+      : `Label bought, ${label.amount} ${label.currency}. ${weightWarning(weight)} Print it, then mark this shipped.`,
   };
 }
 

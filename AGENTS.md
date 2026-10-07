@@ -102,6 +102,10 @@ are listed for the owner in `docs/owner-decisions.md` §13 instead.
 
 - Registries in `src/content/*/index.ts` import entries **explicitly**. Add the
   import when you add an entry, or the build tells you.
+- A Technique Library entry drafted with assistance carries `review` and is a
+  draft — unlisted, `noindex, nofollow`, no Article schema — until a person
+  sets `review.approvedBy` in a commit. The process end to end, brief to
+  sign-off, is `docs/technique-pipeline.md`.
 - Diagrams are `aria-hidden`. Their content lives in a real, keyboard-reachable
   key beneath them. Never put meaning only in the drawing.
 - Interactive targets need 24×24 CSS px minimum (WCAG 2.2 SC 2.5.8). `min-h-6`

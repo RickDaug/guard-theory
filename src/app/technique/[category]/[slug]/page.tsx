@@ -4,7 +4,13 @@ import { notFound } from "next/navigation";
 import { Breadcrumbs } from "@/components/site/Breadcrumbs";
 import { CrossLinks } from "@/components/content/CrossLinks";
 import { crossLinksFor } from "@/content/crosslinks";
-import { ENTRIES, getCategory, getEntry } from "@/content/technique";
+import {
+  ENTRIES,
+  getCategory,
+  getEntry,
+  isPublishedEntry,
+  relatedEntries,
+} from "@/content/technique";
 import { COACH_DISCLAIMER } from "@/content/technique/types";
 import { SHARE_IMAGE_OBJECT, pageMetadata } from "@/lib/metadata";
 import { serializeJsonLd } from "@/lib/json-ld";
@@ -15,6 +21,11 @@ type Params = { params: Promise<{ category: string; slug: string }> };
 /** An unknown slug is a real 404 page — see journal/[slug]/page.tsx. */
 export const dynamicParams = false;
 
+/**
+ * Every entry, drafts included. A draft has to render somewhere for the person
+ * who is going to read it before signing it off; this is the only place it
+ * does. Nothing links to it and nothing lists it — see isPublishedEntry.
+ */
 export function generateStaticParams() {
   return ENTRIES.map((entry) => ({
     category: entry.category,
@@ -27,12 +38,22 @@ export async function generateMetadata({ params }: Params): Promise<Metadata> {
   const entry = getEntry(slug);
   if (!entry) return {};
 
-  return pageMetadata({
-    title: entry.title,
-    description: entry.metaDescription ?? entry.summary,
-    path: `/technique/${entry.category}/${entry.slug}`,
-    type: "article",
-  });
+  const published = isPublishedEntry(entry);
+
+  return {
+    ...pageMetadata({
+      title: entry.title,
+      description: entry.metaDescription ?? entry.summary,
+      path: `/technique/${entry.category}/${entry.slug}`,
+      type: "article",
+      indexable: published,
+    }),
+    // A draft is `nofollow` as well as `noindex`, which is one step past what
+    // a Journal draft carries. A Journal draft is finished writing waiting on
+    // a byline; a technique draft is waiting on somebody to read it, and
+    // until they have, its links out are not an endorsement of anything.
+    ...(published ? {} : { robots: { index: false, follow: false } }),
+  };
 }
 
 /**
@@ -94,13 +115,15 @@ export default async function TechniqueEntryPage({ params }: Params) {
   const category = getCategory(entry.category);
   if (!category) notFound();
 
-  const related = entry.relatedSlugs
-    .map((s) => getEntry(s))
-    .filter((e): e is NonNullable<typeof e> => Boolean(e));
+  // Published entries only. A draft may list the signed-off entries it points
+  // at; a signed-off entry never lists a draft.
+  const related = relatedEntries(entry);
 
   // The route out of the Library: the arguments in the Journal, and the people
   // whose recorded work the entry describes.
   const crossLinks = crossLinksFor("technique", entry.slug);
+
+  const published = isPublishedEntry(entry);
 
   /**
    * An Article with no author and no dates, on purpose.
@@ -111,23 +134,29 @@ export default async function TechniqueEntryPage({ params }: Params) {
    * nothing is derived or defaulted, and the day the registry gains an author
    * or a date is the day this does.
    *
+   * A draft emits nothing here at all — the breadcrumbs are the only
+   * structured data on the page. Describing an unsigned draft to a crawler as
+   * an Article is the claim the review gate exists to withhold.
+   *
    * `HowTo`, `Course` and `LearningResource` were each considered and rejected
    * in docs/structured-data-map.md §7: a technique is not a recipe, and there
    * is no curriculum, completion or credential here to claim.
    */
   const url = absoluteUrl(`/technique/${category.slug}/${entry.slug}`);
-  const jsonLd = {
-    "@context": "https://schema.org",
-    "@type": "Article",
-    "@id": `${url}#article`,
-    headline: entry.title,
-    description: entry.metaDescription ?? entry.summary,
-    mainEntityOfPage: url,
-    image: SHARE_IMAGE_OBJECT,
-    articleSection: category.name,
-    isPartOf: { "@id": absoluteUrl("/#website") },
-    publisher: { "@id": absoluteUrl("/#organization") },
-  };
+  const jsonLd = published
+    ? {
+        "@context": "https://schema.org",
+        "@type": "Article",
+        "@id": `${url}#article`,
+        headline: entry.title,
+        description: entry.metaDescription ?? entry.summary,
+        mainEntityOfPage: url,
+        image: SHARE_IMAGE_OBJECT,
+        articleSection: category.name,
+        isPartOf: { "@id": absoluteUrl("/#website") },
+        publisher: { "@id": absoluteUrl("/#organization") },
+      }
+    : null;
 
   return (
     <main id="main" tabIndex={-1} className="px-6 py-16 md:px-12">
@@ -153,6 +182,23 @@ export default async function TechniqueEntryPage({ params }: Params) {
               {entry.title}
             </h1>
             <p className="mt-7 text-lg text-slate">{entry.summary}</p>
+
+            {/* Shown on a draft and on nothing else, the way the Journal shows
+                a byline on a published article and on nothing else. Plain
+                text in the running register, not a banner: it states what
+                the page is and who produced it, and stops. */}
+            {!published && entry.review ? (
+              <div className="mt-8 border-l-2 border-signal-dim pl-6">
+                <p className="text-base text-slate">
+                  <span className="text-ink">Draft.</span> Nobody has yet read
+                  this entry and signed it off, so it is unlisted and not
+                  offered to search.
+                </p>
+                <p className="notation mt-4 text-2xs text-slate">
+                  Drafted: {entry.review.drafted}
+                </p>
+              </div>
+            ) : null}
           </header>
 
           <Part title="Position and problem">
@@ -237,10 +283,12 @@ export default async function TechniqueEntryPage({ params }: Params) {
         </article>
       </div>
 
-      <script
-        type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: serializeJsonLd(jsonLd) }}
-      />
+      {jsonLd ? (
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: serializeJsonLd(jsonLd) }}
+        />
+      ) : null}
     </main>
   );
 }

@@ -105,6 +105,9 @@ export function resendPayload(from: string, replyTo: string | null, email: Email
     subject: email.subject,
     text: email.body,
     ...(replyTo ? { reply_to: replyTo } : {}),
+    // Message headers, only when the message has any (list mail), so every
+    // other send is the same bytes as before.
+    ...(email.headers && Object.keys(email.headers).length > 0 ? { headers: email.headers } : {}),
   };
 }
 

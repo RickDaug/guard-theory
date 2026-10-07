@@ -111,6 +111,49 @@ Confirm a branch actually appeared after a preview builds:
 MSYS_NO_PATHCONV=1 npx neonctl@latest api /projects/<project-id>/branches
 ```
 
+#### Every preview database is a copy of production's customers
+
+A fork of `main` is a fork of its *rows*, not only its schema: every order's
+name, address, phone and email, the waitlist, and every unsubscribe token. A
+preview deployment runs whatever the branch contains — unreviewed code, a
+dependency bump — against that copy, with working database credentials, and
+its portal accepts whatever `PORTAL_PASSWORD_HASH` the Preview environment
+holds. (Security audit 2026-09-29, S2-3.)
+
+What the repository now does about it: `neon-preview-cleanup.yml` deletes a
+preview branch when its pull request closes, and a daily sweep
+(`scripts/db/neon-preview-sweep.sh`) deletes any `preview/*` branch whose git
+branch is gone, whose pull request is closed, or which never had a pull request
+and is 14 days old. It never touches the default branch or anything outside
+`preview/*`, and it deletes nothing if the list of git branches it is handed
+does not contain `main`.
+
+What only the owner can do — **an open checklist, none of it done yet:**
+
+- [ ] **Vercel Authentication on Preview.** Project → Settings → Deployment
+      Protection → Vercel Authentication → *Standard Protection* (covers
+      previews; included on Pro, not the paid add-on). Without it, anyone
+      holding a preview URL reaches a portal backed by real PII. Confirm by
+      opening a preview URL in a private window: it must ask for a Vercel
+      login.
+- [ ] **A separate `PORTAL_PASSWORD_HASH` for Preview.** Settings →
+      Environment Variables → `PORTAL_PASSWORD_HASH` → give Preview its own
+      value, from a password used nowhere else. Then a leaked preview password
+      opens no production portal, and a leaked production password opens no
+      preview copy.
+- [ ] **Decide whether previews should see real rows at all.** The integration
+      forks from a parent branch. Options, strongest first:
+      1. Create a schema-only parent and point the integration's preview
+         branching at it:
+         `npx neonctl@latest branches create --project-id <id> --name preview-parent --schema-only`
+         then re-apply migrations to it whenever one ships (a schema-only
+         branch does not follow `main`). Previews then hold no customer data.
+      2. A scrubbed parent: a branch of `main` with the PII columns
+         overwritten, refreshed by hand. More realistic data, more upkeep.
+      3. Keep forking `main`, and rely on the two items above plus the sweep.
+      Whichever is chosen, verify it the way the paragraph above does: build a
+      preview and look at what its branch contains.
+
 
 ### 3. Apply the schema
 
@@ -215,7 +258,7 @@ somebody presses **Run workflow** on it. It:
    the result with the original;
 6. runs a separate guard that reads the first bytes of every file about to be
    uploaded and **refuses anything that is not a gpg-encrypted file**;
-7. uploads it as a workflow artifact with `retention-days: 30`.
+7. uploads it as a workflow artifact with `retention-days: 14`.
 
 It never prints the connection string, and an error from `pg_dump` is printed
 with the host and any URL removed.
@@ -229,7 +272,14 @@ must be 32 characters or more, and why it must never be reused from anywhere
 else. Making the repository private would take the files off public download;
 that is the owner's call.
 
-Thirty days is a request. A repository's own retention limit wins when it is
+Fourteen days, down from thirty on 2026-09-29 (security audit S3-7): every
+dump still held is one more that a leaked passphrase opens, and two weeks
+still covers noticing a problem well after Neon Free's six-hour restore window
+has closed. The stronger fix is **owner-only**: upload to private storage (a
+Cloudflare R2 or S3 bucket with its own credentials) instead of a public
+artifact, or make the repository private. Neither is done.
+
+Fourteen days is a request. A repository's own retention limit wins when it is
 lower; this one's was 90 days when checked on 2026-09-18:
 
 ```

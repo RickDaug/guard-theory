@@ -36,6 +36,11 @@ export type Email = {
    * deliberate resend from the portal, which is meant to go again.
    */
   idempotencyKey?: string;
+  /**
+   * Extra message headers, sent as Resend's `headers`. Used for
+   * `List-Unsubscribe` and `List-Unsubscribe-Post` on list mail (RFC 8058).
+   */
+  headers?: Record<string, string>;
 };
 
 /**

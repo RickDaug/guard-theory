@@ -177,6 +177,14 @@ describe("moving an order is a compare-and-set", { skip: !HAS_DB && "no DATABASE
   it("still moves an order nobody else is touching", async () => {
     const id = await makeOrder("new");
     assert.deepEqual((await transitionOrder(id, "in_process")).ok, true);
-    assert.deepEqual((await transitionOrder(id, "cancelled")).ok, true);
+  });
+
+  it("will not cancel on its own: a cancel must refund (cancel.ts)", async () => {
+    const id = await makeOrder("new");
+    const result = await transitionOrder(id, "cancelled");
+    assert.equal(result.ok, false);
+    assert.match(!result.ok ? result.reason : "", /Cancel and refund/);
+    const row = (await query<{ status: string }>(`select status from "order" where id = $1`, [id]))[0]!;
+    assert.equal(row.status, "new");
   });
 });

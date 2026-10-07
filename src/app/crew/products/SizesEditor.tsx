@@ -6,13 +6,15 @@ import { useKeptForm } from "./useKeptForm";
 import { Button } from "@/components/ui/Button";
 import { SIZE_CHART } from "@/content/products/size-chart";
 
-type Size = { id: string; sizeLabel: string; sku: string };
+type Size = { id: string; sizeLabel: string; sku: string; weightOz: string | null };
 
 const INPUT = "min-h-6 w-24 border border-steel-dim bg-graphite px-3 py-2 text-chalk";
 
 function SizeRow({ productId, size, listId }: { productId: string; size: Size; listId: string }) {
   const { state, onSubmit, pending } = useKeptForm(changeProductSize);
+  const weigh = useKeptForm(changeProductSize);
   const inputId = `size-${size.id}`;
+  const weightId = `weight-${size.id}`;
 
   return (
     <li className="border-b border-steel-dim py-4">
@@ -41,6 +43,30 @@ function SizeRow({ productId, size, listId }: { productId: string; size: Size; l
           <span className="notation text-2xs text-orchid">{size.sku}</span>
         </div>
         <FormMessage state={state} />
+      </form>
+      {/* Its own form, so Enter in the weight box saves the weight rather than
+          pressing Rename, the first button of the form above. */}
+      <form onSubmit={weigh.onSubmit} className="mt-4 flex flex-col gap-3">
+        <input type="hidden" name="id" value={productId} />
+        <input type="hidden" name="variantId" value={size.id} />
+        <input type="hidden" name="op" value="weight" />
+        <div className="flex flex-wrap items-end gap-4">
+          <label htmlFor={weightId} className="flex flex-col gap-2">
+            <span className="display-plain text-sm text-steel">Shipping weight (oz)</span>
+            <input
+              key={size.weightOz ?? ""}
+              id={weightId}
+              name="weightOz"
+              defaultValue={size.weightOz ?? ""}
+              inputMode="decimal"
+              className={INPUT}
+            />
+          </label>
+          <Button type="submit" intent="outline" disabled={weigh.pending}>
+            {weigh.pending ? "Saving…" : "Save weight"}
+          </Button>
+        </div>
+        <FormMessage state={weigh.state} />
       </form>
     </li>
   );
@@ -103,6 +129,12 @@ export function SizesEditor({ productId, sizes }: { productId: string; sizes: Si
       <p className="text-sm text-steel">
         A size that has stock, has been ordered, or is in an unfinished checkout cannot be
         removed. Set its stock to 0 and it shows as sold out.
+      </p>
+
+      <p className="text-sm text-steel">
+        Shipping weight is one garment of that size, folded as it ships, in ounces. The label adds
+        up the weights in an order. Until every size in an order has one, the label declares a
+        fixed weight and USPS may adjust the charge.
       </p>
     </section>
   );

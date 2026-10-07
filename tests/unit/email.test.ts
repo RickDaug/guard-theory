@@ -17,6 +17,7 @@ import { confirmationIdempotencyKey } from "../../src/lib/orders/confirmation.ts
 import {
   announcement,
   orderConfirmation,
+  orderCancelled,
   orderInProcess,
   orderShipped,
   type OrderForEmail,
@@ -118,6 +119,7 @@ const MESSAGES = [
       carrier: "USPS",
     }),
   ],
+  ["cancelled", orderCancelled(ORDER, { refundedCents: 9600, earlierRefundCents: 0 })],
 ] as const;
 
 describe("order mail keeps the site's voice", () => {

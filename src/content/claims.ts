@@ -3,9 +3,10 @@ import { noteDate, piecesWithCorrections } from "./corrections.ts";
 import { FIGURES } from "./figures/index.ts";
 import { ARTICLES, isPublished } from "./journal/index.ts";
 import { PRODUCTS } from "./products/index.ts";
+import { PUBLISHED_SPECIFICATIONS } from "./products/published-specs.ts";
 import { SIZE_CHART, SIZE_CHART_SOURCE } from "./products/size-chart.ts";
 import { numberWord } from "./section-descriptions.ts";
-import { ENTRIES } from "./technique/index.ts";
+import { ENTRIES, PUBLISHED_ENTRIES } from "./technique/index.ts";
 import { buildSearchIndex } from "../lib/search/index.ts";
 import * as mailTemplates from "../lib/mail/templates.ts";
 import { PENDING_RETENTION_DAYS } from "../lib/waitlist/confirm.ts";
@@ -588,13 +589,6 @@ const productHas = (pattern: RegExp) =>
   PRODUCTS.length > 0 &&
   PRODUCTS.every((product) => Object.keys(product).some((key) => pattern.test(key)));
 
-const PUBLISHED_SPECIFICATIONS = [
-  "Fabric weight",
-  "Fabric composition",
-  "Seam construction",
-  "Print method",
-];
-
 /**
  * Specification values and chart rows count only when the owner supplied them.
  * On 2026-09-29 the owner confirmed that the composition, GSM, seam type, print
@@ -873,6 +867,40 @@ export const CLAIMS: Claim[] = [
       read("src/app/technique/[category]/[slug]/page.tsx").includes("{COACH_DISCLAIMER}")
         ? true
         : "the technique entry page no longer renders COACH_DISCLAIMER",
+  },
+  {
+    id: "editorial-technique-sign-off",
+    // The publication gate, as the editorial policy describes it. Each half
+    // of the sentence is checked against the code that makes it true: "a
+    // named person has ... signed it off in the source" against the registry,
+    // "unlisted" against the sitemap and the search index, "marked as a
+    // draft" against the entry page. See src/content/technique/index.ts.
+    says: /nothing is published until a named person has read it and signed it off in the source. Until then it is unlisted and marked as a draft/,
+    kind: "stated",
+    where: [POLICIES],
+    holds: ({ read }) => {
+      const unsigned = PUBLISHED_ENTRIES.filter(
+        (entry) =>
+          entry.review !== undefined &&
+          (entry.review.approvedBy === null || entry.review.approvedBy.name.trim() === ""),
+      );
+      if (unsigned.length > 0) {
+        return `${unsigned.map((e) => e.slug).join(", ")} counts as published without a named sign-off`;
+      }
+      const page = read("src/app/technique/[category]/[slug]/page.tsx");
+      if (!page.includes("isPublishedEntry(") || !page.includes("review.drafted")) {
+        return "the technique entry page no longer marks a draft as a draft";
+      }
+      const sitemap = read("src/app/sitemap.ts");
+      if (!sitemap.includes("publishedEntryPaths(") || /\bENTRIES\b/.test(sitemap)) {
+        return "the sitemap lists technique entries without going through the publication gate";
+      }
+      const search = read("src/lib/search/index.ts");
+      if (!search.includes("publishedEntries(entries)")) {
+        return "the search index lists technique entries without going through the publication gate";
+      }
+      return true;
+    },
   },
   {
     id: "search-names-every-collection",

@@ -622,6 +622,30 @@ export async function renameSize(
 }
 
 /**
+ * A size's shipping weight, in ounces, or null to clear it. The label sums these
+ * (src/lib/shipping/weight.ts). Allowed on a size that has been ordered: the
+ * weight is a packing fact, and it changes nothing an order recorded.
+ * `weightOz` has already been through readWeightOz.
+ */
+export async function setSizeWeight(
+  client: PoolClient,
+  productId: string,
+  variantId: string,
+  weightOz: string | null,
+): Promise<EditResult> {
+  const result = await client.query(
+    "update variant set shipping_weight_oz = $3 where id = $1 and product_id = $2",
+    [variantId, productId, weightOz],
+  );
+
+  if ((result.rowCount ?? 0) === 0) {
+    return { ok: false, message: "That size could not be found. Reload the page." };
+  }
+
+  return { ok: true };
+}
+
+/**
  * Removing a size. Refused — never archived, never cascaded — when anything
  * depends on it: stock on the shelf, an order, or a checkout in flight. A size
  * that cannot be removed can be set to zero stock, which shows it as sold out.

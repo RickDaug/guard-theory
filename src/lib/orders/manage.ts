@@ -68,11 +68,14 @@ export type OrderRow = {
   shippo_transaction_id: string | null;
   /** Set while a label is being bought; see src/lib/orders/label.ts. */
   label_claimed_at: Date | null;
+  /** When it was cancelled (0016); see src/lib/orders/cancel.ts. */
+  cancelled_at: Date | null;
   placed_at: Date;
   shipped_at: Date | null;
 };
 
 export type OrderItemRow = {
+  id: string;
   order_id: string;
   product_name: string;
   product_kind: string;
@@ -80,6 +83,10 @@ export type OrderItemRow = {
   sku: string;
   unit_cents: number;
   quantity: number;
+  /** Units fulfilment took from stock; null on lines from before 0016. */
+  stock_taken: number | null;
+  /** Units put back in stock since, by a cancel or a checked return. */
+  restocked_quantity: number;
 };
 
 export async function listOrders(status?: OrderStatus | "flagged"): Promise<OrderRow[]> {
@@ -211,6 +218,16 @@ export async function transitionOrder(
 ): Promise<TransitionResult> {
   if (!Object.hasOwn(STATUS_LABEL, to)) {
     return { ok: false, reason: "That is not a status an order can have." };
+  }
+
+  if (to === "cancelled") {
+    // A cancel is not a status change on its own: it refunds the buyer, puts
+    // the stock back and tells them (cancel.ts). Reaching it from here would
+    // be the old cancel that kept the money.
+    return {
+      ok: false,
+      reason: "Use Cancel and refund on the order page. A cancel always refunds the buyer.",
+    };
   }
 
   const order = await getOrder(orderId);

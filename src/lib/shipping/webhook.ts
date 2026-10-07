@@ -54,7 +54,8 @@ const KNOWN_IPS = new Set([
  * is treated as not configured, so a weak secret fails closed (404 for
  * everyone) rather than quietly working.
  */
-const MIN_TOKEN_LENGTH = 32;
+export const SHIPPO_WEBHOOK_TOKEN_MIN_LENGTH = 32;
+const MIN_TOKEN_LENGTH = SHIPPO_WEBHOOK_TOKEN_MIN_LENGTH;
 
 function secretMatches(candidate: string): boolean {
   const expected = process.env.SHIPPO_WEBHOOK_TOKEN?.trim();

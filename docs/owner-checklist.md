@@ -173,6 +173,12 @@ message, and unless a mailbox or forwarder exists for it at your mail host, a
 customer who replies gets a bounce. Set this to an address you read and every
 message carries it as its reply-to until the forwarder is in place.
 
+Then check the lot: `npm run activation:check` reads every one of these (and
+Stripe, Shippo, the database and the cron) without changing anything or
+printing a value, and prints the fix for anything wrong.
+`docs/test-order-runbook.md` §0 says how to feed it the values, and the rest of
+that file is the test order itself, click by click.
+
 The merged code reads all of these, but a variable added here reaches the site
 only on the next deployment, not the running one. Until each is set, its path
 fails closed: checkout says it is unavailable, no label can be bought, the
@@ -269,10 +275,12 @@ quarterly.
 ### 12. Live-mode cutover
 
 Only after a test-mode order has gone the whole way: paid, confirmed by email,
-labelled, marked delivered, refunded.
+labelled, marked delivered, refunded — and a second one cancelled before it
+ships, to see the refund, the stock going back and the cancellation email
+together (`docs/owner-decisions.md` §15).
 
 - Stripe: switch to live mode. Create a **new** restricted key (`rk_live_`) and
-  a **new** webhook endpoint — same URL, same three events, same API version.
+  a **new** webhook endpoint — same URL, same five events, same API version.
   Live endpoints have their own signing secret. Replace **`STRIPE_SECRET_KEY`**
   and **`STRIPE_WEBHOOK_SECRET`** in Vercel — **in the Production environment
   only**. The code refuses a live key anywhere else: on a Preview or Development

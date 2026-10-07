@@ -10,6 +10,7 @@ import {
 import { ensureOrderConfirmationSent } from "./confirmation.ts";
 import { syncRefundFromCharge } from "./refund.ts";
 import { syncDispute } from "./dispute.ts";
+import { STRIPE_WEBHOOK_EVENTS } from "../stripe/webhook-events.ts";
 
 /**
  * Stripe's webhook.
@@ -40,22 +41,8 @@ import { syncDispute } from "./dispute.ts";
  * The route file is three lines; everything that can be wrong is here.
  */
 
-const HANDLED = new Set<string>([
-  "checkout.session.completed",
-  // Not reachable for US card-only checkout, where the PaymentIntent succeeds
-  // immediately. Handled anyway because it costs three lines, and the day a
-  // delayed method is enabled in the dashboard a completed-only integration
-  // starts fulfilling unpaid orders.
-  "checkout.session.async_payment_succeeded",
-  // So a refund issued in the Stripe dashboard rather than the portal still
-  // shows up on the order. Without it the two records drift silently.
-  "charge.refunded",
-  // A chargeback. The bank has taken the money back; the order is flagged so
-  // nobody ships it without reading that first (src/lib/orders/dispute.ts).
-  // Stripe only sends these once they are added to the endpoint's events.
-  "charge.dispute.created",
-  "charge.dispute.closed",
-]);
+/** What the handler acts on. The list, and why each is on it, is in webhook-events.ts. */
+const HANDLED = new Set<string>(STRIPE_WEBHOOK_EVENTS);
 
 /**
  * Schedules work to run after the response has gone.

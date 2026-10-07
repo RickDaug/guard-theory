@@ -126,7 +126,18 @@ export async function destroySession(): Promise<void> {
 
   // Cleared even if the delete failed — the cookie is the thing in the
   // browser, and leaving it behind is the worse of the two failures.
-  store.delete(sessionCookieName());
+  //
+  // Not `store.delete()`: that sends a bare expiring cookie with no Secure
+  // attribute, and a browser ignores any `__Host-` cookie set without Secure —
+  // so in production the delete was silently dropped and the cookie outlived
+  // the sign-out. Expire it with the same attributes it was set with.
+  store.set(sessionCookieName(), "", {
+    httpOnly: true,
+    sameSite: "lax",
+    secure: process.env.NODE_ENV === "production",
+    path: "/",
+    maxAge: 0,
+  });
 }
 
 /**

@@ -51,6 +51,15 @@ const securityHeaders = [
       //
       // Tracked in docs/technical-architecture.md. Do not quietly delete this
       // comment to make the policy look stricter than it is.
+      //
+      // DEFERRED, 2026-09-29 (security audit S3-1, which found no XSS sink):
+      // a nonce policy for the dynamic /crew and /cart routes only. It needs
+      // the proxy to mint a nonce and pass the policy as a REQUEST header so
+      // Next stamps its own scripts, the proxy matcher widened to /cart (it
+      // is narrow on purpose, see src/proxy.ts), and this header dropped for
+      // those routes, since two policies are both enforced. Its only real
+      // proof is the full Playwright and Lighthouse run, so it ships on its
+      // own branch with those runs, not inside a batch of other fixes.
       "script-src 'self' 'unsafe-inline'",
 
       "upgrade-insecure-requests",

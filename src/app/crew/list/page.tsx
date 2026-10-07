@@ -7,7 +7,7 @@ import { ButtonAnchor } from "@/components/ui/Button";
 
 export const dynamic = "force-dynamic";
 
-type Counts = { total: number; live: number; gone: number };
+type Counts = { total: number; live: number; gone: number; pending: number; legacy: number };
 
 export default async function ListPage() {
   await requirePortalPage(portalUrl("/list"));
@@ -25,12 +25,14 @@ export default async function ListPage() {
 
   const rows = await query<Counts>(
     `select count(*)::int as total,
-            count(*) filter (where unsubscribed_at is null)::int as live,
+            count(*) filter (where unsubscribed_at is null and consent_state in ('confirmed', 'legacy'))::int as live,
+            count(*) filter (where unsubscribed_at is null and consent_state = 'pending')::int as pending,
+            count(*) filter (where unsubscribed_at is null and consent_state = 'legacy')::int as legacy,
             count(*) filter (where unsubscribed_at is not null)::int as gone
        from waitlist_signup`,
   );
 
-  const counts = rows[0] ?? { total: 0, live: 0, gone: 0 };
+  const counts = rows[0] ?? { total: 0, live: 0, gone: 0, pending: 0, legacy: 0 };
   const provider = getMailProvider();
 
   return (
@@ -58,6 +60,12 @@ export default async function ListPage() {
             </dd>
           </div>
         </dl>
+
+        <p className="mb-10 max-w-[46rem] text-base text-steel">
+          {counts.pending} waiting to confirm their address; they are not on the list and are not
+          counted above. {counts.legacy} of those on the list joined before confirmation existed
+          and have never confirmed.
+        </p>
 
         <div className="mb-14">
           {/* A plain anchor: this is a file download, and next/link would try

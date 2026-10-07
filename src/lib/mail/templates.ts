@@ -176,3 +176,40 @@ export function announcement(
     ].join("\n"),
   };
 }
+
+/**
+ * The double opt-in message: one link, to a page with a Confirm button.
+ *
+ * Transactional, not list mail. It goes to an address that is not on the list
+ * yet, because someone asked for it to be, and the list's mail never reaches
+ * that address unless the button is pressed. So it carries no unsubscribe
+ * link; it says instead that ignoring it is enough, which is true — an
+ * unconfirmed address is never sent the announcement and is deleted after
+ * `retentionDays`.
+ *
+ * `token` is from src/lib/waitlist/confirm.ts. `?t=` is the parameter
+ * src/app/first-edition/confirm/page.tsx reads.
+ */
+export function waitlistConfirmation(
+  to: string,
+  firstName: string,
+  token: string,
+  expiresInHours = 72,
+  retentionDays = 30,
+): Email {
+  return {
+    to,
+    subject: "Confirm your address for the Guard Theory First Edition list",
+    body: [
+      `${firstName.trim() || "Hello"},`,
+      "",
+      "Someone, probably you, asked for this address to be told when the Guard Theory First Edition is released. Open this link and press Confirm to join the list:",
+      "",
+      `${SITE_URL}/first-edition/confirm?t=${token}`,
+      "",
+      `The link works for ${expiresInHours} hours. If you did not ask, ignore this message: the address is not on the list, it will not be sent the announcement, and it is deleted after ${retentionDays} days.`,
+      "",
+      "Guard Theory",
+    ].join("\n"),
+  };
+}

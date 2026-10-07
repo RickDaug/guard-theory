@@ -139,7 +139,10 @@ export const STORED: Record<string, Record<string, Disclosure>> = {
   product_spec: internal(["product_id", "position", "label", "value"], "the catalogue: a specification row"),
   product_construction_point: internal(["product_id", "code", "label", "note"], "the catalogue: a construction callout"),
   product_image: internal(["id", "product_id", "blob_url", "alt", "width", "height", "sort_index"], "the catalogue: a product image"),
-  variant: internal(["id", "product_id", "size_label", "sku", "stock", "sort_index"], "the catalogue: a size and its stock"),
+  variant: internal(
+    ["id", "product_id", "size_label", "sku", "stock", "sort_index", "shipping_weight_oz"],
+    "the catalogue: a size, its stock and its shipping weight",
+  ),
 
   /* An order, and the copy of the cart it was priced from. */
   order: {

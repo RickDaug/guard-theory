@@ -106,6 +106,18 @@ describe("productJsonLd", () => {
     assert.ok(!JSON.stringify(withPhoto).includes("og-card"));
   });
 
+  it("names a country of origin only when the owner's value names one", () => {
+    const withOrigin = (value: string | null): ProductView => ({
+      ...view({}),
+      specifications: [{ label: "Country of manufacture", value }],
+    });
+    assert.equal(productJsonLd(withOrigin("Made in Portugal"))!.countryOfOrigin, "Portugal");
+    assert.equal(productJsonLd(withOrigin("Made in USA"))!.countryOfOrigin, "US");
+    assert.equal("countryOfOrigin" in productJsonLd(withOrigin("Imported"))!, false);
+    assert.equal("countryOfOrigin" in productJsonLd(withOrigin(null))!, false);
+    assert.equal("countryOfOrigin" in productJsonLd(view({}))!, false);
+  });
+
   it("names a product-level SKU only when one variant makes it true", () => {
     assert.equal(productJsonLd(view({}))!.sku, undefined);
     const single = productJsonLd(

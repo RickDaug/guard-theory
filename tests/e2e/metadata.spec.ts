@@ -44,6 +44,7 @@ const NOINDEX = [
   "/search",
   "/maintenance",
   "/unsubscribe",
+  "/first-edition/confirm",
   "/cart",
   "/order/confirmed",
 ];
@@ -231,6 +232,13 @@ test("structured data parses and claims nothing untrue", async ({ page }) => {
           expect(record[key], `${path} emits a Product with a "${key}"`).toBeUndefined();
         }
 
+        // Country of origin only when the owner typed one that names a
+        // country (src/content/products/origin.ts). The registry garments have
+        // none, so their Product must not carry one.
+        if (path === "/shop/theory-01-long-sleeve") {
+          expect(record.countryOfOrigin, `${path} invents a country of origin`).toBeUndefined();
+        }
+
         const offer = record.offers as Record<string, unknown> | undefined;
 
         expect(offer, `${path} emits a Product with no Offer`).toBeTruthy();
@@ -253,6 +261,16 @@ test("structured data parses and claims nothing untrue", async ({ page }) => {
         ).toMatch(/schema\.org\/(InStock|OutOfStock)$/);
       }
     }
+  }
+
+  // 16 CFR 303.34 origin: said only from the owner's value. Neither registry
+  // garment has one, so neither page says "Made in" or "Imported".
+  for (const path of ["/shop/theory-01-long-sleeve", "/shop/theory-01-short-sleeve"]) {
+    await page.goto(path, { waitUntil: "load" });
+    await expect(page.locator("[data-origin-disclosure]"), `${path} states an origin nobody supplied`).toHaveCount(0);
+    await expect(page.locator("main"), `${path} states an origin nobody supplied`).not.toContainText(
+      /Made in|Imported/,
+    );
   }
 
   // The waitlist is not a PreOrder, and never becomes one.

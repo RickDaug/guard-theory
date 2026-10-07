@@ -53,6 +53,19 @@ const WALKTHROUGHS: Walkthrough[] = [
     note: "A sale price has to be lower than the price, or it is just the price. Leave it empty when there is no sale.",
   },
   {
+    id: "new-product",
+    title: "Add a new product",
+    standfirst:
+      "A new product is a draft, off the storefront, until it has everything a product page states.",
+    steps: [
+      "Open Products and fill in New product: its name, what kind of garment it is, and the web address if you want a particular one.",
+      "Under Sizes, add each size it comes in, using the sizes in the size and fit guide.",
+      "Under Words and specification, write the summary and the description, and fill in the fabric weight, composition, seam construction and print method.",
+      "Then put it on sale as above: price, stock, Live.",
+    ],
+    note: "If something is missing when you press Save, the page lists what, and the product stays a draft. Photographs are added by the developer for now.",
+  },
+  {
     id: "sold-out",
     title: "Take something off sale",
     standfirst: "Two ways, and they say different things to a reader.",

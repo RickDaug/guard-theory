@@ -10,6 +10,7 @@ import {
 } from "../../src/content/section-descriptions.ts";
 import { CATEGORIES } from "../../src/content/technique/index.ts";
 import { ARTICLES, isPublished } from "../../src/content/journal/index.ts";
+import { FIGURES } from "../../src/content/figures/index.ts";
 
 const MAIL = "src/lib/mail/templates.ts";
 const POLICY = "src/content/policies/index.ts";
@@ -234,14 +235,42 @@ describe("the guard can fail", () => {
     );
   });
 
-  it("objects when the dispatch time drifts from the owner's figure", () => {
-    const claim = byId("dispatch-time-is-the-owners");
-    const verdict = claim.holds(
+  it("objects when the sitemap or the entry page stops going through the publication gate", () => {
+    const claim = byId("editorial-technique-sign-off");
+    assert.equal(claim.holds(contextFor(null)), true);
+
+    const sitemap = "src/app/sitemap.ts";
+    const listed = claim.holds(
       contextFor(null, {
-        [MAIL]: raw(MAIL).replace("dispatched within seven business days", "dispatched within two business days"),
+        [sitemap]: raw(sitemap).replace("publishedEntryPaths()", "ENTRIES.map((e) => e.slug)"),
       }),
     );
-    assert.match(String(verdict), /promises dispatch within two business days/);
+    assert.match(String(listed), /sitemap lists technique entries without going through/);
+
+    const page = "src/app/technique/[category]/[slug]/page.tsx";
+    const unmarked = claim.holds(
+      contextFor(null, { [page]: raw(page).replace(/review\.drafted/g, "review.factAudit") }),
+    );
+    assert.match(String(unmarked), /no longer marks a draft as a draft/);
+  });
+
+  it("objects when the dispatch time drifts from the owner's figure", () => {
+    const claim = byId("dispatch-time-is-the-owners");
+    // The constant every copy file renders from…
+    const terms = "src/content/policies/shipping-terms.ts";
+    const viaConstant = claim.holds(
+      contextFor(null, {
+        [terms]: raw(terms).replace('"seven business days"', '"two business days"'),
+      }),
+    );
+    assert.match(String(viaConstant), /promises dispatch within two business days/);
+    // …and a figure typed straight into the copy instead of the constant.
+    const typed = claim.holds(
+      contextFor(null, {
+        [MAIL]: raw(MAIL).replace("dispatched within ${DISPATCH_WITHIN}", "dispatched within two business days"),
+      }),
+    );
+    assert.match(String(typed), /promises dispatch within two business days/);
   });
 
   it("objects when the return window drifts from the owner's figure", () => {
@@ -292,5 +321,29 @@ describe("the guard can fail", () => {
       contextFor(null, { [map]: raw(map).replace("strokeWidth={live ? 3 : 2}", "strokeWidth={2}") }),
     );
     assert.match(String(verdict), /changes stroke colour when active and not stroke weight/);
+  });
+
+  it("objects when a corrected piece's date and its note disagree", () => {
+    const claim = byId("corrections-dated-note-in-the-piece");
+    assert.equal(claim.holds(contextFor(null)), true);
+    const figure = FIGURES.find((f) => f.updatedAt);
+    assert.ok(figure, "no figure carries a correction to test against");
+    const original = figure.updatedAt;
+    try {
+      figure.updatedAt = "2026-10-01";
+      assert.match(String(claim.holds(contextFor(null))), /latest correction note is dated/);
+      figure.updatedAt = undefined;
+      assert.match(String(claim.holds(contextFor(null))), /carries a correction note and no updatedAt/);
+    } finally {
+      figure.updatedAt = original;
+    }
+  });
+
+  it("objects when the contact form stops offering a correction topic", () => {
+    const form = "src/lib/contact/form-state.ts";
+    const verdict = byId("corrections-through-the-contact-form").holds(
+      contextFor(null, { [form]: raw(form).replace("A correction to something we published", "Something else") }),
+    );
+    assert.match(String(verdict), /no longer offers the topic/);
   });
 });

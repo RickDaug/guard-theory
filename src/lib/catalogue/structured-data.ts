@@ -1,5 +1,6 @@
 import { getProduct } from "../../content/products/index.ts";
 import { getPolicy } from "../../content/policies/index.ts";
+import { productOrigin } from "../../content/products/origin.ts";
 import { toDecimalString } from "../money.ts";
 import { SITE_NAME, absoluteUrl } from "../site.ts";
 import { effectivePriceCents, hasPublishableOffer, stockStatus, type ProductView } from "./types.ts";
@@ -140,6 +141,13 @@ export function productJsonLd(view: ProductView): Record<string, unknown> | null
   // (src/lib/metadata.ts, SHARE_IMAGE_OBJECT).
   if (commerce.images.length > 0) {
     node.image = commerce.images.map((image) => image.url);
+  }
+
+  // Only when the owner's value names a country; an unnamed import names
+  // none, and nothing is guessed (16 CFR 303.34, src/content/products/origin.ts).
+  const origin = productOrigin(view.specifications);
+  if (origin?.country) {
+    node.countryOfOrigin = origin.country;
   }
 
   // A product-level SKU only when there is exactly one variant. With several

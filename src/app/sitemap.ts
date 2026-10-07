@@ -1,5 +1,5 @@
 import type { MetadataRoute } from "next";
-import { ENTRIES } from "@/content/technique";
+import { publishedEntryPaths } from "@/content/technique";
 import {
   indexableJournalCategorySlugs,
   indexableTechniqueCategorySlugs,
@@ -48,9 +48,10 @@ export default function sitemap(): MetadataRoute.Sitemap {
     ...indexableTechniqueCategorySlugs().map((slug) => ({
       url: absoluteUrl(`/technique/${slug}`),
     })),
-    ...ENTRIES.map((entry) => ({
-      url: absoluteUrl(`/technique/${entry.category}/${entry.slug}`),
-    })),
+    // Signed-off entries only. A technique draft renders at its address for
+    // the person who has to read it, and is noindex until they do; see
+    // isPublishedEntry in src/content/technique/index.ts.
+    ...publishedEntryPaths().map((path) => ({ url: absoluteUrl(path) })),
     ...indexableJournalCategorySlugs().map((slug) => ({
       url: absoluteUrl(`/journal/category/${slug}`),
     })),

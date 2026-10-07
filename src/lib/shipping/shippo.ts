@@ -145,14 +145,19 @@ export type Address = {
  * Worth knowing when tuning these: USPS removed the 4oz and 8oz commercial
  * tiers in July 2026, so everything under a pound is billed at the 12–15.99oz
  * rate. Shaving grams below a pound buys nothing.
+ *
+ * `weightOz` is the weight worked out from the order (src/lib/shipping/weight.ts).
+ * Without one, the parcel declares the fixed SHIP_PARCEL_WEIGHT_OZ it always did.
+ * The dimensions stay fixed either way: nobody has measured a multi-garment
+ * parcel, so there is no larger box to declare yet.
  */
-function parcel() {
+export function parcel(weightOz?: string) {
   return {
     length: process.env.SHIP_PARCEL_LENGTH_IN ?? "12",
     width: process.env.SHIP_PARCEL_WIDTH_IN ?? "10",
     height: process.env.SHIP_PARCEL_HEIGHT_IN ?? "1",
     distance_unit: "in",
-    weight: process.env.SHIP_PARCEL_WEIGHT_OZ ?? "10",
+    weight: weightOz ?? process.env.SHIP_PARCEL_WEIGHT_OZ ?? "10",
     mass_unit: "oz",
   };
 }
@@ -224,7 +229,11 @@ export type BoughtLabel = {
  * has the same effect as omitting it, which is why the body is JSON rather
  * than form-encoded.
  */
-export async function buyUspsLabel(to: Address, orderId: string): Promise<BoughtLabel> {
+export async function buyUspsLabel(
+  to: Address,
+  orderId: string,
+  weightOz?: string,
+): Promise<BoughtLabel> {
   const from = shipFromAddress();
 
   if (!from) {
@@ -237,7 +246,7 @@ export async function buyUspsLabel(to: Address, orderId: string): Promise<Bought
   const shipment = await shippo<Shipment>("/shipments/", {
     address_from: from,
     address_to: to,
-    parcels: [parcel()],
+    parcels: [parcel(weightOz)],
     async: false,
   });
 

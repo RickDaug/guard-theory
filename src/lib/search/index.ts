@@ -3,7 +3,9 @@
 // hold the search page to its claim that everything on the site is in it.
 import {
   CATEGORIES as TECHNIQUE_CATEGORIES,
-  ENTRIES,
+  PUBLISHED_ENTRIES,
+  publishedEntries,
+  type TechniqueEntry,
 } from "../../content/technique/index.ts";
 import { PRODUCTS } from "../../content/products/index.ts";
 import { POLICIES } from "../../content/policies/index.ts";
@@ -30,7 +32,14 @@ function toDocument(
   return { ...doc, terms: extraTerms.filter(Boolean).join(" ") };
 }
 
-export function buildSearchIndex(): SearchDocument[] {
+/**
+ * `entries` exists so tests/unit/technique-review.test.ts can hand this a
+ * fixture draft without putting one in the registry. Whatever is passed is
+ * filtered through the same gate the default is.
+ */
+export function buildSearchIndex({
+  entries = PUBLISHED_ENTRIES,
+}: { entries?: TechniqueEntry[] } = {}): SearchDocument[] {
   return [
     // Articles and figures were both missing from this index while the page
     // told the reader everything on the site was searchable. Searching
@@ -60,7 +69,9 @@ export function buildSearchIndex(): SearchDocument[] {
         [figure.lifespan ?? "", figure.contribution],
       ),
     ),
-    ...ENTRIES.map((entry) =>
+    // Signed-off entries only. A draft is unlisted everywhere until a person
+    // has read it; a search result would be a listing.
+    ...publishedEntries(entries).map((entry) =>
       toDocument(
         {
           id: `technique:${entry.slug}`,

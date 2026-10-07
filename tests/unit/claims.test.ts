@@ -268,14 +268,42 @@ describe("the guard can fail", () => {
     );
   });
 
-  it("objects when the dispatch time drifts from the owner's figure", () => {
-    const claim = byId("dispatch-time-is-the-owners");
-    const verdict = claim.holds(
+  it("objects when the sitemap or the entry page stops going through the publication gate", () => {
+    const claim = byId("editorial-technique-sign-off");
+    assert.equal(claim.holds(contextFor(null)), true);
+
+    const sitemap = "src/app/sitemap.ts";
+    const listed = claim.holds(
       contextFor(null, {
-        [MAIL]: raw(MAIL).replace("dispatched within seven business days", "dispatched within two business days"),
+        [sitemap]: raw(sitemap).replace("publishedEntryPaths()", "ENTRIES.map((e) => e.slug)"),
       }),
     );
-    assert.match(String(verdict), /promises dispatch within two business days/);
+    assert.match(String(listed), /sitemap lists technique entries without going through/);
+
+    const page = "src/app/technique/[category]/[slug]/page.tsx";
+    const unmarked = claim.holds(
+      contextFor(null, { [page]: raw(page).replace(/review\.drafted/g, "review.factAudit") }),
+    );
+    assert.match(String(unmarked), /no longer marks a draft as a draft/);
+  });
+
+  it("objects when the dispatch time drifts from the owner's figure", () => {
+    const claim = byId("dispatch-time-is-the-owners");
+    // The constant every copy file renders from…
+    const terms = "src/content/policies/shipping-terms.ts";
+    const viaConstant = claim.holds(
+      contextFor(null, {
+        [terms]: raw(terms).replace('"seven business days"', '"two business days"'),
+      }),
+    );
+    assert.match(String(viaConstant), /promises dispatch within two business days/);
+    // …and a figure typed straight into the copy instead of the constant.
+    const typed = claim.holds(
+      contextFor(null, {
+        [MAIL]: raw(MAIL).replace("dispatched within ${DISPATCH_WITHIN}", "dispatched within two business days"),
+      }),
+    );
+    assert.match(String(typed), /promises dispatch within two business days/);
   });
 
   it("objects when the return window drifts from the owner's figure", () => {

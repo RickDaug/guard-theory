@@ -4,6 +4,7 @@ import { ClearCartOnMount } from "@/components/cart/ClearCartOnMount";
 import { queryOne } from "@/lib/db/client";
 import { getMailProvider } from "@/lib/mail";
 import { formatMoney } from "@/lib/money";
+import { DISPATCH_WITHIN } from "@/content/policies/shipping-terms";
 import { confirmedView, type ConfirmedOrderRow } from "@/lib/orders/confirmed-view";
 
 export const metadata: Metadata = {
@@ -150,8 +151,8 @@ export default async function OrderConfirmedPage({
       {view?.detail ? (
         <p className="text-base text-steel">
           {mailDelivers
-            ? "Orders are packed and dispatched within seven business days. You will get a second email with a tracking number when the parcel leaves us."
-            : "Orders are packed and dispatched within seven business days."}
+            ? `Orders are packed and dispatched within ${DISPATCH_WITHIN}. You will get a second email with a tracking number when the parcel leaves us.`
+            : `Orders are packed and dispatched within ${DISPATCH_WITHIN}.`}
         </p>
       ) : null}
     </UtilityPage>

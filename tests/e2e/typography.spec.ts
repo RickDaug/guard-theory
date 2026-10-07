@@ -61,13 +61,15 @@ for (const path of ROUTES) {
        *   eMag    — from GracieMag, which brands itself as one word
        *   :Maeda  — from "File:Maeda Mituyo.jpg", a Wikimedia filename quoted
        *             exactly in a source line
+       *   tHub    — from GitHub, named in the privacy policy as the host of
+       *             the encrypted nightly backup
        *
        * These are matched against the HIT, not the surrounding sentence, so an
        * entry has to be written in the form the pattern actually captures:
        * one leading character, then the capital and what follows.
        */
       const ALLOWED =
-        /(?:McG|MacD|DeLa|iPhone|JavaScript|JavaSc|YouTube|eMag|:Maeda)/;
+        /(?:McG|MacD|DeLa|iPhone|JavaScript|JavaSc|YouTube|eMag|:Maeda|tHub)/;
       const out: string[] = [];
 
       /**

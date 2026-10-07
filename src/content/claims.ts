@@ -430,7 +430,25 @@ export const PROCESSORS: Array<{
     evidence: "src/lib/shipping/shippo.ts posts the parcel's address to api.goshippo.com",
     present: (context) => externalHosts(context).includes("api.goshippo.com"),
   },
+  {
+    name: "GitHub",
+    evidence:
+      ".github/workflows/db-backup.yml dumps the production database each night and uploads it, encrypted, as a GitHub Actions artifact",
+    present: (context) => nightlyBackup(context) !== null,
+  },
 ];
+
+const BACKUP_WORKFLOW = ".github/workflows/db-backup.yml";
+
+/**
+ * The nightly backup workflow, as text, when it still dumps the database and
+ * uploads the result to GitHub. Null when it is gone or no longer does both.
+ */
+function nightlyBackup(context: ClaimContext): string | null {
+  if (!context.list(".github/workflows").includes(BACKUP_WORKFLOW)) return null;
+  const workflow = context.read(BACKUP_WORKFLOW);
+  return workflow.includes("actions/upload-artifact") && workflow.includes("pg_dump") ? workflow : null;
+}
 
 /** Hosts that appear in code and receive nothing about a reader. */
 export const HOSTS_THAT_RECEIVE_NOTHING: Record<string, string> = {
@@ -629,6 +647,7 @@ function specificationsArePublished(): true | string {
 /* ------------------------------------------------------------------------ */
 
 const FAQ = "src/app/faq/page.tsx";
+const RATE_LIMITER = "src/lib/rate-limit-db.ts";
 const POLICIES = "src/content/policies/index.ts";
 const ORDER_CONFIRMED = "src/app/order/confirmed/page.tsx";
 const MAIL_TEMPLATES = "src/lib/mail/templates.ts";
@@ -988,6 +1007,40 @@ export const CLAIMS: Claim[] = [
     kind: "stated",
     where: [POLICIES],
     holds: processorsMatchPolicy,
+  },
+  {
+    id: "privacy-backups-kept-fourteen-days",
+    says: /encrypted nightly backups are kept for fourteen days/,
+    kind: "stated",
+    where: [POLICIES],
+    holds: (context) => {
+      const workflow = nightlyBackup(context);
+      if (!workflow) return `${BACKUP_WORKFLOW} no longer dumps the database and uploads it to GitHub`;
+      if (!/cron: "\d+ \d+ \* \* \*"/.test(workflow)) return `${BACKUP_WORKFLOW} no longer runs once a day`;
+      const days = workflow.match(/retention-days: (\d+)/)?.[1];
+      return days === "14"
+        ? true
+        : `${BACKUP_WORKFLOW} keeps the artifact for ${days ?? "an unstated number of"} days, not fourteen`;
+    },
+  },
+  {
+    id: "privacy-rate-limit-hash-kept-a-day",
+    says: /a keyed hash of the address, never the address itself, and delete it after a day/,
+    kind: "stated",
+    where: [POLICIES],
+    holds: (context) => {
+      const limiter = context.read(RATE_LIMITER);
+      if (!limiter.includes("RATE_LIMIT_RETENTION_HOURS = 24;")) {
+        return `${RATE_LIMITER} no longer deletes its rows after 24 hours`;
+      }
+      if (!limiter.includes("addressKey(")) {
+        return `${RATE_LIMITER} no longer keys its rows on addressKey, the keyed hash of the address`;
+      }
+      const columns = columnsByTable(context).rate_limit ?? [];
+      return columns.some((column) => /^(ip|addr|address)$/i.test(column))
+        ? `rate_limit now has a column that looks like it holds the address itself: ${columns.join(", ")}`
+        : true;
+    },
   },
   {
     id: "no-cookies-no-tracking",

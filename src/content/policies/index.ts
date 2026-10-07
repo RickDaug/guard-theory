@@ -9,6 +9,8 @@
  * docs/owner-decisions.md rather than announced to the reader on every page.
  */
 
+import { DISPATCH_WITHIN } from "./shipping-terms.ts";
+
 export type PolicySection = {
   id: string;
   heading: string;
@@ -145,13 +147,13 @@ export const POLICIES: Policy[] = [
     title: "Shipping",
     summary: "Where we ship, what it costs, and how long it takes.",
     metaDescription:
-      "We ship within the United States, at a flat rate shown in your cart. Orders are dispatched within seven business days, with tracking sent by email.",
+      `We ship within the United States, at a flat rate shown in your cart. Orders are dispatched within ${DISPATCH_WITHIN}, with tracking sent by email.`,
     sections: [
       {
         id: "dispatch",
         heading: "Dispatch",
         paragraphs: [
-          "Orders are packed and dispatched within seven business days of the order. You will receive a dispatch confirmation with a tracking number as soon as the parcel leaves us.",
+          `Orders are packed and dispatched within ${DISPATCH_WITHIN} of the order. You will receive a dispatch confirmation with a tracking number as soon as the parcel leaves us.`,
           "Orders placed on a weekend or a public holiday are treated as placed on the next business day.",
         ],
       },

@@ -544,8 +544,16 @@ function listMailCarriesUnsubscribe(): true | string {
         problems.push(`the list template "${name}" no longer builds an unsubscribe link`);
       }
       // "One-click": the body link opens a confirm page (a GET must not write),
-      // so the one click is RFC 8058's — the mail client's own button.
-      if (!template.toString().includes("List-Unsubscribe=One-Click")) {
+      // so the one click is RFC 8058's — the mail client's own button. Checked
+      // on a built message, not the source: the headers come from
+      // src/lib/mail/list-unsubscribe.ts.
+      const built = (template as (...args: string[]) => { headers?: Record<string, string> })(
+        "someone@example.com",
+        "claims-check-token",
+        "Subject",
+        "Body",
+      );
+      if (built.headers?.["List-Unsubscribe-Post"] !== "List-Unsubscribe=One-Click") {
         problems.push(`the list template "${name}" no longer sends List-Unsubscribe-Post (RFC 8058 one-click)`);
       }
     } else if (!TRANSACTIONAL_MAIL.includes(name)) {
@@ -634,9 +642,21 @@ export const OWNER_TERMS = {
  */
 export const OWNER_CONFIRMED_PERSON_BYLINES: Record<string, string> = {};
 
+const SHIPPING_TERMS = "src/content/policies/shipping-terms.ts";
+
+/**
+ * The file as a reader sees it: the copy renders the dispatch window from
+ * DISPATCH_WITHIN in shipping-terms.ts, so the placeholder is replaced with
+ * that constant's value before anything reads a figure out of it.
+ */
+function printed(read: (path: string) => string, file: string): string {
+  const value = read(SHIPPING_TERMS).match(/DISPATCH_WITHIN = "([^"]+)"/)?.[1] ?? "(DISPATCH_WITHIN not found)";
+  return read(file).replaceAll("${DISPATCH_WITHIN}", value);
+}
+
 /** Every "<verb> within <n> <unit>" figure in the files, as printed. */
 function figuresIn(read: (path: string) => string, files: string[], pattern: RegExp): string[] {
-  return files.flatMap((file) => [...read(file).matchAll(pattern)].map((m) => m[1] ?? ""));
+  return files.flatMap((file) => [...printed(read, file).matchAll(pattern)].map((m) => m[1] ?? ""));
 }
 
 /**
@@ -806,7 +826,9 @@ export const CLAIMS: Claim[] = [
     // Owner decision 2026-09-29 (docs/owner-decisions.md §12a): replaced the
     // unconfirmed "two business days".
     id: "dispatch-time-is-the-owners",
-    says: /dispatched within seven business days/,
+    // The copy prints the figure through DISPATCH_WITHIN (shipping-terms.ts);
+    // `holds` resolves it and compares the printed figure with the owner's.
+    says: /dispatched within (seven business days|\$\{DISPATCH_WITHIN\})/,
     kind: "stated",
     where: [POLICIES, ORDER_CONFIRMED, MAIL_TEMPLATES],
     holds: ({ read }) => {

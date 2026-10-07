@@ -21,6 +21,7 @@ import {
 } from "./OrderControls";
 import { isShippoConfigured } from "@/lib/shipping/shippo";
 import { emailStatusView } from "@/lib/portal/email-status";
+import { DISPUTE_LABEL, FLAG_EXPLANATION, isFlagReason, type DisputeStatus } from "@/lib/orders/flags";
 
 export const dynamic = "force-dynamic";
 
@@ -31,14 +32,6 @@ export const dynamic = "force-dynamic";
  * means nothing at 7am; "payment succeeded after the last one had already been
  * sold" tells you what happened and what you owe someone.
  */
-const FLAG_EXPLANATION: Record<string, string> = {
-  oversell:
-    "Payment succeeded after the last one had already been sold. The money was taken, so this person is owed either the garment or a refund. Yours to decide.",
-  reconciled:
-    "Recovered from Stripe because the webhook never delivered it. Check the items and the address read correctly before shipping.",
-  refunded: "Money has gone back to this customer. Left flagged so it is easy to find again.",
-};
-
 const TEMPLATE_LABEL: Record<string, string> = {
   "order-confirmation": "Confirmation",
   "order-in-process": "Being prepared",
@@ -85,10 +78,20 @@ export default async function OrderPage({ params }: { params: Promise<{ id: stri
           }`}
         </p>
 
+        {order.dispute_status && order.dispute_status in DISPUTE_LABEL ? (
+          // Said on its own, outside the flag: the flag is cleared once read,
+          // and a chargeback's outcome is still true after that.
+          <p className="display-plain mb-6 text-base text-chalk">
+            {DISPUTE_LABEL[order.dispute_status as DisputeStatus]}
+          </p>
+        ) : null}
+
         {order.flagged_reason ? (
           <div className="mb-12 border-l-2 border-signal-lift bg-graphite px-6 py-5">
             <p className="text-base text-chalk">
-              {FLAG_EXPLANATION[order.flagged_reason] ?? "This order needs a look."}
+              {isFlagReason(order.flagged_reason)
+                ? FLAG_EXPLANATION[order.flagged_reason]
+                : "This order needs a look."}
             </p>
             <form action={clearFlag} className="mt-4">
               <input type="hidden" name="id" value={order.id} />

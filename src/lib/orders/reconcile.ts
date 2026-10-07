@@ -29,6 +29,11 @@ import { applyRefundFromCharge } from "./refund.ts";
 
 export type ReconcileReport = {
   scanned: number;
+  /**
+   * Sessions left for a later run because they are younger than
+   * RECONCILE_MIN_SESSION_AGE_MINUTES: the webhook is still expected.
+   */
+  deferred?: number;
   created: number;
   alreadyRecorded: number;
   skipped: { sessionId: string; reason: string }[];
@@ -67,7 +72,23 @@ export type ReconcileOptions = {
   maxSessions?: number;
   maxRefunds?: number;
   client?: ReconcileClient;
+  /** Defaults to RECONCILE_MIN_SESSION_AGE_MINUTES. Tests pass 0. */
+  minSessionAgeMinutes?: number;
 };
+
+/**
+ * How old a session must be before the reconciler will fulfil it.
+ *
+ * The reconciler and the webhook race for every session paid while a run is
+ * going. The reconciler winning by a few seconds used to flag a perfectly
+ * normal order `reconciled` — "recovered because the webhook never delivered
+ * it" — which was false, and trained the owner to ignore the flag. A Checkout
+ * Session expires about 32 minutes after it is created (sessionExpiresAt in
+ * src/lib/stripe/checkout.ts), so one older than this is either paid or never
+ * will be, and a webhook for it has had minutes to arrive. Nothing waits longer
+ * than one extra fifteen-minute run for it.
+ */
+export const RECONCILE_MIN_SESSION_AGE_MINUTES = 35;
 
 /** The two list calls the reconciler makes: all of Stripe it touches. */
 export type ReconcileClient = {
@@ -91,12 +112,14 @@ export async function reconcileStripeSessions(
   }
 
   const since = Math.floor(Date.now() / 1000) - lookbackHours * 60 * 60;
+  const minAge = options.minSessionAgeMinutes ?? RECONCILE_MIN_SESSION_AGE_MINUTES;
+  const youngest = Math.floor(Date.now() / 1000) - minAge * 60;
 
   const client = options.client ?? stripe();
 
   for await (const session of client.checkout.sessions.list({
     status: "complete",
-    created: { gte: since },
+    created: { gte: since, lte: youngest },
     limit: 100,
   })) {
     if (pastBound(options, report.scanned, options.maxSessions)) {
@@ -105,6 +128,13 @@ export async function reconcileStripeSessions(
     }
 
     report.scanned += 1;
+
+    // Stripe filters on `lte` already; checked here too so the rule holds for
+    // any client, and so the report can say what was left for later.
+    if (typeof session.created === "number" && session.created > youngest) {
+      report.deferred = (report.deferred ?? 0) + 1;
+      continue;
+    }
 
     if (session.payment_status === "unpaid") {
       continue;

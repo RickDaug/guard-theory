@@ -166,6 +166,9 @@ export const STORED: Record<string, Record<string, Disclosure>> = {
     stripe_mode: { internal: "whether the Stripe key that took the payment was test or live" },
     refund_status: { internal: "whether any of the payment has been refunded; derived from Stripe's events" },
     refunded_cents: { internal: "how much has been refunded; derived from Stripe's events" },
+    dispute_status: {
+      internal: "whether the payment has been disputed with the card issuer, and how that ended; derived from Stripe's events",
+    },
     tracking_carrier: { internal: "the carrier for the parcel; from the postage label, not from the buyer" },
     tracking_number: { internal: "the parcel's tracking number; from the postage label, not from the buyer" },
     tracking_url: { internal: "the carrier's tracking page for that number" },
@@ -189,7 +192,7 @@ export const STORED: Record<string, Record<string, Disclosure>> = {
     quantity: { says: "what you bought" },
   },
   checkout_intent: internal(
-    ["id", "lines_json", "subtotal_cents", "shipping_cents", "created_at", "consumed_at"],
+    ["id", "lines_json", "subtotal_cents", "shipping_cents", "created_at", "consumed_at", "order_id"],
     "the cart's sizes, quantities and totals as we priced them before sending the buyer to Stripe; nothing about who is buying, and swept after a week if never paid",
   ),
   webhook_event: internal(["id", "source", "type", "received_at", "processed_at"], "a ledger of which provider events have been handled, so none is handled twice"),

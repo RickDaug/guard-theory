@@ -59,6 +59,8 @@ export type OrderRow = {
   stripe_mode: string;
   refund_status: string;
   refunded_cents: number;
+  /** Where a chargeback stands; null if there has never been one. 0011. */
+  dispute_status: string | null;
   tracking_carrier: string | null;
   tracking_number: string | null;
   tracking_url: string | null;

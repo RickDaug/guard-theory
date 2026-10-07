@@ -46,6 +46,7 @@ export type ProblemKind =
   | "reconcile-failed"
   | "reconcile-stale"
   | "refunds-failed"
+  | "disputed"
   | "unfulfilled"
   | "flagged"
   | "missing-confirmation"
@@ -61,8 +62,10 @@ export const PROBLEM_LABEL: Record<ProblemKind, string> = {
   "reconcile-failed": "The scheduled reconcile failed on its last run",
   "reconcile-stale": "The reconciler has not finished a run recently",
   "refunds-failed": "The reconciler could not read refunds from Stripe",
+  disputed: "Orders under a chargeback, or whose chargeback has just been decided",
   unfulfilled: "Paid, with no order",
-  flagged: "Orders flagged to check (oversold, or recovered by the reconciler)",
+  flagged:
+    "Orders flagged to check (oversold, paid twice, recovered by the reconciler, taken during a key swap, or a parcel that came back)",
   "missing-confirmation": "Paid orders whose confirmation was never attempted",
   email: "Order emails that did not send",
   label: "Label purchases that started and never finished",
@@ -121,10 +124,17 @@ export function modeProblems(check: ModeCheck): Problem[] {
 
 /** Everything the database says needs a person. */
 export async function collectStoredProblems(): Promise<Problem[]> {
-  const [unfulfilled, flagged, emails, labels, webhooks, missing] = await Promise.all([
+  const [unfulfilled, disputed, flagged, emails, labels, webhooks, missing] = await Promise.all([
     query<{ id: string }>("select id from unfulfilled_payment where resolved_at is null"),
+    // Open, or decided and not yet read. The status is in the key, so the
+    // outcome of a dispute already reported as open is news again.
+    query<{ id: string; dispute_status: string | null }>(
+      `select id, dispute_status from "order"
+        where dispute_status = 'open' or flagged_reason = 'disputed'`,
+    ),
     query<{ id: string }>(
-      `select id from "order" where flagged_reason in ('oversell', 'reconciled')`,
+      `select id from "order"
+        where flagged_reason in ('oversell', 'reconciled', 'duplicate-payment', 'mode-mismatch', 'delivery-problem')`,
     ),
     // The latest attempt of each message per order. A failure followed by a
     // successful resend is not a problem; anything whose latest row is not
@@ -157,6 +167,10 @@ export async function collectStoredProblems(): Promise<Problem[]> {
   ]);
 
   return [
+    ...disputed.map((row) => ({
+      kind: "disputed" as const,
+      key: `disputed:${row.id}:${row.dispute_status ?? "open"}`,
+    })),
     ...unfulfilled.map((row) => ({ kind: "unfulfilled" as const, key: `unfulfilled:${row.id}` })),
     ...flagged.map((row) => ({ kind: "flagged" as const, key: `flagged:${row.id}` })),
     ...missing.map((id) => ({ kind: "missing-confirmation" as const, key: `missing:${id}` })),

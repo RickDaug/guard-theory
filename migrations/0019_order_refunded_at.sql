@@ -1,0 +1,23 @@
+-- 0019_order_refunded_at.sql
+--
+-- When a refund was last recorded on an order.
+--
+-- Numbered 0019: 0017 is taken on an open branch (feat/announcement-campaign)
+-- and 0018 on another (feat/contact-forward). The runner applies in filename
+-- order and does not mind a gap.
+--
+-- The sales records export (/crew/orders/export) prints a refund's amount AND
+-- its date, and nothing stored the date: refunded_cents is a running figure
+-- with no timestamp. This is stamped whenever refunded_cents goes UP — by a
+-- portal refund or cancel (refundWithin) and by the charge.refunded webhook or
+-- the reconciler (applyRefundFromCharge) — and left alone when a late or
+-- repeated event changes nothing.
+--
+-- It is when WE recorded the refund: within seconds of Stripe making it for a
+-- portal refund, within one webhook delivery for a dashboard one. Stripe's own
+-- refund object remains the exact record.
+--
+-- Additive, nullable, no backfill. Refunds recorded before this migration have
+-- no date on file, and inventing one (placed_at, or now()) would put a false
+-- date into a record kept for the tax authority. The export leaves it blank.
+alter table "order" add column if not exists refunded_at timestamptz;

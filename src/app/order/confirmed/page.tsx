@@ -4,6 +4,8 @@ import { ClearCartOnMount } from "@/components/cart/ClearCartOnMount";
 import { queryOne } from "@/lib/db/client";
 import { getMailProvider } from "@/lib/mail";
 import { formatMoney } from "@/lib/money";
+import { DISPATCH_WITHIN } from "@/content/policies/shipping-terms";
+import { confirmedView, type ConfirmedOrderRow } from "@/lib/orders/confirmed-view";
 
 export const metadata: Metadata = {
   title: "Order confirmed",
@@ -26,15 +28,15 @@ export const metadata: Metadata = {
  * Reaching it with no session id at all returns 200 with an explanation. The
  * links crawl fetches it that way, and more importantly a person can arrive
  * here from history.
+ *
+ * The session id in the URL never expires, so what it reveals is limited:
+ * the email is masked, and after a day only the order number is shown
+ * (src/lib/orders/confirmed-view.ts; security audit 2026-09-29, S3-2).
  */
 export const dynamic = "force-dynamic";
 
-type OrderRow = {
+type OrderRow = ConfirmedOrderRow & {
   id: string;
-  number: string;
-  email: string;
-  total_cents: number;
-  currency: string;
   stripe_mode: string;
 };
 
@@ -52,7 +54,7 @@ export default async function OrderConfirmedPage({
   if (sessionId) {
     try {
       order = await queryOne<OrderRow>(
-        `select id, number, email, total_cents, currency, stripe_mode
+        `select id, number, email, total_cents, currency, stripe_mode, created_at
            from "order" where stripe_session_id = $1`,
         [sessionId],
       );
@@ -66,12 +68,14 @@ export default async function OrderConfirmedPage({
 
   // "We have sent a confirmation" is only said when one was: a provider that
   // actually delivers, and a row in email_log saying it went. With no provider
-  // connected every message is logged rather than sent, and the log row still
-  // reads "sent".
+  // connected a message is logged rather than sent and recorded as
+  // 'not-delivered' (0008_email_not_delivered.sql); rows written before that
+  // migration read 'sent' either way, which is why the provider is asked too.
   const mailDelivers = getMailProvider().delivers;
   let confirmationSent = false;
+  const view = order ? confirmedView(order) : null;
 
-  if (order && mailDelivers) {
+  if (order && view?.detail && mailDelivers) {
     try {
       const row = await queryOne<{ id: string }>(
         `select id from email_log
@@ -110,9 +114,15 @@ export default async function OrderConfirmedPage({
           Only when this page was reached with a session id that names a real
           order: the bare URL sits in browser history, and opening it used to
           empty whatever was in the cart that day. */}
-      {order ? <ClearCartOnMount /> : null}
+      {view?.detail ? <ClearCartOnMount /> : null}
 
-      {order ? (
+      {order && view && !view.detail ? (
+        // An old link, from history or a log. The number is enough to find the
+        // order by; the details are in the confirmation email.
+        <p className="text-lg text-steel">
+          {`This is order number ${view.number}. Its details are in the confirmation email. If you need anything, write to us with the number.`}
+        </p>
+      ) : order && view?.detail ? (
         <>
           {order.stripe_mode === "test" ? (
             <p className="border-l-2 border-signal-lift bg-graphite px-5 py-4 text-base text-chalk">
@@ -121,11 +131,11 @@ export default async function OrderConfirmedPage({
           ) : null}
           <p className="text-lg text-steel">
             {confirmationSent
-              ? `Your order is number ${order.number}. We have sent a confirmation to ${order.email}.`
-              : `Your order is number ${order.number}. Keep it: it is how we find your order if you write to us.`}
+              ? `Your order is number ${view.number}. We have sent a confirmation to ${view.maskedEmail}.`
+              : `Your order is number ${view.number}. Keep it: it is how we find your order if you write to us.`}
           </p>
           <p className="text-base text-steel">
-            {`Total charged: ${formatMoney(order.total_cents, order.currency)}, including tax and shipping.`}
+            {`Total charged: ${formatMoney(view.totalCents, view.currency)}, including tax and shipping.`}
           </p>
         </>
       ) : (
@@ -138,11 +148,11 @@ export default async function OrderConfirmedPage({
         </p>
       )}
 
-      {order ? (
+      {view?.detail ? (
         <p className="text-base text-steel">
           {mailDelivers
-            ? "Orders are packed and dispatched within seven business days. You will get a second email with a tracking number when the parcel leaves us."
-            : "Orders are packed and dispatched within seven business days."}
+            ? `Orders are packed and dispatched within ${DISPATCH_WITHIN}. You will get a second email with a tracking number when the parcel leaves us.`
+            : `Orders are packed and dispatched within ${DISPATCH_WITHIN}.`}
         </p>
       ) : null}
     </UtilityPage>

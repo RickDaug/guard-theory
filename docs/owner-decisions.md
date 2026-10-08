@@ -291,9 +291,17 @@ figures. The two sections do not overlap.)
 | c | Contact messages are "kept while we deal with them and for as long afterwards as we need to answer a follow-up" | `src/content/policies/index.ts:74` | Kept indefinitely. | decide a period, or confirm the wording is as specific as you want it |
 | d | "A person reads every message", and "answers it specifically" | `src/app/contact/page.tsx:9`, `:25`; `src/components/contact/ContactForm.tsx:78` | A message is a row in `contact_message`. Nothing notifies anyone that it arrived, and on `main` there is no screen that shows it. | confirm someone is checking the table, or have messages forwarded by email now that Resend is connected |
 | e | The optional waitlist answers "exist so the first production run is split sensibly between sleeve lengths rather than guessed at" | `src/content/policies/index.ts:58` | Stored; nothing reads them. In August you removed the size question because a brand surveying the public on what to produce reads as undecided (§5) — this sentence gives that same reason for the questions that stayed. The sweep removed the word "sizes" from it, because the field is gone, and left the purpose alone. | state the purpose you want given, or confirm this one |
-| f | "Factual errors get corrected in the piece with a dated note" | `src/app/faq/page.tsx:61` | An article can carry `updatedAt`, which is emitted as `dateModified`. There is no field for a correction note and no article has one yet, so the promise is untested. | confirm; the note field gets built the first time it is needed |
+| f | "Factual errors get corrected in the piece with a dated note" | `src/app/faq/page.tsx:61` | An article can carry `updatedAt`, which is emitted as `dateModified`. There is no field for a correction note and no article has one yet, so the promise is untested. | confirm; the note field gets built the first time it is needed. **Built 2026-09-29/30 (PRs #65, #67–#70):** corrected Journal articles and Figures entries carry a dated "Correction, …" note in the piece and an `updatedAt` (Journal emits it as `dateModified`). `/policies/corrections` describes exactly that and lists the corrected pieces from the registries; `corrections-*` claims in `src/content/claims.ts` hold the notes and dates together. |
 | g | "The list is told first, and told once" / "Once, when the First Edition opens" / "One message when it opens, and nothing else" | `src/app/faq/page.tsx:17`, `:29`; `src/app/first-edition/page.tsx:67`; `src/components/waitlist/WaitlistForm.tsx:126-127`; `src/app/shop/[slug]/page.tsx:110` | Nothing sends on `main`. The draft announcement send (PR #2) skips anyone `email_log` says already has it, which is what would enforce "once" — if a second, different message is ever wanted, these sentences forbid it. | confirm one message is the promise |
 | h | Tape "comes first" among accessories; spats and shorts follow the rash guards | `src/app/faq/page.tsx:57`; `src/app/shop/page.tsx:18-26` | §11 above still lists the accessory order as undecided. | answer §11, and the copy follows |
+
+**2026-09-29, row d (`feat/contact-forward`):** every saved contact message is
+now emailed, plain text, to `OWNER_ALERT_EMAIL` (else `REPLY_TO_EMAIL`) with the
+sender as Reply-To, and the portal's Messages screen lists them newest first
+with an answered flag. With neither address set nothing is sent and the row
+records `not-delivered`. What is still yours: set one of the two addresses, and
+read what arrives. Row c's retention is unchanged — answering a message deletes
+nothing.
 
 Also found, and not an owner question: `/email-confirmed` tells a visitor "that
 address is confirmed". No confirmation step exists, nothing links to the page,
@@ -329,3 +337,38 @@ standard, and `tests/e2e/not-found.spec.ts` records this one as the exception.
 | b. List the registry's products at build time and refuse the rest | A product created in the portal without a registry entry has no page until the next deploy — the storefront would list it and its link would 404. |
 
 **Needed:** a or b. **Interim behaviour:** a.
+
+## 15. Cancel, refund and restock — decided 2026-09-28, built
+
+**Status: decided.** You authorised the common-sense defaults from the
+decision brief (items 6 and 7), and they are now what the portal does:
+
+| When | Money | Stock | Buyer |
+|---|---|---|---|
+| **Cancel**, before the parcel has shipped | Everything not yet refunded is refunded, in the same action | Everything that was taken off the shelf goes back | Emailed that it is cancelled and what was refunded |
+| **Cancel**, after it has shipped | Refused: that is a return, not a cancel | — | — |
+| **Full refund**, before it has shipped | Refunded | Goes back on its own | (no email; the refund itself shows on their card) |
+| **Part refund**, before it has shipped | Refunded | Nothing moves — a part refund is usually a price adjustment | — |
+| **Refund after shipping** (a return) | Refunded | Nothing moves unless you tick it: each line has a "Put back in stock" box, never pre-ticked. Tick only what has come back and is fit to sell | — |
+
+Why the cancel refunds in the same action: under the FTC Mail Order Rule an
+order that is cancelled is owed a prompt refund. A cancel that relied on you
+remembering a second click was the one way to break that by accident. If Stripe
+refuses the refund, or does not answer, the order is **not** cancelled and the
+page says why — a cancelled order still holding the buyer's money cannot happen.
+
+A cancel is refused while a label purchase is in progress; one that has
+finished does not block it, and the page reminds you to void that label in
+Shippo for the postage back. Nothing can be put back in stock twice: each line
+records how much has gone back, and a double click, a second tab or a cancel
+after a full refund all find nothing left to return. A line that was oversold
+took nothing off the shelf, so a cancel puts nothing back for it.
+
+Orders cancelled before this was built kept the money and the stock. Refunding
+one of those in full now puts its stock back too.
+
+**Still yours:** the returns and cancellation wording on the policy pages
+(`src/content/policies/index.ts`) should say this. Suggested sense, not final
+text: an order can be cancelled for a full refund until it has shipped; after
+that it is a return; a returned item is refunded once it arrives and has been
+checked.

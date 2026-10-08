@@ -13,13 +13,14 @@ import type { PublishedArticle } from "../types.ts";
 export const theTriangleAndTheAngle: PublishedArticle = {
   status: "published",
   publishedAt: "2026-08-04",
+  updatedAt: "2026-09-29",
   authorId: "guard-theory-editorial",
   slug: "the-triangle-and-the-angle",
   category: "technique-notes",
   title: "The triangle, and why the angle matters more than the squeeze",
   metaTitle: "The triangle: angle over squeeze",
   standfirst:
-    "A triangle that will not finish is almost never a triangle that needs more effort; it is a triangle applied along the wrong line.",
+    "A triangle that will not finish is rarely a triangle that needs more effort; it is a triangle applied along the wrong line.",
   sections: [
     {
       id: "the-shape-and-the-assumption",
@@ -47,7 +48,7 @@ export const theTriangleAndTheAngle: PublishedArticle = {
       paragraphs: [
         "Set up square, with your opponent's head straight down your centre line, and the pressure your legs generate runs front to back. Move your hips out to the side of the trapped arm, so that your shin crosses their neck on a diagonal, and the same legs now apply across the neck rather than into the back of it. Nothing about the effort changed. The direction did.",
         "Making that angle is a hip movement. You are not turning your shoulders; you are moving your seat out from under them and pivoting around the leg that is already across. Most people learn this as an instruction to grab the shin and pull the body around, which works but describes the effect rather than the cause. The cause is that your hips and their head stop being in a straight line.",
-        "The clearest diagnostic is what your locking leg is doing. If your knee is pointing at the ceiling and your ankle is hooked over your own shin, you are square and applying front to back. If your knee has come across and down, so that your thigh is close to parallel with their shoulders, you have the angle. From there, the last increment usually comes from pulling their head toward your own hip rather than from tightening the legs at all.",
+        "The clearest diagnostic is the leg across their neck. If its knee points at the ceiling, you are square and applying front to back. If it has come across and down, so that the thigh is close to parallel with their shoulders, you have the angle. From there, the last increment usually comes from pulling the trapped arm across, or drawing their head toward your hip once the angle is made, rather than from tightening the legs.",
         "There is a common failure worth naming. Pulling the head with both hands while square feels productive because it produces a sensation, and the sensation is not the mechanism. It is also where this technique acquires its risk, which is the subject of the next section.",
       ],
     },
@@ -67,7 +68,7 @@ export const theTriangleAndTheAngle: PublishedArticle = {
       paragraphs: [
         "Beyond the crank line, the triangle is treated differently across organisations, and the differences say something about what each ruleset is protecting.",
         "The IBJJF restricts the entry rather than the position. Jumping to closed guard on a standing opponent is penalised in the under-15 division at all belts and in every white belt age group, with flying triangles named among the attacks the rule covers. The concern is a technique whose control is established mid-fall.",
-        "United World Wrestling's rules for freestyle wrestling go further than any grappling ruleset: a scissor-lock with the feet crossed on the head, neck or body is forbidden outright. Wrestling also forbids strangling in general terms. The shape that is a primary attack in one sport is a prohibited hold in its close relative, which is a useful corrective for anyone who assumes technique selection is settled by mechanics alone.",
+        "United World Wrestling's rules for freestyle wrestling forbid a scissor-lock with the feet crossed on the head, neck or body outright, and judo penalises the leg scissor it calls do-jime with disqualification. Wrestling also forbids strangling in general terms. The shape that is a primary attack in one sport is a prohibited hold in its close relative, which is a useful corrective for anyone who assumes technique selection is settled by mechanics alone.",
         "Where does that leave a reader? With the same conclusion the rules keep pointing at. The legality of a triangle in your division is a question with an answer, it is written down, and the answer is not the same everywhere. Read the rule book that governs the competition you enter, and ask a coach about the age and rank restrictions rather than inferring them from what adults in your room do.",
       ],
     },
@@ -78,13 +79,14 @@ export const theTriangleAndTheAngle: PublishedArticle = {
         "This is an argument about one variable, and the variable is not the only one. Grip on the far arm, control of the near hip, posture, and whether the opponent's knee is up or down all change what is available, and none of that is dealt with here.",
         "It also says nothing about frequency. There is a thin research literature on submissions in competition and it does not break down finishes by mechanical detail. Spanias, Kirk and Ovretveit reported that in their sample of 26 no-gi submission-only matches, time in dominant positions correlated with upper-body submissions but not with lower-body ones. That is a statement about position and category, not about triangles, and it is a small sample from two events.",
         "What remains is a practical test rather than a claim. The next time a triangle stalls, change one thing at a time. Move the hips first. If it improves, the problem was the line. If it does not, add the far-side control, then look at the arm. Squeezing harder is the last thing on that list because it is the only one on it that cannot be wrong in an interesting way.",
+        "Correction, 29 September 2026: an earlier version of this article took its angle diagnostic from the locking leg. The leg to read is the one across the neck. It also said wrestling's scissor-lock ban goes further than any grappling ruleset, which overlooked judo's disqualification for do-jime.",
       ],
     },
   ],
   sources: [
     {
       title:
-        "Sport and Organisation Rules of the International Judo Federation, version 12.03.2024, Appendix D: Article 18.1.2 item 27 on sankaku gripping the head without an arm, and the kata-sankaku provisions",
+        "Sport and Organisation Rules of the International Judo Federation, version 12.03.2024, Appendix D: Article 18.1.2 item 27 on sankaku gripping the head without an arm, the kata-sankaku provisions, and Article 18.2.2 item 3 on do-jime",
       publisher: "International Judo Federation",
       url: "https://78884ca60822a34fb0e6-082b8fd5551e97bc65e327988b444396.ssl.cf3.rackcdn.com/up/2024/04/IJF_SOR_version_12_03_2024_App-1712052995.pdf",
       accessed: "2026-08-04",

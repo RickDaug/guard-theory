@@ -145,14 +145,19 @@ export type Address = {
  * Worth knowing when tuning these: USPS removed the 4oz and 8oz commercial
  * tiers in July 2026, so everything under a pound is billed at the 12–15.99oz
  * rate. Shaving grams below a pound buys nothing.
+ *
+ * `weightOz` is the weight worked out from the order (src/lib/shipping/weight.ts).
+ * Without one, the parcel declares the fixed SHIP_PARCEL_WEIGHT_OZ it always did.
+ * The dimensions stay fixed either way: nobody has measured a multi-garment
+ * parcel, so there is no larger box to declare yet.
  */
-function parcel() {
+export function parcel(weightOz?: string) {
   return {
     length: process.env.SHIP_PARCEL_LENGTH_IN ?? "12",
     width: process.env.SHIP_PARCEL_WIDTH_IN ?? "10",
     height: process.env.SHIP_PARCEL_HEIGHT_IN ?? "1",
     distance_unit: "in",
-    weight: process.env.SHIP_PARCEL_WEIGHT_OZ ?? "10",
+    weight: weightOz ?? process.env.SHIP_PARCEL_WEIGHT_OZ ?? "10",
     mass_unit: "oz",
   };
 }
@@ -224,7 +229,11 @@ export type BoughtLabel = {
  * has the same effect as omitting it, which is why the body is JSON rather
  * than form-encoded.
  */
-export async function buyUspsLabel(to: Address, orderId: string): Promise<BoughtLabel> {
+export async function buyUspsLabel(
+  to: Address,
+  orderId: string,
+  weightOz?: string,
+): Promise<BoughtLabel> {
   const from = shipFromAddress();
 
   if (!from) {
@@ -237,7 +246,7 @@ export async function buyUspsLabel(to: Address, orderId: string): Promise<Bought
   const shipment = await shippo<Shipment>("/shipments/", {
     address_from: from,
     address_to: to,
-    parcels: [parcel()],
+    parcels: [parcel(weightOz)],
     async: false,
   });
 
@@ -271,17 +280,32 @@ export async function buyUspsLabel(to: Address, orderId: string): Promise<Bought
     async: false,
   });
 
-  if (transaction.status !== "SUCCESS" || !transaction.label_url) {
+  if (transaction.status !== "SUCCESS") {
     throw new ShippoError(
       "Shippo could not produce a label. Nothing has been bought; Shippo's dashboard shows why.",
       true,
     );
   }
 
+  // SUCCESS is a purchase. One that came back without a label or a tracking
+  // number is still paid for, so it is NOT "nothing bought": the claim on the
+  // order must stay. It used to store an empty string as the tracking number,
+  // which blocked relabelling without being a number anyone could track.
+  const trackingNumber = transaction.tracking_number?.trim() ?? "";
+
+  if (!transaction.label_url || !trackingNumber) {
+    throw new ShippoError(
+      `Shippo reports a label as bought (transaction ${transaction.object_id}) but returned no ` +
+        `${transaction.label_url ? "tracking number" : "label"}. Do not buy another: open that ` +
+        "transaction in Shippo and paste its tracking number here.",
+      false,
+    );
+  }
+
   return {
     transactionId: transaction.object_id,
     labelUrl: transaction.label_url,
-    trackingNumber: transaction.tracking_number ?? "",
+    trackingNumber,
     trackingUrl: transaction.tracking_url_provider ?? null,
     carrier: rate.provider ?? "USPS",
     amount: rate.amount,

@@ -57,7 +57,9 @@ export type CheckoutProblem =
   | "already-paid"
   | "empty"
   /** A price, a status, the stock or the shipping rate moved since the cart was priced. */
-  | "cart-changed";
+  | "cart-changed"
+  /** Too many checkouts started from one address, or from everywhere, in a short time. */
+  | "busy";
 
 /**
  * What `startCheckoutAction` returns: the Stripe URL for the browser to go to,

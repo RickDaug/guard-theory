@@ -9,6 +9,8 @@
  * docs/owner-decisions.md rather than announced to the reader on every page.
  */
 
+import { DISPATCH_WITHIN } from "./shipping-terms.ts";
+
 export type PolicySection = {
   id: string;
   heading: string;
@@ -40,15 +42,16 @@ export const POLICIES: Policy[] = [
     title: "Privacy",
     summary: "What we collect, why, how long we keep it, and how to get it deleted.",
     metaDescription:
-      "What we hold if you join the list, write to us or place an order, and the five companies that handle it for us. No analytics, no tracking scripts.",
+      "What we hold if you join the list, write to us or place an order, and the six companies that handle it for us. No analytics, no tracking scripts.",
     sections: [
       {
         id: "what-we-collect",
         heading: "What we collect",
         paragraphs: [
-          "If you join the First Edition list we collect your first name and email address, and — only if you choose to give them — how long you have been training, your preferred sleeve length, and which products interest you. We also record when you joined and that you agreed to be emailed, and when we email you we keep a record of which message was sent.",
+          "If you join the First Edition list we collect your first name and email address, and — only if you choose to give them — how long you have been training, your preferred sleeve length, and which products interest you. We also record when you joined, that you agreed to be emailed, and whether and when you confirmed your address from the link we email you. When we email you we keep a record of which message was sent.",
           "If you contact us we collect your name, email address and whatever you write to us.",
           "If you place an order we collect your email address, the name and postal address the parcel is going to, and a phone number for the shipping label. We keep those with a record of what you bought, what you paid, and each email we sent you about the order. Your card details are typed into our payment provider's page, not ours. They never reach us and we do not store them.",
+          "When you open your cart, go to pay, write to us or join the First Edition list, we count the requests coming from your network address, so that a script cannot flood any of them. We store a keyed hash of the address, never the address itself, and delete it after a day.",
           "That is the entire list. We do not ask for a date of birth, and we do not ask for an address or a phone number unless something is being posted to you.",
         ],
       },
@@ -64,22 +67,23 @@ export const POLICIES: Policy[] = [
         id: "who-else",
         heading: "Who else handles it",
         paragraphs: [
-          "Five companies each do one job for us, and each receives what that job needs.",
-          "Stripe takes payment and works out sales tax. You enter your card, email address, shipping address and phone number on Stripe's own page. Shippo buys the postage label, so it receives the name, address, phone number and email address for the parcel. Resend delivers our email, so it receives your email address and the message. Neon hosts the database all of this is stored in. Vercel hosts the site, so every request to it passes through Vercel.",
+          "Six companies each do one job for us, and each receives what that job needs.",
+          "Stripe takes payment and works out sales tax. You enter your card, email address, shipping address and phone number on Stripe's own page. Shippo buys the postage label, so it receives the name, address, phone number and email address for the parcel. Resend delivers our email, so it receives your email address and the message. Neon hosts the database all of this is stored in. Vercel hosts the site, so every request to it passes through Vercel. GitHub stores an encrypted copy of that database, taken each night and kept for fourteen days, so that it can be restored if something is lost.",
         ],
       },
       {
         id: "how-long",
         heading: "How long we keep it",
         paragraphs: [
-          "Waitlist details are kept until the First Edition has been released and you have been told, or until you ask us to delete them. Messages sent through the contact form are kept while we deal with them and for as long afterwards as we need to answer a follow-up. Ask us to delete either and we will.",
+          "Waitlist details are kept until the First Edition has been released and you have been told, or until you ask us to delete them. An address that is never confirmed is not on the list, and it is deleted 30 days after we send the link. Messages sent through the contact form are kept while we deal with them and for as long afterwards as we need to answer a follow-up. Ask us to delete either and we will.",
+          "Our encrypted nightly backups are kept for fourteen days, so something we delete can remain in a backup until that backup expires.",
         ],
       },
       {
         id: "your-rights",
         heading: "Your data, and getting rid of it",
         paragraphs: [
-          "Ask and we will tell you exactly what we hold about you, correct it, or delete it. There is no form and no reason required. Every email we send to the First Edition list carries a one-click unsubscribe. Emails about an order — the confirmation, the dispatch notice — are sent because you placed that order. They are not a mailing list, and placing an order does not add you to one.",
+          "Ask and we will tell you exactly what we hold about you, correct it, or delete it. There is no form and no reason required. Every email we send to the First Edition list carries a one-click unsubscribe. Emails about an order — the confirmation, the note that it is being prepared, the dispatch notice — are sent because you placed that order. They are not a mailing list, and placing an order does not add you to one.",
           "If you are in the UK, EU or California, you have statutory rights to access, correction, deletion and portability. We apply the same standard to everyone regardless of where they live.",
         ],
       },
@@ -145,13 +149,13 @@ export const POLICIES: Policy[] = [
     title: "Shipping",
     summary: "Where we ship, what it costs, and how long it takes.",
     metaDescription:
-      "We ship within the United States, at a flat rate shown in your cart. Orders are dispatched within seven business days, with tracking sent by email.",
+      `We ship within the United States, at a flat rate shown in your cart. Orders are dispatched within ${DISPATCH_WITHIN}, with tracking sent by email.`,
     sections: [
       {
         id: "dispatch",
         heading: "Dispatch",
         paragraphs: [
-          "Orders are packed and dispatched within seven business days of the order. You will receive a dispatch confirmation with a tracking number as soon as the parcel leaves us.",
+          `Orders are packed and dispatched within ${DISPATCH_WITHIN} of the order. You will receive a dispatch confirmation with a tracking number as soon as the parcel leaves us.`,
           "Orders placed on a weekend or a public holiday are treated as placed on the next business day.",
         ],
       },
@@ -244,7 +248,7 @@ export const POLICIES: Policy[] = [
         heading: "What this site sets",
         paragraphs: [
           "Nothing, for a reader. There is no analytics, no advertising pixel and no consent banner, because there is nothing to consent to.",
-          "The one cookie this site sets is the sign-in session for our own portal. It is set only when one of us signs in there, it expires on its own, and a reader is never given one.",
+          "The only cookies this site sets are for our own portal: the sign-in session for our own portal, and a signed note that a browser has signed in there before, which lets that browser still sign in while someone else is guessing passwords. Both are set only when one of us signs in there, both expire on their own, and a reader is never given either.",
           "That is a design decision rather than an oversight. If we ever need a cookie for readers, this page will say what it is and what it does, and it will not be set before you agree.",
         ],
       },
@@ -341,6 +345,37 @@ export const POLICIES: Policy[] = [
         paragraphs: [
           "Guard Theory makes apparel and publishes the Journal. Where an article touches something we sell, it says so.",
           "Reference material — the Technique Library, the historical writing — carries no commercial links in its body. That is what makes it worth citing.",
+        ],
+      },
+    ],
+  },
+  {
+    slug: "corrections",
+    title: "Corrections",
+    summary: "What happens when something we published turns out to be wrong.",
+    metaDescription:
+      "A factual error is corrected in the piece itself, with a dated note saying what the earlier version said. How to point one out, and which pieces carry a note.",
+    sections: [
+      {
+        id: "in-the-piece",
+        heading: "In the piece",
+        paragraphs: [
+          "When a Journal article or an Influential Figures entry gets a fact wrong, the piece is corrected and a note is added to it. The note opens with the word Correction and the date, says what the earlier version said, and says what changed. It stays in the piece.",
+          "We do not quietly edit a page and pretend it never said what it said.",
+        ],
+      },
+      {
+        id: "dates",
+        heading: "Dates",
+        paragraphs: [
+          "A correction does not change the date a piece was published. A corrected Journal article also gives search engines the date of its latest correction as the date it was last modified.",
+        ],
+      },
+      {
+        id: "telling-us",
+        heading: "Pointing one out",
+        paragraphs: [
+          "Tell us through the contact form, choosing “A correction to something we published”. Point at the specific claim and, if you have one, the source that says otherwise.",
         ],
       },
     ],

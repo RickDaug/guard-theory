@@ -6,6 +6,7 @@ import {
 } from "./types.ts";
 import { armDrag } from "./entries/arm-drag.ts";
 import { bloodChokeVersusAirChoke } from "./entries/blood-choke-versus-air-choke.ts";
+import { butterflyGuardUnderPressure } from "./entries/butterfly-guard-under-pressure.ts";
 import { butterflyHookAsLever } from "./entries/butterfly-hook-as-lever.ts";
 import { closedGuardPostureBattle } from "./entries/closed-guard-posture-battle.ts";
 import { connectionInOpenGuard } from "./entries/connection-in-open-guard.ts";
@@ -13,10 +14,14 @@ import { deLaRivaHook } from "./entries/de-la-riva-hook.ts";
 import { elbowKneeEscape } from "./entries/elbow-knee-escape.ts";
 import { framesVersusBlocks } from "./entries/frames-versus-blocks.ts";
 import { gettingHipsUnderneath } from "./entries/getting-hips-underneath.ts";
+import { guardRetentionIsTheKneeBetween } from "./entries/guard-retention-is-the-knee-between.ts";
 import { insidePosition } from "./entries/inside-position.ts";
 import { kneeCutPass } from "./entries/knee-cut-pass.ts";
 import { kneeShield } from "./entries/knee-shield.ts";
 import { legEntanglementAsControl } from "./entries/leg-entanglement-as-control.ts";
+import { mountIsAHipPin } from "./entries/mount-is-a-hip-pin.ts";
+import { pressurePassingVersusLoosePassing } from "./entries/pressure-passing-versus-loose-passing.ts";
+import { retentionLadderFrameAngleInvertRecover } from "./entries/retention-ladder-frame-angle-invert-recover.ts";
 import { seatBeltAndHooks } from "./entries/seat-belt-and-hooks.ts";
 import { sweepingTowardTheMissingPost } from "./entries/sweeping-toward-the-missing-post.ts";
 import { underhookHalfGuard } from "./entries/underhook-half-guard.ts";
@@ -29,6 +34,7 @@ import { underhookHalfGuard } from "./entries/underhook-half-guard.ts";
 export const ENTRIES: TechniqueEntry[] = [
   armDrag,
   bloodChokeVersusAirChoke,
+  butterflyGuardUnderPressure,
   butterflyHookAsLever,
   closedGuardPostureBattle,
   connectionInOpenGuard,
@@ -36,10 +42,14 @@ export const ENTRIES: TechniqueEntry[] = [
   elbowKneeEscape,
   framesVersusBlocks,
   gettingHipsUnderneath,
+  guardRetentionIsTheKneeBetween,
   insidePosition,
   kneeCutPass,
   kneeShield,
   legEntanglementAsControl,
+  mountIsAHipPin,
+  pressurePassingVersusLoosePassing,
+  retentionLadderFrameAngleInvertRecover,
   seatBeltAndHooks,
   sweepingTowardTheMissingPost,
   underhookHalfGuard,

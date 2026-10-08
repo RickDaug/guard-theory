@@ -53,6 +53,19 @@ const WALKTHROUGHS: Walkthrough[] = [
     note: "A sale price has to be lower than the price, or it is just the price. Leave it empty when there is no sale.",
   },
   {
+    id: "new-product",
+    title: "Add a new product",
+    standfirst:
+      "A new product is a draft, off the storefront, until it has everything a product page states.",
+    steps: [
+      "Open Products and fill in New product: its name, what kind of garment it is, and the web address if you want a particular one.",
+      "Under Sizes, add each size it comes in, using the sizes in the size and fit guide.",
+      "Under Words and specification, write the summary and the description, and fill in the fabric weight, composition, seam construction and print method.",
+      "Then put it on sale as above: price, stock, Live.",
+    ],
+    note: "If something is missing when you press Save, the page lists what, and the product stays a draft. Photographs are added by the developer for now.",
+  },
+  {
     id: "sold-out",
     title: "Take something off sale",
     standfirst: "Two ways, and they say different things to a reader.",
@@ -64,15 +77,28 @@ const WALKTHROUGHS: Walkthrough[] = [
     note: "Sold out sends people to the First Edition list. It does not promise a restock, because the site never has.",
   },
   {
+    id: "cancel",
+    title: "Cancel an order",
+    standfirst:
+      "Before it ships, a cancel is one button: the buyer is refunded, the stock goes back, and they are told.",
+    steps: [
+      "Open the order.",
+      "Press Cancel and refund. The amount on the button is what goes back to their card.",
+      "If Stripe refuses or does not answer, the order is not cancelled and the page says why. Nothing has changed, so read the reason before trying again.",
+    ],
+    note: "Once it has shipped it cannot be cancelled. If the buyer sends it back, that is a return — see the next walkthrough.",
+  },
+  {
     id: "refund",
     title: "Refund someone",
     standfirst: "The money goes back to the card it came from. There is nothing to enter.",
     steps: [
       "Open the order.",
       "Leave the amount empty to refund all of what is left, or type an amount for part of it.",
+      "For a return, tick each item that has come back and is fit to sell again. Leave the box empty for anything worn, damaged or still in the post.",
       "Press Refund.",
     ],
-    note: "The order stays flagged afterwards so it is easy to find again. Press I have dealt with this to clear the flag once you are done.",
+    note: "Before an order ships, a full refund puts its stock back on its own and a part refund does not. After it ships, stock only goes back when you tick it. The order stays flagged afterwards so it is easy to find again; press I have dealt with this to clear the flag once you are done.",
   },
   {
     id: "flagged",
@@ -80,7 +106,7 @@ const WALKTHROUGHS: Walkthrough[] = [
     standfirst:
       "Some orders cannot be decided by software. They appear under Needs you, each with a sentence saying what happened.",
     steps: [
-      "Oversold means two people paid for the last one. Both were charged. Either find another, or refund one of them — that is your call, not the shop's.",
+      "Oversold means two people paid for the last one. Both were charged. Either find another, or cancel one of them, which refunds them — that is your call, not the shop's.",
       "Recovered means the order arrived without the usual notification and was found later. Check the items and the address especially carefully before shipping.",
       "Refunded means money has gone back. Nothing to do except clear the flag.",
     ],

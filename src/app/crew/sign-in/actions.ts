@@ -1,14 +1,18 @@
 "use server";
 
-import { headers } from "next/headers";
+import { cookies, headers } from "next/headers";
 import { redirect } from "next/navigation";
 import { verifyPassword } from "@/lib/portal/auth";
 import { createSession, destroySession, sweepExpiredSessions } from "@/lib/portal/session";
 import { portalUrl, safeNextPath } from "@/lib/portal/routes";
 import {
+  KNOWN_DEVICE_DAYS,
   addressKey,
   beginLoginAttempt,
+  isKnownDevice,
+  knownDeviceCookieName,
   markAttemptSucceeded,
+  signKnownDevice,
   sweepLoginAttempts,
 } from "@/lib/portal/attempts";
 import type { PortalFormState } from "@/lib/portal/form-state";
@@ -45,7 +49,7 @@ export async function signIn(
   const password = formData.get("password");
 
   if (typeof password !== "string" || password === "") {
-    return { status: "error", message: "Enter the password." };
+    return { status: "error", message: "Enter the password.", field: "password" };
   }
 
   // The limiter lives in Postgres, so every instance counts against the same
@@ -53,10 +57,17 @@ export async function signIn(
   // the password is examined. If the limiter cannot be reached, nobody signs
   // in: the session table is in the same database, so there is nothing to gain
   // by pressing on, and an unmetered scrypt is the thing being defended.
+  //
+  // A browser that has signed in before carries a signed known-device cookie and
+  // is exempt from the all-callers cap, so a botnet saturating it cannot lock
+  // the owner out. It is still held to its own per-address cap. The trade-off is
+  // written up at the top of src/lib/portal/attempts.ts.
+  const store = await cookies();
+  const knownDevice = isKnownDevice(store.get(knownDeviceCookieName())?.value, hash);
   let gate;
 
   try {
-    gate = await beginLoginAttempt(addressKey(await clientAddress(), hash));
+    gate = await beginLoginAttempt(addressKey(await clientAddress(), hash), { knownDevice });
   } catch (error) {
     console.error(
       "[guard-theory] sign-in limiter unavailable:",
@@ -81,7 +92,7 @@ export async function signIn(
     // One message for a wrong password and for anything else that failed. There
     // is one account, so there is nothing to enumerate, and nothing to gain by
     // being more specific.
-    return { status: "error", message: "That password is not right." };
+    return { status: "error", message: "That password is not right.", field: "password" };
   }
 
   await markAttemptSucceeded(gate.attemptId).catch(() => {});
@@ -103,6 +114,18 @@ export async function signIn(
       message: "The password was right, but we could not start a session. Try again in a moment.",
     };
   }
+
+  // Remember this browser, or refresh how long it is remembered. Keyed on the
+  // password hash, so changing the password forgets every browser at once.
+  store.set(knownDeviceCookieName(), signKnownDevice(hash), {
+    httpOnly: true,
+    // Only ever read by this form's own POST, so it never needs to travel cross-site.
+    sameSite: "strict",
+    // __Host- (production) requires Secure, Path=/ and no Domain.
+    secure: process.env.NODE_ENV === "production",
+    path: "/",
+    maxAge: KNOWN_DEVICE_DAYS * 24 * 60 * 60,
+  });
 
   // An allowlist, inside the portal only. See safeNextPath.
   const target = safeNextPath(formData.get("next")) ?? portalUrl();

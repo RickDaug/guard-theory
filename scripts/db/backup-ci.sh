@@ -44,6 +44,13 @@ MIN_PASSPHRASE_CHARS=32
 # than this. Anything smaller is a header and an apology.
 MIN_DUMP_BYTES="${BACKUP_MIN_DUMP_BYTES:-4096}"
 PROBE_IMAGE="postgres:17-alpine"
+# Schemas Neon creates and manages itself, left out of the dump. neon_auth is
+# Neon Auth's; this app does not use it (nothing in src/ or migrations/ names
+# it), and a Neon database that already has it — any branch of production,
+# any new project with Neon Auth on — refuses a dump that creates it again
+# ("schema neon_auth already exists"). Keep in step with NEON_MANAGED_SCHEMAS
+# in restore-verify-ci.sh.
+NEON_MANAGED_SCHEMAS=(neon_auth)
 
 [ -n "${BACKUP_DATABASE_URL:-}" ] || fail "the BACKUP_DATABASE_URL secret is not set. See docs/database-runbook.md."
 [ -n "${BACKUP_PASSPHRASE:-}" ] || fail "the BACKUP_PASSPHRASE secret is not set. An unencrypted dump is never uploaded, so there is nothing to do."
@@ -115,8 +122,13 @@ fi
 
 echo "backup: server is Postgres ${major}; dumping with postgres:${major}-alpine"
 
+exclude=""
+for schema in "${NEON_MANAGED_SCHEMAS[@]}"; do
+  exclude="${exclude} --exclude-schema=${schema}"
+done
+
 in_postgres "postgres:${major}-alpine" \
-  'pg_dump --dbname="$BACKUP_DATABASE_URL" --format=custom --compress=9 --no-owner --no-privileges' \
+  "pg_dump --dbname=\"\$BACKUP_DATABASE_URL\" --format=custom --compress=9 --no-owner --no-privileges${exclude}" \
   >"$plain" 2>"$work/pg_dump.err" || {
   redacted "$work/pg_dump.err"
   fail "pg_dump failed."
@@ -135,9 +147,23 @@ tables="$(printf '%s\n' "$toc" | grep -c ' TABLE DATA ' || true)"
 
 [ "$tables" -ge 1 ] || fail "the archive lists no table data at all."
 
+# A here-string, never `printf | grep -q`: grep -q exits at its first match,
+# and under pipefail the printf still writing the rest of the listing can die
+# of SIGPIPE, which fails the pipeline — a table that IS there reported as
+# missing. Production's listing is long, so the nightly run is the likelier
+# victim; the test's three-line listing lost the race once in CI.
 for required in _migration waitlist_signup; do
-  printf '%s\n' "$toc" | grep -q " TABLE DATA public ${required} " ||
+  grep -q " TABLE DATA public ${required} " <<<"$toc" ||
     fail "the archive has no data entry for \"${required}\". This is not the production database, or not all of it."
+done
+
+# The exclusion held: nothing of Neon's own is in the file. A listing line is
+# "<id>; <oid> <oid> <type, one or two words> <schema or -> <name> <owner>", so
+# any word after the oids but before the owner naming the schema counts.
+for schema in "${NEON_MANAGED_SCHEMAS[@]}"; do
+  if awk -v s="$schema" '/^[0-9]+;/ { for (i = 4; i < NF; i++) if ($i == s) found = 1 } END { exit !found }' <<<"$toc"; then
+    fail "the archive still holds Neon's ${schema} schema. It would not restore into a Neon database that already has one."
+  fi
 done
 
 echo "backup: archive is ${bytes} bytes with ${tables} tables"

@@ -54,7 +54,7 @@ test.describe("First Edition waitlist", () => {
     await expect(page.getByText(/includes an @ symbol/i).first()).toBeVisible();
   });
 
-  test("accepts a valid submission and confirms in the same words as the button", async ({
+  test("accepts a valid submission and asks the address to confirm", async ({
     page,
   }) => {
     await page.goto("/first-edition");
@@ -67,12 +67,30 @@ test.describe("First Edition waitlist", () => {
 
     const confirmation = page.getByRole("status");
     await expect(confirmation).toBeVisible();
-    await expect(confirmation).toContainText(/you're on the list/i);
+    // Double opt-in: the address is pending until its owner presses Confirm
+    // on the emailed link, so the form must not say it is on the list.
+    await expect(confirmation).toContainText(/check your email/i);
+    await expect(confirmation).not.toContainText(/you're on the list/i);
 
     // The form is gone — there is nothing left to submit.
     await expect(
       page.getByRole("button", { name: /join the first edition list/i }),
     ).toHaveCount(0);
+  });
+
+  test("the confirmation link's page writes nothing until Confirm is pressed", async ({
+    page,
+  }) => {
+    // A token of the right shape that we never signed: opening it must show a
+    // button, not an outcome, and pressing it must say the link is not ours.
+    const forged = `${Buffer.from("00000000-0000-4000-8000-000000000000").toString("base64url")}.9999999999.${"A".repeat(43)}`;
+    await page.goto(`/first-edition/confirm?t=${forged}`);
+
+    await expect(page.getByRole("button", { name: /confirm my address/i })).toBeVisible();
+    await expect(page.getByRole("status")).toHaveCount(0);
+
+    await page.getByRole("button", { name: /confirm my address/i }).click();
+    await expect(page.getByText(/that link is not ours/i)).toBeVisible();
   });
 
   test("never pre-checks marketing consent", async ({ page }) => {

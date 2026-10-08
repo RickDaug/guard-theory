@@ -12,11 +12,19 @@ export const metadata: Metadata = pageMetadata({
 });
 
 /**
- * The cart is per-reader and lives in localStorage, so there is nothing here to
- * prerender and nothing a crawler should index. Reaching it with an empty cart
- * is the ordinary case, not an error — the links crawl fetches it that way.
+ * Prerendered, deliberately — not `force-dynamic`.
+ *
+ * The cart is per-reader and lives in localStorage, so the server has nothing
+ * to say about it: this shell is identical for every reader, and CartView fills
+ * it in the browser. Prices are re-read on the server by `priceCartAction` and
+ * again at checkout, so a static shell cannot show a stale price or stock
+ * figure — it shows none at all. Rendering it per request bought nothing but a
+ * function invocation on every visit (live: `x-vercel-cache: MISS`, ~230ms
+ * TTFB, against a CDN hit for prerendered pages).
+ *
+ * Nothing a crawler should index either. Reaching it with an empty cart is the
+ * ordinary case, not an error — the links crawl fetches it that way.
  */
-export const dynamic = "force-dynamic";
 
 export default function CartPage() {
   return (

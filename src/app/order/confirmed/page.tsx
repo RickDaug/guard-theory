@@ -1,3 +1,4 @@
+import { pageMetadata } from "@/lib/metadata";
 import type { Metadata } from "next";
 import { UtilityPage } from "@/components/site/UtilityPage";
 import { ClearCartOnMount } from "@/components/cart/ClearCartOnMount";
@@ -7,9 +8,22 @@ import { formatMoney } from "@/lib/money";
 import { DISPATCH_WITHIN } from "@/content/policies/shipping-terms";
 import { confirmedView, type ConfirmedOrderRow } from "@/lib/orders/confirmed-view";
 
+/*
+ * Built by pageMetadata like every other route, so a link to this page (it
+ * gets pasted: it is where a buyer lands) carries its own URL and the share
+ * card rather than the home page's og:url and no image. The title and
+ * description claim no order, because the page itself only shows one when it
+ * finds one: the bare URL answers with "we do not have an order to show".
+ * noindex AND nofollow, as before — nothing on it is for a crawler.
+ */
 export const metadata: Metadata = {
-  title: "Order confirmed",
-  description: "Your Guard Theory order has been received.",
+  ...pageMetadata({
+    title: "Your order",
+    description:
+      "Where a Guard Theory order is confirmed after payment, with its order number once the payment has reached us.",
+    path: "/order/confirmed",
+    indexable: false,
+  }),
   robots: { index: false, follow: false },
 };
 

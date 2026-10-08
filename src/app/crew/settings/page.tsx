@@ -62,7 +62,7 @@ function Section({ id, title, rows }: { id: string; title: string; rows: Row[] }
 }
 
 export default async function SettingsPage() {
-  await requirePortalPage(portalUrl("/settings"));
+  await requirePortalPage(portalUrl("/settings"), "owner");
 
   const now = new Date();
   const hasDb = isDatabaseConfigured();

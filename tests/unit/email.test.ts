@@ -190,6 +190,7 @@ describe("replies can be routed somewhere that exists", () => {
       // List mail's own RFC 8058 headers (unsubscribe-post.test.ts); not a reply-to.
       headers: EMAIL.headers,
     });
+    assert.ok(EMAIL.headers?.["List-Unsubscribe"], "the fixture carries List-Unsubscribe");
   });
 
   it("malformed: dropped with a warning, never a throw", () => {

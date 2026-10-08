@@ -6,6 +6,7 @@ import { portalUrl } from "@/lib/portal/routes";
 import { getSession } from "@/lib/portal/session";
 import { PortalNav } from "./PortalNav";
 import { signOut } from "./sign-in/actions";
+import { roleAllows, type Role } from "@/lib/portal/roles";
 
 export const metadata: Metadata = {
   robots: { index: false, follow: false, nocache: true },
@@ -31,16 +32,18 @@ export const metadata: Metadata = {
  * the banner disappearing.
  */
 
-const NAV = [
-  { href: "", label: "Today" },
-  { href: "/orders/ship", label: "To ship" },
-  { href: "/orders", label: "Orders" },
-  { href: "/products", label: "Products" },
-  { href: "/categories", label: "Categories" },
-  { href: "/list", label: "First Edition" },
-  { href: "/messages", label: "Messages" },
-  { href: "/settings", label: "Settings" },
-  { href: "/learn", label: "Learn" },
+/** `owner` items are hidden from crew. Each page also refuses them itself. */
+const NAV: { href: string; label: string; needs: Role }[] = [
+  { href: "", label: "Today", needs: "crew" },
+  { href: "/orders/ship", label: "To ship", needs: "crew" },
+  { href: "/orders", label: "Orders", needs: "crew" },
+  { href: "/products", label: "Products", needs: "crew" },
+  { href: "/categories", label: "Categories", needs: "owner" },
+  { href: "/list", label: "First Edition", needs: "owner" },
+  { href: "/messages", label: "Messages", needs: "owner" },
+  { href: "/settings", label: "Settings", needs: "owner" },
+  { href: "/users", label: "Crew", needs: "owner" },
+  { href: "/learn", label: "Learn", needs: "crew" },
 ];
 
 async function ModeBanner() {
@@ -111,9 +114,12 @@ export default async function CrewLayout({ children }: { children: React.ReactNo
 
   return (
     <div className="min-h-screen">
-      <ModeBanner />
+      {/* Neither the banner nor the navigation belongs on a printed packing slip. */}
+      <div className="print:hidden">
+        <ModeBanner />
+      </div>
 
-      <header className="border-b border-steel-dim px-6 py-5 md:px-12">
+      <header className="border-b border-steel-dim px-6 py-5 md:px-12 print:hidden">
         <div className="mx-auto flex max-w-[104rem] flex-wrap items-center gap-x-8 gap-y-3">
           <Link
             href={portalUrl()}
@@ -123,8 +129,14 @@ export default async function CrewLayout({ children }: { children: React.ReactNo
           </Link>
 
           <PortalNav
-            items={NAV.map((item) => ({ href: portalUrl(item.href), label: item.label }))}
+            items={NAV.filter((item) => roleAllows(session.role, item.needs)).map((item) => ({
+              href: portalUrl(item.href),
+              label: item.label,
+            }))}
           >
+            <li>
+              <span className="text-sm text-steel">{session.name}</span>
+            </li>
             <li>
               {/*
                 signOut existed with nothing calling it, so the only way out

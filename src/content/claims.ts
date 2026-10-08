@@ -131,6 +131,21 @@ export const STORED: Record<string, Record<string, Disclosure>> = {
     created_at: { internal: "when the send was attempted" },
     order_id: { says: "each email we sent you about the order" },
   },
+  /* The announcement's send record: what we wrote, and how far its send got. */
+  announcement_campaign: internal(
+    ["id", "subject", "body", "status", "recipients", "last_stop", "created_at", "updated_at", "finished_at"],
+    "a message we wrote to the list and the progress of sending it; nothing in it is about a reader",
+  ),
+  announcement_delivery: {
+    campaign_id: { internal: "which of our messages the row belongs to" },
+    email: { says: "a record of which message was sent" },
+    position: { internal: "the order the list is sent in" },
+    status: { internal: "whether the send worked" },
+    attempts: { internal: "a retry counter" },
+    email_log_id: { internal: "the matching row in our own send log" },
+    error: { internal: "the provider's error text when it did not" },
+    updated_at: { internal: "when the send was attempted" },
+  },
 
   /* The catalogue. Nothing in these five tables is about a person. */
   category: internal(["id", "slug", "name", "active", "sort_index"], "the catalogue: a product category the owner edits in the portal"),
@@ -222,8 +237,20 @@ export const STORED: Record<string, Record<string, Disclosure>> = {
 
   /* The portal. These rows are about whoever signs in to it — the owner — never a reader. */
   admin_session: internal(
-    ["token_hash", "created_at", "expires_at", "last_seen", "ip", "user_agent"],
-    "the portal sign-in session: a hash of the owner's session token, its lifetime, and the address and browser it was opened from",
+    ["token_hash", "created_at", "expires_at", "last_seen", "ip", "user_agent", "user_id"],
+    "the portal sign-in session: a hash of a crew member's session token, whose it is, its lifetime, and the address and browser it was opened from",
+  ),
+  crew_user: internal(
+    ["id", "username", "email", "display_name", "role", "password_hash", "active", "created_at", "last_sign_in_at"],
+    "the portal's own crew accounts — people the owner adds to pack orders, never a reader; the password is an scrypt hash",
+  ),
+  crew_token: internal(
+    ["token_hash", "user_id", "purpose", "created_at", "expires_at", "used_at", "delivery"],
+    "a crew member's one-time set-password link: a hash of the token, never the token, and whether its email went",
+  ),
+  order_event: internal(
+    ["id", "order_id", "kind", "detail", "actor_user_id", "actor_name", "created_at"],
+    "which crew member did what to an order in the portal; about the crew, not the buyer",
   ),
   login_attempt: internal(
     ["id", "key_hash", "succeeded", "attempted_at"],
@@ -463,6 +490,8 @@ export const HOSTS_THAT_RECEIVE_NOTHING: Record<string, string> = {
     "the carrier's tracking page, linked from the shipped email and the order page; the buyer's browser requests it if they click, this site never does",
   evil: "an example in a comment of the spreadsheet formula the CSV export refuses; never requested",
   "evil.example": "an example in a comment of the redirect the sign-in return check refuses; never requested",
+  "guardtheory.net.example.com":
+    "an example in a comment of a site URL the announcement script refuses to send from; never requested",
 };
 
 /** Runtime dependencies, and why each does or does not move data off the site. */
@@ -472,6 +501,10 @@ export const DEPENDENCIES: Record<string, string> = {
   "react-dom": "sends nothing anywhere",
   pg: "the Postgres driver; accounted for as the processor Neon",
   stripe: "the Stripe SDK; accounted for as the processor Stripe",
+  "@vercel/blob":
+    "stores the product photographs the owner uploads in the Crew Portal, in Vercel Blob; no reader data goes through it, and Vercel is already a named processor",
+  sharp:
+    "re-encodes an uploaded product photograph on the server, removing its location and camera metadata; sends nothing anywhere",
 };
 
 function externalHosts(context: ClaimContext): string[] {
@@ -563,6 +596,9 @@ export const TRANSACTIONAL_MAIL = [
   // Sent to us, not to a reader: a contact message forwarded to the owner's
   // inbox, with the sender as Reply-To. Nobody joined a list to get it.
   "contactForward",
+  // Sent to someone the owner added to the Crew Portal: a one-time link to
+  // choose their password. Staff mail, not list mail.
+  "crewSetPassword",
 ];
 
 function listMailCarriesUnsubscribe(): true | string {
@@ -1213,7 +1249,11 @@ export const CLAIMS: Claim[] = [
       if (!read("src/app/first-edition/actions.ts").includes("purgeUnconfirmed(")) {
         return "nothing calls purgeUnconfirmed any more, so unconfirmed addresses are kept indefinitely";
       }
-      if (!read("src/app/crew/list/actions.ts").includes("consent_state in ('confirmed', 'legacy')")) {
+      const announcement = read("src/lib/mail/announcement.ts");
+      if (
+        !announcement.includes(`ON_THE_LIST = "consent_state in ('confirmed', 'legacy')"`) ||
+        (announcement.match(/and \$\{ON_THE_LIST\}/g) ?? []).length < 3
+      ) {
         return "the announcement no longer limits itself to confirmed (and legacy) addresses, so an unconfirmed one is on the list after all";
       }
       return true;

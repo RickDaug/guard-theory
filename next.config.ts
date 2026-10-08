@@ -105,6 +105,32 @@ const securityHeaders = [
   },
 ];
 
+/**
+ * The one host product photographs are fetched from: NEXT_PUBLIC_BLOB_HOSTNAME
+ * when it is set, otherwise the public host of the store named in
+ * BLOB_READ_WRITE_TOKEN (`vercel_blob_rw_<store id>_<secret>` →
+ * `<store id>.public.blob.vercel-storage.com`). Read at BUILD time, so a store
+ * connected after the last deploy needs a redeploy before its photographs show.
+ *
+ * The same decision as blobHostname() in src/lib/images/host.ts, written out
+ * here because this file is loaded before the path aliases exist.
+ * tests/unit/images.test.ts runs both against the same inputs.
+ */
+export function photographHost(env: Record<string, string | undefined> = process.env): string | null {
+  const explicit = env.NEXT_PUBLIC_BLOB_HOSTNAME?.trim().toLowerCase();
+  if (explicit) return explicit;
+
+  const parts = (env.BLOB_READ_WRITE_TOKEN ?? "").trim().split("_");
+  const storeId = parts[3];
+  const isToken = parts.length >= 5 && parts[0] === "vercel" && parts[1] === "blob" && parts[2] === "rw";
+
+  return isToken && storeId && /^[A-Za-z0-9]+$/.test(storeId)
+    ? `${storeId.toLowerCase()}.public.blob.vercel-storage.com`
+    : null;
+}
+
+const PHOTOGRAPH_HOST = photographHost();
+
 const nextConfig: NextConfig = {
   poweredByHeader: false,
 
@@ -128,6 +154,17 @@ const nextConfig: NextConfig = {
     // mechanism changes. See docs/technical-architecture.md (or AGENTS.md's
     // "Gotchas" section) for how this was diagnosed.
     useTypeScriptCli: true,
+
+    // Product photographs are uploaded through a server action (the Crew
+    // Portal's product editor). The default 1 MB would refuse every one; the
+    // upload's own limit is 4 MB (src/lib/images/validate.ts), plus room for
+    // multipart framing, and 4.5 MB is also Vercel's ceiling for a function's
+    // request body, so nothing larger could arrive anyway. This limit is
+    // global: the public actions (waitlist, contact, cart) validate and rate
+    // limit their own fields and read nothing near this size.
+    serverActions: {
+      bodySizeLimit: "4.5mb",
+    },
   },
 
   images: {
@@ -154,11 +191,11 @@ const nextConfig: NextConfig = {
     //
     // The hostname is pinned rather than wildcarded: `remotePatterns` treats an
     // omitted pathname as `**`, which Next's own documentation warns against.
-    remotePatterns: process.env.NEXT_PUBLIC_BLOB_HOSTNAME
+    remotePatterns: PHOTOGRAPH_HOST
       ? [
           {
             protocol: "https" as const,
-            hostname: process.env.NEXT_PUBLIC_BLOB_HOSTNAME,
+            hostname: PHOTOGRAPH_HOST,
             port: "",
             pathname: "/**",
           },

@@ -30,7 +30,7 @@ function received(at: Date): string {
  * recorded. Newest first. Unanswered messages carry the live-state rule.
  */
 export default async function MessagesPage() {
-  await requirePortalPage(portalUrl("/messages"));
+  await requirePortalPage(portalUrl("/messages"), "owner");
 
   if (!isDatabaseConfigured()) {
     return (

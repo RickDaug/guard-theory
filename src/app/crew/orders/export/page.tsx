@@ -26,7 +26,7 @@ export default async function SalesExportPage({
 }: {
   searchParams: Promise<{ error?: string | string[] }>;
 }) {
-  await requirePortalPage(portalUrl("/orders/export"));
+  await requirePortalPage(portalUrl("/orders/export"), "owner");
 
   const params = await searchParams;
   const error = exportErrorMessage(Array.isArray(params.error) ? params.error[0] : params.error);
@@ -118,6 +118,13 @@ export default async function SalesExportPage({
         <p className="max-w-[46rem] text-base text-steel">
           Refunds recorded before this export existed have no date on file, and that column is
           left blank for them rather than guessed.
+        </p>
+        <p className="mt-4 max-w-[46rem] text-base text-steel">
+          A chargeback the shop lost is its own column, &ldquo;lost to chargeback&rdquo;, and is
+          taken out of net: the bank gave that money back to the buyer. Stripe&rsquo;s dispute fee
+          is not in this file; it is on the Stripe balance report. A second payment for a cart
+          that was already paid is not an order, so it is not here either; it is listed under
+          Needs you until it is dealt with.
         </p>
       </div>
     </main>

@@ -127,10 +127,12 @@ describe("structured data", () => {
 });
 
 describe("every portal action authorises itself", () => {
-  it("requireSession() is the first statement of every exported action", () => {
+  it("requireRole() is the first statement of every exported action", () => {
     // The proxy redirects a signed-out browser, but a server action is a POST
     // anyone can send, and a proxy matcher is not a boundary. Sign-in and
-    // sign-out are the two that must work without a session.
+    // sign-out must work without a session, and setting a password from an
+    // emailed link carries a single-use token instead. Which role each action
+    // demands is checked in tests/unit/crew-actions-guard.test.ts.
     const root = path.resolve(import.meta.dirname, "..", "..", "src", "app", "crew");
     const files: string[] = [];
     const walk = (dir: string) => {
@@ -143,7 +145,7 @@ describe("every portal action authorises itself", () => {
     walk(root);
     assert.ok(files.length >= 3, "expected to find the portal's action files");
 
-    const exempt = new Set(["signIn", "signOut"]);
+    const exempt = new Set(["signIn", "signOut", "setPassword"]);
     const unguarded: string[] = [];
     let checked = 0;
 
@@ -154,7 +156,7 @@ describe("every portal action authorises itself", () => {
         const [, name, first] = match;
         if (exempt.has(name!)) continue;
         checked += 1;
-        if (!/^await requireSession\(\);/.test(first!.trim())) {
+        if (!/^(const \w+ = )?await requireRole\("(crew|owner)"\);/.test(first!.trim())) {
           unguarded.push(`${path.relative(root, file)}: ${name}`);
         }
       }
@@ -244,7 +246,7 @@ describe("the known-device cookie", () => {
     const check = body.indexOf("isKnownDevice(");
     const gate = body.indexOf("beginLoginAttempt(");
     const verified = body.indexOf("verifyPassword(");
-    const set = body.indexOf("store.set(knownDeviceCookieName(), signKnownDevice(hash)");
+    const set = body.indexOf("store.set(knownDeviceCookieName(), signKnownDevice(secret)");
     assert.ok(check !== -1 && check < gate, "the cookie is checked before the gate");
     assert.match(body, /beginLoginAttempt\([^;]*\{ knownDevice \}\)/);
     assert.ok(verified !== -1 && set > verified, "set only once the password is right");

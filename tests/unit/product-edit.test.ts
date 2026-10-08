@@ -15,6 +15,7 @@ import {
   saveContent,
   skuFor,
   slugify,
+  NEEDS_PHOTOGRAPH,
   storefrontProblems,
   storefrontProblemsFor,
   type EditResult,
@@ -52,6 +53,7 @@ const WHOLE: StorefrontCheck = {
   description: "Fixture description",
   specs: PUBLISHED_SPECIFICATIONS.map((label) => ({ label, value: `fixture ${label}` })),
   sizeLabels: ["M"],
+  imageAlts: ["Fixture garment laid flat, front view, on white."],
 };
 
 describe("reading the new-product form", () => {
@@ -144,9 +146,11 @@ describe("what a product needs before the storefront", () => {
       description: null,
       specs: PUBLISHED_SPECIFICATIONS.map((label) => ({ label, value: null })),
       sizeLabels: [],
+      imageAlts: [],
     });
     assert.ok(problems.includes("a price"));
     assert.ok(problems.includes("at least one size"));
+    assert.ok(problems.includes(NEEDS_PHOTOGRAPH));
     assert.ok(problems.includes("a summary"));
     assert.ok(problems.includes("a description"));
     for (const label of PUBLISHED_SPECIFICATIONS) {
@@ -175,6 +179,7 @@ describe("what a product needs before the storefront", () => {
         priceCents: 100,
         specs: product.specifications,
         sizeLabels: product.sizeLabels.length > 0 ? product.sizeLabels : ["M"],
+        imageAlts: WHOLE.imageAlts,
       });
       if (product.specSource === "owner") {
         assert.deepEqual(problems, [], product.slug);
@@ -195,13 +200,14 @@ describe("the product actions", () => {
   // Source-level, because the actions need a request and a session.
   const action = readFileSync(new URL("../../src/app/crew/products/actions.ts", import.meta.url), "utf8");
 
-  it("every exported action checks the session before anything else", () => {
+  it("every exported action checks for the OWNER before anything else", () => {
     const bodies = action.split(/^export async function /m).slice(1);
     assert.ok(bodies.length >= 8, `found ${bodies.length} actions`);
     for (const body of bodies) {
       const name = body.slice(0, body.indexOf("("));
       const opening = body.slice(body.indexOf("{", body.indexOf(")")) + 1).trimStart();
-      assert.match(opening, /^await requireSession\(\);/, `${name} does not start with requireSession()`);
+      // Owner, not crew: crew see the catalogue and change none of it.
+      assert.match(opening, /^await requireRole\("owner"\);/, `${name} does not start with requireRole("owner")`);
     }
   });
 
@@ -221,9 +227,17 @@ describe("the product actions", () => {
     assert.match(action, /applyStockEdits\(/);
   });
 
-  it("says plainly that images are not edited here", () => {
+  it("says on the page that a product needs a photograph to go live", () => {
     const page = readFileSync(new URL("../../src/app/crew/products/page.tsx", import.meta.url), "utf8");
-    assert.match(page, /Images: added by the developer for now\./);
+    assert.match(page.replace(/\s+/g, " "), /at least one photograph with alt text/);
+    assert.equal(NEEDS_PHOTOGRAPH, "at least one photograph with alt text");
+    assert.match(page, /<ImagesEditor/);
+  });
+
+  it("refuses a product with no photograph, or only photographs nobody described", () => {
+    assert.deepEqual(storefrontProblems({ ...WHOLE, imageAlts: [] }), [NEEDS_PHOTOGRAPH]);
+    assert.deepEqual(storefrontProblems({ ...WHOLE, imageAlts: ["  "] }), [NEEDS_PHOTOGRAPH]);
+    assert.deepEqual(storefrontProblems({ ...WHOLE, imageAlts: ["", WHOLE.imageAlts[0]!] }), []);
   });
 });
 
@@ -277,6 +291,11 @@ describe("creating and editing against the database", { skip: !HAS_DB && "no DAT
     );
     assert.deepEqual(saved, { ok: true });
     assert.deepEqual(await run((client) => addSize(client, id, "M")), { ok: true });
+    await query(
+      `insert into product_image (id, product_id, blob_url, alt, width, height, sort_index)
+       values ($1, $2, $3, $4, 2400, 3000, 0)`,
+      [randomUUID(), id, "https://fixture.invalid/flat-front.jpg", "Fixture garment laid flat, front view, on white."],
+    );
   }
 
   after(async () => {
@@ -316,6 +335,9 @@ describe("creating and editing against the database", { skip: !HAS_DB && "no DAT
 
     await makeWhole(id);
     assert.deepEqual(await problems(id, null), ["a price"]);
+    await query("update product_image set alt = '' where product_id = $1", [id]);
+    assert.deepEqual(await problems(id, 8900), [NEEDS_PHOTOGRAPH]);
+    await query("update product_image set alt = 'Fixture garment laid flat, front view, on white.' where product_id = $1", [id]);
     assert.deepEqual(await problems(id, 8900), []);
   });
 

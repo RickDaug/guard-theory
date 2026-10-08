@@ -1,16 +1,21 @@
 import { requirePortalPage } from "@/lib/portal/guard";
 import { portalUrl } from "@/lib/portal/routes";
 import { isDatabaseConfigured, query } from "@/lib/db/client";
-import { getMailProvider } from "@/lib/mail";
+import { loadCampaignProgress, type CampaignProgress } from "@/lib/mail/campaign";
 import { AnnouncementForm } from "./AnnouncementForm";
+import { ContinueForm } from "./ContinueForm";
 import { ButtonAnchor } from "@/components/ui/Button";
 
 export const dynamic = "force-dynamic";
 
+// A send batch runs inside this page's server action. The batch stops itself
+// well inside this (CAMPAIGN_BUDGET_MS), so it is never killed holding a row.
+export const maxDuration = 60;
+
 type Counts = { total: number; live: number; gone: number; pending: number; legacy: number };
 
 export default async function ListPage() {
-  await requirePortalPage(portalUrl("/list"));
+  await requirePortalPage(portalUrl("/list"), "owner");
 
   if (!isDatabaseConfigured()) {
     return (
@@ -33,7 +38,7 @@ export default async function ListPage() {
   );
 
   const counts = rows[0] ?? { total: 0, live: 0, gone: 0, pending: 0, legacy: 0 };
-  const provider = getMailProvider();
+  const campaign = await loadCampaignProgress();
 
   return (
     <main id="main" className="px-6 py-16 md:px-12">
@@ -75,21 +80,63 @@ export default async function ListPage() {
           </ButtonAnchor>
         </div>
 
-        {!provider.delivers ? (
-          <p className="mb-10 border-l-2 border-signal-lift bg-graphite px-5 py-4 text-base text-chalk">
-            No mail provider is connected, so nothing here will actually send. Messages are
-            written to the log instead. Set RESEND_API_KEY and RECEIPT_FROM_EMAIL.
-          </p>
-        ) : null}
+        {campaign ? <Campaign progress={campaign} /> : null}
 
         <h2 className="display-condensed mb-3 text-xl text-chalk">Write to the list</h2>
         <p className="mb-8 max-w-[46rem] text-base text-steel">
-          People who have unsubscribed are never included. Send a test to yourself first —
-          this cannot be recalled.
+          Draft it here and it is held to the same voice rules as the Journal. People who have
+          unsubscribed are never included when it is sent.
         </p>
 
         <AnnouncementForm liveCount={counts.live} />
       </div>
     </main>
+  );
+}
+
+function Campaign({ progress }: { progress: CampaignProgress }) {
+  const remaining = progress.queued + progress.sending;
+  const figures: [string, number][] = [
+    ["Sent", progress.sent],
+    ["Remaining", remaining],
+    ["Failed", progress.failed],
+    ["Check by hand", progress.unknown],
+    ["Unsubscribed since", progress.unsubscribed],
+    ["Skipped", progress.skipped],
+  ];
+
+  return (
+    <section className="mb-14" aria-labelledby="campaign-heading">
+      <h2 id="campaign-heading" className="display-condensed mb-3 text-xl text-chalk">
+        {progress.status === "open" ? "Sending" : "Last send"}: {progress.subject}
+      </h2>
+      <p className="mb-6 text-base text-steel">
+        {progress.recipients} {progress.recipients === 1 ? "recipient" : "recipients"}, queued{" "}
+        {progress.createdAt.toISOString().slice(0, 16).replace("T", " ")} UTC.{" "}
+        {progress.status === "done" ? "Finished." : "Each press sends the next batch."}
+      </p>
+
+      <dl className="m-0 mb-6 grid gap-px bg-steel-dim sm:grid-cols-3">
+        {figures.map(([label, value]) => (
+          <div key={label} className="bg-ink p-5">
+            <dt className="notation text-2xs text-orchid">{label}</dt>
+            <dd className="display-condensed mt-3 text-2xl text-chalk tabular-nums">{value}</dd>
+          </div>
+        ))}
+      </dl>
+
+      {progress.lastStop ? (
+        <p className="mb-6 text-base text-steel">Last batch stopped: {progress.lastStop}</p>
+      ) : null}
+
+      {progress.unknown > 0 ? (
+        <p className="mb-6 text-base text-steel">
+          Check by hand means Resend never gave a clear answer, so the message may have arrived. Those
+          addresses are never sent to again automatically; look them up in the Resend dashboard.
+        </p>
+      ) : null}
+
+      {progress.status === "open" ? <ContinueForm campaignId={progress.id} /> : null}
+    </section>
   );
 }

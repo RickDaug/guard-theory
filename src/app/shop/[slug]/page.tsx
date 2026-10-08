@@ -7,6 +7,7 @@ import { Breadcrumbs } from "@/components/site/Breadcrumbs";
 import { ButtonLink } from "@/components/ui/Button";
 import { BuyBox } from "@/components/product/BuyBox";
 import { GarmentFlat } from "@/components/product/GarmentFlat";
+import { ProductGallery } from "@/components/product/ProductGallery";
 import { PRODUCTS, STATUS_LABEL } from "@/content/products";
 import { ORIGIN_LABEL, productOrigin } from "@/content/products/origin";
 import { SIZE_CHART } from "@/content/products/size-chart";
@@ -14,6 +15,7 @@ import {
   effectivePriceCents,
   getProductView,
   hasPublishableOffer,
+  productPhotographs,
   stockStatus,
 } from "@/lib/catalogue";
 import { toDecimalString } from "@/lib/money";
@@ -90,6 +92,10 @@ export default async function ProductPage({ params }: Params) {
   const availability = stockStatus(product);
   const priceCents = effectivePriceCents(product);
   const showOffer = hasPublishableOffer(product);
+  // Only photographs the owner uploaded, on the configured host, with alt
+  // text. None is the normal state for a garment not yet photographed, and
+  // then the page is exactly what it was: the flat, and nothing standing in.
+  const photographs = productPhotographs(product);
   const other = PRODUCTS.filter((p) => p.slug !== product.slug);
   // 16 CFR 303.34: the listing states the origin in the FTC's form. Only
   // from a value the owner typed; with none, the page says nothing about
@@ -123,6 +129,11 @@ export default async function ProductPage({ params }: Params) {
                 // Only when the owner's value names a country; an unnamed
                 // import names none, and nothing is guessed.
                 ...(origin?.country ? { countryOfOrigin: origin.country } : {}),
+                // The owner's photographs, primary first, and only when there
+                // are some. Never the share card or the flat in their place.
+                ...(photographs.length > 0
+                  ? { image: photographs.map((photograph) => photograph.url) }
+                  : {}),
                 offers: {
                   "@type": "Offer",
                   price: toDecimalString(priceCents),
@@ -156,6 +167,8 @@ export default async function ProductPage({ params }: Params) {
               mobile screenshot caught: every other one is 390 wide and this one
               was 393. */}
           <div className="min-w-0 lg:col-span-7 lg:sticky lg:top-8 lg:self-start">
+            {/* Photographs sit alongside the flat, never instead of it. */}
+            <ProductGallery images={photographs} productName={`${product.name} ${product.kind.toLowerCase()}`} />
             {/**
              * One line, always — the same rule, and the same reason, as the
              * breadcrumb. At 390px this label fits on one line in the metric

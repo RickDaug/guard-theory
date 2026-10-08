@@ -35,7 +35,9 @@ export default async function OrdersPage({
 }: {
   searchParams: Promise<{ status?: string | string[] }>;
 }) {
-  await requirePortalPage(portalUrl("/orders"));
+  const session = await requirePortalPage(portalUrl("/orders"));
+  // The export, the reconcile and the unmatched payments are about money: the owner's.
+  const owner = session.role === "owner";
 
   const params = await searchParams;
   const raw = params.status;
@@ -66,6 +68,7 @@ export default async function OrdersPage({
       <div className="mx-auto max-w-[80rem]">
         <div className="mb-10 flex flex-wrap items-baseline gap-x-8 gap-y-4">
           <h1 className="display-condensed text-3xl text-chalk">Orders</h1>
+          {owner ? (
           <div className="ml-auto flex flex-wrap items-baseline gap-x-8 gap-y-4">
             <Link
               href={portalUrl("/orders/export")}
@@ -75,6 +78,7 @@ export default async function OrdersPage({
             </Link>{" "}
             <ReconcileButton />
           </div>
+          ) : null}
         </div>
 
         <nav aria-label="Order status" className="mb-10">
@@ -109,7 +113,7 @@ export default async function OrdersPage({
 
         {/* On every tab, not only "Needs you": this is money taken with no order
             to show for it, and the default tab is New. */}
-        {unfulfilled.length > 0 ? (
+        {owner && unfulfilled.length > 0 ? (
           <section aria-labelledby="unfulfilled-heading" className="mb-12 border-l-2 border-signal-lift bg-graphite px-6 py-5">
             <h2 id="unfulfilled-heading" className="display-plain mb-3 text-lg text-chalk">
               Paid, with no order

@@ -249,7 +249,9 @@ export default async function OrderPage({ params }: { params: Promise<{ id: stri
                       key={to}
                       id={order.id}
                       label={
-                        remaining > 0
+                        // A lost chargeback already returned the money: the
+                        // cancel refunds nothing (cancel.ts), and says so.
+                        remaining > 0 && order.dispute_status !== "lost"
                           ? `Cancel and refund ${formatMoney(remaining, order.currency)}`
                           : "Cancel this order"
                       }
@@ -266,7 +268,18 @@ export default async function OrderPage({ params }: { params: Promise<{ id: stri
               </div>
             )}
 
-            {remaining > 0 ? (
+            {order.dispute_status === "lost" ? (
+              <>
+              <p className="max-w-[46rem] text-base text-steel">
+                {shipped
+                  ? "The buyer's bank returned this payment through a lost chargeback, so there is nothing left to refund."
+                  : order.status === "cancelled"
+                    ? "The buyer's bank returned this payment through a lost chargeback. Nothing was refunded on top of it."
+                    : "The buyer's bank returned this payment through a lost chargeback. Do not ship it: cancel it, which refunds nothing more and puts the stock back."}
+              </p>
+              {restockable.length > 0 ? <RestockControl id={order.id} lines={restockable} /> : null}
+              </>
+            ) : remaining > 0 ? (
               <RefundControl
                 id={order.id}
                 remainingLabel={formatMoney(remaining, order.currency)}

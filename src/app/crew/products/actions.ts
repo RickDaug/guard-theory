@@ -32,6 +32,17 @@ import {
   type EditResult,
 } from "@/lib/portal/product-edit";
 import { WEIGHT_INVALID, readWeightOz } from "@/lib/shipping/weight";
+import { isImageStorageConnected } from "@/lib/images/host";
+import { prepareUpload } from "@/lib/images/process";
+import { deleteImage, storeImage } from "@/lib/images/storage";
+import { checkFileSize, readAltText } from "@/lib/images/validate";
+import {
+  addImage,
+  deleteOrArchiveProduct,
+  moveImage,
+  removeImage,
+  setImageAlt,
+} from "@/lib/portal/product-images";
 
 /**
  * Product management.
@@ -418,29 +429,25 @@ export async function deleteProduct(formData: FormData): Promise<void> {
     return;
   }
 
-  try {
-    const sold = await queryOne<{ n: number }>(
-      `select count(*)::int as n
-         from order_item oi
-         join variant v on v.id = oi.variant_id
-        where v.product_id = $1`,
-      [id],
-    );
+  let urls: string[] = [];
 
-    if ((sold?.n ?? 0) > 0) {
-      await query(
-        `update product set status = 'archived', archived_at = now(), updated_at = now()
-          where id = $1`,
-        [id],
-      );
-    } else {
-      await query("delete from product where id = $1", [id]);
-    }
+  try {
+    ({ urls } = await transaction((client) => deleteOrArchiveProduct(client, id)));
   } catch (error) {
     console.error(
       "[guard-theory] could not delete product:",
       error instanceof Error ? error.message : error,
     );
+  }
+
+  // After the commit, as removing one photograph does: a deleted product's
+  // files would otherwise stay public with no row left that names them.
+  // Logged by deleteImage when storage will not; with no storage connected
+  // there is no token to delete with, so the URLs are logged for the owner.
+  for (const url of urls) {
+    if (!isImageStorageConnected() || !(await deleteImage(url))) {
+      console.error(`[guard-theory] a deleted product's photograph is still in storage: ${url}`);
+    }
   }
 
   revalidatePath("/shop");
@@ -541,4 +548,183 @@ export async function moveCategory(formData: FormData): Promise<void> {
   }
 
   revalidatePath("/shop");
+}
+
+/* ------------------------------------------------------------------------ */
+/* Photographs                                                               */
+/* ------------------------------------------------------------------------ */
+
+const STORAGE_NOT_CONNECTED =
+  "Image storage not connected. Photographs can be uploaded once a Vercel Blob store is connected to this project (docs/provisioning.md).";
+
+/**
+ * One photograph, uploaded.
+ *
+ * In this order, so that nothing half-done survives a failure: check the file
+ * and the alt text; re-encode it without its metadata (src/lib/images/
+ * process.ts); store it; then insert the row. If the row cannot be written the
+ * stored file is deleted again. The file never reaches storage as it arrived.
+ */
+export async function uploadProductImage(
+  _previous: PortalFormState,
+  formData: FormData,
+): Promise<PortalFormState> {
+  await requireSession();
+
+  if (!isImageStorageConnected()) {
+    return { status: "error", message: STORAGE_NOT_CONNECTED };
+  }
+
+  const id = text(formData, "id");
+  const file = formData.get("file");
+
+  if (!id) {
+    return { status: "error", message: "That product could not be identified." };
+  }
+
+  if (!(file instanceof File) || file.size === 0) {
+    return { status: "error", message: "Choose a photograph to upload.", field: "file" };
+  }
+
+  const sizeProblem = checkFileSize(file.size);
+
+  if (sizeProblem) {
+    return { status: "error", message: sizeProblem, field: "file" };
+  }
+
+  const alt = readAltText(formData.get("alt"), file.name);
+
+  if (!alt.ok) {
+    return { status: "error", message: alt.message, field: "alt" };
+  }
+
+  const product = await queryOne<{ slug: string }>("select slug from product where id = $1", [id]);
+
+  if (!product) {
+    return { status: "error", message: "That product could not be found." };
+  }
+
+  const prepared = await prepareUpload(new Uint8Array(await file.arrayBuffer()));
+
+  if (!prepared.ok) {
+    return { status: "error", message: prepared.message, field: "file" };
+  }
+
+  let url: string;
+
+  try {
+    const stored = await storeImage(product.slug, file.name, prepared.image);
+
+    if (!stored.ok) {
+      return { status: "error", message: stored.message };
+    }
+
+    url = stored.url;
+  } catch (error) {
+    console.error(
+      "[guard-theory] could not store an image:",
+      error instanceof Error ? error.message : error,
+    );
+    return { status: "error", message: "Image storage did not accept the file just now. Nothing was saved." };
+  }
+
+  const saved = await edit(
+    "add product image",
+    async (client) => {
+      const added = await addImage(client, id, {
+        url,
+        alt: alt.alt,
+        width: prepared.image.width,
+        height: prepared.image.height,
+      });
+      return added.ok ? { ok: true } : added;
+    },
+    `Uploaded: ${prepared.image.width} × ${prepared.image.height}, with its location and camera data removed.`,
+  );
+
+  if (saved.status === "error") {
+    await deleteImage(url);
+  }
+
+  return saved;
+}
+
+/**
+ * Moving, making primary, re-describing or removing one photograph. One form
+ * with several buttons, like a size row; `op` is the button that was pressed.
+ */
+export async function changeProductImage(
+  _previous: PortalFormState,
+  formData: FormData,
+): Promise<PortalFormState> {
+  await requireSession();
+
+  const id = text(formData, "id");
+  const imageId = text(formData, "imageId");
+  const op = text(formData, "op");
+
+  if (!id || !imageId) {
+    return { status: "error", message: "That photograph could not be identified." };
+  }
+
+  if (op === "up" || op === "down" || op === "primary") {
+    return edit(
+      "reorder product images",
+      (client) => moveImage(client, id, imageId, op),
+      op === "primary" ? "That is now the primary photograph." : "Moved.",
+    );
+  }
+
+  if (op === "alt") {
+    const alt = readAltText(formData.get("alt"));
+
+    if (!alt.ok) {
+      return { status: "error", message: alt.message, field: "alt" };
+    }
+
+    return edit(
+      "save image alt text",
+      (client) => setImageAlt(client, id, imageId, alt.alt),
+      "Alt text saved.",
+    );
+  }
+
+  if (op !== "remove") {
+    return { status: "error", message: "That is not something a photograph can do." };
+  }
+
+  // Removing the row without removing the file would leave a public copy
+  // nobody can find to delete. So with no storage connected, nothing is removed.
+  if (!isImageStorageConnected()) {
+    return { status: "error", message: STORAGE_NOT_CONNECTED };
+  }
+
+  let url: string;
+
+  try {
+    url = await transaction(async (client) => {
+      const removed = await removeImage(client, id, imageId);
+      if (!removed.ok) throw new EditRefused(removed.message);
+      return removed.url;
+    });
+  } catch (error) {
+    if (error instanceof EditRefused) {
+      return { status: "error", message: error.refusal };
+    }
+
+    console.error(
+      "[guard-theory] could not remove product image:",
+      error instanceof Error ? error.message : error,
+    );
+    return { status: "error", message: "We could not save that just now. Nothing has changed." };
+  }
+
+  revalidateCatalogue();
+
+  return (await deleteImage(url))
+    ? { status: "success", message: "Photograph removed, and its file deleted from storage." }
+    : {
+        status: "error",
+        message: `Photograph removed from the product, but its file could not be deleted from storage. Delete it in the Vercel Blob dashboard: ${url}`,
+      };
 }

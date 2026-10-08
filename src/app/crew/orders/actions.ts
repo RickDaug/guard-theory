@@ -9,6 +9,7 @@ import {
   getOrderItems,
   toEmailShape,
   resolveUnfulfilledPayment,
+  saveTracking,
 } from "@/lib/orders/manage";
 import type { OrderStatus } from "@/lib/orders/manage";
 import { refundOrder } from "@/lib/orders/refund";
@@ -150,8 +151,9 @@ export async function cancelAndRefund(
   revalidateOrders(id);
 
   const order = await getOrder(id);
-  const money =
-    result.refundedCents > 0 && order
+  const money = result.chargeback
+    ? "Cancelled. Nothing was refunded: the buyer's bank already returned the payment through the lost chargeback."
+    : result.refundedCents > 0 && order
       ? `Cancelled, and ${formatMoney(result.refundedCents, order.currency)} refunded to the card it came from.`
       : "Cancelled. It had already been refunded in full.";
   const label = result.hasLabel
@@ -270,19 +272,16 @@ export async function setTracking(
     return { status: "error", message: "Write the carrier as a short name, like USPS or UPS.", field: "trackingCarrier" };
   }
 
-  if (!(await getOrder(id))) {
-    return { status: "error", message: "That order no longer exists." };
-  }
-
   const url =
     carrier.toUpperCase() === "USPS"
       ? `https://tools.usps.com/go/TrackConfirmAction?tLabels=${encodeURIComponent(number)}`
       : null;
 
-  await query(
-    `update "order" set tracking_number = $2, tracking_carrier = $3, tracking_url = $4 where id = $1`,
-    [id, number, carrier, url],
-  );
+  const saved = await saveTracking(id, { number, carrier, url });
+
+  if (!saved.ok) {
+    return { status: "error", message: saved.reason };
+  }
 
   revalidateOrders(id);
   return { status: "success", message: "Tracking saved. You can mark this shipped now." };
@@ -391,7 +390,11 @@ export async function resendEmail(
     // refunded, and none of it by this message.
     sent = await sendEmail(
       "order-cancelled",
-      orderCancelled(shape, { refundedCents: 0, earlierRefundCents: order.refunded_cents }),
+      orderCancelled(shape, {
+        refundedCents: 0,
+        earlierRefundCents: order.refunded_cents,
+        chargeback: order.dispute_status === "lost",
+      }),
       order.id,
     );
   } else {
@@ -497,7 +500,7 @@ export async function buyLabel(
       "has-tracking":
         "This order already has a tracking number. Clear it first if the label was wrong.",
       "not-shippable":
-        "This order was cancelled or refunded in full while you were looking at it. No label was bought.",
+        "This order is not waiting to ship any more — it was cancelled, refunded in full, had its stock put back, or has a chargeback against it. No label was bought. Reload to see why.",
       "in-progress": "A label is already being bought for this order. Give it a moment, then reload.",
       abandoned:
         "A label purchase for this order was started and never finished, so it may have gone through. " +

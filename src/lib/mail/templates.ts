@@ -1,5 +1,6 @@
 import { SITE_NAME, SITE_URL } from "../site.ts";
 import { formatMoney } from "../money.ts";
+import { TOPICS } from "../contact/form-state.ts";
 import { DISPATCH_WITHIN } from "../../content/policies/shipping-terms.ts";
 import { listUnsubscribeHeaders } from "./list-unsubscribe.ts";
 import type { Email } from "./types.ts";
@@ -301,6 +302,58 @@ export function waitlistConfirmation(
       `${SITE_URL}/first-edition/confirm?t=${token}`,
       "",
       `The link works for ${expiresInHours} hours. If you did not ask, ignore this message: the address is not on the list, it will not be sent the announcement, and it is deleted after ${retentionDays} days.`,
+      "",
+      "Guard Theory",
+    ].join("\n"),
+  };
+}
+
+export type ContactForForward = {
+  name: string;
+  email: string;
+  topic: string;
+  message: string;
+  receivedAt: string;
+};
+
+/** One address, nothing that could start a second header. */
+const SINGLE_ADDRESS = /^[^\s@,;<>]+@[^\s@,;<>]+\.[^\s@,;<>]+$/;
+
+/**
+ * A contact-form message, forwarded to the owner.
+ *
+ * Reply-To is the sender, so answering is pressing Reply. The subject names the
+ * site and the topic, never the message: subjects end up in notification
+ * previews and mail-server logs that the body does not. `inboxUrl` is the
+ * portal's list, when the caller knows it, so the answered flag is one click
+ * away.
+ */
+export function contactForward(
+  to: string,
+  message: ContactForForward,
+  inboxUrl: string | null = null,
+): Email {
+  const topic = TOPICS.find((entry) => entry.value === message.topic)?.label ?? message.topic;
+  const sender = message.email.trim();
+  const replyTo = SINGLE_ADDRESS.test(sender) ? sender : undefined;
+
+  return {
+    to,
+    subject: `Guard Theory contact form: ${topic}`,
+    ...(replyTo ? { replyTo } : {}),
+    body: [
+      `From:     ${message.name.trim()} <${sender}>`,
+      `Topic:    ${topic}`,
+      `Received: ${message.receivedAt}`,
+      "",
+      message.message,
+      "",
+      "—",
+      "",
+      replyTo
+        ? `Reply to this email to answer ${sender} directly.`
+        : "The sender's address could not be used as a reply address. Copy it from the From line.",
+      ...(inboxUrl ? [`Mark it answered in the portal: ${inboxUrl}`] : []),
       "",
       "Guard Theory",
     ].join("\n"),

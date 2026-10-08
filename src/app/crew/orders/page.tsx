@@ -66,7 +66,13 @@ export default async function OrdersPage({
       <div className="mx-auto max-w-[80rem]">
         <div className="mb-10 flex flex-wrap items-baseline gap-x-8 gap-y-4">
           <h1 className="display-condensed text-3xl text-chalk">Orders</h1>
-          <div className="ml-auto">
+          <div className="ml-auto flex flex-wrap items-baseline gap-x-8 gap-y-4">
+            <Link
+              href={portalUrl("/orders/export")}
+              className="display-plain inline-flex min-h-6 items-center text-sm text-steel hover:text-chalk"
+            >
+              Sales records export
+            </Link>{" "}
             <ReconcileButton />
           </div>
         </div>

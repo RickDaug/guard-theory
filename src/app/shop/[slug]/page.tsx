@@ -202,15 +202,39 @@ export default async function ProductPage({ params }: Params) {
             </p>
 
             {availability === "purchasable" && priceCents !== null && product.commerce ? (
-              <BuyBox
-                productName={product.name}
-                priceCents={priceCents}
-                compareAtCents={
-                  product.commerce.saleCents !== null ? product.commerce.priceCents : null
-                }
-                currency={product.commerce.currency}
-                variants={product.commerce.variants}
-              />
+              <>
+                <BuyBox
+                  productName={product.name}
+                  priceCents={priceCents}
+                  compareAtCents={
+                    product.commerce.saleCents !== null ? product.commerce.priceCents : null
+                  }
+                  currency={product.commerce.currency}
+                  variants={product.commerce.variants}
+                />
+                {/* What the price above does not include, said before the cart
+                    rather than discovered in it. Both sentences are the
+                    shipping policy's and the cart's own; the terms themselves
+                    are linked, not restated, so they cannot drift. */}
+                <p className="mt-5 max-w-[34rem] text-sm text-steel">
+                  Shipping is one flat rate per order, shown in your cart. Sales tax is added at
+                  checkout. Read the{" "}
+                  <Link
+                    href="/policies/shipping"
+                    className="text-chalk underline decoration-steel-dim underline-offset-[5px] transition-colors duration-[140ms] ease-[var(--ease-control)] hover:decoration-signal-lift"
+                  >
+                    shipping
+                  </Link>{" "}
+                  and{" "}
+                  <Link
+                    href="/policies/returns"
+                    className="text-chalk underline decoration-steel-dim underline-offset-[5px] transition-colors duration-[140ms] ease-[var(--ease-control)] hover:decoration-signal-lift"
+                  >
+                    returns
+                  </Link>{" "}
+                  policies.
+                </p>
+              </>
             ) : (
               <div className="mt-10 border border-steel-dim p-6">
                 <p className="notation text-2xs text-orchid">First Edition</p>

@@ -1,9 +1,10 @@
 "use client";
 
-import { useActionState } from "react";
+import { useActionState, useId } from "react";
 import { runReconcile } from "./actions";
 import { PORTAL_INITIAL_STATE } from "@/lib/portal/form-state";
 import { Button } from "@/components/ui/Button";
+import { FormFeedback } from "@/components/ui/FormFeedback";
 
 /**
  * Recovers orders the webhook missed.
@@ -14,6 +15,7 @@ import { Button } from "@/components/ui/Button";
  */
 export function ReconcileButton() {
   const [state, formAction, pending] = useActionState(runReconcile, PORTAL_INITIAL_STATE);
+  const feedbackId = useId();
 
   return (
     <div className="flex flex-col items-end gap-3">
@@ -23,11 +25,7 @@ export function ReconcileButton() {
         </Button>
       </form>
 
-      {state.status !== "idle" ? (
-        <p role="status" className="max-w-[34rem] text-right text-sm text-steel">
-          {state.message}
-        </p>
-      ) : null}
+      <FormFeedback id={feedbackId} state={state} inline className="max-w-[34rem] text-right" />
     </div>
   );
 }

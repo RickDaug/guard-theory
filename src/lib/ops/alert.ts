@@ -3,6 +3,7 @@ import { getMailProvider, maskEmail } from "../mail/index.ts";
 import type { MailProvider } from "../mail/types.ts";
 import { LABEL_CLAIM_MINUTES } from "../orders/label.ts";
 import { isStripeConfigured } from "../stripe/client.ts";
+import { readCheckoutSurge, type CheckoutSurge } from "../public-limits.ts";
 import { checkStripeMode, type ModeCheck } from "../stripe/mode-check.ts";
 import { readLastReconcile, reconcileHealth, type LastReconcile } from "./health.ts";
 import { listMissingConfirmations } from "./sweep.ts";
@@ -19,7 +20,9 @@ import { listMissingConfirmations } from "./sweep.ts";
  * WHAT IT SAYS
  *
  * Counts by kind and nothing else: no order numbers, no buyer names, no
- * addresses, no portal path. The message is stored by the mail provider, and
+ * addresses, no portal path. The one exception is the checkout surge, whose
+ * line carries when it happened and how many calls went past the cap, because
+ * a surge has no row in the portal to open. The message is stored by the mail provider, and
  * the owner has the portal for the detail; the email's job is only to make
  * them open it.
  *
@@ -38,6 +41,12 @@ export const MIN_GAP_MINUTES = 60;
 export const WEBHOOK_STUCK_MINUTES = 10;
 /** Order mail that failed longer ago than this is history, not an alert. */
 export const EMAIL_LOOKBACK_DAYS = 14;
+/**
+ * A checkout surge (src/lib/public-limits.ts) is reported while its most
+ * recent call past the cap is younger than this. After that it is history and
+ * drops out, so the digest clears as it does for anything else resolved.
+ */
+export const SURGE_ALERT_HOURS = REMIND_HOURS;
 const MAX_KEYS = 500;
 const STATE_KEY = "owner_alert";
 
@@ -52,9 +61,11 @@ export type ProblemKind =
   | "missing-confirmation"
   | "email"
   | "label"
-  | "webhook";
+  | "webhook"
+  | "checkout-surge";
 
-export type Problem = { kind: ProblemKind; key: string };
+/** `detail` is printed after the label; only the checkout surge carries one. */
+export type Problem = { kind: ProblemKind; key: string; detail?: string };
 
 /** One line per kind, in the order the owner should deal with them. */
 export const PROBLEM_LABEL: Record<ProblemKind, string> = {
@@ -70,6 +81,8 @@ export const PROBLEM_LABEL: Record<ProblemKind, string> = {
   email: "Order emails that did not send",
   label: "Label purchases that started and never finished",
   webhook: `Stripe or Shippo events not processed after ${WEBHOOK_STUCK_MINUTES} minutes`,
+  "checkout-surge":
+    "Checkout went past its limit for all buyers together (buyers were let through; per-buyer limits still held)",
 };
 
 const ORDER: ProblemKind[] = Object.keys(PROBLEM_LABEL) as ProblemKind[];
@@ -110,6 +123,51 @@ export function runProblems(
   return problems;
 }
 
+function formatUtc(date: Date): string {
+  return `${date.toISOString().slice(0, 16).replace("T", " ")} UTC`;
+}
+
+export type SurgeStatus =
+  | { recent: true; since: Date; last: Date; calls: number; text: string }
+  | { recent: false; text: string };
+
+/**
+ * What the recorded surge means now. Shared by the digest and the portal's
+ * Settings, so they cannot disagree about "recent".
+ */
+export function surgeStatus(surge: CheckoutSurge | null, now: Date): SurgeStatus {
+  const since = surge ? new Date(surge.since) : null;
+  const last = surge ? new Date(surge.last) : null;
+  const calls = surge && Number.isInteger(surge.calls) && surge.calls > 0 ? surge.calls : null;
+
+  if (!since || !last || Number.isNaN(since.getTime()) || Number.isNaN(last.getTime()) || !calls) {
+    return { recent: false, text: "None recorded" };
+  }
+
+  const window =
+    since.getTime() === last.getTime()
+      ? `at ${formatUtc(last)}`
+      : `between ${formatUtc(since)} and ${formatUtc(last)}`;
+  const text = `${calls} ${calls === 1 ? "call" : "calls"} over the cap ${window}`;
+  const hoursAgo = (now.getTime() - last.getTime()) / 3_600_000;
+
+  return hoursAgo < SURGE_ALERT_HOURS
+    ? { recent: true, since, last, calls, text }
+    : { recent: false, text: `None in the last ${SURGE_ALERT_HOURS} hours (last: ${text})` };
+}
+
+/**
+ * The surge as a problem while it is recent. The key is the episode's start,
+ * so a new episode (a call more than SURGE_EPISODE_MINUTES after the last) is
+ * news, and more calls in the same episode wait for the usual reminder.
+ */
+export function surgeProblems(surge: CheckoutSurge | null, now: Date): Problem[] {
+  const status = surgeStatus(surge, now);
+  return status.recent
+    ? [{ kind: "checkout-surge", key: `surge:${status.since.toISOString()}`, detail: status.text }]
+      : [];
+}
+
 /**
  * A key whose prefix says one mode while Stripe reports the other. The key
  * names both modes, so a different mismatch is news and the same one is not.
@@ -124,7 +182,7 @@ export function modeProblems(check: ModeCheck): Problem[] {
 
 /** Everything the database says needs a person. */
 export async function collectStoredProblems(): Promise<Problem[]> {
-  const [unfulfilled, disputed, flagged, emails, labels, webhooks, missing] = await Promise.all([
+  const [unfulfilled, disputed, flagged, emails, labels, webhooks, missing, surge] = await Promise.all([
     query<{ id: string }>("select id from unfulfilled_payment where resolved_at is null"),
     // Open, or decided and not yet read. The status is in the key, so the
     // outcome of a dispute already reported as open is news again.
@@ -164,6 +222,7 @@ export async function collectStoredProblems(): Promise<Problem[]> {
       [WEBHOOK_STUCK_MINUTES],
     ),
     listMissingConfirmations(200),
+    readCheckoutSurge(),
   ]);
 
   return [
@@ -180,6 +239,7 @@ export async function collectStoredProblems(): Promise<Problem[]> {
     })),
     ...labels.map((row) => ({ kind: "label" as const, key: `label:${row.id}` })),
     ...webhooks.map((row) => ({ kind: "webhook" as const, key: `webhook:${row.id}` })),
+    ...surgeProblems(surge, new Date()),
   ];
 }
 
@@ -229,6 +289,10 @@ export function composeDigest(problems: Problem[]): { subject: string; body: str
   const kinds = ORDER.filter((kind) => counts.has(kind));
   const lines = kinds.map((kind) => {
     const n = counts.get(kind)!;
+    const detail = problems.find((problem) => problem.kind === kind && problem.detail)?.detail;
+    if (detail) {
+      return `- ${PROBLEM_LABEL[kind]}: ${detail}`;
+    }
     return n === 1 || kind.startsWith("reconcile") || kind === "refunds-failed" || kind === "stripe-mode"
       ? `- ${PROBLEM_LABEL[kind]}`
       : `- ${PROBLEM_LABEL[kind]}: ${n}`;

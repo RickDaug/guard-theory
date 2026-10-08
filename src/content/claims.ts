@@ -117,6 +117,8 @@ export const STORED: Record<string, Record<string, Disclosure>> = {
     topic: { internal: "a fixed label the reader picks for the message, not something they tell us about themselves" },
     message: { says: "whatever you write to us" },
     received_at: { internal: "when the message arrived" },
+    forward_delivery: { internal: "whether the email forwarding the message to us was sent, failed, or only logged" },
+    answered_at: { internal: "when we marked the message answered in our portal" },
   },
   email_log: {
     id: { internal: "a random identifier we generate" },
@@ -169,6 +171,7 @@ export const STORED: Record<string, Record<string, Disclosure>> = {
     stripe_mode: { internal: "whether the Stripe key that took the payment was test or live" },
     refund_status: { internal: "whether any of the payment has been refunded; derived from Stripe's events" },
     refunded_cents: { internal: "how much has been refunded; derived from Stripe's events" },
+    refunded_at: { internal: "when a refund on the order was last recorded; derived from Stripe's events" },
     dispute_status: {
       internal: "whether the payment has been disputed with the card issuer, and how that ended; derived from Stripe's events",
     },
@@ -557,6 +560,9 @@ export const TRANSACTIONAL_MAIL = [
   // Sent to an address that is not on the list yet, because someone asked for
   // it to be. It says that ignoring it is enough, which is true.
   "waitlistConfirmation",
+  // Sent to us, not to a reader: a contact message forwarded to the owner's
+  // inbox, with the sender as Reply-To. Nobody joined a list to get it.
+  "contactForward",
 ];
 
 function listMailCarriesUnsubscribe(): true | string {

@@ -109,6 +109,7 @@ export async function saveProduct(
     return {
       status: "error",
       message: "Write the price as a number, like 89 or 89.00. Leave it empty for no price.",
+      field: "price",
     };
   }
 
@@ -116,6 +117,7 @@ export async function saveProduct(
     return {
       status: "error",
       message: "Write the sale price as a number, or leave it empty.",
+      field: "salePrice",
     };
   }
 
@@ -125,6 +127,7 @@ export async function saveProduct(
     return {
       status: "error",
       message: "A sale price has to be lower than the price. Otherwise it is just the price.",
+      field: "salePrice",
     };
   }
 
@@ -132,6 +135,7 @@ export async function saveProduct(
     return {
       status: "error",
       message: "Set a price before setting a sale price.",
+      field: "price",
     };
   }
 
@@ -147,6 +151,7 @@ export async function saveProduct(
     return {
       status: "error",
       message: "A product cannot go live without a price. Set one first, or leave it as a draft.",
+      field: "price",
     };
   }
 
@@ -450,7 +455,7 @@ export async function saveCategory(
   const name = text(formData, "name");
 
   if (!name) {
-    return { status: "error", message: "Give the category a name." };
+    return { status: "error", message: "Give the category a name.", field: "name" };
   }
 
   const slug =
@@ -462,7 +467,7 @@ export async function saveCategory(
       .replace(/^-+|-+$/g, "");
 
   if (!slug) {
-    return { status: "error", message: "That name does not make a usable web address." };
+    return { status: "error", message: "That name does not make a usable web address.", field: "name" };
   }
 
   const id = text(formData, "id") || `cat_${randomUUID().slice(0, 8)}`;

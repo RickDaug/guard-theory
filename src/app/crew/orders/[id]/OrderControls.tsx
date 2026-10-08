@@ -1,6 +1,6 @@
 "use client";
 
-import { useActionState } from "react";
+import { useActionState, useId } from "react";
 import {
   advanceOrder,
   buyLabel,
@@ -12,19 +12,7 @@ import {
 } from "../actions";
 import { PORTAL_INITIAL_STATE } from "@/lib/portal/form-state";
 import { Button } from "@/components/ui/Button";
-
-function Feedback({ state }: { state: { status: string; message: string } }) {
-  if (state.status === "idle") return null;
-
-  return (
-    <p
-      role={state.status === "error" ? "alert" : "status"}
-      className="border-l-2 border-signal-lift bg-graphite px-5 py-3 text-base text-chalk"
-    >
-      {state.message}
-    </p>
-  );
-}
+import { FormFeedback, PORTAL_CONTROL, fieldProps } from "@/components/ui/FormFeedback";
 
 export function AdvanceControl({
   id,
@@ -36,6 +24,7 @@ export function AdvanceControl({
   label: string;
 }) {
   const [state, formAction, pending] = useActionState(advanceOrder, PORTAL_INITIAL_STATE);
+  const feedbackId = useId();
 
   return (
     <div className="flex flex-col gap-4">
@@ -46,7 +35,7 @@ export function AdvanceControl({
           {pending ? "Working…" : label}
         </Button>
       </form>
-      <Feedback state={state} />
+      <FormFeedback id={feedbackId} state={state} />
     </div>
   );
 }
@@ -59,6 +48,7 @@ export function TrackingControl({
   trackingNumber: string | null;
 }) {
   const [state, formAction, pending] = useActionState(setTracking, PORTAL_INITIAL_STATE);
+  const feedbackId = useId();
 
   return (
     <div className="flex flex-col gap-4">
@@ -70,7 +60,8 @@ export function TrackingControl({
           <input
             name="trackingNumber"
             defaultValue={trackingNumber ?? ""}
-            className="min-h-6 border border-steel-dim bg-graphite px-4 py-3 text-chalk"
+            {...fieldProps(state, "trackingNumber", feedbackId)}
+            className={PORTAL_CONTROL}
           />
         </label>
 
@@ -79,7 +70,8 @@ export function TrackingControl({
           <input
             name="trackingCarrier"
             defaultValue="USPS"
-            className="min-h-6 w-28 border border-steel-dim bg-graphite px-4 py-3 text-chalk"
+            {...fieldProps(state, "trackingCarrier", feedbackId)}
+            className={`${PORTAL_CONTROL} w-28`}
           />
         </label>
 
@@ -87,7 +79,7 @@ export function TrackingControl({
           {pending ? "Saving…" : "Save tracking"}
         </Button>
       </form>
-      <Feedback state={state} />
+      <FormFeedback id={feedbackId} state={state} />
     </div>
   );
 }
@@ -99,6 +91,7 @@ export function TrackingControl({
  */
 export function CancelControl({ id, label }: { id: string; label: string }) {
   const [state, formAction, pending] = useActionState(cancelAndRefund, PORTAL_INITIAL_STATE);
+  const feedbackId = useId();
 
   return (
     <div className="flex flex-col gap-4">
@@ -108,7 +101,7 @@ export function CancelControl({ id, label }: { id: string; label: string }) {
           {pending ? "Cancelling…" : label}
         </Button>
       </form>
-      <Feedback state={state} />
+      <FormFeedback id={feedbackId} state={state} />
     </div>
   );
 }
@@ -185,6 +178,7 @@ export function RefundControl({
   stockNote?: string;
 }) {
   const [state, formAction, pending] = useActionState(issueRefund, PORTAL_INITIAL_STATE);
+  const feedbackId = useId();
 
   return (
     <div className="flex flex-col gap-4">
@@ -201,7 +195,8 @@ export function RefundControl({
               name="amount"
               inputMode="decimal"
               placeholder="Leave empty for all of it"
-              className="min-h-6 border border-steel-dim bg-graphite px-4 py-3 text-chalk"
+              {...fieldProps(state, "amount", feedbackId)}
+              className={PORTAL_CONTROL}
             />
           </label>
 
@@ -211,7 +206,7 @@ export function RefundControl({
         </div>
       </form>
       {stockNote ? <p className="text-sm text-steel">{stockNote}</p> : null}
-      <Feedback state={state} />
+      <FormFeedback id={feedbackId} state={state} />
     </div>
   );
 }
@@ -219,6 +214,7 @@ export function RefundControl({
 /** A return that arrives after the order was already refunded in full. */
 export function RestockControl({ id, lines }: { id: string; lines: RestockableLine[] }) {
   const [state, formAction, pending] = useActionState(restockReturned, PORTAL_INITIAL_STATE);
+  const feedbackId = useId();
 
   return (
     <div className="flex flex-col gap-4">
@@ -231,13 +227,23 @@ export function RestockControl({ id, lines }: { id: string; lines: RestockableLi
           </Button>
         </div>
       </form>
-      <Feedback state={state} />
+      <FormFeedback id={feedbackId} state={state} />
     </div>
   );
 }
 
-export function ResendControl({ id, template }: { id: string; template: string }) {
+export function ResendControl({
+  id,
+  template,
+  templateLabel,
+}: {
+  id: string;
+  template: string;
+  /** What the message is called on the page, so each button says which it resends. */
+  templateLabel: string;
+}) {
   const [state, formAction, pending] = useActionState(resendEmail, PORTAL_INITIAL_STATE);
+  const feedbackId = useId();
 
   return (
     <span className="flex flex-col gap-2">
@@ -246,16 +252,13 @@ export function ResendControl({ id, template }: { id: string; template: string }
         <input type="hidden" name="template" value={template} />
         <Button type="submit" intent="quiet" disabled={pending}>
           {pending ? "Sending…" : "Send again"}
+          {/* A row of identical "Send again" buttons is a list of the same
+              name to a screen reader. The written space keeps the name
+              "Send again, Confirmation" rather than fused. */}
+          <span className="sr-only">{`, ${templateLabel}`}</span>
         </Button>
       </form>
-      {state.status !== "idle" ? (
-        <span
-          role={state.status === "error" ? "alert" : "status"}
-          className="text-sm text-steel"
-        >
-          {state.message}
-        </span>
-      ) : null}
+      <FormFeedback id={feedbackId} state={state} inline />
     </span>
   );
 }
@@ -284,13 +287,22 @@ export function LabelControl({
   weightWarning: string | null;
 }) {
   const [state, formAction, pending] = useActionState(buyLabel, PORTAL_INITIAL_STATE);
+  const feedbackId = useId();
+  const noteId = useId();
 
   return (
     <div className="flex flex-col gap-4">
       <div className="flex flex-wrap items-center gap-5">
         <form action={formAction}>
           <input type="hidden" name="id" value={id} />
-          <Button type="submit" intent="outline" disabled={pending || !configured}>
+          <Button
+            type="submit"
+            intent="outline"
+            disabled={pending || !configured}
+            // Says why it is disabled, to a reader who reaches the button
+            // before the sentence under it.
+            aria-describedby={configured ? undefined : noteId}
+          >
             {pending ? "Buying…" : "Buy a USPS label"}
           </Button>
         </form>
@@ -310,7 +322,7 @@ export function LabelControl({
       </div>
 
       {!configured ? (
-        <p className="text-sm text-steel">
+        <p id={noteId} className="text-sm text-steel">
           Shippo is not connected. Buy the label wherever you normally do and paste the
           tracking number above.
         </p>
@@ -324,7 +336,7 @@ export function LabelControl({
         <p className="text-sm text-steel">{`The label will declare ${weightOz} oz, from the sizes in this order and the packaging.`}</p>
       ) : null}
 
-      <Feedback state={state} />
+      <FormFeedback id={feedbackId} state={state} />
     </div>
   );
 }

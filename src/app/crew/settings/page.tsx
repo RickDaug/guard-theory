@@ -5,7 +5,8 @@ import { stripeKeyRefusal, stripeMode } from "@/lib/stripe/client";
 import { checkStripeMode, describeModeCheck } from "@/lib/stripe/mode-check";
 import { isShippoConfigured, shippoMode } from "@/lib/shipping/shippo";
 import { getMailProvider, maskEmail } from "@/lib/mail";
-import { ownerAlertAddress, readAlertState, type AlertState } from "@/lib/ops/alert";
+import { ownerAlertAddress, readAlertState, surgeStatus, type AlertState } from "@/lib/ops/alert";
+import { readCheckoutSurge, type CheckoutSurge } from "@/lib/public-limits";
 import {
   describeAge,
   envPresence,
@@ -69,14 +70,16 @@ export default async function SettingsPage() {
   let last: LastReconcile | null = null;
   let alertState: AlertState | null = null;
   let migrations: MigrationStatus | null = null;
+  let surge: CheckoutSurge | null = null;
   let readFailed = false;
 
   if (hasDb) {
     try {
-      [last, alertState, migrations] = await Promise.all([
+      [last, alertState, migrations, surge] = await Promise.all([
         readLastReconcile(),
         readAlertState(),
         migrationStatus(),
+        readCheckoutSurge(),
       ]);
     } catch (error) {
       readFailed = true;
@@ -93,6 +96,7 @@ export default async function SettingsPage() {
   const mail = getMailProvider();
   const ownerAlert = ownerAlertAddress();
   const health = reconcileHealth(last, now);
+  const checkoutSurge = surgeStatus(surge, now);
   const modeCheck = await checkStripeMode();
   const modeLine = describeModeCheck(modeCheck);
 
@@ -173,6 +177,13 @@ export default async function SettingsPage() {
                   : []),
               ]
             : []),
+          {
+            label: "Checkout surge",
+            value: checkoutSurge.recent
+              ? `${checkoutSurge.text} — buyers were let through`
+              : checkoutSurge.text,
+            problem: checkoutSurge.recent,
+          },
           {
             label: "Last owner alert",
             value: alertState ? formatWhen(new Date(alertState.at)) : "None sent",

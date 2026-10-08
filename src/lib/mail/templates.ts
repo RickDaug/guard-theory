@@ -184,10 +184,19 @@ export function orderShipped(
  */
 export function orderCancelled(
   order: OrderForEmail,
-  refund: { refundedCents: number; earlierRefundCents: number },
+  refund: {
+    refundedCents: number;
+    earlierRefundCents: number;
+    /** The payment went back through a chargeback the shop lost, not a refund. */
+    chargeback?: boolean;
+  },
 ): Email {
-  const refundLines =
-    refund.refundedCents > 0
+  const refundLines = refund.chargeback
+    ? [
+        "Your bank has already returned your payment to you, through the dispute you raised",
+        "with them, so there is nothing further to come back from us.",
+      ]
+    : refund.refundedCents > 0
       ? [
           `We have refunded ${formatMoney(refund.refundedCents, order.currency)} to the card you paid with.`,
           ...(refund.earlierRefundCents > 0
@@ -235,11 +244,18 @@ export function orderCancelled(
  * promises and what the law requires. It points at `?t=`, which is the
  * parameter `src/app/unsubscribe/page.tsx` actually reads.
  *
- * The body link opens a confirm page (a GET must not write: mail scanners
- * follow every link). The headers are the one-click path: RFC 8058's
- * `List-Unsubscribe-Post` tells the mail client to POST to /api/unsubscribe,
- * which acts at once (list-unsubscribe.ts builds them). Gmail and Yahoo
- * require both headers from bulk senders. No order message may carry them.
+ * TWO WAYS OUT, FOR TWO KINDS OF READER
+ *
+ * The link in the body is for a person, and it lands on a page with a button:
+ * mail scanners and link prefetchers follow every URL in a message, and a link
+ * that unsubscribes on GET lets them unsubscribe people who never clicked.
+ *
+ * The headers are for the mail client. `List-Unsubscribe` with
+ * `List-Unsubscribe-Post: List-Unsubscribe=One-Click` is RFC 8058: the client
+ * shows its own unsubscribe button and, when it is pressed, POSTs to the URL.
+ * A scanner does not POST. Gmail and Yahoo have required both headers of bulk
+ * senders since February 2024, and a list message without them is more likely
+ * to be filed as spam however few of them there are.
  */
 export function announcement(
   to: string,

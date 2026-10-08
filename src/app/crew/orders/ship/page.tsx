@@ -34,8 +34,12 @@ export default async function ShipQueuePage() {
             {rows.map((order) => {
               // Things to read before buying postage, in the live-state colour;
               // plain facts about the order, in steel.
+              const lost = order.dispute_status === "lost";
               const warnings = [
-                isFlagReason(order.flagged_reason)
+                // A lost chargeback outranks the flag's own wording: the money
+                // is gone for good, and the way out is Cancel, not waiting.
+                lost ? "Chargeback lost — do not ship; cancel it to put the stock back" : null,
+                isFlagReason(order.flagged_reason) && !(lost && order.flagged_reason === "disputed")
                   ? (FLAG_SHIP_WARNING[order.flagged_reason] ?? null)
                   : null,
                 // A cleared flag does not end a chargeback.

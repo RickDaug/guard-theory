@@ -1,5 +1,6 @@
 import { query } from "../db/client.ts";
 import type { BoughtLabel, ShippoMode } from "../shipping/shippo.ts";
+import { SHIPPABLE_SQL } from "./manage.ts";
 
 /**
  * Who is buying the label for this order, right now.
@@ -24,6 +25,8 @@ export type LabelEligibility = {
   status: string;
   refund_status: string;
   stripe_mode: string;
+  /** Where a chargeback stands (0011). An open or lost one refuses a label. */
+  dispute_status?: string | null;
 };
 
 /**
@@ -40,6 +43,9 @@ export type LabelEligibility = {
  *   carry. A token whose mode cannot be read is refused for the same reason
  *   the Stripe side refuses an unknown key.
  * - A cancelled order, or one refunded in full, is not going anywhere.
+ * - A chargeback, open or lost: the bank has pulled the money back. Postage
+ *   for goods that may never be paid for — or, once lost, certainly will not
+ *   be — is money nobody gets back. It used to be only a warning on the page.
  */
 export function labelRefusal(order: LabelEligibility, mode: ShippoMode): string | null {
   if (mode === "unknown") {
@@ -60,6 +66,14 @@ export function labelRefusal(order: LabelEligibility, mode: ShippoMode): string 
     return "This order has been refunded in full. No label was bought.";
   }
 
+  if (order.dispute_status === "lost") {
+    return "The buyer's bank took this payment back and the dispute was lost, so this order must not ship. No label was bought. Cancel it to put the stock back.";
+  }
+
+  if (order.dispute_status === "open") {
+    return "The buyer's bank has disputed this payment, and Stripe is holding the money until it is decided. No label was bought. Answer the dispute in the Stripe dashboard and wait for the outcome.";
+  }
+
   return null;
 }
 
@@ -74,7 +88,8 @@ export async function claimLabelPurchase(orderId: string): Promise<LabelClaim> {
   const rows = await query<{ id: string }>(
     `update "order" set label_claimed_at = now()
       where id = $1 and tracking_number is null and label_claimed_at is null
-        and status <> 'cancelled' and refund_status <> 'full'
+        and status <> 'cancelled' and ${SHIPPABLE_SQL}
+        and dispute_status is distinct from 'open'
       returning id`,
     [orderId],
   );
@@ -86,7 +101,8 @@ export async function claimLabelPurchase(orderId: string): Promise<LabelClaim> {
   const state = await query<{ has_tracking: boolean; abandoned: boolean; shippable: boolean }>(
     `select tracking_number is not null as has_tracking,
             label_claimed_at < now() - make_interval(mins => $2) as abandoned,
-            status <> 'cancelled' and refund_status <> 'full' as shippable
+            status <> 'cancelled' and ${SHIPPABLE_SQL}
+              and dispute_status is distinct from 'open' as shippable
        from "order" where id = $1`,
     [orderId, LABEL_CLAIM_MINUTES],
   );

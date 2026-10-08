@@ -189,6 +189,8 @@ export type SalesOrder = {
   currency: string;
   stripe_payment_intent: string | null;
   stripe_mode: string;
+  /** Where a chargeback stands (0011); null if there never was one. */
+  dispute_status?: string | null;
 };
 
 /**
@@ -212,7 +214,8 @@ export async function loadSalesOrders(range: DateRange, includeTest: boolean): P
   const rows = await query<SalesOrder>(
     `select number, placed_at, status, ship_state, ship_postal, ship_country,
             subtotal_cents, shipping_cents, tax_cents, total_cents,
-            refunded_cents, refunded_at, currency, stripe_payment_intent, stripe_mode
+            refunded_cents, refunded_at, currency, stripe_payment_intent, stripe_mode,
+            dispute_status
        from "order"
       where placed_at >= $1 and placed_at < $2
         and ($3::boolean or stripe_mode = 'live')
@@ -231,7 +234,18 @@ export function filterToRange<T extends { placed_at: Date }>(rows: T[], range: D
 }
 
 const money = (cents: number) => toDecimalString(cents);
-const net = (order: SalesOrder) => order.total_cents - order.refunded_cents;
+/**
+ * What a lost chargeback took back: everything not already refunded. The bank
+ * returns the disputed amount to the buyer and Stripe debits it from the
+ * shop, so it is not revenue — but it is not a refund either (refunded_cents
+ * records only refunds), and it was counted as revenue until this column.
+ * Stripe's dispute fee is not included; it is on the Stripe balance report.
+ */
+export const chargebackCents = (order: SalesOrder) =>
+  order.dispute_status === "lost" ? Math.max(0, order.total_cents - order.refunded_cents) : 0;
+const net = (order: SalesOrder) =>
+  order.total_cents - order.refunded_cents - chargebackCents(order);
+const NET_HEADER = "net (total charged minus refunded and chargebacks lost)";
 
 const ORDER_COLUMNS: CsvColumn<SalesOrder>[] = [
   { header: "order number", value: (o) => String(o.number), literal: true },
@@ -252,7 +266,8 @@ const ORDER_COLUMNS: CsvColumn<SalesOrder>[] = [
     value: (o) => (o.refunded_at ? pacificDate(o.refunded_at) : ""),
     literal: true,
   },
-  { header: "net (total charged minus refunded)", value: (o) => money(net(o)), literal: true },
+  { header: "lost to chargeback", value: (o) => money(chargebackCents(o)), literal: true },
+  { header: NET_HEADER, value: (o) => money(net(o)), literal: true },
   { header: "currency", value: (o) => o.currency },
   { header: "Stripe payment id", value: (o) => o.stripe_payment_intent },
   { header: "Stripe mode", value: (o) => o.stripe_mode },
@@ -273,11 +288,23 @@ export type SummaryRow = {
   tax: number;
   total: number;
   refunded: number;
+  chargeback: number;
   net: number;
 };
 
 function empty(grouping: string, group: string): SummaryRow {
-  return { grouping, group, orders: 0, subtotal: 0, shipping: 0, tax: 0, total: 0, refunded: 0, net: 0 };
+  return {
+    grouping,
+    group,
+    orders: 0,
+    subtotal: 0,
+    shipping: 0,
+    tax: 0,
+    total: 0,
+    refunded: 0,
+    chargeback: 0,
+    net: 0,
+  };
 }
 
 function add(row: SummaryRow, order: SalesOrder): void {
@@ -287,6 +314,7 @@ function add(row: SummaryRow, order: SalesOrder): void {
   row.tax += order.tax_cents;
   row.total += order.total_cents;
   row.refunded += order.refunded_cents;
+  row.chargeback += chargebackCents(order);
   row.net += net(order);
 }
 
@@ -350,7 +378,8 @@ const SUMMARY_COLUMNS: CsvColumn<SummaryRow>[] = [
   { header: "tax charged", value: (r) => money(r.tax), literal: true },
   { header: "total charged", value: (r) => money(r.total), literal: true },
   { header: "refunded", value: (r) => money(r.refunded), literal: true },
-  { header: "net (total charged minus refunded)", value: (r) => money(r.net), literal: true },
+  { header: "lost to chargeback", value: (r) => money(r.chargeback), literal: true },
+  { header: NET_HEADER, value: (r) => money(r.net), literal: true },
 ];
 
 export function summaryCsv(orders: SalesOrder[]): string {

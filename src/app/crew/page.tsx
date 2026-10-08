@@ -81,7 +81,10 @@ export default async function CrewHome() {
             {health.state === "never"
               ? "The reconciler has never finished a run, so a payment the webhook missed would not be picked up."
               : `The reconciler last finished ${describeAge(health.minutesAgo)}. It runs every fifteen minutes; past ${RECONCILE_STALE_MINUTES}, payments the webhook missed are not being picked up.`}{" "}
-            <Link href={portalUrl("/settings")} className="text-signal-lift">
+            <Link
+              href={portalUrl("/settings")}
+              className="text-signal-lift underline underline-offset-[5px]"
+            >
               See Settings
             </Link>
           </p>
@@ -113,7 +116,10 @@ export default async function CrewHome() {
             {unpriced === 1
               ? "One product has no price yet, so it cannot go live."
               : `${unpriced} products have no price yet, so they cannot go live.`}{" "}
-            <Link href={portalUrl("/products")} className="text-signal-lift">
+            <Link
+              href={portalUrl("/products")}
+              className="text-signal-lift underline underline-offset-[5px]"
+            >
               Set prices
             </Link>
           </p>

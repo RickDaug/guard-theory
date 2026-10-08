@@ -253,7 +253,7 @@ export async function setTracking(
   }
 
   if (!number) {
-    return { status: "error", message: "Enter the tracking number." };
+    return { status: "error", message: "Enter the tracking number.", field: "trackingNumber" };
   }
 
   // This string goes into an email and into a carrier URL. Carriers use
@@ -262,11 +262,12 @@ export async function setTracking(
     return {
       status: "error",
       message: "That does not look like a tracking number. Letters and digits only, 6 to 40 of them.",
+      field: "trackingNumber",
     };
   }
 
   if (!/^[A-Za-z0-9 .&-]{2,30}$/.test(carrier)) {
-    return { status: "error", message: "Write the carrier as a short name, like USPS or UPS." };
+    return { status: "error", message: "Write the carrier as a short name, like USPS or UPS.", field: "trackingCarrier" };
   }
 
   if (!(await getOrder(id))) {
@@ -306,7 +307,7 @@ export async function issueRefund(
     const cleaned = raw.replace(/[$,\s]/g, "");
 
     if (!/^\d+(\.\d{1,2})?$/.test(cleaned)) {
-      return { status: "error", message: "Write the amount as a number, like 20 or 20.00." };
+      return { status: "error", message: "Write the amount as a number, like 20 or 20.00.", field: "amount" };
     }
 
     const [whole, fraction = ""] = cleaned.split(".");
@@ -315,7 +316,7 @@ export async function issueRefund(
     // "99999999999999999999" passes the pattern and is not a number of cents
     // any more: past 2^53 the arithmetic above has already rounded it.
     if (!Number.isSafeInteger(amountCents) || amountCents <= 0) {
-      return { status: "error", message: "Enter an amount greater than zero." };
+      return { status: "error", message: "Enter an amount greater than zero.", field: "amount" };
     }
   }
 

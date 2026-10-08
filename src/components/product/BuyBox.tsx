@@ -33,6 +33,8 @@ export function BuyBox({ productName, priceCents, compareAtCents, currency, vari
   const firstAvailable = variants.find((variant) => variant.inStock);
   const [selected, setSelected] = useState<string | null>(firstAvailable?.id ?? null);
   const [added, setAdded] = useState(false);
+  // Bumped on every add, so adding the same size twice is announced twice.
+  const [adds, setAdds] = useState(0);
 
   const chosen = variants.find((variant) => variant.id === selected) ?? null;
 
@@ -80,8 +82,10 @@ export function BuyBox({ productName, priceCents, compareAtCents, currency, vari
                 }}
                 className={[
                   "notation min-h-6 border px-4 py-2 text-2xs transition-colors duration-[140ms] ease-[var(--ease-control)]",
+                  // The chosen size takes a doubled rule as well as the brighter
+                  // colour, so it is told apart by more than colour (SC 1.4.1).
                   isSelected
-                    ? "border-signal-lift text-chalk"
+                    ? "border-signal-lift text-chalk shadow-[inset_0_0_0_1px_var(--color-signal-lift)]"
                     : "border-steel-dim text-steel hover:border-signal-lift hover:text-signal-lift",
                   variant.inStock ? "" : "cursor-not-allowed line-through opacity-45",
                 ].join(" ")}
@@ -107,6 +111,7 @@ export function BuyBox({ productName, priceCents, compareAtCents, currency, vari
             if (chosen?.inStock) {
               addToCart(chosen.id, 1);
               setAdded(true);
+              setAdds((n) => n + 1);
             }
           }}
         >
@@ -116,11 +121,16 @@ export function BuyBox({ productName, priceCents, compareAtCents, currency, vari
         {added ? <ButtonLink href="/cart" intent="quiet">Go to cart</ButtonLink> : null}
       </div>
 
-      {added ? (
-        <p role="status" className="mt-5 text-base text-steel">
-          {`${productName}, size ${chosen?.sizeLabel}, is in your cart.`}
-        </p>
-      ) : null}
+      {/* In the DOM from the first render and empty until something is added:
+          a status region inserted already holding its text is not reliably
+          announced (SC 4.1.3). */}
+      <div role="status" data-buybox-status>
+        {added ? (
+          <p key={adds} className="mt-5 text-base text-steel">
+            {`${productName}, size ${chosen?.sizeLabel}, is in your cart.`}
+          </p>
+        ) : null}
+      </div>
     </div>
   );
 }

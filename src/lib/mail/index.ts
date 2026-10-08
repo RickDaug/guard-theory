@@ -97,15 +97,17 @@ class LoggingProvider implements MailProvider {
  *
  * `reply_to` is Resend's field name. It is only present when there is an
  * address to put in it, so a deployment without `REPLY_TO_EMAIL` sends the
- * same bytes it always has.
+ * same bytes it always has. A message that carries its own `replyTo` uses it.
  */
 export function resendPayload(from: string, replyTo: string | null, email: Email) {
+  // A message's own Reply-To (the contact forward's sender) beats the site-wide one.
+  const replyAddress = email.replyTo ?? replyTo;
   return {
     from: fromWithName(from),
     to: [email.to],
     subject: email.subject,
     text: email.body,
-    ...(replyTo ? { reply_to: replyTo } : {}),
+    ...(replyAddress ? { reply_to: replyAddress } : {}),
     // Message headers, only when the message has any (list mail), so every
     // other send is the same bytes as before.
     ...(email.headers && Object.keys(email.headers).length > 0 ? { headers: email.headers } : {}),

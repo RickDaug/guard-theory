@@ -6,13 +6,17 @@ import {
 } from "./types.ts";
 import { armDrag } from "./entries/arm-drag.ts";
 import { armbarIsHipToShoulderDistance } from "./entries/armbar-is-hip-to-shoulder-distance.ts";
+import { backRetentionFollowingTheTurn } from "./entries/back-retention-following-the-turn.ts";
 import { bloodChokeVersusAirChoke } from "./entries/blood-choke-versus-air-choke.ts";
 import { butterflyGuardUnderPressure } from "./entries/butterfly-guard-under-pressure.ts";
 import { butterflyHookAsLever } from "./entries/butterfly-hook-as-lever.ts";
 import { closedGuardPostureBattle } from "./entries/closed-guard-posture-battle.ts";
 import { connectionInOpenGuard } from "./entries/connection-in-open-guard.ts";
 import { deLaRivaHook } from "./entries/de-la-riva-hook.ts";
+import { defendingTheGuillotine } from "./entries/defending-the-guillotine.ts";
 import { elbowKneeEscape } from "./entries/elbow-knee-escape.ts";
+import { escapingBackControl } from "./entries/escaping-back-control.ts";
+import { escapingSideControl } from "./entries/escaping-side-control.ts";
 import { framesVersusBlocks } from "./entries/frames-versus-blocks.ts";
 import { gettingHipsUnderneath } from "./entries/getting-hips-underneath.ts";
 import { guardRetentionIsTheKneeBetween } from "./entries/guard-retention-is-the-knee-between.ts";
@@ -24,7 +28,9 @@ import { kneeCutPass } from "./entries/knee-cut-pass.ts";
 import { kneeShield } from "./entries/knee-shield.ts";
 import { legEntanglementAsControl } from "./entries/leg-entanglement-as-control.ts";
 import { mountIsAHipPin } from "./entries/mount-is-a-hip-pin.ts";
+import { positionalHierarchy } from "./entries/positional-hierarchy.ts";
 import { pressurePassingVersusLoosePassing } from "./entries/pressure-passing-versus-loose-passing.ts";
+import { rearNakedStrangle } from "./entries/rear-naked-strangle.ts";
 import { retentionLadderFrameAngleInvertRecover } from "./entries/retention-ladder-frame-angle-invert-recover.ts";
 import { seatBeltAndHooks } from "./entries/seat-belt-and-hooks.ts";
 import { sweepingTowardTheMissingPost } from "./entries/sweeping-toward-the-missing-post.ts";
@@ -39,13 +45,17 @@ import { underhookHalfGuard } from "./entries/underhook-half-guard.ts";
 export const ENTRIES: TechniqueEntry[] = [
   armDrag,
   armbarIsHipToShoulderDistance,
+  backRetentionFollowingTheTurn,
   bloodChokeVersusAirChoke,
   butterflyGuardUnderPressure,
   butterflyHookAsLever,
   closedGuardPostureBattle,
   connectionInOpenGuard,
   deLaRivaHook,
+  defendingTheGuillotine,
   elbowKneeEscape,
+  escapingBackControl,
+  escapingSideControl,
   framesVersusBlocks,
   gettingHipsUnderneath,
   guardRetentionIsTheKneeBetween,
@@ -57,7 +67,9 @@ export const ENTRIES: TechniqueEntry[] = [
   kneeShield,
   legEntanglementAsControl,
   mountIsAHipPin,
+  positionalHierarchy,
   pressurePassingVersusLoosePassing,
+  rearNakedStrangle,
   retentionLadderFrameAngleInvertRecover,
   seatBeltAndHooks,
   sweepingTowardTheMissingPost,

@@ -28,11 +28,11 @@ export function copyFor(result: UnsubscribeOutcome): Copy {
         ),
         body: (
           <>
-            <p className="text-lg text-steel">
+            <p className="text-lg text-chalk">
               Your email address has been removed from the First Edition list. We
               will not email you again.
             </p>
-            <p className="text-base text-steel">
+            <p className="text-base text-chalk">
               Nothing else was deleted automatically. If you would also like the
               preferences you gave us removed,{" "}
               <Link
@@ -43,7 +43,7 @@ export function copyFor(result: UnsubscribeOutcome): Copy {
               </Link>{" "}
               and we will delete them — you do not need to give a reason.
             </p>
-            <p className="text-base text-steel">
+            <p className="text-base text-chalk">
               If you did this by accident, you can join again at any time.
               Nothing is held against the address.
             </p>
@@ -62,12 +62,12 @@ export function copyFor(result: UnsubscribeOutcome): Copy {
         ),
         body: (
           <>
-            <p className="text-lg text-steel">
+            <p className="text-lg text-chalk">
               This page removes an address from the First Edition list, and it
               needs the link from one of our emails to know which address to
               remove.
             </p>
-            <p className="text-base text-steel">
+            <p className="text-base text-chalk">
               Every email we send carries that link at the foot of it. If you
               cannot find one,{" "}
               <Link
@@ -93,12 +93,12 @@ export function copyFor(result: UnsubscribeOutcome): Copy {
         ),
         body: (
           <>
-            <p className="text-lg text-steel">
+            <p className="text-lg text-chalk">
               We could not match this link to an address on the list. It may have
               been truncated by an email client, or the address may already have
               been deleted outright.
             </p>
-            <p className="text-base text-steel">
+            <p className="text-base text-chalk">
               <Link
                 href="/contact"
                 className="text-chalk underline decoration-steel-dim underline-offset-[5px] transition-colors duration-[140ms] ease-[var(--ease-control)] hover:decoration-signal-lift"
@@ -124,12 +124,12 @@ export function copyFor(result: UnsubscribeOutcome): Copy {
         ),
         body: (
           <>
-            <p className="text-lg text-steel">
+            <p className="text-lg text-chalk">
               Something on our side failed and your address has not been removed.
               We would rather say so than show you a confirmation that means
               nothing.
             </p>
-            <p className="text-base text-steel">
+            <p className="text-base text-chalk">
               Try the link again in a few minutes. If it fails twice,{" "}
               <Link
                 href="/contact"

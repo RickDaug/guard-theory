@@ -39,7 +39,7 @@ export function ConfirmForm({ token }: { token: string }) {
       }
       secondary={SECONDARY}
     >
-      <p className="text-lg text-steel">
+      <p className="text-lg text-chalk">
         Press the button to remove your address from the First Edition list. We
         will not email you again.
       </p>

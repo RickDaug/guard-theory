@@ -80,35 +80,47 @@ export default function FaqPage() {
       <div className="mx-auto max-w-[104rem]">
         <Breadcrumbs trail={[{ href: "/faq", label: "FAQ" }]} />
 
-        <header className="mt-10 mb-16 max-w-[46rem]">
-          <h1 className="display-condensed text-4xl text-chalk">
-            Frequently asked
-          </h1>
-          <p className="mt-8 text-lg text-steel">
-            Short answers, and the reasoning behind them where the reasoning is
-            the useful part.
+        {/* The sheet: a contents page of the monograph. Each question is a
+            row — question in the margin, answer at the reading measure. */}
+        <div className="band-bone band-edge mt-10 px-7 py-14 sm:px-16 sm:py-20">
+          <header className="max-w-[46rem]">
+            <h1 className="display-serif text-4xl text-ink">
+              Frequently asked
+            </h1>
+            <div aria-hidden="true" className="mt-8 h-1 w-16 bg-signal" />
+            <p className="mt-8 text-lg text-ink">
+              Short answers, and the reasoning behind them where the reasoning is
+              the useful part.
+            </p>
+          </header>
+
+          <dl className="m-0 mt-16 border-t border-steel p-0">
+            {FAQS.map((item) => (
+              <div
+                key={item.q}
+                className="grid gap-x-12 gap-y-3 border-b border-steel py-8 lg:grid-cols-12"
+              >
+                <dt className="display-condensed text-lg text-ink lg:col-span-5">
+                  {item.q}
+                </dt>
+                <dd className="m-0 max-w-[38rem] text-base text-ink lg:col-span-7">
+                  {item.a}
+                </dd>
+              </div>
+            ))}
+          </dl>
+
+          <p className="mt-14 text-base text-ink">
+            Something not answered here?{" "}
+            <Link
+              href="/contact"
+              className="text-signal-dim underline decoration-steel underline-offset-[5px] transition-colors duration-[140ms] ease-[var(--ease-control)] hover:decoration-signal-dim"
+            >
+              Ask us
+            </Link>
+            .
           </p>
-        </header>
-
-        <dl className="m-0 grid max-w-[70rem] grid-cols-1 gap-px bg-steel-dim p-0 lg:grid-cols-2">
-          {FAQS.map((item) => (
-            <div key={item.q} className="bg-ink p-8">
-              <dt className="display-condensed text-lg text-chalk">{item.q}</dt>
-              <dd className="m-0 mt-4 text-base text-steel">{item.a}</dd>
-            </div>
-          ))}
-        </dl>
-
-        <p className="mt-14 text-base text-steel">
-          Something not answered here?{" "}
-          <Link
-            href="/contact"
-            className="text-chalk underline decoration-steel-dim underline-offset-[5px] transition-colors duration-[140ms] ease-[var(--ease-control)] hover:decoration-signal-lift"
-          >
-            Ask us
-          </Link>
-          .
-        </p>
+        </div>
       </div>
 
       <script

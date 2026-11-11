@@ -83,14 +83,22 @@ export default function HomePage() {
         {/* The headline column takes half the grid and more above lg: at
             text-5xl a five-column measure broke every word onto its own line. */}
         <div className="relative mx-auto grid max-w-[104rem] gap-16 lg:grid-cols-12 lg:gap-16 xl:gap-20">
-          <div className="lg:col-span-6 xl:col-span-7">
+          {/* A container, so the headline is sized from this column rather than
+              from the viewport. At a viewport-relative text-5xl the longest
+              line ("It is a theory", 5.26em in Archivo at wdth 66) was wider
+              than the column at 320, 360 and 1024-1400px and wrapped; and in
+              the fallback face (6.04em in Arial Narrow) it wrapped at 390px
+              too, then un-wrapped when Archivo arrived: seven lines to four,
+              173px of page, CLS 0.1303 five runs out of five. 16cqi gives
+              every line a 6.25em budget, so neither face can wrap. */}
+          <div className="@container lg:col-span-6 xl:col-span-7">
             <p className="display-wide text-xs text-chalk sm:text-sm">
               No-gi grappling apparel
             </p>
 
             <h1
               id="hero-title"
-              className="display-condensed mt-8 text-5xl leading-[0.9] text-chalk"
+              className="display-condensed mt-8 text-[clamp(2.5rem,16cqi,8.5rem)] leading-[0.9] text-chalk"
             >
               {/* A <br> is a line, not a space. Without the written one
                   this read "Guard is nota position.It is a theoryof
@@ -117,7 +125,10 @@ export default function HomePage() {
               . Position before submission. Systems before chaos.
             </p>
 
-            <div className="mt-12 flex flex-wrap items-center gap-x-8 gap-y-4">
+            {/* Stacked below sm, a row above it. With `flex-wrap` the pair sat
+                on one line in the fallback face and broke onto two in Archivo
+                at 390px, so the plate beneath moved 40px when the font landed. */}
+            <div className="mt-12 flex flex-col items-start gap-y-4 sm:flex-row sm:items-center sm:gap-x-8">
               <Link
                 href="/first-edition"
                 className="display-plain bg-signal px-7 py-3.5 text-sm text-chalk no-underline transition-colors duration-[140ms] ease-[var(--ease-control)] hover:bg-signal-dim"

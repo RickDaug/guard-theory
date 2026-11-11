@@ -243,7 +243,12 @@ export default async function TechniqueEntryPage({ params }: Params) {
         <div className="band-bone corner-ticks mx-auto mt-10 max-w-[80rem] px-7 py-14 sm:px-14 sm:py-20 lg:grid lg:grid-cols-[minmax(0,1fr)_13rem] lg:gap-x-16 xl:px-20">
           <article className="min-w-0 max-w-[52rem] [&_p]:max-w-[38rem] [&_li]:max-w-[38rem]">
             <header className="pb-10">
-              <p className="flex flex-wrap items-baseline gap-x-4 gap-y-1">
+              {/* Stacked below sm, a row above it — decided by the breakpoint,
+                  never by `flex-wrap`. Wrapping made the height depend on
+                  which font had arrived: the pair fitted one line in the mono
+                  fallback and needed two in Martian Mono at 390px, which moved
+                  the whole entry 20px (CLS 0.0737, five runs out of five). */}
+              <p className="flex flex-col gap-y-1 sm:flex-row sm:items-baseline sm:gap-x-4">
                 <span className="eyebrow text-slate">{category.name}</span>{" "}
                 <span className="notation text-2xs text-slate">
                   {entry.difficulty} · {entry.relevance}

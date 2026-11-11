@@ -121,7 +121,7 @@ export const jiuJitsuJujutsuAndTheSpellingOfTheName: DraftArticle = {
     {
       title: "History of Kodokan Judo",
       publisher: "Kodokan Judo Institute",
-      url: "http://kodokanjudoinstitute.org/en/doctrine/history/",
+      url: "https://kdkjudo.org/en/teachings/history/",
       accessed: "2026-11-11",
     },
     {

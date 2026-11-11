@@ -202,8 +202,11 @@ export default async function ArticlePage({ params }: Params) {
 
                 {published && author ? (
                   <p className="mt-6 text-base text-slate">
-                    By <span className="text-ink">{author.name}</span>,{" "}
-                    {author.kind === "person" ? author.role.toLowerCase() : author.role} · Published{" "}
+                    By <span className="text-ink">{author.name}</span>
+                    {/* A person's standing follows their name. The editorial
+                        byline is the publication, and needs no qualifier. */}
+                    {author.kind === "person" ? `, ${author.role.toLowerCase()}` : null}
+                    {" · Published "}
                     <time dateTime={(article as { publishedAt: string }).publishedAt}>
                       {new Date(
                         (article as { publishedAt: string }).publishedAt,

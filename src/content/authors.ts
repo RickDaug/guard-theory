@@ -35,8 +35,9 @@ export const AUTHORS: Author[] = [
     id: EDITORIAL_AUTHOR_ID,
     kind: "organization",
     name: "Guard Theory editorial",
-    // Printed after the name as written, not lower-cased.
-    role: "the publication's byline",
+    // Not printed on the byline: a person's role follows their name, the
+    // publication's does not.
+    role: "editorial",
     bio: "Published under the sourcing rules in our editorial policy. The sources are listed above.",
   },
   {

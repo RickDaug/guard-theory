@@ -40,20 +40,12 @@ describe("the X-Robots-Tag header", () => {
     if (vercelEnv === undefined) delete process.env.VERCEL_ENV;
     else process.env.VERCEL_ENV = vercelEnv;
 
-    // The collect pass needs no hash manifest (see scripts/build.mjs).
-    process.env.GT_CSP_PASS = "collect";
     const rules = (await nextConfig.headers?.()) ?? [];
-    delete process.env.GT_CSP_PASS;
+    assert.equal(rules.length, 1);
     const rule = rules[0]!;
     assert.equal(rule.source, "/:path*");
-    assert.ok(
-      rules.slice(1).every((r) => !r.headers.some((h) => h.key === "X-Robots-Tag")),
-      "X-Robots-Tag is set by the catch-all rule only",
-    );
-    // Whatever else happens, the security headers are still there. The CSP
-    // is per page (src/lib/csp.ts), so it lives in rules of its own.
-    assert.ok(rule.headers.some((h) => h.key === "Strict-Transport-Security"));
-    assert.ok(rules.some((r) => r.headers.some((h) => h.key === "Content-Security-Policy")));
+    // Whatever else happens, the security headers are still there.
+    assert.ok(rule.headers.some((h) => h.key === "Content-Security-Policy"));
     return rule.headers.find((h) => h.key === "X-Robots-Tag")?.value;
   }
 

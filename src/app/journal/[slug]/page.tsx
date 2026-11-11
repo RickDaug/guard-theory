@@ -145,7 +145,9 @@ export default async function ArticlePage({ params }: Params) {
     : null;
 
   return (
-    <main id="main" tabIndex={-1} className="px-6 py-16 md:px-12">
+    // The desk: ink with the plate's dot grid as texture, the one textured
+    // band on this page. The sheet below is the only bone surface.
+    <main id="main" tabIndex={-1} className="plate-grid px-6 py-16 md:px-12">
       <div className="mx-auto max-w-[104rem]">
         <Breadcrumbs
           trail={[
@@ -173,13 +175,13 @@ export default async function ArticlePage({ params }: Params) {
             aria-label="Contents"
             className="lg:col-span-3 lg:sticky lg:top-8 lg:self-start"
           >
-            <p className="notation mb-5 text-2xs text-orchid">Contents</p>
+            <p className="eyebrow mb-5 border-b border-steel-dim pb-3 text-steel">Contents</p>
             <ol role="list" className="m-0 flex list-none flex-col gap-3 p-0">
               {article.sections.map((section) => (
                 <li key={section.id}>
                   <a
                     href={`#${section.id}`}
-                    className="inline-flex min-h-[24px] items-center text-sm text-steel no-underline transition-colors duration-[140ms] ease-[var(--ease-control)] hover:text-chalk"
+                    className="link-rule inline-flex min-h-[24px] items-center text-sm text-chalk transition-colors duration-[140ms] ease-[var(--ease-control)] hover:text-signal-lift"
                   >
                     {section.heading}
                   </a>
@@ -190,18 +192,23 @@ export default async function ArticlePage({ params }: Params) {
 
           {/* The study register: a sheet of paper laid on the dark ground. */}
           <article className="lg:col-span-8 lg:col-start-5">
-            <div className="bg-bone px-7 py-14 sm:px-16 sm:py-20 [&_p]:max-w-[38rem] [&_li]:max-w-[38rem]">
+            {/* The sheet: a bone band with the plate's registration ticks at
+                its corners. band-bone sets text and focus-ring together. */}
+            <div className="band-bone corner-ticks px-7 py-14 sm:px-16 sm:py-20 [&_p]:max-w-[38rem] [&_li]:max-w-[38rem]">
               <header className="pb-10">
-                <p className="notation text-2xs text-signal-dim">
-                  {category.name} · {readingTimeMinutes(article)} min read
+                <p className="flex flex-wrap items-baseline gap-x-4 gap-y-1">
+                  <span className="eyebrow text-slate">{category.name}</span>{" "}
+                  <span className="notation text-2xs text-slate">
+                    {readingTimeMinutes(article)} min read
+                  </span>
                 </p>
-                <h1 className="display-condensed mt-6 text-3xl text-ink">
+                <h1 className="display-serif mt-6 text-4xl text-ink">
                   {article.title}
                 </h1>
-                <p className="mt-7 text-lg text-slate">{article.standfirst}</p>
+                <p className="mt-8 text-lg text-slate">{article.standfirst}</p>
 
                 {published && author ? (
-                  <p className="mt-6 text-base text-slate">
+                  <p className="mt-8 border-t border-steel pt-5 text-sm text-slate">
                     By <span className="text-ink">{author.name}</span>,{" "}
                     {author.kind === "person" ? author.role.toLowerCase() : author.role} · Published{" "}
                     <time dateTime={(article as { publishedAt: string }).publishedAt}>
@@ -232,7 +239,7 @@ export default async function ArticlePage({ params }: Params) {
                   <section
                     key={section.id}
                     id={section.id}
-                    className="scroll-mt-8 border-t border-slate/25 pt-8"
+                    className="scroll-mt-8 border-t border-steel pt-8"
                   >
                     <h2 className="display-condensed text-xl text-ink">
                       {section.heading}
@@ -249,7 +256,7 @@ export default async function ArticlePage({ params }: Params) {
               </div>
 
               {article.contestedNotes.length > 0 ? (
-                <section className="mt-14 border-t border-slate/25 pt-8">
+                <section className="mt-14 border border-steel bg-bone-raised p-6 sm:p-8">
                   <h2 className="display-condensed text-xl text-ink">
                     Where the record is contested
                   </h2>
@@ -269,16 +276,23 @@ export default async function ArticlePage({ params }: Params) {
                 </section>
               ) : null}
 
-              <section className="mt-14 border-t border-slate/25 pt-8">
+              {/* References, set as a reference list: a numbered column, the
+                  title as the link, the publisher and the date consulted as
+                  the locator line. Every source and date is printed as is;
+                  tests/unit/content.test.ts parses them. */}
+              <section className="mt-14 border-t border-steel pt-8">
                 <h2 className="display-condensed text-xl text-ink">Sources</h2>
                 <p className="mt-3 text-sm text-slate">
                   Each source opens in a new tab.
                 </p>
-                <ol role="list" className="m-0 mt-5 flex list-none flex-col gap-4 p-0">
+                <ol role="list" className="m-0 mt-6 flex list-none flex-col p-0">
                   {article.sources.map((source, index) => (
-                    <li key={source.url} className="flex gap-5">
+                    <li
+                      key={source.url}
+                      className="grid grid-cols-[2.25rem_1fr] gap-x-3 border-t border-steel py-4 first:border-t-0 first:pt-0"
+                    >
                       <span
-                        className="notation mt-1.5 shrink-0 text-2xs text-slate"
+                        className="notation pt-1 text-2xs text-slate"
                         aria-hidden="true"
                       >
                         {String(index + 1).padStart(2, "0")}
@@ -288,12 +302,12 @@ export default async function ArticlePage({ params }: Params) {
                           href={source.url}
                           rel="noopener noreferrer"
                           target="_blank"
-                          className="underline decoration-slate/40 underline-offset-[5px] transition-colors duration-[140ms] ease-[var(--ease-control)] hover:decoration-signal-dim"
+                          className="text-signal-dim underline decoration-signal-dim/40 underline-offset-[5px] transition-colors duration-[140ms] ease-[var(--ease-control)] hover:decoration-signal-dim"
                         >
                           {source.title}{" "}
                           <span className="sr-only">(opens in a new tab)</span>
                         </a>
-                        <span className="block text-slate">
+                        <span className="notation mt-1.5 block text-2xs text-slate">
                           {source.publisher} · consulted {source.accessed}
                         </span>
                       </span>
@@ -303,7 +317,7 @@ export default async function ArticlePage({ params }: Params) {
               </section>
 
               {related.length > 0 ? (
-                <section className="mt-14 border-t border-slate/25 pt-8">
+                <section className="mt-14 border-t border-steel pt-8">
                   <h2 className="display-condensed text-xl text-ink">
                     Related reading
                   </h2>
@@ -312,7 +326,7 @@ export default async function ArticlePage({ params }: Params) {
                       <li key={item.slug}>
                         <Link
                           href={`/journal/${item.slug}`}
-                          className="text-base text-ink underline decoration-slate/40 underline-offset-[5px] transition-colors duration-[140ms] ease-[var(--ease-control)] hover:decoration-signal-dim"
+                          className="link-rule inline-flex min-h-6 items-center text-base text-signal-dim"
                         >
                           {item.title}
                         </Link>
@@ -322,25 +336,32 @@ export default async function ArticlePage({ params }: Params) {
                 </section>
               ) : null}
 
-              <CrossLinks links={crossLinks} ground="bone" />
+              {/* The route out of the Journal, as a raised surface on the
+                  sheet. The wrapper restyles the component's own top rule and
+                  spacing; the component is shared and untouched. */}
+              {crossLinks.length > 0 ? (
+                <div className="mt-14 border border-steel bg-bone-raised px-6 pb-8 sm:px-8 [&>section]:mt-0 [&>section]:border-t-0 [&>section]:pt-8">
+                  <CrossLinks links={crossLinks} ground="bone" />
+                </div>
+              ) : null}
 
-              <footer className="mt-14 border-t border-slate/25 pt-8">
+              <footer className="mt-14 border-t border-steel pt-8">
                 {author ? (
                   <p className="mb-6 max-w-[34rem] text-sm text-slate">
                     <span className="text-ink">{author.name}.</span> {author.bio}
                   </p>
                 ) : null}
-                <p className="notation text-2xs text-slate">
+                <p className="eyebrow text-slate">
                   <Link
                     href="/policies/editorial"
-                    className="inline-flex min-h-6 items-center underline underline-offset-[5px]"
+                    className="link-rule inline-flex min-h-6 items-center text-signal-dim"
                   >
                     Editorial policy
                   </Link>{" "}
                   <span aria-hidden="true">·</span>{" "}
                   <Link
                     href="/contact"
-                    className="inline-flex min-h-6 items-center underline underline-offset-[5px]"
+                    className="link-rule inline-flex min-h-6 items-center text-signal-dim"
                   >
                     Found a mistake? Tell us
                   </Link>

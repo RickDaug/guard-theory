@@ -37,32 +37,72 @@ const SECTIONS: Record<
 
 const ORDER: Collection[] = ["journal", "technique", "figure"];
 
-export function SectionCrossNav({ current }: { current: Collection }) {
+/**
+ * Ground the block is drawn on. On ink it is the hairline grid it has always
+ * been; on bone (the facelift's contents pages) each section is a raised
+ * surface — bone-raised fill, steel hairline, square corners — that lifts on
+ * hover and ends in the link.
+ */
+type Ground = "ink" | "bone";
+
+const GROUND = {
+  ink: {
+    heading: "text-chalk",
+    list: "gap-px border border-steel-dim bg-steel-dim",
+    item: "bg-ink",
+    link: "p-7 hover:bg-ink-raised",
+    title: "text-chalk group-hover:text-signal-lift",
+    summary: "text-steel",
+  },
+  bone: {
+    heading: "text-ink",
+    list: "gap-6",
+    item: "card-lift reveal border border-steel bg-bone-raised hover:border-slate focus-within:border-slate",
+    link: "p-7 md:p-8",
+    title: "text-ink group-hover:text-signal-dim",
+    summary: "text-slate",
+  },
+} as const satisfies Record<Ground, Record<string, string>>;
+
+export function SectionCrossNav({
+  current,
+  ground = "ink",
+}: {
+  current: Collection;
+  ground?: Ground;
+}) {
   const others = ORDER.filter((key) => key !== current);
+  const tone = GROUND[ground];
 
   return (
     <section aria-labelledby="sections" className="mt-24">
       <h2
         id="sections"
-        className="display-condensed mb-8 text-2xl text-chalk"
+        className={`display-condensed mb-8 text-2xl ${tone.heading}`}
       >
         The rest of the writing
       </h2>
-      <ul className="m-0 grid list-none gap-px border border-steel-dim bg-steel-dim p-0 md:grid-cols-2">
+      <ul className={`m-0 grid list-none p-0 md:grid-cols-2 ${tone.list}`}>
         {others.map((key) => {
           const section = SECTIONS[key];
           return (
-            <li key={key} className="bg-ink">
+            <li key={key} className={tone.item}>
               <Link
                 href={section.href}
                 aria-labelledby={`section-${key}-title`}
                 aria-describedby={`section-${key}-summary`}
-                className="group flex h-full flex-col p-7 no-underline transition-colors duration-[140ms] ease-[var(--ease-control)] hover:bg-ink-raised"
+                className={`group flex h-full flex-col no-underline transition-colors duration-[140ms] ease-[var(--ease-control)] ${tone.link}`}
               >
-                <h3 id={`section-${key}-title`} className="display-condensed text-lg text-chalk transition-colors duration-[140ms] ease-[var(--ease-control)] group-hover:text-signal-lift">
+                <h3
+                  id={`section-${key}-title`}
+                  className={`display-condensed text-lg transition-colors duration-[140ms] ease-[var(--ease-control)] ${tone.title}`}
+                >
                   {section.name}
                 </h3>
-                <p id={`section-${key}-summary`} className="mt-3 grow text-sm text-steel">
+                <p
+                  id={`section-${key}-summary`}
+                  className={`mt-3 grow text-sm ${tone.summary}`}
+                >
                   {section.description}
                 </p>
               </Link>

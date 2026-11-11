@@ -20,10 +20,10 @@ export default function FormSuccessPage() {
       primary={{ href: "/", label: "Go to the home page" }}
       secondary={{ href: "/journal", label: "Read the Journal" }}
     >
-      <p className="text-lg text-steel">
+      <p className="text-lg text-chalk">
         Your submission was received. Nothing further is needed from you.
       </p>
-      <p className="text-base text-steel">
+      <p className="text-base text-chalk">
         If you were joining the First Edition list, you will hear from us once,
         when it opens.
       </p>

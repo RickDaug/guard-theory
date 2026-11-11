@@ -6,7 +6,7 @@ import { addToCart } from "@/lib/cart/client";
 import { formatMoney } from "@/lib/money";
 import { SIZE_CHART } from "@/content/products/size-chart";
 import type { VariantView } from "@/lib/catalogue/types";
-import { Button, ButtonLink } from "@/components/ui/Button";
+import { Button } from "@/components/ui/Button";
 
 /**
  * Price, size, add to cart.
@@ -39,29 +39,29 @@ export function BuyBox({ productName, priceCents, compareAtCents, currency, vari
   const chosen = variants.find((variant) => variant.id === selected) ?? null;
 
   return (
-    <div className="mt-10 border border-steel-dim p-6">
-      <p className="notation text-2xs text-orchid">First Edition</p>
+    <div className="corner-ticks mt-10 border border-steel bg-bone-raised p-6 sm:p-7">
+      <p className="eyebrow text-slate">First Edition</p>
 
-      <p className="display-condensed mt-4 text-3xl text-chalk tabular-nums">
+      <p className="display-condensed mt-4 text-3xl text-ink tabular-nums">
         {formatMoney(priceCents, currency)}
       </p>
 
       {compareAtCents !== null ? (
-        <p className="mt-2 text-sm text-steel">
+        <p className="mt-2 text-sm text-slate">
           {`Was ${formatMoney(compareAtCents, currency)}`}
         </p>
       ) : null}
 
       <fieldset className="mt-8 border-0 p-0">
-        <legend className="display-plain mb-4 text-sm text-steel">Size</legend>
+        <legend className="display-plain mb-4 text-sm text-slate">Size</legend>
         {/* The size question is asked here, so the answer is linked here —
             not only from the Sizes section further down the page. The page
             has a chart only once the owner supplies one (#64); until then it
             is the fit guide, and the link says so. */}
-        <p className="-mt-2 mb-4 text-sm text-steel">
+        <p className="-mt-2 mb-4 text-sm text-slate">
           <Link
             href="/size-and-fit"
-            className="inline-flex min-h-6 items-center text-chalk underline decoration-steel-dim underline-offset-[5px] transition-colors duration-[140ms] ease-[var(--ease-control)] hover:decoration-signal-lift"
+            className="inline-flex min-h-6 items-center text-signal-dim underline decoration-steel underline-offset-[5px] transition-colors duration-[140ms] ease-[var(--ease-control)] hover:decoration-signal-dim"
           >
             {SIZE_CHART.length > 0 ? "Size chart and fit guide" : "How it should fit"}
           </Link>
@@ -85,8 +85,8 @@ export function BuyBox({ productName, priceCents, compareAtCents, currency, vari
                   // The chosen size takes a doubled rule as well as the brighter
                   // colour, so it is told apart by more than colour (SC 1.4.1).
                   isSelected
-                    ? "border-signal-lift text-chalk shadow-[inset_0_0_0_1px_var(--color-signal-lift)]"
-                    : "border-steel-dim text-steel hover:border-signal-lift hover:text-signal-lift",
+                    ? "border-signal-dim text-ink shadow-[inset_0_0_0_1px_var(--color-signal-dim)]"
+                    : "border-slate text-ink hover:border-signal-dim hover:text-signal-dim",
                   variant.inStock ? "" : "cursor-not-allowed line-through opacity-45",
                 ].join(" ")}
               >
@@ -98,7 +98,7 @@ export function BuyBox({ productName, priceCents, compareAtCents, currency, vari
       </fieldset>
 
       {chosen && chosen.inStock && chosen.stock <= 3 ? (
-        <p className="mt-5 text-sm text-steel">
+        <p className="mt-5 text-sm text-slate">
           {chosen.stock === 1 ? "One left in this size." : `${chosen.stock} left in this size.`}
         </p>
       ) : null}
@@ -118,7 +118,14 @@ export function BuyBox({ productName, priceCents, compareAtCents, currency, vari
           {chosen?.inStock ? "Add to cart" : "Choose a size"}
         </Button>
 
-        {added ? <ButtonLink href="/cart" intent="quiet">Go to cart</ButtonLink> : null}
+        {added ? (
+          <Link
+            href="/cart"
+            className="display-plain inline-flex min-h-6 items-center text-sm text-signal-dim underline decoration-steel underline-offset-[6px] transition-colors duration-[140ms] ease-[var(--ease-control)] hover:decoration-signal-dim"
+          >
+            Go to cart
+          </Link>
+        ) : null}
       </div>
 
       {/* In the DOM from the first render and empty until something is added:
@@ -126,7 +133,7 @@ export function BuyBox({ productName, priceCents, compareAtCents, currency, vari
           announced (SC 4.1.3). */}
       <div role="status" data-buybox-status>
         {added ? (
-          <p key={adds} className="mt-5 text-base text-steel">
+          <p key={adds} className="mt-5 text-base text-ink">
             {`${productName}, size ${chosen?.sizeLabel}, is in your cart.`}
           </p>
         ) : null}

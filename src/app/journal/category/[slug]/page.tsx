@@ -2,12 +2,11 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { Breadcrumbs } from "@/components/site/Breadcrumbs";
+import { ArticleCard, sortNewestFirst } from "@/components/journal/ArticleCard";
 import {
   CATEGORIES,
   articlesInCategory,
   getJournalCategory,
-  isPublished,
-  readingTimeMinutes,
 } from "@/content/journal";
 import { pageMetadata } from "@/lib/metadata";
 import {
@@ -46,7 +45,7 @@ export default async function JournalCategoryPage({ params }: Params) {
   const category = getJournalCategory(slug);
   if (!category) notFound();
 
-  const articles = articlesInCategory(category.slug);
+  const articles = sortNewestFirst(articlesInCategory(category.slug));
 
   // What the Library and the Figures index hold on the same subjects.
   const crossLinks = crossLinksForMany(
@@ -62,86 +61,80 @@ export default async function JournalCategoryPage({ params }: Params) {
   }));
 
   return (
-    <main id="main" tabIndex={-1} className="px-6 py-16 md:px-12">
-      <div className="mx-auto max-w-[104rem]">
-        <Breadcrumbs
-          trail={[
-            { href: "/journal", label: "Journal" },
-            { href: `/journal/category/${category.slug}`, label: category.name },
-          ]}
-        />
+    <main id="main" tabIndex={-1}>
+      <div className="band-ink px-6 pt-8 pb-6 md:px-12">
+        <div className="mx-auto max-w-[104rem]">
+          <Breadcrumbs
+            trail={[
+              { href: "/journal", label: "Journal" },
+              { href: `/journal/category/${category.slug}`, label: category.name },
+            ]}
+          />
+        </div>
+      </div>
 
-        <header className="mt-10 mb-16 max-w-[46rem]">
-          <h1 className="display-condensed text-4xl text-chalk">
-            {category.name}
-          </h1>
-          <p className="mt-8 text-lg text-steel">{category.summary}</p>
-        </header>
+      <div className="band-bone band-edge px-6 py-16 md:px-12 md:py-20">
+        <div className="mx-auto max-w-[104rem]">
+          <header className="max-w-[46rem]">
+            <p className="eyebrow text-slate">Journal</p>
+            <h1 className="display-serif mt-5 text-4xl text-ink">
+              {category.name}
+            </h1>
+            <div aria-hidden="true" className="mt-6 h-1 w-12 bg-signal" />
+            <p className="mt-8 text-lg text-slate">{category.summary}</p>
+          </header>
 
-        {articles.length === 0 ? (
-          <div className="max-w-[42rem] border border-steel-dim p-10">
-            <h2 className="display-condensed text-xl text-chalk">
-              Nothing here yet
-            </h2>
-            <p className="mt-5 text-base text-steel">
-              Nothing has been written for this category yet. We would rather
-              leave it empty than fill it to look busy.
-            </p>
-            <Link
-              href="/journal"
-              className="display-plain mt-8 inline-flex min-h-6 items-center text-sm text-chalk underline decoration-steel-dim underline-offset-[6px] transition-colors duration-[140ms] ease-[var(--ease-control)] hover:decoration-signal-lift"
+          {articles.length === 0 ? (
+            <div className="mt-16 max-w-[42rem] border border-steel bg-bone-raised p-8 sm:p-10">
+              <h2 className="display-serif text-xl text-ink">
+                Nothing here yet
+              </h2>
+              <p className="mt-5 text-base text-slate">
+                Nothing has been written for this category yet. We would rather
+                leave it empty than fill it to look busy.
+              </p>
+              <Link
+                href="/journal"
+                className="link-rule mt-8 inline-flex min-h-6 items-center text-sm text-signal-dim"
+              >
+                Back to the Journal
+              </Link>
+            </div>
+          ) : (
+            <ul
+              className={`m-0 mt-16 grid list-none gap-6 p-0 ${
+                // Two columns only when there is something to put in both;
+                // a lone card in a two-column grid reads as one that failed
+                // to load.
+                articles.length > 1 ? "md:grid-cols-2" : "max-w-[40rem]"
+              }`}
             >
-              Back to the Journal
-            </Link>
-          </div>
-        ) : (
-          <ul
-            className={`m-0 grid list-none gap-px bg-steel-dim p-0 ${
-              // Two columns only when there is something to put in both.
-              // The gap-px-over-a-tinted-background trick draws its rules by
-              // letting the parent show through, so a lone entry in a
-              // two-column grid leaves a filled empty cell that reads as a
-              // card that failed to load.
-              articles.length > 1 ? "lg:grid-cols-2" : ""
-            }`}
-          >
-            {articles.map((article) => (
-              <li key={article.slug} className="bg-ink">
-                <Link
-                  href={`/journal/${article.slug}`}
-                  aria-labelledby={`article-${article.slug}-title`}
-                  aria-describedby={`article-${article.slug}-summary`}
-                  className="group flex h-full flex-col p-8 no-underline transition-colors duration-[140ms] ease-[var(--ease-control)] hover:bg-ink-raised"
-                >
-                  <span className="notation text-2xs text-orchid">
-                    {isPublished(article) ? "Published" : "Draft"}
-                  </span>
-                  <h2 id={`article-${article.slug}-title`} className="display-condensed mt-5 text-xl text-chalk transition-colors duration-[140ms] ease-[var(--ease-control)] group-hover:text-signal-lift">
-                    {article.title}
-                  </h2>
-                  <p id={`article-${article.slug}-summary`} className="mt-4 grow text-sm text-steel">
-                    {article.standfirst}
-                  </p>
-                  <span className="notation mt-8 text-2xs text-steel">
-                    {readingTimeMinutes(article)} min · {article.sources.length}{" "}
-                    sources
-                  </span>
-                </Link>
-              </li>
-            ))}
-          </ul>
-        )}
+              {articles.map((article) => (
+                <ArticleCard key={article.slug} article={article} headingLevel="h2" rowFrom="md" />
+              ))}
+            </ul>
+          )}
 
-        <CrossLinks
-          links={crossLinks}
-          heading="Reading connected to this category"
-        />
+          {crossLinks.length > 0 ? (
+            <div className="mt-16 max-w-[60rem] border border-steel bg-bone-raised px-7 pb-10 sm:px-10 [&>section]:mt-0 [&>section]:border-t-0 [&>section]:pt-10">
+              <CrossLinks
+                links={crossLinks}
+                ground="bone"
+                heading="Reading connected to this category"
+              />
+            </div>
+          ) : null}
+        </div>
+      </div>
 
-        <SiblingCategories
-          categories={siblings}
-          heading="The rest of the Journal"
-          unit="article"
-        />
+      <div className="band-graphite px-6 pb-20 md:px-12">
+        <div className="mx-auto max-w-[104rem]">
+          <SiblingCategories
+            categories={siblings}
+            heading="The rest of the Journal"
+            unit="article"
+          />
+        </div>
       </div>
     </main>
   );

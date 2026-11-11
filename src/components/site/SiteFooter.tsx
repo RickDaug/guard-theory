@@ -70,7 +70,10 @@ export function SiteFooter() {
               <span className="wordmark text-sm text-chalk">Guard Theory</span>
             </Link>
             <p className="display-wide mt-10 text-[clamp(1.75rem,1rem+3vw,3rem)] text-chalk">
-              Guard
+              {/* A <br> is a line, not a space: the written space keeps the
+                  wordmark reading as two words to a copy, a reader view and
+                  tests/e2e/typography.spec.ts. */}
+              Guard{" "}
               <br />
               Theory
             </p>

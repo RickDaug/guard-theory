@@ -43,7 +43,7 @@ Three clusters. Each has one pillar, supporting pages, and a defined link direct
 
 - **Pillar:** `/journal/why-guard-is-a-system-not-a-position`
 - **Structural hub:** `/technique` (the library index)
-- **Supporting:** all twelve `/technique/[category]` pages and their entries;
+- **Supporting:** all thirteen `/technique/[category]` pages and their entries;
   `/journal/*`; `/journal/*`
 - **Reinforcing:** `/manifesto` (the brand's version of the same argument),
   `/figures/*` (who developed which part of the system)

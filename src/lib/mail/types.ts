@@ -23,6 +23,8 @@ export type EmailTemplate =
   | "announcement"
   | "waitlist-confirmation"
   | "contact-forward"
+  | "crew-invite"
+  | "crew-reset"
   | "test";
 
 export type Email = {

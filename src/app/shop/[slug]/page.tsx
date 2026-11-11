@@ -7,17 +7,22 @@ import { Breadcrumbs } from "@/components/site/Breadcrumbs";
 import { ButtonLink } from "@/components/ui/Button";
 import { BuyBox } from "@/components/product/BuyBox";
 import { GarmentFlat } from "@/components/product/GarmentFlat";
+import { ProductGallery } from "@/components/product/ProductGallery";
 import { PRODUCTS, STATUS_LABEL } from "@/content/products";
 import { ORIGIN_LABEL, productOrigin } from "@/content/products/origin";
 import { SIZE_CHART } from "@/content/products/size-chart";
 import {
   effectivePriceCents,
   getProductView,
-  hasPublishableOffer,
+  productPhotographs,
   stockStatus,
 } from "@/lib/catalogue";
-import { toDecimalString } from "@/lib/money";
-import { absoluteUrl } from "@/lib/site";
+import {
+  CARE_ARTICLE_SLUG,
+  isProductIndexable,
+  productJsonLd,
+  productTitle,
+} from "@/lib/catalogue/structured-data";
 import { pageMetadata } from "@/lib/metadata";
 import { serializeJsonLd } from "@/lib/json-ld";
 
@@ -61,9 +66,10 @@ export async function generateMetadata({ params }: Params): Promise<Metadata> {
   if (!product) return notFoundMetadata;
 
   return pageMetadata({
-    title: `${product.name} — ${product.kind}`,
+    title: productTitle(product),
     description: product.metaDescription ?? product.summary,
     path: `/shop/${product.slug}`,
+    indexable: isProductIndexable(product),
   });
 }
 
@@ -89,7 +95,11 @@ export default async function ProductPage({ params }: Params) {
 
   const availability = stockStatus(product);
   const priceCents = effectivePriceCents(product);
-  const showOffer = hasPublishableOffer(product);
+  const jsonLd = productJsonLd(product);
+  // Only photographs the owner uploaded, on the configured host, with alt
+  // text. None is the normal state for a garment not yet photographed, and
+  // then the page is exactly what it was: the flat, and nothing standing in.
+  const photographs = productPhotographs(product);
   const other = PRODUCTS.filter((p) => p.slug !== product.slug);
   // 16 CFR 303.34: the listing states the origin in the FTC's form. Only
   // from a value the owner typed; with none, the page says nothing about
@@ -106,35 +116,14 @@ export default async function ProductPage({ params }: Params) {
   return (
     <main id="main" tabIndex={-1} className="px-6 py-16 md:px-12">
       <div className="mx-auto max-w-[104rem]">
-        {showOffer && priceCents !== null && product.commerce ? (
+        {jsonLd ? (
           <script
             type="application/ld+json"
             // Not executable script, so the Content-Security-Policy does not
-            // apply to it. Emitted only when hasPublishableOffer() is true, so
-            // every value below is one the owner entered.
-            dangerouslySetInnerHTML={{
-              __html: serializeJsonLd({
-                "@context": "https://schema.org",
-                "@type": "Product",
-                name: `${product.name} — ${product.kind}`,
-                description: product.summary,
-                sku: product.commerce.variants[0]?.sku,
-                url: absoluteUrl(`/shop/${product.slug}`),
-                // Only when the owner's value names a country; an unnamed
-                // import names none, and nothing is guessed.
-                ...(origin?.country ? { countryOfOrigin: origin.country } : {}),
-                offers: {
-                  "@type": "Offer",
-                  price: toDecimalString(priceCents),
-                  priceCurrency: product.commerce.currency,
-                  availability:
-                    availability === "purchasable"
-                      ? "https://schema.org/InStock"
-                      : "https://schema.org/OutOfStock",
-                  url: absoluteUrl(`/shop/${product.slug}`),
-                },
-              }),
-            }}
+            // apply to it. productJsonLd() returns null unless
+            // hasPublishableOffer() holds, so every value is one the owner
+            // entered or one a published policy states.
+            dangerouslySetInnerHTML={{ __html: serializeJsonLd(jsonLd) }}
           />
         ) : null}
 
@@ -156,6 +145,8 @@ export default async function ProductPage({ params }: Params) {
               mobile screenshot caught: every other one is 390 wide and this one
               was 393. */}
           <div className="min-w-0 lg:col-span-7 lg:sticky lg:top-8 lg:self-start">
+            {/* Photographs sit alongside the flat, never instead of it. */}
+            <ProductGallery images={photographs} productName={`${product.name} ${product.kind.toLowerCase()}`} />
             {/**
              * One line, always — the same rule, and the same reason, as the
              * breadcrumb. At 390px this label fits on one line in the metric
@@ -202,15 +193,39 @@ export default async function ProductPage({ params }: Params) {
             </p>
 
             {availability === "purchasable" && priceCents !== null && product.commerce ? (
-              <BuyBox
-                productName={product.name}
-                priceCents={priceCents}
-                compareAtCents={
-                  product.commerce.saleCents !== null ? product.commerce.priceCents : null
-                }
-                currency={product.commerce.currency}
-                variants={product.commerce.variants}
-              />
+              <>
+                <BuyBox
+                  productName={product.name}
+                  priceCents={priceCents}
+                  compareAtCents={
+                    product.commerce.saleCents !== null ? product.commerce.priceCents : null
+                  }
+                  currency={product.commerce.currency}
+                  variants={product.commerce.variants}
+                />
+                {/* What the price above does not include, said before the cart
+                    rather than discovered in it. Both sentences are the
+                    shipping policy's and the cart's own; the terms themselves
+                    are linked, not restated, so they cannot drift. */}
+                <p className="mt-5 max-w-[34rem] text-sm text-steel">
+                  Shipping is one flat rate per order, shown in your cart. Sales tax is added at
+                  checkout. Read the{" "}
+                  <Link
+                    href="/policies/shipping"
+                    className="text-chalk underline decoration-steel-dim underline-offset-[5px] transition-colors duration-[140ms] ease-[var(--ease-control)] hover:decoration-signal-lift"
+                  >
+                    shipping
+                  </Link>{" "}
+                  and{" "}
+                  <Link
+                    href="/policies/returns"
+                    className="text-chalk underline decoration-steel-dim underline-offset-[5px] transition-colors duration-[140ms] ease-[var(--ease-control)] hover:decoration-signal-lift"
+                  >
+                    returns
+                  </Link>{" "}
+                  policies.
+                </p>
+              </>
             ) : (
               <div className="mt-10 border border-steel-dim p-6">
                 <p className="notation text-2xs text-orchid">First Edition</p>
@@ -288,6 +303,35 @@ export default async function ProductPage({ params }: Params) {
                 </Link>
                 .
               </p>
+            </section>
+
+            {/* docs/internal-linking-map.md Rule P-5: a PDP links to care and
+                to returns. The Technique Library link that rule also names is
+                left out until a product records which position its cut was
+                designed around — the registry does not say, and it is not
+                ours to guess. */}
+            <section aria-labelledby="care" className="mt-14">
+              <h2 id="care" className="display-condensed mb-6 text-xl text-chalk">
+                Care and returns
+              </h2>
+              <ul className="m-0 flex list-none flex-col gap-3 p-0">
+                <li>
+                  <Link
+                    href={`/journal/${CARE_ARTICLE_SLUG}`}
+                    className="text-base text-chalk underline decoration-steel-dim underline-offset-[5px] transition-colors duration-[140ms] ease-[var(--ease-control)] hover:decoration-signal-lift"
+                  >
+                    How to wash a rash guard
+                  </Link>
+                </li>
+                <li>
+                  <Link
+                    href="/policies/returns"
+                    className="text-base text-chalk underline decoration-steel-dim underline-offset-[5px] transition-colors duration-[140ms] ease-[var(--ease-control)] hover:decoration-signal-lift"
+                  >
+                    Returns policy
+                  </Link>
+                </li>
+              </ul>
             </section>
 
             {other.length > 0 ? (

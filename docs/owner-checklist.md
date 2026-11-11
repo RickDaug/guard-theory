@@ -150,6 +150,22 @@ sign-in; that is by design.
 Optional: **`PORTAL_PATH`**, a URL segment to serve the portal from instead of
 `/crew`. It is read at build time, so it takes effect on the next deploy.
 
+### 5a. Give each employee their own sign-in
+
+After the crew-accounts change is deployed (migration 0020 applied first):
+
+1. Sign in with the shared password as you do now (leave Username empty).
+2. **Crew** → add yourself as **Owner**, open the link you are sent, choose your
+   password, then sign out and back in with your username.
+3. Add each employee as **Crew**. They get a one-time link by email; with no
+   mail provider the page shows you the link once to hand over in person.
+4. **Crew → Turn off the shared password.**
+
+Crew can handle orders and print labels and packing slips; refunds, cancels,
+prices and everything else stay with you. The full walkthrough, and how to turn
+the shared password back on if you ever need to, is in `docs/provisioning.md`
+→ "Adding someone to the crew".
+
 ### 6. Put all of it in Vercel Production
 
 Vercel → project `guard-theory` → Settings → Environment Variables. For each

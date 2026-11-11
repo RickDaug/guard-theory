@@ -20,3 +20,12 @@ export type PortalFormState = {
 };
 
 export const PORTAL_INITIAL_STATE: PortalFormState = { status: "idle", message: "" };
+
+/**
+ * A crew form that may have made a set-password link nobody was emailed. The
+ * link is in the state only — never stored, never logged — so it is on screen
+ * once, for the owner to hand over in person, and gone on the next submit.
+ */
+export type CrewLinkFormState = PortalFormState & { link?: string };
+
+export const CREW_LINK_INITIAL_STATE: CrewLinkFormState = { status: "idle", message: "" };

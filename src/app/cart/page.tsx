@@ -27,45 +27,47 @@ export const metadata: Metadata = pageMetadata({
  * ordinary case, not an error — the links crawl fetches it that way.
  */
 
+/** An inline link on the bone sheet. */
+const SHEET_LINK =
+  "text-signal-dim underline decoration-steel underline-offset-[5px] transition-colors duration-[140ms] ease-[var(--ease-control)] hover:decoration-signal-dim";
+
+/** The cart is an order sheet: bone, with the lines ruled and the figures in notation. */
 export default function CartPage() {
   return (
-    <main id="main" className="px-6 py-16 md:px-12">
-      <div className="mx-auto max-w-[64rem]">
-        <Breadcrumbs trail={[{ href: "/cart", label: "Cart" }]} />
+    <main id="main">
+      <div className="band-ink px-6 md:px-12">
+        <div className="mx-auto max-w-[104rem] py-5">
+          <Breadcrumbs trail={[{ href: "/cart", label: "Cart" }]} />
+        </div>
+      </div>
 
-        <header className="mt-10 mb-14 max-w-[46rem]">
-          <p className="notation text-2xs text-orchid">Checkout</p>
-          <h1 className="display-condensed mt-6 text-4xl text-chalk">Cart</h1>
-        </header>
+      <div className="band-bone band-edge px-6 pt-14 pb-20 md:px-12 md:pt-20 md:pb-28">
+        <div className="mx-auto max-w-[64rem]">
+          <header className="mb-12 md:mb-16">
+            <p className="eyebrow text-slate">Checkout</p>
+            <h1 className="display-condensed mt-5 text-4xl leading-[0.9] text-ink">Cart</h1>
+          </header>
 
-        <CartView />
+          <CartView />
 
-        {/* The terms a first-time buyer looks for before paying, one step
-            from the Checkout button. Linked, never restated here. */}
-        <p className="mt-14 max-w-[46rem] text-sm text-steel">
-          Shipping is one flat rate per order, whatever is in it. Read the{" "}
-          <Link
-            href="/policies/shipping"
-            className="text-chalk underline decoration-steel-dim underline-offset-[5px] transition-colors duration-[140ms] ease-[var(--ease-control)] hover:decoration-signal-lift"
-          >
-            shipping
-          </Link>{" "}
-          and{" "}
-          <Link
-            href="/policies/returns"
-            className="text-chalk underline decoration-steel-dim underline-offset-[5px] transition-colors duration-[140ms] ease-[var(--ease-control)] hover:decoration-signal-lift"
-          >
-            returns
-          </Link>{" "}
-          policies, or{" "}
-          <Link
-            href="/size-and-fit"
-            className="text-chalk underline decoration-steel-dim underline-offset-[5px] transition-colors duration-[140ms] ease-[var(--ease-control)] hover:decoration-signal-lift"
-          >
-            check your size
-          </Link>{" "}
-          before you pay.
-        </p>
+          {/* The terms a first-time buyer looks for before paying, one step
+              from the Checkout button. Linked, never restated here. */}
+          <p className="mt-14 max-w-[46rem] border-t border-steel pt-6 text-sm text-slate">
+            Shipping is one flat rate per order, whatever is in it. Read the{" "}
+            <Link href="/policies/shipping" className={SHEET_LINK}>
+              shipping
+            </Link>{" "}
+            and{" "}
+            <Link href="/policies/returns" className={SHEET_LINK}>
+              returns
+            </Link>{" "}
+            policies, or{" "}
+            <Link href="/size-and-fit" className={SHEET_LINK}>
+              check your size
+            </Link>{" "}
+            before you pay.
+          </p>
+        </div>
       </div>
     </main>
   );

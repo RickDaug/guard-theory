@@ -1,6 +1,6 @@
 import { pageMetadata } from "@/lib/metadata";
 import type { Metadata } from "next";
-import { UtilityPage } from "@/components/site/UtilityPage";
+import { StateSheet } from "@/components/product/StateSheet";
 import { ClearCartOnMount } from "@/components/cart/ClearCartOnMount";
 import { queryOne } from "@/lib/db/client";
 import { getMailProvider } from "@/lib/mail";
@@ -103,7 +103,7 @@ export default async function OrderConfirmedPage({
   }
 
   return (
-    <UtilityPage
+    <StateSheet
       eyebrow="First Edition"
       title={
         order ? (
@@ -121,7 +121,13 @@ export default async function OrderConfirmedPage({
         )
       }
       primary={{ href: "/shop", label: "Back to the shop" }}
-      secondary={{ href: "/policies/shipping", label: "Read the shipping policy" }}
+      // What a buyer wants next: the terms of the parcel, then something to
+      // read while it is on its way.
+      links={[
+        { href: "/policies/shipping", label: "Read the shipping policy" },
+        { href: "/policies/returns", label: "Returns policy" },
+        { href: "/technique", label: "Technique Library" },
+      ]}
     >
       {/* The cart has done its job. Emptying it here rather than before the
           redirect means a buyer who abandons Stripe still comes back to it.
@@ -133,22 +139,22 @@ export default async function OrderConfirmedPage({
       {order && view && !view.detail ? (
         // An old link, from history or a log. The number is enough to find the
         // order by; the details are in the confirmation email.
-        <p className="text-lg text-steel">
+        <p className="text-lg text-ink">
           {`This is order number ${view.number}. Its details are in the confirmation email. If you need anything, write to us with the number.`}
         </p>
       ) : order && view?.detail ? (
         <>
           {order.stripe_mode === "test" ? (
-            <p className="border-l-2 border-signal-lift bg-graphite px-5 py-4 text-base text-chalk">
+            <p className="border-l-[3px] border-signal bg-bone-raised px-5 py-4 text-base text-ink">
               This was a test order. No money moved and nothing will be shipped.
             </p>
           ) : null}
-          <p className="text-lg text-steel">
+          <p className="text-lg text-ink">
             {confirmationSent
               ? `Your order is number ${view.number}. We have sent a confirmation to ${view.maskedEmail}.`
               : `Your order is number ${view.number}. Keep it: it is how we find your order if you write to us.`}
           </p>
-          <p className="text-base text-steel">
+          <p className="text-base text-slate">
             {`Total charged: ${formatMoney(view.totalCents, view.currency)}, including tax and shipping.`}
           </p>
         </>
@@ -156,19 +162,19 @@ export default async function OrderConfirmedPage({
         // No order on record for this address. That is the ordinary state for a
         // moment after paying, and also what anyone opening this URL cold gets —
         // so it claims neither a payment nor an email, because it knows of neither.
-        <p className="text-lg text-steel">
+        <p className="text-lg text-ink">
           We do not have an order to show here yet. If you have just paid, it can take a moment to
           reach us. Reload this page to see your order number.
         </p>
       )}
 
       {view?.detail ? (
-        <p className="text-base text-steel">
+        <p className="text-base text-slate">
           {mailDelivers
             ? `Orders are packed and dispatched within ${DISPATCH_WITHIN}. You will get a second email with a tracking number when the parcel leaves us.`
             : `Orders are packed and dispatched within ${DISPATCH_WITHIN}.`}
         </p>
       ) : null}
-    </UtilityPage>
+    </StateSheet>
   );
 }

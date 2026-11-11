@@ -41,7 +41,7 @@ Study
                               equipment-and-apparel · competition-analysis
 /journal/[slug]               Article. Contents, sources, contested notes.
                               Drafts render but are noindex and unlisted.
-/technique                    Twelve categories
+/technique                    Thirteen categories
 /technique/[category]         Category listing
 /technique/[category]/[slug]  Entry — problem, objective, concept, mechanics,
                               errors, safety, progression, related
@@ -90,7 +90,7 @@ category holds the arguments. Flagged for owner confirmation in
   checkout that cannot take money would be a lie in the navigation.
 - **No newsletter signup separate from the waitlist.** There is one list and it
   sends one message.
-- **No tag taxonomy.** Eight Journal categories and twelve technique areas are
+- **No tag taxonomy.** Eight Journal categories and thirteen technique areas are
   enough structure for the volume of content that exists. Tags added early
   produce a hundred pages with one item each.
 - **No pagination yet.** No listing exceeds one screen of items. The strategy

@@ -36,6 +36,11 @@ const TARGETS = [
   // Added because it was the one page under the gate and the gate could not
   // see it: this list was chosen when the site had three page types.
   { name: "search", url: "/search", skipSeo: true },
+  // The commerce pages. The product page was already here; the listing and the
+  // cart were not, so a regression on either could merge unseen. The cart is
+  // noindex by design, so its SEO score measures that choice, not the page.
+  { name: "shop", url: "/shop" },
+  { name: "cart", url: "/cart", skipSeo: true },
 ];
 
 /**
@@ -135,7 +140,9 @@ try {
 }
 
 console.log("building with indexing enabled…\n");
-await run(process.platform === "win32" ? "npx.cmd" : "npx", ["next", "build"], {
+// scripts/build.mjs, not a bare `next build`: the CSP's per-page script hashes
+// come from its two passes, and without them every page's scripts are blocked.
+await run(process.execPath, ["scripts/build.mjs"], {
   env: AUDIT_ENV,
   stdio: "ignore",
 });

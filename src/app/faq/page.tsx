@@ -43,7 +43,7 @@ const FAQS = [
   },
   {
     q: "Who writes the Journal?",
-    a: "Guard Theory editorial. Every published article carries a byline, a publication date and the sources it was built from. The articles are researched and drafted with AI assistance, which is why the byline names the publication rather than a person; the editorial policy explains how they are sourced.",
+    a: "Guard Theory editorial. Every published article carries a byline, a publication date and the sources it was built from. The byline names the publication rather than a person; a person's name goes on a piece only when that person wrote it or has read it and agreed to put their name to it. The editorial policy explains how articles are sourced.",
   },
   {
     q: "Do you take sponsored posts or affiliate commission?",

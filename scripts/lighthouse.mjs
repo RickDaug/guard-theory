@@ -140,9 +140,7 @@ try {
 }
 
 console.log("building with indexing enabled…\n");
-// scripts/build.mjs, not a bare `next build`: the CSP's per-page script hashes
-// come from its two passes, and without them every page's scripts are blocked.
-await run(process.execPath, ["scripts/build.mjs"], {
+await run(process.platform === "win32" ? "npx.cmd" : "npx", ["next", "build"], {
   env: AUDIT_ENV,
   stdio: "ignore",
 });

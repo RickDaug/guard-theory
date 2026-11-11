@@ -10,10 +10,12 @@ import { expect, test } from "@playwright/test";
  * somebody else's server is slow is a test people learn to ignore.
  */
 
-const MAX_PAGES = 120;
+// A bound on a runaway crawl, not a budget: the site passed 120 pages when the
+// Journal reached 36 articles, and the assertion below failed as designed.
+const MAX_PAGES = 300;
 
 test("every internal link resolves", async ({ page, request, baseURL }) => {
-  test.setTimeout(180_000);
+  test.setTimeout(420_000);
 
   const origin = new URL(baseURL ?? "http://127.0.0.1:3100").origin;
 

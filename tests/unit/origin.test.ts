@@ -5,6 +5,8 @@ import { describe, it } from "node:test";
 import { PRODUCTS } from "../../src/content/products/index.ts";
 import { ORIGIN_LABEL, productOrigin, readOrigin } from "../../src/content/products/origin.ts";
 import { PUBLISHED_SPECIFICATIONS } from "../../src/content/products/published-specs.ts";
+import { productJsonLd } from "../../src/lib/catalogue/structured-data.ts";
+import type { ProductView } from "../../src/lib/catalogue/types.ts";
 import { storefrontProblems, type StorefrontCheck } from "../../src/lib/portal/product-edit.ts";
 
 /**
@@ -155,7 +157,26 @@ describe("the product page", () => {
   });
 
   it("puts countryOfOrigin in the Product JSON-LD only when a country is named", () => {
-    assert.match(page, /\.\.\.\(origin\?\.country \? \{ countryOfOrigin: origin\.country \} : \{\}\)/);
+    // The page emits productJsonLd(product); the rule lives there now.
+    assert.match(page, /productJsonLd\(product\)/);
+    const withOrigin = (value: string): ProductView => ({
+      ...PRODUCTS[0]!,
+      constructionPoints: [],
+      specifications: [{ label: ORIGIN_LABEL, value }],
+      sizeLabels: [],
+      commerce: {
+        productId: "p1",
+        status: "active",
+        priceCents: 8900,
+        saleCents: null,
+        currency: "USD",
+        categorySlug: null,
+        images: [],
+        variants: [{ id: "v1", sizeLabel: "M", sku: "GT-M", stock: 3, inStock: true }],
+      },
+    });
+    assert.equal(productJsonLd(withOrigin("Made in Portugal"))?.countryOfOrigin, "Portugal");
+    assert.equal(productJsonLd(withOrigin("Imported"))?.countryOfOrigin, undefined);
   });
 
   it("prints the origin line as its disclosure, never the raw value", () => {

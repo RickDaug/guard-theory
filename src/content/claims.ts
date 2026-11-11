@@ -952,7 +952,7 @@ export const CLAIMS: Claim[] = [
         return `${unsigned.map((e) => e.slug).join(", ")} counts as published without a named sign-off`;
       }
       const page = read("src/app/technique/[category]/[slug]/page.tsx");
-      if (!page.includes("isPublishedEntry(") || !page.includes("review.drafted")) {
+      if (!page.includes("isPublishedEntry(") || !page.includes("Nobody has yet read")) {
         return "the technique entry page no longer marks a draft as a draft";
       }
       const sitemap = read("src/app/sitemap.ts");

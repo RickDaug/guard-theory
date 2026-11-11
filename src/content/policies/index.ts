@@ -321,7 +321,7 @@ export const POLICIES: Policy[] = [
         id: "bylines",
         heading: "Bylines",
         paragraphs: [
-          "Journal articles are researched and drafted with AI assistance, so they carry the Guard Theory editorial byline rather than a person's name. A person's name goes on a piece only when that person wrote it or has read it and agreed to put their name to it.",
+          "Journal articles carry the Guard Theory editorial byline rather than a person's name. A person's name goes on a piece only when that person wrote it or has read it and agreed to put their name to it.",
           "The rules on this page apply to every article, whoever drafted it, and every article lists the sources its claims are traced to.",
         ],
       },
@@ -336,7 +336,7 @@ export const POLICIES: Policy[] = [
         id: "sign-off",
         heading: "Drafting and sign-off",
         paragraphs: [
-          "A Technique Library entry may be drafted with research and writing assistance. Every entry is then fact-audited and voice-audited, each independently of the draft, and nothing is published until a named person has read it and signed it off in the source. Until then it is unlisted and marked as a draft.",
+          "Every Technique Library entry is fact-audited and voice-audited, each independently of the draft, and nothing is published until a named person has read it and signed it off in the source. Until then it is unlisted and marked as a draft.",
         ],
       },
       {

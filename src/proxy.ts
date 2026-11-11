@@ -43,7 +43,7 @@ import { noncePolicy } from "@/lib/csp";
  * ever one policy on a response. The matcher below lists those prefixes and a
  * unit test keeps it equal to DYNAMIC_PREFIXES.
  *
- * Matching /shop, /order, /first-edition/confirm and /unsubscribe does make Next buffer their
+ * Matching /cart, /shop, /order and /unsubscribe does make Next buffer their
  * request bodies. None of them receives a webhook; `/api/*` is still never
  * matched.
  */
@@ -99,10 +99,10 @@ export const config = {
   // cannot be built from PORTAL_PATH. See the note above about rewrites.
   // Keep equal to DYNAMIC_PREFIXES in src/lib/csp.ts (tests/unit/csp.test.ts).
   matcher: [
+    "/cart",
+    "/cart/:path*",
     "/crew",
     "/crew/:path*",
-    "/first-edition/confirm",
-    "/first-edition/confirm/:path*",
     "/order",
     "/order/:path*",
     "/shop",

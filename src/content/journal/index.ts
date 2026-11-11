@@ -28,6 +28,13 @@ import { positionBeforeSubmissionAndWhatThePointsTableTeaches } from "./entries/
 import { survivalFirstAndTheOrderThingsAreLearnedIn } from "./entries/survival-first-and-the-order-things-are-learned-in.ts";
 import { theBridgeAndTheHipEscape } from "./entries/the-bridge-and-the-hip-escape.ts";
 import { whatATapIs } from "./entries/what-a-tap-is.ts";
+import { closedGuardAndWhatTheLockedAnklesBuy } from "./entries/closed-guard-and-what-the-locked-ankles-buy.ts";
+import { leaveYourEgoAtTheDoor } from "./entries/leave-your-ego-at-the-door.ts";
+import { leverageAndTheSmallerPerson } from "./entries/leverage-and-the-smaller-person.ts";
+import { maximumEfficiencyAndMutualWelfare } from "./entries/maximum-efficiency-and-mutual-welfare.ts";
+import { sportOrSelfDefenceAndWhatJiuJitsuIsFor } from "./entries/sport-or-self-defence-and-what-jiu-jitsu-is-for.ts";
+import { theSixTiesANoGiBeginnerNeedsNamesFor } from "./entries/the-six-ties-a-no-gi-beginner-needs-names-for.ts";
+import { theTechnicalStandUp } from "./entries/the-technical-stand-up.ts";
 import { whySportJiuJitsuDoesNotTransferDirectlyToMma } from "./entries/why-sport-jiu-jitsu-does-not-transfer-directly-to-mma.ts";
 
 /**
@@ -64,6 +71,13 @@ export const ARTICLES: Article[] = [
   survivalFirstAndTheOrderThingsAreLearnedIn,
   theBridgeAndTheHipEscape,
   whatATapIs,
+  closedGuardAndWhatTheLockedAnklesBuy,
+  leaveYourEgoAtTheDoor,
+  leverageAndTheSmallerPerson,
+  maximumEfficiencyAndMutualWelfare,
+  sportOrSelfDefenceAndWhatJiuJitsuIsFor,
+  theSixTiesANoGiBeginnerNeedsNamesFor,
+  theTechnicalStandUp,
 ];
 
 const BY_SLUG = new Map(ARTICLES.map((article) => [article.slug, article]));

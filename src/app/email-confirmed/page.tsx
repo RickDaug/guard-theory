@@ -21,10 +21,10 @@ export default function EmailConfirmedPage() {
       primary={{ href: "/first-edition", label: "See what you signed up for" }}
       secondary={{ href: "/technique", label: "Browse the Technique Library" }}
     >
-      <p className="text-lg text-steel">
+      <p className="text-lg text-chalk">
         That address is confirmed and you are on the First Edition list.
       </p>
-      <p className="text-base text-steel">
+      <p className="text-base text-chalk">
         You will hear from us once, when the First Edition opens.
         There is no newsletter and no drip sequence, and every message to the
         list carries a one-click unsubscribe.

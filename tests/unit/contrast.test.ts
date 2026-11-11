@@ -126,7 +126,7 @@ describe("control borders use the colour the table tested", () => {
   const CONTROLS: Array<{ file: string; control: RegExp; name: string }> = [
     { file: "components/ui/Field.tsx", control: /const CONTROL_BORDER = "([^"]+)"/, name: "input, select, textarea" },
     { file: "components/ui/Button.tsx", control: /outline:\s*"(border [^"]+)"/, name: "outlined button" },
-    { file: "components/site/SiteHeader.tsx", control: /className="(display-plain border [^"]+)"/, name: "header call to action" },
+    { file: "components/site/SiteHeader.tsx", control: /className="(eyebrow inline-flex min-h-6 items-center border [^"]+)"/, name: "header call to action" },
     { file: "components/search/SearchClient.tsx", control: /className="(w-full border [^"]+)"/, name: "search input" },
   ];
 

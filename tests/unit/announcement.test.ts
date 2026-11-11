@@ -875,15 +875,19 @@ describe("the queries, against a real database", { skip: !configured }, () => {
   });
 
   it("counts today's sends of every template toward the quota", async () => {
-    const before = await countSentToday();
-    await logged(addr("today-a"), "test", "sent");
-    await logged(addr("today-b"), "announcement", "sent");
-    await logged(addr("today-c"), "announcement", "failed");
-    await logged(addr("today-d"), "announcement", "unknown");
-    await logged(addr("today-e"), "announcement", "pending");
-    await logged(addr("yesterday"), "announcement", "sent", new Date(Date.now() - 2 * 86_400_000));
+    // A fixed day far from the real clock: other test files run in parallel
+    // against the same database and log real mail "now", which a count of the
+    // real today would pick up between the two reads.
+    const today = new Date("2098-06-15T12:00:00.000Z");
+    const before = await countSentToday(today);
+    await logged(addr("today-a"), "test", "sent", today);
+    await logged(addr("today-b"), "announcement", "sent", today);
+    await logged(addr("today-c"), "announcement", "failed", today);
+    await logged(addr("today-d"), "announcement", "unknown", today);
+    await logged(addr("today-e"), "announcement", "pending", today);
+    await logged(addr("yesterday"), "announcement", "sent", new Date(today.getTime() - 2 * 86_400_000));
     // Unknown and pending may have spent quota, so they are counted as spent.
-    assert.equal(await countSentToday(), before + 4);
+    assert.equal(await countSentToday(today), before + 4);
   });
 
   it("the day is the UTC day: 23:59 and 00:01 are different days", async () => {

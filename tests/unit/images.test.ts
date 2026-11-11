@@ -118,8 +118,13 @@ describe("product photographs go through next/image", () => {
     const page = readFileSync(path.join(ROOT, "src/app/shop/[slug]/page.tsx"), "utf8");
     assert.match(page, /const photographs = productPhotographs\(product\)/);
     assert.match(page, /<ProductGallery images=\{photographs\}/);
-    // Structured data names images only when there are some.
-    assert.match(page, /photographs\.length > 0\s*\?\s*\{ image: photographs\.map/);
+    // Structured data is built by productJsonLd(), which takes its images from
+    // the same productPhotographs() filter and names them only when there are
+    // some (tests/unit/product-structured-data.test.ts checks the values).
+    const structuredData = readFileSync(path.join(ROOT, "src/lib/catalogue/structured-data.ts"), "utf8");
+    assert.match(structuredData, /const photographs = productPhotographs\(view\)/);
+    assert.match(structuredData, /if \(photographs\.length > 0\) \{\s*node\.image = photographs\.map/);
+    assert.doesNotMatch(page, /"@type": "Product"/);
   });
 });
 

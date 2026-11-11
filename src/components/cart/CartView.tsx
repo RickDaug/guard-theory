@@ -15,7 +15,19 @@ import {
   type PricedCart,
 } from "@/lib/cart/types";
 import { formatMoney } from "@/lib/money";
-import { Button, ButtonLink } from "@/components/ui/Button";
+import Link from "next/link";
+import { Button } from "@/components/ui/Button";
+
+/**
+ * The two secondary controls, styled for the bone sheet the cart now sits on.
+ * ui/Button is cut for ink (chalk text), so these carry the same shape and the
+ * same 24px floor with the paper pairing: ink text, slate control border,
+ * signal-dim on hover. Logic and markup roles are unchanged.
+ */
+const OUTLINE =
+  "display-plain inline-flex min-h-6 items-center justify-center gap-2 border border-slate px-7 py-3.5 text-sm text-ink no-underline transition-[background-color,border-color,color,opacity] duration-[140ms] ease-[var(--ease-control)] hover:border-signal-dim hover:text-signal-dim disabled:cursor-not-allowed disabled:opacity-45";
+const QUIET =
+  "display-plain inline-flex min-h-6 items-center justify-center gap-2 text-sm text-ink underline decoration-steel underline-offset-[6px] transition-[background-color,border-color,color,opacity] duration-[140ms] ease-[var(--ease-control)] hover:decoration-signal-dim disabled:cursor-not-allowed disabled:opacity-45";
 
 /**
  * The cart.
@@ -56,7 +68,7 @@ function DroppedNotice({ cart }: { cart: PricedCart }) {
   return (
     <p
       role="status"
-      className="border-l-2 border-signal-lift bg-graphite px-5 py-4 text-base text-steel"
+      className="border-l-[3px] border-signal bg-bone-raised px-5 py-4 text-base text-ink"
     >
       {soldOut > 0
         ? `${soldOut === 1 ? "One size" : `${soldOut} sizes`} sold out while it was in your cart, so ${soldOut === 1 ? "it has" : "they have"} been removed.`
@@ -177,13 +189,13 @@ export function CartView() {
     // `invisible`, so it is neither seen, focused nor announced.
     return (
       <div className="flex flex-col gap-6">
-        <p className="text-lg text-steel" role="status">
+        <p className="text-lg text-slate" role="status">
           Working out your total…
         </p>
         <div>
-          <Button intent="outline" type="button" disabled tabIndex={-1} aria-hidden className="invisible">
+          <button type="button" disabled tabIndex={-1} aria-hidden className={`${OUTLINE} invisible`}>
             Back to the shop
-          </Button>
+          </button>
         </div>
       </div>
     );
@@ -191,7 +203,7 @@ export function CartView() {
 
   if (failed) {
     return (
-      <p className="text-lg text-steel" role="alert">
+      <p className="text-lg text-ink" role="alert">
         We could not work out your total just now. Nothing has been charged and your cart is
         untouched. Try again in a moment.
       </p>
@@ -209,7 +221,7 @@ export function CartView() {
       </p>
 
       {problem ? (
-        <p role="alert" className="border-l-2 border-signal-lift bg-graphite px-5 py-4 text-base text-chalk">
+        <p role="alert" className="border-l-[3px] border-signal bg-bone-raised px-5 py-4 text-base text-ink">
           {PROBLEMS[problem]}
         </p>
       ) : null}
@@ -218,40 +230,40 @@ export function CartView() {
 
       {!hasLines ? (
         <div className="flex flex-col gap-6">
-          <p className="text-lg text-steel">Your cart is empty.</p>
+          <p className="text-lg text-ink">Your cart is empty.</p>
           <div>
-            <ButtonLink href="/shop" intent="outline" ref={backToShop}>
+            <Link href="/shop" className={OUTLINE} ref={backToShop}>
               Back to the shop
-            </ButtonLink>
+            </Link>
           </div>
         </div>
       ) : (
         <>
-          <ul className="flex flex-col gap-0 border-t border-steel-dim/40">
+          <ul className="m-0 flex list-none flex-col gap-0 border-t border-steel p-0">
             {cart!.lines.map((line, index) => (
               <li
                 key={line.variantId}
-                className="flex flex-col gap-4 border-b border-steel-dim/40 py-6 sm:flex-row sm:items-baseline sm:justify-between"
+                className="flex flex-col gap-4 border-b border-steel py-6 sm:flex-row sm:items-baseline sm:justify-between"
               >
                 <div className="flex flex-col gap-1">
-                  <span className="font-display text-lg text-chalk">
+                  <span className="display-condensed text-xl text-ink">
                     {`${line.productName} — ${line.productKind}`}
                   </span>
-                  <span className="text-base text-steel">{`Size ${line.sizeLabel}`}</span>
+                  <span className="text-base text-slate">{`Size ${line.sizeLabel}`}</span>
                   {line.stock <= 3 ? (
-                    <span className="text-sm text-steel">
+                    <span className="text-sm text-slate">
                       {line.stock === 1 ? "One left" : `${line.stock} left`}
                     </span>
                   ) : null}
                 </div>
 
                 <div className="flex flex-wrap items-center gap-x-6 gap-y-3">
-                  <label className="flex items-center gap-3 text-base text-steel">
+                  <label className="flex items-center gap-3 text-base text-slate">
                     <span>Quantity</span>
                     <select
                       // steel-mid: the border is how the control is found, and
                       // steel-dim is 1.7:1 on graphite (SC 1.4.11).
-                      className="min-h-6 border border-steel-mid bg-graphite px-3 py-2 text-chalk"
+                      className="min-h-6 border border-steel-mid bg-bone-raised px-3 py-2 text-ink"
                       value={line.quantity}
                       aria-label={`Quantity of ${line.productName}, size ${line.sizeLabel}`}
                       onChange={(event) =>
@@ -269,12 +281,13 @@ export function CartView() {
                     </select>
                   </label>
 
-                  <span className="font-display text-lg text-chalk tabular-nums">
+                  <span className="notation text-base text-ink tabular-nums">
                     {formatMoney(line.lineCents, cart!.currency)}
                   </span>
 
-                  <Button
-                    intent="quiet"
+                  <button
+                    type="button"
+                    className={QUIET}
                     ref={(node) => {
                       if (node) removeButtons.current.set(line.variantId, node);
                       else removeButtons.current.delete(line.variantId);
@@ -289,28 +302,28 @@ export function CartView() {
                     aria-label={`Remove ${line.productName}, size ${line.sizeLabel}`}
                   >
                     Remove
-                  </Button>
+                  </button>
                 </div>
               </li>
             ))}
           </ul>
 
-          <dl className="flex flex-col gap-3 text-base">
+          <dl className="notation flex flex-col gap-3 text-sm">
             <div className="flex justify-between">
-              <dt className="text-steel">Subtotal</dt>
-              <dd className="text-chalk tabular-nums">
+              <dt className="text-slate">Subtotal</dt>
+              <dd className="text-ink tabular-nums">
                 {formatMoney(cart!.subtotalCents, cart!.currency)}
               </dd>
             </div>
             <div className="flex justify-between">
-              <dt className="text-steel">Shipping</dt>
-              <dd className="text-chalk tabular-nums">
+              <dt className="text-slate">Shipping</dt>
+              <dd className="text-ink tabular-nums">
                 {formatMoney(cart!.shippingCents, cart!.currency)}
               </dd>
             </div>
-            <div className="flex justify-between border-t border-steel-dim/40 pt-3">
-              <dt className="text-steel">Tax</dt>
-              <dd className="text-steel">Calculated at checkout</dd>
+            <div className="flex justify-between border-t border-steel pt-3">
+              <dt className="text-slate">Tax</dt>
+              <dd className="text-slate">Calculated at checkout</dd>
             </div>
           </dl>
 
@@ -328,12 +341,12 @@ export function CartView() {
                 </Button>
               </div>
             ) : (
-              <p role="alert" className="text-base text-steel">
+              <p role="alert" className="text-base text-ink">
                 We could not start a checkout just now. Nothing has been charged. Try again in a
                 moment.
               </p>
             )}
-            <p className="text-sm text-steel">
+            <p className="text-sm text-slate">
               Payment and delivery address are handled on Stripe&rsquo;s own page. We never see your
               card details.
             </p>

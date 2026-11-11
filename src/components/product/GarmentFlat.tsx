@@ -119,9 +119,10 @@ export function GarmentFlat({
           strokeWidth={1.5}
         />
 
-        {/* Raglan seams, drawn doubled. `data-draw` lets a `plate-draw` card
-            hold these un-drawn until hover; outside such a card it is inert. */}
-        <g data-draw fill="none" stroke="var(--color-steel-dim)" strokeWidth={1.25}>
+        {/* Raglan seams, drawn doubled. `data-draw` is inert here; inside a
+            `plate-draw` card (ProductCard) the seams, leaders and rings draw
+            in on hover. Inherited by every path in the group. */}
+        <g data-draw="" fill="none" stroke="var(--color-steel-dim)" strokeWidth={1.25}>
           <path d="M 378 100 C 392 125, 400 150, 404 176" />
           <path d="M 373 102 C 387 127, 395 152, 399 178" />
           <path d="M 282 100 C 268 125, 260 150, 256 176" />
@@ -159,6 +160,7 @@ export function GarmentFlat({
                 fill="transparent"
               />
               <line
+                data-draw=""
                 x1={geometry.from[0]}
                 y1={geometry.from[1]}
                 x2={end[0]}
@@ -175,6 +177,7 @@ export function GarmentFlat({
                 className="transition-[fill] duration-[140ms] ease-[var(--ease-control)]"
               />
               <circle
+                data-draw=""
                 cx={geometry.ring[0]}
                 cy={geometry.ring[1]}
                 r={RING_R}

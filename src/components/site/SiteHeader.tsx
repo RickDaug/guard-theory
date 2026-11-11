@@ -24,7 +24,7 @@ const NAV = [
  */
 export function SiteHeader() {
   return (
-    <header className="band-ink sticky top-0 z-40 border-b border-steel-dim/70 px-6 backdrop-blur-md supports-[backdrop-filter]:bg-ink/85 md:px-12">
+    <header className="band-ink sticky top-0 z-40 border-b border-steel-dim/70 px-6 backdrop-blur-md supports-[backdrop-filter]:bg-ink/95 md:px-12">
       <div className="mx-auto flex max-w-[104rem] flex-wrap items-center gap-x-10 gap-y-3 py-4 md:py-5">
         <Link
           href="/"

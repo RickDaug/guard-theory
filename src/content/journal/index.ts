@@ -22,6 +22,12 @@ import { theKimuraAsAControlBeforeItIsAFinish } from "./entries/the-kimura-as-a-
 import { theRearNakedStrangleFromBackControl } from "./entries/the-rear-naked-strangle-from-back-control.ts";
 import { theTriangleAndTheAngle } from "./entries/the-triangle-and-the-angle.ts";
 import { whyTheUnderhookDecidesHalfGuard } from "./entries/why-the-underhook-decides-half-guard.ts";
+import { basePostureAndStructure } from "./entries/base-posture-and-structure.ts";
+import { jiuJitsuJujutsuAndTheSpellingOfTheName } from "./entries/jiu-jitsu-jujutsu-and-the-spelling-of-the-name.ts";
+import { positionBeforeSubmissionAndWhatThePointsTableTeaches } from "./entries/position-before-submission-and-what-the-points-table-teaches.ts";
+import { survivalFirstAndTheOrderThingsAreLearnedIn } from "./entries/survival-first-and-the-order-things-are-learned-in.ts";
+import { theBridgeAndTheHipEscape } from "./entries/the-bridge-and-the-hip-escape.ts";
+import { whatATapIs } from "./entries/what-a-tap-is.ts";
 import { whySportJiuJitsuDoesNotTransferDirectlyToMma } from "./entries/why-sport-jiu-jitsu-does-not-transfer-directly-to-mma.ts";
 
 /**
@@ -52,6 +58,12 @@ export const ARTICLES: Article[] = [
   theTriangleAndTheAngle,
   whySportJiuJitsuDoesNotTransferDirectlyToMma,
   whyTheUnderhookDecidesHalfGuard,
+  basePostureAndStructure,
+  jiuJitsuJujutsuAndTheSpellingOfTheName,
+  positionBeforeSubmissionAndWhatThePointsTableTeaches,
+  survivalFirstAndTheOrderThingsAreLearnedIn,
+  theBridgeAndTheHipEscape,
+  whatATapIs,
 ];
 
 const BY_SLUG = new Map(ARTICLES.map((article) => [article.slug, article]));

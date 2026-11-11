@@ -11,6 +11,7 @@ import {
 import { CrossLinks } from "@/components/content/CrossLinks";
 import { SiblingCategories } from "@/components/content/SiblingCategories";
 import { crossLinksForMany } from "@/content/crosslinks";
+import { getRulesNote, type RulesNote } from "@/content/technique/rules-notes";
 
 type Params = { params: Promise<{ category: string }> };
 
@@ -41,6 +42,7 @@ export default async function TechniqueCategoryPage({ params }: Params) {
   if (!category) notFound();
 
   const entries = entriesInCategory(category.slug);
+  const rulesNote = getRulesNote(category.slug);
 
   // What the Journal and the Figures index say about the entries in this
   // area, gathered from the same declarations the entry pages use.
@@ -72,6 +74,8 @@ export default async function TechniqueCategoryPage({ params }: Params) {
           </h1>
           <p className="mt-8 text-lg text-steel">{category.summary}</p>
         </header>
+
+        {rulesNote ? <RulesNoteBlock note={rulesNote} /> : null}
 
         {entries.length === 0 ? (
           <div className="max-w-[42rem] border border-steel-dim p-10">
@@ -133,5 +137,67 @@ export default async function TechniqueCategoryPage({ params }: Params) {
         />
       </div>
     </main>
+  );
+}
+
+/**
+ * A ruleset note, where the category has one (src/content/technique/rules-notes.ts).
+ *
+ * Facts only, each tied to the rule document it was read from, with the date
+ * it was read. Real text on the page, not a tooltip or a drawing, because the
+ * reader it exists for is deciding what to drill for an event.
+ */
+function RulesNoteBlock({ note }: { note: RulesNote }) {
+  const number = new Map(note.sources.map((source, index) => [source.id, index + 1]));
+
+  return (
+    <section
+      aria-labelledby="rules-note-heading"
+      className="mb-16 max-w-[46rem] border border-steel-dim p-8 md:p-10"
+    >
+      <h2 id="rules-note-heading" className="display-condensed text-xl text-chalk">
+        {note.heading}
+      </h2>
+      <p className="mt-5 text-base text-steel">{note.intro}</p>
+      <ul role="list" className="m-0 mt-5 flex list-none flex-col gap-4 p-0">
+        {note.statements.map((statement) => (
+          <li key={statement.text} className="text-base text-chalk">
+            {statement.text}{" "}
+            <a
+              href={`#rules-source-${number.get(statement.source)}`}
+              className="notation inline-flex min-h-6 items-center text-2xs text-steel underline decoration-steel-dim underline-offset-[5px] transition-colors duration-[140ms] ease-[var(--ease-control)] hover:decoration-signal-lift"
+            >
+              Source {number.get(statement.source)}
+            </a>
+          </li>
+        ))}
+      </ul>
+      <p className="mt-6 text-base text-steel">{note.closing}</p>
+
+      <h3 className="notation mt-8 text-2xs text-steel">
+        Sources, read <time dateTime={note.asOf}>{note.asOf}</time>
+      </h3>
+      <ol role="list" className="m-0 mt-4 flex list-none flex-col gap-3 p-0">
+        {note.sources.map((source, index) => (
+          <li key={source.id} id={`rules-source-${index + 1}`} className="flex gap-4">
+            <span className="notation mt-1 shrink-0 text-2xs text-steel" aria-hidden="true">
+              {String(index + 1).padStart(2, "0")}
+            </span>
+            <span className="text-sm text-chalk">
+              <a
+                href={source.url}
+                rel="noopener noreferrer"
+                target="_blank"
+                className="underline decoration-steel-dim underline-offset-[5px] transition-colors duration-[140ms] ease-[var(--ease-control)] hover:decoration-signal-lift"
+              >
+                {source.title}{" "}
+                <span className="sr-only">(opens in a new tab)</span>
+              </a>
+              <span className="block text-steel">{source.locator}</span>
+            </span>
+          </li>
+        ))}
+      </ol>
+    </section>
   );
 }

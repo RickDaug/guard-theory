@@ -69,3 +69,20 @@ test("every sitemap URL is canonical to itself, absolutely", async ({ request })
 
   expect(problems, problems.join(" | ")).toEqual([]);
 });
+
+/**
+ * A moved Technique Library entry keeps its old address as a one-hop 308.
+ * tests/unit/technique-redirects.test.ts checks the config; this checks that
+ * the server actually answers with it.
+ */
+test("the leg-entanglement entry's pre-leg-locks address is a 308 to its new one", async ({
+  request,
+}) => {
+  const response = await request.get("/technique/submissions/leg-entanglement-as-control", {
+    maxRedirects: 0,
+  });
+  expect(response.status()).toBe(308);
+  expect(response.headers()["location"] ?? "").toMatch(
+    /\/technique\/leg-locks\/leg-entanglement-as-control$/,
+  );
+});

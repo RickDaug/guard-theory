@@ -112,8 +112,15 @@ describe("public actions, statically", () => {
   });
 
   it("the announcement goes only to confirmed and legacy addresses", () => {
-    const send = body(read("src/app/crew/list/actions.ts"), "sendAnnouncement");
-    assert.match(send, /where unsubscribed_at is null\s+and consent_state in \('confirmed', 'legacy'\)/);
+    // The recipients are chosen in src/lib/mail/announcement.ts (the portal's
+    // campaign and the CLI both plan from loadSubscribers, and every send
+    // re-checks in claimRecipient); the portal action never queries the list.
+    const announcement = read("src/lib/mail/announcement.ts");
+    assert.match(announcement, /ON_THE_LIST = "consent_state in \('confirmed', 'legacy'\)"/);
+    for (const fn of ["loadSubscribers", "claimRecipient"]) {
+      assert.match(body(announcement, fn), /and \$\{ON_THE_LIST\}/, `${fn} must filter on consent_state`);
+    }
+    assert.doesNotMatch(read("src/app/crew/list/actions.ts"), /from waitlist_signup/);
   });
 
   it("opening the confirmation link changes nothing; only the button's POST confirms", () => {

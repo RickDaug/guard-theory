@@ -163,7 +163,7 @@ describe("the owner alert, end to end with a stand-in provider", () => {
       delivers,
       async send(email) {
         sent.push(email);
-        return ok ? { ok: true, providerId: null } : { ok: false, error: "provider down" };
+        return ok ? { ok: true, providerId: null } : { ok: false, unknown: false, error: "provider down" };
       },
     };
     return { mail, sent };

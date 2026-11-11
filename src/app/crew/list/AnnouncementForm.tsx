@@ -10,7 +10,6 @@ export function AnnouncementForm({ liveCount }: { liveCount: number }) {
   const [state, formAction, pending] = useActionState(sendAnnouncement, PORTAL_INITIAL_STATE);
   const feedbackId = useId();
   const bodyHint = useId();
-  const testHint = useId();
 
   return (
     <form action={formAction} className="flex flex-col gap-6 border border-steel-dim p-7">
@@ -44,43 +43,37 @@ export function AnnouncementForm({ liveCount }: { liveCount: number }) {
         </p>
       </div>
 
-      <div className="flex flex-col gap-2">
+      {/* A dry run unless the box is ticked AND the count is typed back: the
+          same two-step gate as scripts/mail/send-announcement.ts. */}
+      {/* min-w-0: a fieldset defaults to min-inline-size: min-content, which
+          held it wider than a 320px viewport (SC 1.4.10). */}
+      <fieldset className="flex min-w-0 flex-col gap-3 border border-steel-dim p-5">
+        <legend className="display-plain px-2 text-sm text-steel">Sending</legend>
+        <p className="text-sm text-steel">
+          Without this box ticked, the form checks the draft and reports who would receive it. Nothing
+          is sent.
+        </p>
+        <label className="flex min-h-6 items-center gap-3 text-base text-chalk">
+          <input type="checkbox" name="send" className="min-h-6 min-w-6" />
+          <span>Send it for real</span>
+        </label>
         <label className="flex flex-col gap-2">
           <span className="display-plain text-sm text-steel">
-            Send one test copy to this address first
+            Type the number of recipients to confirm ({liveCount} on the list)
           </span>
           <input
-            name="testTo"
-            type="email"
-            placeholder="you@example.com"
-            {...fieldProps(state, "testTo", feedbackId, testHint)}
+            name="confirm"
+            inputMode="numeric"
+            autoComplete="off"
+            {...fieldProps(state, "confirm", feedbackId)}
             className={PORTAL_CONTROL}
           />
         </label>
-        <p id={testHint} className="text-sm text-steel">
-          Fill this in and only that address is emailed. Empty it to send for real.
-        </p>
-      </div>
-
-      <label className="flex items-start gap-3">
-        {/* Never pre-checked. This is the control that turns a draft into
-            hundreds of emails that cannot be recalled. */}
-        <input
-          name="confirm"
-          type="checkbox"
-          {...fieldProps(state, "confirm", feedbackId)}
-          className="mt-1 min-h-6 min-w-6"
-        />
-        <span className="display-plain text-sm text-steel">
-          {liveCount === 1
-            ? "Yes, email the one person on the list."
-            : `Yes, email all ${liveCount} people on the list. This cannot be undone.`}
-        </span>
-      </label>
+      </fieldset>
 
       <div>
         <Button type="submit" disabled={pending}>
-          {pending ? "Sending…" : "Send"}
+          {pending ? "Working…" : "Check, or send"}
         </Button>
       </div>
     </form>

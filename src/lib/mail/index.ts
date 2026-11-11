@@ -48,24 +48,69 @@ class ResendProvider implements MailProvider {
   async send(email: Email): Promise<SendResult> {
     // `fetch`, not the SDK. Sending is one POST with a JSON body, and that is
     // not a problem that earns a dependency — see docs/commerce-plan.md §15.
+    let response: Response;
+
     try {
-      const response = await fetch("https://api.resend.com/emails", {
+      response = await fetch("https://api.resend.com/emails", {
         method: "POST",
         headers: resendHeaders(this.apiKey, email),
         body: JSON.stringify(resendPayload(this.from, this.replyTo, email)),
         signal: AbortSignal.timeout(8_000),
       });
-
-      if (!response.ok) {
-        return { ok: false, error: `${response.status}: ${(await response.text()).slice(0, 300)}` };
-      }
-
-      const payload = (await response.json()) as { id?: string };
-      return { ok: true, providerId: payload.id ?? null };
     } catch (error) {
-      return { ok: false, error: error instanceof Error ? error.message : String(error) };
+      // No answer is not a "no". A request that timed out after Resend
+      // accepted it looks exactly like one that never arrived, so this is
+      // reported as unknown and nothing may retry it on its own.
+      return {
+        ok: false,
+        unknown: true,
+        error: `no answer from Resend: ${error instanceof Error ? error.message : String(error)}`,
+      };
     }
+
+    if (!response.ok) {
+      const detail = await response.text().catch(() => "");
+      const retryAfterMs = parseRetryAfter(response.headers.get("retry-after"));
+      return {
+        ok: false,
+        unknown: isAmbiguousStatus(response.status),
+        error: `${response.status}: ${detail.slice(0, 300)}`,
+        ...(retryAfterMs === null ? {} : { retryAfterMs }),
+      };
+    }
+
+    // A 2xx is an accepted message whether or not the body can be read. The
+    // id is a convenience for the dashboard; losing it must not turn a sent
+    // message into a failed one.
+    const payload = (await response.json().catch(() => ({}))) as { id?: string };
+    return { ok: true, providerId: payload.id ?? null };
   }
+}
+
+/**
+ * `Retry-After` as milliseconds: whole seconds only, which is what Resend sends
+ * on a 429. An HTTP date, a negative or anything unreadable is null — the
+ * caller's own backoff applies instead.
+ */
+export function parseRetryAfter(value: string | null): number | null {
+  const trimmed = value?.trim() ?? "";
+  if (!/^\d+(?:\.\d+)?$/.test(trimmed)) {
+    return null;
+  }
+  return Math.round(Number(trimmed) * 1000);
+}
+
+/**
+ * Statuses that do not say whether the message went.
+ *
+ * A 5xx can come from a gateway in front of a Resend that accepted the
+ * message. A 409 is Resend's answer to an idempotency key it has seen before:
+ * either the earlier request is still in flight, or it finished with a
+ * different payload — and in both cases there IS an earlier request. Every
+ * other 4xx (a bad address, a bad key, the 429 quota) is a plain refusal.
+ */
+export function isAmbiguousStatus(status: number): boolean {
+  return status >= 500 || status === 409;
 }
 
 /**
@@ -222,6 +267,37 @@ export async function sendEmail(
   email: Email,
   orderId: string | null = null,
 ): Promise<boolean> {
+  return (await sendAndRecord(template, email, orderId)).ok;
+}
+
+/**
+ * `sendEmail`, returning the provider's result instead of a boolean.
+ *
+ * For a caller that needs to tell a refusal from a send nobody can vouch for
+ * (`result.unknown`). Same contract otherwise — it never throws, and it logs,
+ * against `orderId` when there is one. The log row says "failed" for both
+ * (`logStatus`): everything this path sends may be sent again — the order
+ * confirmation carries an idempotency key — and the confirmation retry looks
+ * for "failed" and "not-delivered" rows (0008_email_not_delivered.sql).
+ *
+ * NOT FOR THE ANNOUNCEMENT, and it refuses it. This path sends first and
+ * writes the log afterwards, which is right for a message that may be sent
+ * again and wrong for one that must arrive once. The list send claims its row
+ * BEFORE the provider call — `claimRecipient` in `announcement.ts` — and an
+ * announcement sent from here would go out unclaimed, past the one index that
+ * stops a second copy.
+ */
+export async function sendAndRecord(
+  template: EmailTemplate,
+  email: Email,
+  orderId: string | null = null,
+): Promise<SendResult> {
+  if (template === "announcement") {
+    const error = "the announcement is sent by scripts/mail/send-announcement.ts or a portal campaign, which claim first";
+    console.error(`[guard-theory] refused to send ${template} to ${maskEmail(email.to)}: ${error}`);
+    return { ok: false, unknown: false, error };
+  }
+
   const mail = getMailProvider();
   const result = await mail.send(email);
 
@@ -256,7 +332,7 @@ export async function sendEmail(
     }
   }
 
-  return result.ok;
+  return result;
 }
 
 export type { Email, EmailStatus, EmailTemplate, MailProvider, SendResult } from "./types.ts";

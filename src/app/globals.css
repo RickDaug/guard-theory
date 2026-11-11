@@ -511,3 +511,14 @@
     }
   }
 }
+
+/* The scroll-driven reveal is bound to scroll position, not to time, so the
+   global duration collapse above does not reach it. Under reduced motion the
+   content is simply there. */
+@media (prefers-reduced-motion: reduce) {
+  .reveal {
+    animation: none !important;
+    opacity: 1;
+    transform: none;
+  }
+}

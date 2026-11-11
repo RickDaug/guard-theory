@@ -267,19 +267,17 @@ export function ResendControl({
 /**
  * Buys the label.
  *
- * The link to the PDF is rendered by the page, not here, and it points at a
- * freshly-signed URL — Shippo's label links expire and the expiry is not
- * documented, so the stored one is treated as a cache rather than a fact.
+ * Printing it is the page's "Print label" link, to /orders/[id]/label, which
+ * fetches a freshly-signed URL — Shippo's label links expire and the expiry is
+ * not documented, so the stored one is treated as a cache rather than a fact.
  */
 export function LabelControl({
   id,
-  labelUrl,
   configured,
   weightOz,
   weightWarning,
 }: {
   id: string;
-  labelUrl: string | null;
   configured: boolean;
   /** What the label will declare, when no label has been bought yet. */
   weightOz: string | null;
@@ -306,19 +304,6 @@ export function LabelControl({
             {pending ? "Buying…" : "Buy a USPS label"}
           </Button>
         </form>
-
-        {labelUrl ? (
-          // A plain anchor: this is Shippo's own signed URL, off our origin,
-          // and next/link would try to client-navigate to it.
-          <a
-            href={labelUrl}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="display-plain inline-flex min-h-6 items-center text-sm text-signal-lift underline underline-offset-[6px]"
-          >
-            Open the label (4x6 PDF)
-          </a>
-        ) : null}
       </div>
 
       {!configured ? (

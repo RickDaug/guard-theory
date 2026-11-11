@@ -43,7 +43,9 @@ export function proxy(request: NextRequest): NextResponse {
 
   const signIn = portalUrl("/sign-in");
 
-  if (pathname === signIn) {
+  // The two doors that are open without a session: signing in, and choosing a
+  // password from an emailed link (which carries its own single-use token).
+  if (pathname === signIn || pathname === portalUrl("/set-password")) {
     return NextResponse.next();
   }
 

@@ -22,7 +22,9 @@ export const dynamic = "force-dynamic";
  * reconciler is the one problem that hides every other one.
  */
 export default async function CrewHome() {
-  await requirePortalPage(portalUrl());
+  const session = await requirePortalPage(portalUrl());
+  // The reconciler and prices are the owner's to act on; crew get the counts.
+  const owner = session.role === "owner";
 
   let toShip = 0;
   let needsYou = 0;
@@ -73,7 +75,7 @@ export default async function CrewHome() {
       <div className="mx-auto max-w-[70rem]">
         <h1 className="display-condensed mb-12 text-3xl text-chalk">Today</h1>
 
-        {health.state === "stale" || health.state === "never" ? (
+        {owner && (health.state === "stale" || health.state === "never") ? (
           <p
             role="status"
             className="mb-10 border-l-2 border-signal-lift bg-graphite px-5 py-4 text-base text-chalk"
@@ -111,7 +113,7 @@ export default async function CrewHome() {
           ))}
         </dl>
 
-        {unpriced > 0 ? (
+        {owner && unpriced > 0 ? (
           <p className="mt-10 border-l-2 border-signal-lift bg-graphite px-5 py-4 text-base text-chalk">
             {unpriced === 1
               ? "One product has no price yet, so it cannot go live."
@@ -125,7 +127,7 @@ export default async function CrewHome() {
           </p>
         ) : null}
 
-        {health.state === "fresh" ? (
+        {owner && health.state === "fresh" ? (
           <p className="mt-12 text-sm text-steel">
             {`Stripe last checked for missed payments ${describeAge(health.minutesAgo)}.`}
           </p>

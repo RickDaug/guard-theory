@@ -10,7 +10,7 @@ export const dynamic = "force-dynamic";
 type Row = { id: string; slug: string; name: string; active: boolean; sort_index: number };
 
 export default async function CategoriesPage() {
-  await requirePortalPage(portalUrl("/categories"));
+  await requirePortalPage(portalUrl("/categories"), "owner");
 
   if (!isDatabaseConfigured()) {
     return (

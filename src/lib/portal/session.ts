@@ -1,5 +1,5 @@
 import { cookies, headers } from "next/headers";
-import { isDatabaseConfigured, query, queryOne } from "../db/client.ts";
+import { isDatabaseConfigured, query } from "../db/client.ts";
 import { cache } from "react";
 import {
   SESSION_IDLE_MINUTES,
@@ -8,13 +8,18 @@ import {
   hashSessionToken,
   newSessionToken,
 } from "./auth.ts";
+import { findSession, insertSession, type Session } from "./session-store.ts";
+import { authorise, NotAuthorised, type Role } from "./roles.ts";
+
+export { NotAuthorised };
+export type { Session };
 
 /**
  * Portal sessions.
  *
  * THE RULE THAT MATTERS MOST HERE
  *
- * `requireSession()` is called inside every portal page and every portal server
+ * `requireRole()` is called inside every portal page and every portal server
  * action — not only in the proxy. Server Actions are POSTs to the page route
  * rather than routes of their own, so a proxy matcher is a convenience, not a
  * security boundary: change the matcher and the actions quietly stop being
@@ -25,30 +30,24 @@ import {
  * login screen instead of a flash of the dashboard. It is not the lock.
  */
 
-export type Session = { tokenHash: string; expiresAt: Date };
-
-export async function createSession(): Promise<string> {
+/**
+ * Starts a session for a person (`userId`), or for the shared owner password
+ * (`null`). A new token every time: signing in never reuses a session.
+ */
+export async function createSession(userId: string | null): Promise<string> {
   const token = newSessionToken();
   const tokenHash = hashSessionToken(token);
   const expiresAt = new Date(Date.now() + SESSION_TTL_HOURS * 60 * 60 * 1000);
 
   const headerList = await headers();
 
-  // One admin, one session. Signing in ends every other session first, so a
-  // cookie lifted from another machine stops working the moment the owner signs
-  // in again — which is also the "sign out everywhere" this portal lacked.
-  await query("delete from admin_session");
-
-  await query(
-    `insert into admin_session (token_hash, expires_at, ip, user_agent)
-     values ($1, $2, $3, $4)`,
-    [
-      tokenHash,
-      expiresAt.toISOString(),
-      headerList.get("x-forwarded-for")?.split(",")[0]?.trim() ?? null,
-      headerList.get("user-agent")?.slice(0, 300) ?? null,
-    ],
-  );
+  await insertSession({
+    tokenHash,
+    userId,
+    expiresAt,
+    ip: headerList.get("x-forwarded-for")?.split(",")[0]?.trim() ?? null,
+    userAgent: headerList.get("user-agent")?.slice(0, 300) ?? null,
+  });
 
   const store = await cookies();
 
@@ -84,21 +83,7 @@ export const getSession = cache(async function getSession(): Promise<Session | n
   }
 
   try {
-    const row = await queryOne<{ token_hash: string; expires_at: Date }>(
-      `update admin_session
-          set last_seen = now()
-        where token_hash = $1
-          and expires_at > now()
-          and last_seen > now() - make_interval(mins => $2)
-      returning token_hash, expires_at`,
-      [hashSessionToken(token), SESSION_IDLE_MINUTES],
-    );
-
-    if (!row) {
-      return null;
-    }
-
-    return { tokenHash: row.token_hash, expiresAt: row.expires_at };
+    return await findSession(hashSessionToken(token));
   } catch (error) {
     // A database that cannot be reached is not an authenticated session.
     console.error(
@@ -159,22 +144,13 @@ export async function sweepExpiredSessions(): Promise<number> {
   }
 }
 
-export class NotAuthorised extends Error {
-  constructor() {
-    super("Not signed in to the Crew Portal.");
-    this.name = "NotAuthorised";
-  }
-}
-
 /**
- * The actual lock. Call this first in every portal page and every portal action.
+ * The actual lock. The first statement of every portal server action:
+ * `await requireRole("crew")` for what anyone signed in may do, and
+ * `await requireRole("owner")` for everything else (src/lib/portal/roles.ts
+ * says which is which). Throws without a session, and throws when the
+ * session's role does not cover `needs`.
  */
-export async function requireSession(): Promise<Session> {
-  const session = await getSession();
-
-  if (!session) {
-    throw new NotAuthorised();
-  }
-
-  return session;
+export async function requireRole(needs: Role): Promise<Session> {
+  return authorise(await getSession(), needs);
 }

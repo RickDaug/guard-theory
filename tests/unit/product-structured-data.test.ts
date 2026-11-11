@@ -26,6 +26,10 @@ import type { Commerce, ProductView } from "../../src/lib/catalogue/types.ts";
 
 const registry = PRODUCTS[0]!;
 
+// productJsonLd() names only photographs productPhotographs() admits: on the
+// configured Blob host, with alt text. The fixture host stands in for it.
+process.env.NEXT_PUBLIC_BLOB_HOSTNAME = "blob.example";
+
 function view(commerce: Partial<Commerce> | null, slug = registry.slug): ProductView {
   return {
     slug,
@@ -104,6 +108,16 @@ describe("productJsonLd", () => {
     )!;
     assert.deepEqual(withPhoto.image, ["https://blob.example/a.jpg"]);
     assert.ok(!JSON.stringify(withPhoto).includes("og-card"));
+    // The same filter the gallery uses: another host, or no alt text, is not a photograph here.
+    const rejected = productJsonLd(
+      view({
+        images: [
+          { url: "https://elsewhere.example/a.jpg", alt: "a", width: 1600, height: 1600 },
+          { url: "https://blob.example/b.jpg", alt: "  ", width: 1600, height: 1600 },
+        ],
+      }),
+    )!;
+    assert.equal(rejected.image, undefined);
   });
 
   it("names a country of origin only when the owner's value names one", () => {

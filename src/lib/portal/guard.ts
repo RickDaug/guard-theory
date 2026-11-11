@@ -1,6 +1,7 @@
 import { redirect } from "next/navigation";
-import { getSession } from "./session.ts";
+import { getSession, type Session } from "./session.ts";
 import { portalUrl } from "./routes.ts";
+import { roleAllows, type Role } from "./roles.ts";
 
 /**
  * The guard a portal PAGE uses.
@@ -14,11 +15,16 @@ import { portalUrl } from "./routes.ts";
  * correct thing for a navigation regardless. The tests and the right answer
  * agree here, which is usually a sign the tests are right.
  */
-export async function requirePortalPage(next?: string): Promise<void> {
+export async function requirePortalPage(next?: string, needs: Role = "crew"): Promise<Session> {
   const session = await getSession();
 
   if (session) {
-    return;
+    // Signed in, but this screen is the owner's: back to Today, which every
+    // role can see. A redirect for the same reason as above, not a 403.
+    if (!roleAllows(session.role, needs)) {
+      redirect(portalUrl());
+    }
+    return session;
   }
 
   const target = next ? `?next=${encodeURIComponent(next)}` : "";
@@ -35,15 +41,15 @@ export async function requirePortalPage(next?: string): Promise<void> {
  *
  * Returns null when the caller may proceed.
  */
-export async function requirePortalRoute(): Promise<Response | null> {
+export async function requirePortalRoute(needs: Role = "crew"): Promise<Response | null> {
   const session = await getSession();
 
-  if (session) {
+  if (session && roleAllows(session.role, needs)) {
     return null;
   }
 
   return new Response(null, {
     status: 303,
-    headers: { Location: portalUrl("/sign-in"), "Cache-Control": "no-store" },
+    headers: { Location: portalUrl(session ? "" : "/sign-in"), "Cache-Control": "no-store" },
   });
 }

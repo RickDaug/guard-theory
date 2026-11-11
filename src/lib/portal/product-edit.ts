@@ -217,7 +217,12 @@ export type StorefrontCheck = {
   description: string | null;
   specs: Specification[];
   sizeLabels: string[];
+  /** The alt text of each of the product's photographs, in order. */
+  imageAlts: string[];
 };
+
+/** The go-live line for photographs. Named so the portal's copy can match it. */
+export const NEEDS_PHOTOGRAPH = "at least one photograph with alt text";
 
 /**
  * Everything the product still lacks before it may be live or sold out. Empty
@@ -225,8 +230,11 @@ export type StorefrontCheck = {
  *
  * Each line is something the site already says about every product it shows:
  * a price where a price is expected, a size to choose, the promised
- * specification lines (PUBLISHED_SPECIFICATIONS), and — once the owner has
- * supplied a size chart — sizes the size and fit guide actually has a row for.
+ * specification lines (PUBLISHED_SPECIFICATIONS), at least one photograph a
+ * screen reader can describe (owner decision, 2026-09-29: the first photograph
+ * is also the one Product JSON-LD and the Stripe Checkout line show), and —
+ * once the owner has supplied a size chart — sizes the size and fit guide
+ * actually has a row for.
  *
  * Two of those lines are the law, not just the site's promise:
  *   - the country of manufacture, in a form the listing can state as the FTC
@@ -267,6 +275,13 @@ export function storefrontProblems(
 
   if (check.sizeLabels.length === 0) {
     problems.push("at least one size");
+  }
+
+  // Alt text is NOT NULL and the upload refuses an empty one, so this is the
+  // last line of defence rather than the first: a photograph nobody can
+  // describe does not count towards going live.
+  if (!check.imageAlts.some((alt) => alt.trim() !== "")) {
+    problems.push(NEEDS_PHOTOGRAPH);
   }
 
   // The size and fit guide renders a chart only when the owner has supplied
@@ -328,6 +343,11 @@ export async function storefrontProblemsFor(
   );
 
   const sizeLabels = sizes.rows.map((size) => size.size_label);
+  const images = await client.query<{ alt: string }>(
+    "select alt from product_image where product_id = $1 order by sort_index, id",
+    [productId],
+  );
+  const imageAlts = images.rows.map((image) => image.alt);
   const registry = getProduct(row.slug);
 
   if (registry) {
@@ -339,6 +359,7 @@ export async function storefrontProblemsFor(
       description: registry.description,
       specs: registry.specifications,
       sizeLabels,
+      imageAlts,
     });
   }
 
@@ -355,6 +376,7 @@ export async function storefrontProblemsFor(
     description: row.description,
     specs: specs.rows,
     sizeLabels,
+    imageAlts,
   });
 }
 
@@ -380,7 +402,7 @@ async function keepsStorefrontWhole(client: PoolClient, productId: string): Prom
     ? { ok: true }
     : {
         ok: false,
-        message: `That would leave a product on the storefront without ${joinList(problems.map((p) => p.replace(/^(a|an|at least one) /, "")))}. Nothing was changed. Set it to draft first if you mean to take it down.`,
+        message: `That would leave a product on the storefront without ${joinList(problems.map((p) => p.replace(/^(a|an) /, "").replace(/^at least one /, "any ")))}. Nothing was changed. Set it to draft first if you mean to take it down.`,
       };
 }
 
@@ -394,7 +416,7 @@ export class EditRefused extends Error {
   }
 }
 
-async function refuseUnlessWhole(client: PoolClient, productId: string): Promise<void> {
+export async function refuseUnlessWhole(client: PoolClient, productId: string): Promise<void> {
   const whole = await keepsStorefrontWhole(client, productId);
   if (!whole.ok) throw new EditRefused(whole.message);
 }

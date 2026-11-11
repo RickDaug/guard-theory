@@ -13,6 +13,7 @@ import {
   STALE_CLAIM_SECONDS,
 } from "../../src/lib/orders/fulfil.ts";
 import { closePool, isDatabaseConfigured, query } from "../../src/lib/db/client.ts";
+import { applyRefundFromCharge } from "../../src/lib/orders/refund.ts";
 
 /**
  * The three guarantees the shop's correctness rests on, exercised against a
@@ -495,6 +496,89 @@ describe("turning a paid session into an order", { skip: !HAS_DB && "no DATABASE
       assert.equal((await fulfilCheckoutSession(first)).outcome, "already-recorded");
 
       await query("delete from unfulfilled_payment where stripe_session_id = $1", [second.id]);
+    } finally {
+      quiet.mock.restore();
+    }
+  });
+
+  it("a paid-twice flag the owner cleared stays cleared when the reconciler replays (review S3-1)", async () => {
+    // The reconciler replays every complete session every 15 minutes for 72
+    // hours. Each replay of the SECOND session used to raise duplicate-payment
+    // on the first order again, however often the owner cleared it.
+    const quiet = mock.method(console, "error", () => {});
+
+    try {
+      const intentId = await makeIntent(1, 5);
+      const first = session({ client_reference_id: intentId });
+      const second = session({ client_reference_id: intentId });
+
+      assert.equal((await fulfilCheckoutSession(first)).outcome, "created");
+      assert.equal((await fulfilCheckoutSession(second)).outcome, "unfulfilled");
+
+      const flagOf = async () =>
+        (
+          await query<{ flagged_reason: string | null }>(
+            `select flagged_reason from "order" where stripe_session_id = $1`,
+            [first.id],
+          )
+        )[0]!.flagged_reason;
+      assert.equal(await flagOf(), "duplicate-payment");
+
+      // The owner reads it, refunds the second payment in Stripe, clears it.
+      await query(`update "order" set flagged_reason = null where stripe_session_id = $1`, [
+        first.id,
+      ]);
+      await applyRefundFromCharge(String(second.payment_intent), 9600);
+
+      assert.equal(
+        (await fulfilCheckoutSession(second, { flagAs: "reconciled" })).outcome,
+        "unfulfilled",
+      );
+      assert.equal(await flagOf(), null, "the cleared flag stays cleared");
+
+      // And the replay keeps the refunded note on the payment, rather than
+      // showing it unrefunded until the refund pass runs.
+      const recorded = await query<{ reason: string }>(
+        "select reason from unfulfilled_payment where stripe_session_id = $1",
+        [second.id],
+      );
+      assert.match(recorded[0]!.reason, /^duplicate payment.* — Stripe shows refunded: 96\.00 USD$/);
+
+      await query("delete from unfulfilled_payment where stripe_session_id = $1", [second.id]);
+    } finally {
+      quiet.mock.restore();
+    }
+  });
+
+  it("a recovered order's paid date is when the session was paid, not when it was found (review S3-2)", async () => {
+    const quiet = mock.method(console, "error", () => {});
+
+    try {
+      // Paid three days ago, the webhook never arrived, the reconciler finds
+      // it now. Its paid date must be three days ago: it decides the month the
+      // sales export files it under.
+      const created = Math.floor(Date.now() / 1000) - 3 * 24 * 60 * 60;
+      const late = session({ client_reference_id: await makeIntent(1, 5), created });
+      const result = await fulfilCheckoutSession(late, { flagAs: "reconciled" });
+      assert.equal(result.outcome, "created");
+
+      const [row] = await query<{ placed_at: Date }>(
+        `select placed_at from "order" where stripe_session_id = $1`,
+        [late.id],
+      );
+      assert.equal(row!.placed_at.getTime(), created * 1000);
+
+      // On time, the webhook's own moment is the payment's: now().
+      const onTime = session({
+        client_reference_id: await makeIntent(1, 5),
+        created: Math.floor(Date.now() / 1000) - 60,
+      });
+      assert.equal((await fulfilCheckoutSession(onTime)).outcome, "created");
+      const [fresh] = await query<{ lag: number }>(
+        `select extract(epoch from now() - placed_at)::float8 as lag from "order" where stripe_session_id = $1`,
+        [onTime.id],
+      );
+      assert.ok(fresh!.lag < 30, `recorded as now, not as session creation (${fresh!.lag}s)`);
     } finally {
       quiet.mock.restore();
     }

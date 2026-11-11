@@ -3,7 +3,13 @@ import { getPolicy } from "../../content/policies/index.ts";
 import { productOrigin } from "../../content/products/origin.ts";
 import { toDecimalString } from "../money.ts";
 import { SITE_NAME, absoluteUrl } from "../site.ts";
-import { effectivePriceCents, hasPublishableOffer, stockStatus, type ProductView } from "./types.ts";
+import {
+  effectivePriceCents,
+  hasPublishableOffer,
+  productPhotographs,
+  stockStatus,
+  type ProductView,
+} from "./types.ts";
 
 /**
  * Product structured data and product indexability, as pure functions of a
@@ -139,8 +145,9 @@ export function productJsonLd(view: ProductView): Record<string, unknown> | null
   // Only real photographs the owner uploaded. The share card is the page's
   // image, not a picture of the garment, and must never stand in for one
   // (src/lib/metadata.ts, SHARE_IMAGE_OBJECT).
-  if (commerce.images.length > 0) {
-    node.image = commerce.images.map((image) => image.url);
+  const photographs = productPhotographs(view);
+  if (photographs.length > 0) {
+    node.image = photographs.map((image) => image.url);
   }
 
   // Only when the owner's value names a country; an unnamed import names

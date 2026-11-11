@@ -39,6 +39,12 @@ describe("a label is only bought for an order that will actually ship", () => {
     assert.match(labelRefusal({ ...shippable, refund_status: "full" }, "live") ?? "", /refunded/);
   });
 
+  it("refuses an order under an open or lost chargeback (review S2-2, S3-10)", () => {
+    assert.match(labelRefusal({ ...shippable, dispute_status: "open" }, "live") ?? "", /disputed/);
+    assert.match(labelRefusal({ ...shippable, dispute_status: "lost" }, "live") ?? "", /lost/);
+    assert.equal(labelRefusal({ ...shippable, dispute_status: "won" }, "live"), null);
+  });
+
   // The inverse: a guard that refuses everything passes every test above.
   it("allows a matching mode, including a partially refunded order", () => {
     assert.equal(labelRefusal(shippable, "live"), null);

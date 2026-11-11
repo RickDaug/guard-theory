@@ -59,6 +59,8 @@ export type CancelResult =
       restockFailed: boolean;
       /** True when a bought label is now on a cancelled order. */
       hasLabel: boolean;
+      /** Cancelled without a refund, because a lost chargeback already returned the money. */
+      chargeback: boolean;
       emailed: boolean;
     }
   | { ok: false; reason: string };
@@ -70,7 +72,12 @@ export type CancelOptions = {
 
 type Locked = Pick<
   OrderRow,
-  "status" | "tracking_number" | "label_claimed_at" | "total_cents" | "refunded_cents"
+  | "status"
+  | "tracking_number"
+  | "label_claimed_at"
+  | "total_cents"
+  | "refunded_cents"
+  | "dispute_status"
 >;
 
 type Committed =
@@ -82,6 +89,7 @@ type Committed =
       earlierRefundCents: number;
       restock: RestockOutcome | null;
       restockFailed: boolean;
+      chargeback: boolean;
     };
 
 export const CANCEL_REFUSED_SHIPPED =
@@ -93,7 +101,8 @@ export async function cancelOrder(
 ): Promise<CancelResult> {
   const committed = await transaction<Committed>(async (client) => {
     const found = await client.query<Locked>(
-      `select status, tracking_number, label_claimed_at, total_cents, refunded_cents
+      `select status, tracking_number, label_claimed_at, total_cents, refunded_cents,
+              dispute_status
          from "order" where id = $1 for update`,
       [orderId],
     );
@@ -124,10 +133,30 @@ export async function cancelOrder(
       };
     }
 
+    if (order.dispute_status === "open") {
+      // Stripe refuses to refund a charge under dispute, and the outcome
+      // decides who ends up with the money: won, it comes back and a cancel
+      // refunds it as usual; lost, the bank has already returned it.
+      return {
+        ok: false,
+        reason:
+          "Not cancelled. The buyer's bank has disputed this payment and Stripe will not refund it " +
+          "while the dispute is open. Answer it in the Stripe dashboard; once it is decided, cancel here.",
+      };
+    }
+
+    // A lost chargeback: the bank has already given the buyer back what was
+    // left, so there is nothing to refund, and Stripe would refuse to try
+    // (charge_disputed). Asking it anyway made this order impossible to
+    // cancel, stuck in To ship with its stock off the shelf. The cancel goes
+    // ahead without the refund; refunded_cents is left as it is, because it
+    // records refunds and this was not one (the dispute column says what
+    // happened, and the sales export counts it from there).
+    const chargeback = order.dispute_status === "lost";
     const earlierRefundCents = order.refunded_cents;
     let refundedCents = 0;
 
-    if (order.total_cents - order.refunded_cents > 0) {
+    if (!chargeback && order.total_cents - order.refunded_cents > 0) {
       const money = await refundWithin(client, orderId, undefined, {
         createRefund: options.createRefund,
       });
@@ -178,6 +207,7 @@ export async function cancelOrder(
       earlierRefundCents,
       restock,
       restockFailed,
+      chargeback,
     };
   });
 
@@ -191,6 +221,7 @@ export async function cancelOrder(
     orderCancelled(toEmailShape(committed.order, items), {
       refundedCents: committed.refundedCents,
       earlierRefundCents: committed.earlierRefundCents,
+      chargeback: committed.chargeback,
     }),
     orderId,
   );
@@ -201,6 +232,7 @@ export async function cancelOrder(
     restock: committed.restock,
     restockFailed: committed.restockFailed,
     hasLabel: committed.order.tracking_number !== null,
+    chargeback: committed.chargeback,
     emailed,
   };
 }

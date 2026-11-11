@@ -95,12 +95,13 @@ const E = order({ number: 105, placed_at: new Date("2026-10-01T07:30:00Z") });
 const ORDERS_HEADER =
   "order number,paid date (Pacific time),status,ship-to state,ship-to ZIP,ship-to country," +
   "items subtotal,shipping charged,tax charged,total charged,refunded," +
-  "refund recorded date (Pacific time),net (total charged minus refunded),currency," +
+  "refund recorded date (Pacific time),lost to chargeback," +
+  "net (total charged minus refunded and chargebacks lost),currency," +
   "Stripe payment id,Stripe mode";
 
 const SUMMARY_HEADER =
   "grouping,group,orders,items subtotal,shipping charged,tax charged,total charged,refunded," +
-  "net (total charged minus refunded)";
+  "lost to chargeback,net (total charged minus refunded and chargebacks lost)";
 
 describe("sales records export: dates are California's", () => {
   it("puts an instant on its Pacific calendar date", () => {
@@ -193,9 +194,9 @@ describe("sales records export: the files", () => {
       ordersCsv([A, B, C]),
       [
         ORDERS_HEADER,
-        "101,2026-07-15,delivered,CA,90015,US,89.00,7.00,8.46,104.46,0.00,,104.46,USD,pi_A,live",
-        "102,2026-07-31,shipped,NY,10001,US,89.00,7.00,0.00,96.00,20.00,2026-08-10,76.00,USD,pi_B,live",
-        "103,2026-09-30,cancelled,CA,94110,US,178.00,7.00,16.92,201.92,201.92,2026-09-30,0.00,USD,pi_C,live",
+        "101,2026-07-15,delivered,CA,90015,US,89.00,7.00,8.46,104.46,0.00,,0.00,104.46,USD,pi_A,live",
+        "102,2026-07-31,shipped,NY,10001,US,89.00,7.00,0.00,96.00,20.00,2026-08-10,0.00,76.00,USD,pi_B,live",
+        "103,2026-09-30,cancelled,CA,94110,US,178.00,7.00,16.92,201.92,201.92,2026-09-30,0.00,0.00,USD,pi_C,live",
       ].join("\r\n"),
     );
   });
@@ -203,7 +204,7 @@ describe("sales records export: the files", () => {
   it("neutralises buyer-typed cells and marks a test order", () => {
     assert.equal(
       ordersCsv([D]).split("\r\n")[1],
-      "104,2026-08-15,new,'=1+1,'-73301,US,89.00,7.00,0.00,96.00,0.00,,96.00,USD,pi_D,test",
+      "104,2026-08-15,new,'=1+1,'-73301,US,89.00,7.00,0.00,96.00,0.00,,0.00,96.00,USD,pi_D,test",
     );
   });
 
@@ -212,14 +213,41 @@ describe("sales records export: the files", () => {
       summaryCsv([A, B, C]),
       [
         SUMMARY_HEADER,
-        "month paid (Pacific time),2026-07,2,178.00,14.00,8.46,200.46,20.00,180.46",
-        "month paid (Pacific time),2026-09,1,178.00,7.00,16.92,201.92,201.92,0.00",
-        "destination,California,2,267.00,14.00,25.38,306.38,201.92,104.46",
-        "destination,Other US states,1,89.00,7.00,0.00,96.00,20.00,76.00",
-        "ship-to state,CA,2,267.00,14.00,25.38,306.38,201.92,104.46",
-        "ship-to state,NY,1,89.00,7.00,0.00,96.00,20.00,76.00",
-        "all orders in range,total,3,356.00,21.00,25.38,402.38,221.92,180.46",
+        "month paid (Pacific time),2026-07,2,178.00,14.00,8.46,200.46,20.00,0.00,180.46",
+        "month paid (Pacific time),2026-09,1,178.00,7.00,16.92,201.92,201.92,0.00,0.00",
+        "destination,California,2,267.00,14.00,25.38,306.38,201.92,0.00,104.46",
+        "destination,Other US states,1,89.00,7.00,0.00,96.00,20.00,0.00,76.00",
+        "ship-to state,CA,2,267.00,14.00,25.38,306.38,201.92,0.00,104.46",
+        "ship-to state,NY,1,89.00,7.00,0.00,96.00,20.00,0.00,76.00",
+        "all orders in range,total,3,356.00,21.00,25.38,402.38,221.92,0.00,180.46",
       ].join("\r\n"),
+    );
+  });
+
+  it("takes a lost chargeback out of net, in its own column, and not as a refund (review S3-3)", () => {
+    // Paid 96.00, 10.00 refunded as a price adjustment, then the buyer's bank
+    // charged back the rest and the shop lost the dispute. None of the 86.00
+    // is revenue; it used to be counted as if it were.
+    const F = order({
+      number: 106,
+      placed_at: new Date("2026-08-20T18:00:00Z"),
+      refunded_cents: 1000,
+      refunded_at: new Date("2026-08-21T18:00:00Z"),
+      stripe_payment_intent: "pi_F",
+      dispute_status: "lost",
+    });
+    const won = order({ number: 107, placed_at: new Date("2026-08-21T18:00:00Z"), dispute_status: "won" });
+
+    assert.equal(
+      ordersCsv([F, won]).split("\r\n").slice(1).join("\n"),
+      [
+        "106,2026-08-20,new,CA,90015,US,89.00,7.00,0.00,96.00,10.00,2026-08-21,86.00,0.00,USD,pi_F,live",
+        "107,2026-08-21,new,CA,90015,US,89.00,7.00,0.00,96.00,0.00,,0.00,96.00,USD,,live",
+      ].join("\n"),
+    );
+    assert.equal(
+      summaryCsv([F, won]).split("\r\n").at(-1),
+      "all orders in range,total,2,178.00,14.00,0.00,192.00,10.00,86.00,96.00",
     );
   });
 
@@ -227,7 +255,7 @@ describe("sales records export: the files", () => {
     assert.equal(ordersCsv([]), ORDERS_HEADER);
     assert.equal(
       summaryCsv([]),
-      [SUMMARY_HEADER, "all orders in range,total,0,0.00,0.00,0.00,0.00,0.00,0.00"].join("\r\n"),
+      [SUMMARY_HEADER, "all orders in range,total,0,0.00,0.00,0.00,0.00,0.00,0.00,0.00"].join("\r\n"),
     );
   });
 });

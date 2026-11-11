@@ -2,7 +2,7 @@ import { randomUUID } from "node:crypto";
 import type Stripe from "stripe";
 import type { PoolClient } from "pg";
 import { query, transaction } from "../db/client.ts";
-import type { PricedLine } from "../cart/types.ts";
+import { CHECKOUT_SESSION_MINUTES, type PricedLine } from "../cart/types.ts";
 import { orderStripeMode, stripeMode } from "../stripe/client.ts";
 import { raiseFlagSql, strongestFlag } from "./flags.ts";
 
@@ -260,6 +260,26 @@ export function amountMismatch(
  * caller is allowed to tell Stripe the event was handled. Upserts on the
  * session id: the webhook and the reconciler will both find the same session.
  */
+/**
+ * When the order was paid, for placed_at — the "paid date" the sales export
+ * files a sale under, and the ship queue's "Paid X ago".
+ *
+ * A Checkout Session is paid somewhere between its creation and its expiry
+ * (CHECKOUT_SESSION_MINUTES, plus the two-minute rounding in
+ * sessionExpiresAt). An order recorded inside that window — the webhook, on
+ * time — is recorded as it is paid, and now() is exact. One recorded later —
+ * by the reconciler, up to 72 hours on, or by a webhook retried for days — was
+ * paid long before now(), which put a 31 March sale in April's filing. That
+ * one takes the session's creation time: at most the window early, where
+ * now() was up to three days late. Stripe's `created` is epoch seconds.
+ */
+export const PLACED_AT_SQL = `case
+  when $20::bigint is not null
+   and to_timestamp($20::bigint) < now() - make_interval(mins => ${CHECKOUT_SESSION_MINUTES + 3})
+  then to_timestamp($20::bigint)
+  else now()
+end`;
+
 export async function recordUnfulfilledPayment(
   session: Stripe.Checkout.Session,
   reason: string,
@@ -272,7 +292,11 @@ export async function recordUnfulfilledPayment(
      values ($1, $2, $3, $4, $5, $6, $7, $8)
      on conflict (stripe_session_id) do update set
        last_seen_at = now(),
-       reason = excluded.reason`,
+       -- A refund note written by applyRefundFromCharge (refund.ts) is kept,
+       -- so a replay does not show the payment as unrefunded until the refund
+       -- pass puts the note back.
+       reason = excluded.reason
+         || coalesce(substring(unfulfilled_payment.reason from ' — Stripe shows refunded: .*$'), '')`,
     [
       randomUUID(),
       session.id,
@@ -391,10 +415,21 @@ export async function fulfilCheckoutSession(
       // refund, written where the portal shows it: unfulfilled_payment is
       // exactly "paid, and no order should be made from it". The FIRST order
       // is flagged `duplicate-payment` as well, so whoever opens it before
-      // shipping sees that its buyer paid twice. Under the intent lock, so a
-      // replay flags it again to the same value and nothing else. Intents
-      // consumed before 0011 carry no order_id, and only the row is written.
-      if (snapshot.order_id) {
+      // shipping sees that its buyer paid twice. Intents consumed before 0011
+      // carry no order_id, and only the row is written.
+      //
+      // Raised ONCE: only when this second payment has not been written down
+      // yet. The reconciler replays every complete session every fifteen
+      // minutes for 72 hours, and raising it on every replay brought the flag
+      // back after the owner had cleared it — as often as they cleared it.
+      // A crash between this commit and the row being written leaves no row,
+      // so the next replay raises it again: never lost, only never repeated.
+      const alreadyRecorded = await client.query(
+        "select 1 from unfulfilled_payment where stripe_session_id = $1",
+        [session.id],
+      );
+
+      if (snapshot.order_id && alreadyRecorded.rows.length === 0) {
         await client.query(`update "order" set ${raiseFlagSql("$2")} where id = $1`, [
           snapshot.order_id,
           "duplicate-payment",
@@ -427,10 +462,11 @@ export async function fulfilCheckoutSession(
         id, status, email,
         ship_name, ship_line1, ship_line2, ship_city, ship_state, ship_postal, ship_country,
         phone, subtotal_cents, shipping_cents, tax_cents, total_cents, currency,
-        stripe_session_id, stripe_payment_intent, stripe_mode, flagged_reason
+        stripe_session_id, stripe_payment_intent, stripe_mode, flagged_reason, placed_at
       )
       values ($1, 'new', $2, $3, $4, $5, $6, $7, $8, $9, $10,
-              $11, $12, $13, $14, $15, $16, $17, $18, $19)
+              $11, $12, $13, $14, $15, $16, $17, $18, $19,
+              ${PLACED_AT_SQL})
       on conflict (stripe_session_id) do nothing
       returning id, number
       `,
@@ -463,6 +499,7 @@ export async function fulfilCheckoutSession(
           mismatch ? "mode-mismatch" : null,
           options.flagAs ?? null,
         ),
+        typeof session.created === "number" ? session.created : null,
       ],
     );
 

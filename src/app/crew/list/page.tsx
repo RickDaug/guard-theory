@@ -15,7 +15,7 @@ export const maxDuration = 60;
 type Counts = { total: number; live: number; gone: number; pending: number; legacy: number };
 
 export default async function ListPage() {
-  await requirePortalPage(portalUrl("/list"));
+  await requirePortalPage(portalUrl("/list"), "owner");
 
   if (!isDatabaseConfigured()) {
     return (

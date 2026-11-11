@@ -1,7 +1,7 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
-import { requireSession } from "@/lib/portal/session";
+import { requireRole } from "@/lib/portal/session";
 import { query } from "@/lib/db/client";
 import {
   transitionOrder,
@@ -9,7 +9,10 @@ import {
   getOrderItems,
   toEmailShape,
   resolveUnfulfilledPayment,
+  saveTracking,
+  STATUS_LABEL,
 } from "@/lib/orders/manage";
+import { recordOrderEvent } from "@/lib/orders/events";
 import type { OrderStatus } from "@/lib/orders/manage";
 import { refundOrder } from "@/lib/orders/refund";
 import { cancelOrder } from "@/lib/orders/cancel";
@@ -59,7 +62,7 @@ export async function advanceOrder(
   _previous: PortalFormState,
   formData: FormData,
 ): Promise<PortalFormState> {
-  await requireSession();
+  const actor = await requireRole("crew");
 
   const id = text(formData, "id");
   const to = text(formData, "to") as OrderStatus;
@@ -74,6 +77,7 @@ export async function advanceOrder(
     return { status: "error", message: result.reason };
   }
 
+  await recordOrderEvent(id, "status_changed", actor, `to ${STATUS_LABEL[to]}`);
   revalidateOrders(id);
 
   return {
@@ -133,7 +137,7 @@ export async function cancelAndRefund(
   _previous: PortalFormState,
   formData: FormData,
 ): Promise<PortalFormState> {
-  await requireSession();
+  const actor = await requireRole("owner");
 
   const id = text(formData, "id");
 
@@ -150,8 +154,15 @@ export async function cancelAndRefund(
   revalidateOrders(id);
 
   const order = await getOrder(id);
-  const money =
-    result.refundedCents > 0 && order
+  await recordOrderEvent(
+    id,
+    "cancelled",
+    actor,
+    result.refundedCents > 0 && order ? `${formatMoney(result.refundedCents, order.currency)} refunded` : null,
+  );
+  const money = result.chargeback
+    ? "Cancelled. Nothing was refunded: the buyer's bank already returned the payment through the lost chargeback."
+    : result.refundedCents > 0 && order
       ? `Cancelled, and ${formatMoney(result.refundedCents, order.currency)} refunded to the card it came from.`
       : "Cancelled. It had already been refunded in full.";
   const label = result.hasLabel
@@ -172,7 +183,7 @@ export async function restockReturned(
   _previous: PortalFormState,
   formData: FormData,
 ): Promise<PortalFormState> {
-  await requireSession();
+  const actor = await requireRole("owner");
 
   const id = text(formData, "id");
 
@@ -192,6 +203,9 @@ export async function restockReturned(
     return { status: "error", message: result.reason };
   }
 
+  if (result.restock.restocked.length > 0) {
+    await recordOrderEvent(id, "restocked", actor, describeRestock(result.restock.restocked));
+  }
   revalidateOrders(id);
 
   const sentence = restockSentence(result.restock, false).trim();
@@ -207,7 +221,7 @@ export async function resolveUnfulfilled(
   _previous: PortalFormState,
   formData: FormData,
 ): Promise<PortalFormState> {
-  await requireSession();
+  await requireRole("owner");
 
   const id = text(formData, "id");
 
@@ -215,6 +229,7 @@ export async function resolveUnfulfilled(
     return { status: "error", message: "That payment could not be identified." };
   }
 
+  // Not an order: a payment with no order behind it, so no order history.
   const done = await resolveUnfulfilledPayment(id);
   revalidateOrders();
 
@@ -225,7 +240,7 @@ export async function resolveUnfulfilled(
 
 /** A person has looked in Shippo and there is no label: the order may be tried again. */
 export async function releaseLabel(formData: FormData): Promise<void> {
-  await requireSession();
+  const actor = await requireRole("crew");
 
   const id = text(formData, "id");
 
@@ -234,6 +249,7 @@ export async function releaseLabel(formData: FormData): Promise<void> {
   }
 
   await releaseLabelClaim(id);
+  await recordOrderEvent(id, "label_released", actor);
   revalidateOrders(id);
 }
 
@@ -242,7 +258,7 @@ export async function setTracking(
   _previous: PortalFormState,
   formData: FormData,
 ): Promise<PortalFormState> {
-  await requireSession();
+  const actor = await requireRole("crew");
 
   const id = text(formData, "id");
   const number = text(formData, "trackingNumber");
@@ -270,20 +286,18 @@ export async function setTracking(
     return { status: "error", message: "Write the carrier as a short name, like USPS or UPS.", field: "trackingCarrier" };
   }
 
-  if (!(await getOrder(id))) {
-    return { status: "error", message: "That order no longer exists." };
-  }
-
   const url =
     carrier.toUpperCase() === "USPS"
       ? `https://tools.usps.com/go/TrackConfirmAction?tLabels=${encodeURIComponent(number)}`
       : null;
 
-  await query(
-    `update "order" set tracking_number = $2, tracking_carrier = $3, tracking_url = $4 where id = $1`,
-    [id, number, carrier, url],
-  );
+  const saved = await saveTracking(id, { number, carrier, url });
 
+  if (!saved.ok) {
+    return { status: "error", message: saved.reason };
+  }
+
+  await recordOrderEvent(id, "tracking_set", actor, `${carrier} ${number}`);
   revalidateOrders(id);
   return { status: "success", message: "Tracking saved. You can mark this shipped now." };
 }
@@ -292,7 +306,7 @@ export async function issueRefund(
   _previous: PortalFormState,
   formData: FormData,
 ): Promise<PortalFormState> {
-  await requireSession();
+  const actor = await requireRole("owner");
 
   const id = text(formData, "id");
   const raw = text(formData, "amount");
@@ -335,6 +349,16 @@ export async function issueRefund(
     return { status: "error", message: result.reason };
   }
 
+  const refunded = await getOrder(id);
+  await recordOrderEvent(
+    id,
+    "refunded",
+    actor,
+    // refundedCents is the order's running total, so that is what is said.
+    result.status === "full"
+      ? "in full"
+      : `${refunded ? formatMoney(result.refundedCents, refunded.currency) : `${result.refundedCents} cents`} refunded so far`,
+  );
   revalidateOrders(id);
 
   const money =
@@ -353,7 +377,7 @@ export async function resendEmail(
   _previous: PortalFormState,
   formData: FormData,
 ): Promise<PortalFormState> {
-  await requireSession();
+  const actor = await requireRole("crew");
 
   const id = text(formData, "id");
   const template = text(formData, "template");
@@ -391,13 +415,18 @@ export async function resendEmail(
     // refunded, and none of it by this message.
     sent = await sendEmail(
       "order-cancelled",
-      orderCancelled(shape, { refundedCents: 0, earlierRefundCents: order.refunded_cents }),
+      orderCancelled(shape, {
+        refundedCents: 0,
+        earlierRefundCents: order.refunded_cents,
+        chargeback: order.dispute_status === "lost",
+      }),
       order.id,
     );
   } else {
     return { status: "error", message: "That is not a message this order sends." };
   }
 
+  await recordOrderEvent(order.id, "email_resent", actor, template);
   revalidateOrders(order.id);
 
   // sendEmail reports true for the log-only provider as well, so "Sent." is
@@ -407,12 +436,18 @@ export async function resendEmail(
 
 /** Clears a flag once the owner has dealt with whatever it was for. */
 export async function clearFlag(formData: FormData): Promise<void> {
-  await requireSession();
+  const actor = await requireRole("owner");
 
   const id = text(formData, "id");
 
   if (id) {
-    await query(`update "order" set flagged_reason = null where id = $1`, [id]);
+    const cleared = await query<{ id: string }>(
+      `update "order" set flagged_reason = null where id = $1 and flagged_reason is not null returning id`,
+      [id],
+    );
+    if (cleared.length > 0) {
+      await recordOrderEvent(id, "flag_cleared", actor);
+    }
     revalidateOrders(id);
   }
 }
@@ -421,7 +456,7 @@ export async function runReconcile(
   _previous: PortalFormState,
   _formData: FormData,
 ): Promise<PortalFormState> {
-  await requireSession();
+  await requireRole("owner");
 
   const report = await reconcileStripeSessions();
   await recordReconcileRun(report).catch(() => {});
@@ -457,7 +492,7 @@ export async function buyLabel(
   _previous: PortalFormState,
   formData: FormData,
 ): Promise<PortalFormState> {
-  await requireSession();
+  const actor = await requireRole("crew");
 
   const id = text(formData, "id");
 
@@ -497,7 +532,7 @@ export async function buyLabel(
       "has-tracking":
         "This order already has a tracking number. Clear it first if the label was wrong.",
       "not-shippable":
-        "This order was cancelled or refunded in full while you were looking at it. No label was bought.",
+        "This order is not waiting to ship any more — it was cancelled, refunded in full, had its stock put back, or has a chargeback against it. No label was bought. Reload to see why.",
       "in-progress": "A label is already being bought for this order. Give it a moment, then reload.",
       abandoned:
         "A label purchase for this order was started and never finished, so it may have gone through. " +
@@ -569,6 +604,8 @@ export async function buyLabel(
     return { status: "error", message: saved.message };
   }
 
+  await recordOrderEvent(order.id, "label_bought", actor, `${label.amount} ${label.currency}`);
+
   return {
     status: "success",
     message: weight.measured
@@ -579,7 +616,7 @@ export async function buyLabel(
 
 /** A freshly-signed link to the label PDF, because the stored one expires. */
 export async function labelLink(formData: FormData): Promise<void> {
-  await requireSession();
+  await requireRole("crew");
 
   const id = text(formData, "id");
   const order = id ? await getOrder(id) : undefined;

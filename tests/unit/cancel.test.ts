@@ -10,6 +10,12 @@ import {
 } from "../../src/lib/orders/refund.ts";
 import { restockReturn } from "../../src/lib/orders/restock.ts";
 import { claimLabelPurchase } from "../../src/lib/orders/label.ts";
+import {
+  saveTracking,
+  transitionOrder,
+  SHIP_REFUSED_CHARGEBACK,
+  SHIP_REFUSED_RESTOCKED,
+} from "../../src/lib/orders/manage.ts";
 import { orderCancelled } from "../../src/lib/mail/templates.ts";
 import { closePool, isDatabaseConfigured, query } from "../../src/lib/db/client.ts";
 
@@ -61,6 +67,7 @@ async function makeOrder(
     tracking?: string | null;
     claimed?: boolean;
     refundedCents?: number;
+    dispute?: string | null;
   } = {},
 ): Promise<{ id: string; total: number; items: string[] }> {
   const id = randomUUID();
@@ -74,9 +81,9 @@ async function makeOrder(
        id, status, email, ship_name, ship_line1, ship_city, ship_state, ship_postal,
        subtotal_cents, shipping_cents, tax_cents, total_cents,
        stripe_session_id, stripe_payment_intent, stripe_mode,
-       tracking_number, label_claimed_at, refunded_cents, refund_status
+       tracking_number, label_claimed_at, refunded_cents, refund_status, dispute_status
      ) values ($1, $2, 'buyer@example.com', 'Sam Fadda', '1 Test Street', 'Los Angeles', 'CA', '90015',
-               $3, 700, 0, $4, $5, $6, 'test', $7, $8, $9, $10)`,
+               $3, 700, 0, $4, $5, $6, 'test', $7, $8, $9, $10, $11)`,
     [
       id,
       extra.status ?? "new",
@@ -88,6 +95,7 @@ async function makeOrder(
       extra.claimed ? new Date() : null,
       refunded,
       refunded === 0 ? "none" : refunded >= total ? "full" : "partial",
+      extra.dispute ?? null,
     ],
   );
 
@@ -509,6 +517,123 @@ describe("cancel and restock", { skip: !HAS_DB && "no DATABASE_URL" }, () => {
       assert.equal(refused.ok, false);
     });
   });
+
+  // The final combined-tree review (2026-09-29). Each of these reproduced on
+  // the combined tree before the fix.
+  describe("a full refund before shipping means it does not ship (review S2-1)", () => {
+    it("a goodwill full refund restocks, and then the order cannot be moved toward shipping", async () => {
+      const a0 = await stockOf(variantA);
+      const { id } = await makeOrder([{ variant: variantA, quantity: 1 }]);
+      assert.equal(await stockOf(variantA), a0 - 1);
+
+      const refund = await refundOrder(id, undefined, recorder());
+      assert.equal(refund.ok && refund.status, "full");
+      assert.equal(await stockOf(variantA), a0, "the unit is back on the shelf");
+
+      // The reproduction: the owner pastes tracking by hand and marks it
+      // shipped. Each step used to succeed, and stock still counted the unit.
+      const tracking = await saveTracking(id, {
+        number: "9400111899223197428491",
+        carrier: "USPS",
+        url: null,
+      });
+      assert.equal(tracking.ok, false);
+      assert.match(!tracking.ok ? tracking.reason : "", /back on the shelf/);
+
+      const inProcess = await transitionOrder(id, "in_process");
+      assert.deepEqual(inProcess, { ok: false, reason: SHIP_REFUSED_RESTOCKED });
+
+      // Even with tracking forced onto the row, shipped is refused.
+      await query(
+        `update "order" set status = 'in_process', tracking_number = 'X123456' where id = $1`,
+        [id],
+      );
+      const shipped = await transitionOrder(id, "shipped");
+      assert.equal(shipped.ok, false);
+      assert.equal((await orderRow(id)).status, "in_process");
+      assert.equal(await stockOf(variantA), a0, "no unit has left that stock still counts");
+    });
+
+    it("an unrefunded order still gets tracking and ships", async () => {
+      const { id } = await makeOrder([{ variant: variantA, quantity: 1 }]);
+      const tracking = await saveTracking(id, {
+        number: "9400111899223197428492",
+        carrier: "USPS",
+        url: null,
+      });
+      assert.deepEqual(tracking, { ok: true });
+      assert.equal((await transitionOrder(id, "in_process")).ok, true);
+      assert.equal((await transitionOrder(id, "shipped")).ok, true);
+    });
+
+    it("a refund waits while a label is being bought, as a cancel does", async () => {
+      const a0 = await stockOf(variantA);
+      const { id } = await makeOrder([{ variant: variantA, quantity: 1 }], { claimed: true });
+      const { calls, createRefund } = recorder();
+
+      const result = await refundOrder(id, undefined, { createRefund });
+
+      assert.equal(result.ok, false);
+      assert.match(!result.ok ? result.reason : "", /label is being bought/);
+      assert.equal(calls.length, 0, "Stripe was not asked");
+      assert.equal(await stockOf(variantA), a0 - 1, "nothing restocked under a live label purchase");
+    });
+  });
+
+  describe("a lost chargeback (review S2-2)", () => {
+    it("cancels without asking Stripe for a refund and puts the stock back", async () => {
+      const a0 = await stockOf(variantA);
+      const { id } = await makeOrder([{ variant: variantA, quantity: 1 }], { dispute: "lost" });
+      const calls: unknown[] = [];
+
+      const result = await cancelOrder(id, {
+        // Stripe refuses a refund on a charged-back payment (charge_disputed).
+        // That refusal is what made this order impossible to cancel.
+        createRefund: async (input) => {
+          calls.push(input);
+          throw stripeError("StripeInvalidRequestError", "charge_disputed");
+        },
+      });
+
+      assert.equal(result.ok, true, JSON.stringify(result));
+      assert.equal(result.ok && result.chargeback, true);
+      assert.equal(result.ok && result.refundedCents, 0);
+      assert.equal(calls.length, 0, "no refund was attempted");
+      const row = await orderRow(id);
+      assert.equal(row.status, "cancelled", "so it leaves To ship");
+      assert.equal(row.refunded_cents, 0, "a chargeback is not recorded as a refund");
+      assert.equal(await stockOf(variantA), a0, "the unit is back");
+    });
+
+    it("cannot be moved toward shipping, given tracking, or have a label claimed", async () => {
+      const { id } = await makeOrder([{ variant: variantA, quantity: 1 }], { dispute: "lost" });
+
+      assert.deepEqual(await transitionOrder(id, "in_process"), {
+        ok: false,
+        reason: SHIP_REFUSED_CHARGEBACK,
+      });
+      const tracking = await saveTracking(id, {
+        number: "9400111899223197428493",
+        carrier: "USPS",
+        url: null,
+      });
+      assert.equal(tracking.ok, false);
+      assert.deepEqual(await claimLabelPurchase(id), { claimed: false, why: "not-shippable" });
+    });
+
+    it("an open dispute refuses a label claim, a refund and a cancel, without calling Stripe", async () => {
+      const { id } = await makeOrder([{ variant: variantA, quantity: 1 }], { dispute: "open" });
+      const { calls, createRefund } = recorder();
+
+      assert.deepEqual(await claimLabelPurchase(id), { claimed: false, why: "not-shippable" });
+      assert.equal((await refundOrder(id, undefined, { createRefund })).ok, false);
+      const cancel = await cancelOrder(id, { createRefund });
+      assert.equal(cancel.ok, false);
+      assert.match(!cancel.ok ? cancel.reason : "", /dispute is open/);
+      assert.equal(calls.length, 0);
+      assert.equal((await orderRow(id)).status, "new");
+    });
+  });
 });
 
 describe("the cancellation email", () => {
@@ -531,6 +656,16 @@ describe("the cancellation email", () => {
     assert.match(email.body, /\$20\.00 refunded earlier/);
     assert.match(email.body, /\/policies\/returns/);
     assert.doesNotMatch(email.body, /!/);
+  });
+
+  it("after a lost chargeback, says the bank returned the money instead of claiming a refund", () => {
+    const email = orderCancelled(order, {
+      refundedCents: 0,
+      earlierRefundCents: 0,
+      chargeback: true,
+    });
+    assert.match(email.body, /bank has already returned your payment/);
+    assert.doesNotMatch(email.body, /refunded/);
   });
 
   it("does not promise a refund that was already made", () => {

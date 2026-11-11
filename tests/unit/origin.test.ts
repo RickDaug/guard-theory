@@ -34,6 +34,7 @@ function whole(origin: string | null): StorefrontCheck {
       value: label === ORIGIN_LABEL ? origin : `fixture ${label}`,
     })),
     sizeLabels: ["M"],
+    imageAlts: ["Fixture garment laid flat, front view, on white."],
   };
 }
 
@@ -125,6 +126,7 @@ describe("the go-live checklist", () => {
         priceCents: 100,
         specs: product.specifications,
         sizeLabels: ["M"],
+        imageAlts: ["Fixture garment laid flat, front view, on white."],
       });
       assert.ok(problems.includes("a country of manufacture"), product.slug);
       assert.ok(problems.includes("a fabric composition"), product.slug);

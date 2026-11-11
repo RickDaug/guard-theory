@@ -131,6 +131,14 @@ export type RefundOptions = {
  * already, and restocked_quantity stops it going back twice.
  */
 const UNSHIPPED = new Set(["new", "in_process", "cancelled"]);
+/** Why a disputed payment cannot be refunded from here. */
+export const REFUND_REFUSED_DISPUTE = {
+  open:
+    "The buyer's bank has disputed this payment, and Stripe will not refund a payment while it is disputed. Nothing was refunded. Answer the dispute in the Stripe dashboard; once it is decided you can refund or cancel here.",
+  lost:
+    "The buyer's bank already returned this payment to them through a chargeback that was lost, so there is nothing left to refund. Nothing was refunded. If the order has not shipped, cancel it to put the stock back.",
+} as const;
+
 /** Statuses in which the parcel has gone: stock comes back only by hand. */
 const SHIPPED = new Set(["shipped", "delivered"]);
 
@@ -151,11 +159,36 @@ export async function refundOrder(
   return transaction<PortalRefundResult>(async (client) => {
     // Locked before anything is decided, so the status the restock rule reads
     // is the status the refund is made against.
-    const locked = await client.query<{ status: string }>(
-      `select status from "order" where id = $1 for update`,
+    const locked = await client.query<{
+      status: string;
+      dispute_status: string | null;
+      label_in_flight: boolean;
+    }>(
+      `select status, dispute_status,
+              (label_claimed_at is not null and tracking_number is null) as label_in_flight
+         from "order" where id = $1 for update`,
       [orderId],
     );
     const status = locked.rows[0]?.status;
+
+    // A full refund of an unshipped order puts its stock back. While a label
+    // is being bought nobody knows whether the parcel is about to go, so the
+    // stock cannot be put back yet — the same rule a cancel has (cancel.ts).
+    if (status !== undefined && UNSHIPPED.has(status) && locked.rows[0]!.label_in_flight) {
+      return {
+        ok: false,
+        reason:
+          "A label is being bought for this order, or a purchase was started and never finished. " +
+          "Nothing was refunded. Reload in a moment; if the page asks you to look in Shippo, do that first.",
+      };
+    }
+
+    // Stripe refuses to refund a charge that has been charged back
+    // (charge_disputed). Said plainly, before asking it.
+    const dispute = locked.rows[0]?.dispute_status;
+    if (dispute === "open" || dispute === "lost") {
+      return { ok: false, reason: REFUND_REFUSED_DISPUTE[dispute] };
+    }
 
     if (wantsRestock && status !== undefined && !SHIPPED.has(status)) {
       return {

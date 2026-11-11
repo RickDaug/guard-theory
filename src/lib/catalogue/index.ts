@@ -300,6 +300,7 @@ export async function listProductViews(): Promise<ProductView[]> {
 export {
   effectivePriceCents,
   hasPublishableOffer,
+  productPhotographs,
   stockStatus,
   type Commerce,
   type ProductView,

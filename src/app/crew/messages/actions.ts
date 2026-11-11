@@ -1,7 +1,7 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
-import { requireSession } from "@/lib/portal/session";
+import { requireRole } from "@/lib/portal/session";
 import { isDatabaseConfigured } from "@/lib/db/client";
 import { setAnswered } from "@/lib/contact/inbox";
 import { portalUrl } from "@/lib/portal/routes";
@@ -12,7 +12,7 @@ export async function markAnswered(
   _previous: PortalFormState,
   formData: FormData,
 ): Promise<PortalFormState> {
-  await requireSession();
+  await requireRole("owner");
 
   const id = formData.get("id");
   const answered = formData.get("answered") === "true";

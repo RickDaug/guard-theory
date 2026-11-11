@@ -75,8 +75,8 @@ export const BASE_DIRECTIVES: readonly string[] = [
  * prerendered page sits inside one (it would get two conflicting policies).
  */
 export const DYNAMIC_PREFIXES: readonly string[] = [
-  "/cart",
   "/crew",
+  "/first-edition/confirm",
   "/order",
   "/shop",
   "/unsubscribe",

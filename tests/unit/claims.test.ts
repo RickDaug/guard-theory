@@ -282,7 +282,7 @@ describe("the guard can fail", () => {
 
     const page = "src/app/technique/[category]/[slug]/page.tsx";
     const unmarked = claim.holds(
-      contextFor(null, { [page]: raw(page).replace(/review\.drafted/g, "review.factAudit") }),
+      contextFor(null, { [page]: raw(page).replace(/Nobody has yet read/g, "Nobody has read") }),
     );
     assert.match(String(unmarked), /no longer marks a draft as a draft/);
   });

@@ -186,16 +186,13 @@ export default async function TechniqueEntryPage({ params }: Params) {
             {/* Shown on a draft and on nothing else, the way the Journal shows
                 a byline on a published article and on nothing else. Plain
                 text in the running register, not a banner: it states what
-                the page is and who produced it, and stops. */}
+                the page is, and stops. */}
             {!published && entry.review ? (
               <div className="mt-8 border-l-2 border-signal-dim pl-6">
                 <p className="text-base text-slate">
                   <span className="text-ink">Draft.</span> Nobody has yet read
                   this entry and signed it off, so it is unlisted and not
                   offered to search.
-                </p>
-                <p className="notation mt-4 text-2xs text-slate">
-                  Drafted: {entry.review.drafted}
                 </p>
               </div>
             ) : null}

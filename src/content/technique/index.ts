@@ -46,7 +46,6 @@ import { legDragTurnsTheHips } from "./entries/leg-drag-turns-the-hips.ts";
 import { legEntanglementAsControl } from "./entries/leg-entanglement-as-control.ts";
 import { lockdownStretchesTheBase } from "./entries/lockdown-stretches-the-base.ts";
 import { kneebarIsAnArmbarOnTheLeg } from "./entries/kneebar-is-an-armbar-on-the-leg.ts";
-import { legEntanglementAsControl } from "./entries/leg-entanglement-as-control.ts";
 import { legLockDefenceKneeLine } from "./entries/leg-lock-defence-knee-line.ts";
 import { rearBodyLockMatReturn } from "./entries/rear-body-lock-mat-return.ts";
 import { saddleTrapsTheKnee } from "./entries/saddle-traps-the-knee.ts";
@@ -70,7 +69,6 @@ import { trapAndRollRemovesAPost } from "./entries/trap-and-roll-removes-a-post.
 import { seatedGuardHandsInTheFight } from "./entries/seated-guard-hands-in-the-fight.ts";
 import { sprawlHipsBackAndDown } from "./entries/sprawl-hips-back-and-down.ts";
 import { straightAnkleLockIsALever } from "./entries/straight-ankle-lock-is-a-lever.ts";
-import { sweepingTowardTheMissingPost } from "./entries/sweeping-toward-the-missing-post.ts";
 import { toeHoldFigureFourOnTheFoot } from "./entries/toe-hold-figure-four-on-the-foot.ts";
 import { twoOnOneControlsOneArm } from "./entries/two-on-one-controls-one-arm.ts";
 import { triangleClosesAtTheShoulder } from "./entries/triangle-closes-at-the-shoulder.ts";
@@ -129,7 +127,6 @@ export const ENTRIES: TechniqueEntry[] = [
   legEntanglementAsControl,
   lockdownStretchesTheBase,
   kneebarIsAnArmbarOnTheLeg,
-  legEntanglementAsControl,
   legLockDefenceKneeLine,
   rearBodyLockMatReturn,
   saddleTrapsTheKnee,
@@ -153,7 +150,6 @@ export const ENTRIES: TechniqueEntry[] = [
   seatedGuardHandsInTheFight,
   sprawlHipsBackAndDown,
   straightAnkleLockIsALever,
-  sweepingTowardTheMissingPost,
   toeHoldFigureFourOnTheFoot,
   twoOnOneControlsOneArm,
   triangleClosesAtTheShoulder,

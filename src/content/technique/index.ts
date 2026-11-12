@@ -10,10 +10,12 @@ import { backRetentionFollowingTheTurn } from "./entries/back-retention-followin
 import { bloodChokeVersusAirChoke } from "./entries/blood-choke-versus-air-choke.ts";
 import { butterflyGuardUnderPressure } from "./entries/butterfly-guard-under-pressure.ts";
 import { butterflyHookAsLever } from "./entries/butterfly-hook-as-lever.ts";
+import { closedGuardAttacksShareOneAngle } from "./entries/closed-guard-attacks-share-one-angle.ts";
 import { closedGuardPostureBattle } from "./entries/closed-guard-posture-battle.ts";
 import { connectionInOpenGuard } from "./entries/connection-in-open-guard.ts";
 import { deLaRivaBackTake } from "./entries/de-la-riva-back-take.ts";
 import { deLaRivaHook } from "./entries/de-la-riva-hook.ts";
+import { deepHalfGuard } from "./entries/deep-half-guard.ts";
 import { defendingTheGuillotine } from "./entries/defending-the-guillotine.ts";
 import { elbowKneeEscape } from "./entries/elbow-knee-escape.ts";
 import { escapingBackControl } from "./entries/escaping-back-control.ts";
@@ -31,6 +33,7 @@ import { kneeShield } from "./entries/knee-shield.ts";
 import { legEntanglementAsControl } from "./entries/leg-entanglement-as-control.ts";
 import { mountIsAHipPin } from "./entries/mount-is-a-hip-pin.ts";
 import { noGiGripsAreOnATimer } from "./entries/no-gi-grips-are-on-a-timer.ts";
+import { omoplataIsAKimuraWithTheLeg } from "./entries/omoplata-is-a-kimura-with-the-leg.ts";
 import { positionalHierarchy } from "./entries/positional-hierarchy.ts";
 import { pressurePassingVersusLoosePassing } from "./entries/pressure-passing-versus-loose-passing.ts";
 import { rearNakedStrangle } from "./entries/rear-naked-strangle.ts";
@@ -54,10 +57,12 @@ export const ENTRIES: TechniqueEntry[] = [
   bloodChokeVersusAirChoke,
   butterflyGuardUnderPressure,
   butterflyHookAsLever,
+  closedGuardAttacksShareOneAngle,
   closedGuardPostureBattle,
   connectionInOpenGuard,
   deLaRivaBackTake,
   deLaRivaHook,
+  deepHalfGuard,
   defendingTheGuillotine,
   elbowKneeEscape,
   escapingBackControl,
@@ -75,6 +80,7 @@ export const ENTRIES: TechniqueEntry[] = [
   legEntanglementAsControl,
   mountIsAHipPin,
   noGiGripsAreOnATimer,
+  omoplataIsAKimuraWithTheLeg,
   positionalHierarchy,
   pressurePassingVersusLoosePassing,
   rearNakedStrangle,

@@ -15,20 +15,26 @@ export default function SearchPage() {
   const index = buildSearchIndex();
 
   return (
-    <main id="main" tabIndex={-1} className="px-6 py-16 md:px-12">
-      <div className="mx-auto max-w-[104rem]">
-        <Breadcrumbs trail={[{ href: "/search", label: "Search" }]} />
+    <main id="main" tabIndex={-1}>
+      <div className="band-ink px-6 pt-10 pb-8 md:px-12">
+        <div className="mx-auto max-w-[104rem]">
+          <Breadcrumbs trail={[{ href: "/search", label: "Search" }]} />
+        </div>
+      </div>
 
-        <header className="mt-10 mb-12 max-w-[46rem]">
-          <h1 className="display-condensed text-4xl text-chalk">Search</h1>
-          <p className="mt-8 text-lg text-steel">
-            The Journal, the Technique Library, the figures, the garments and
-            the policies are indexed in the page you are reading — no query is
-            sent anywhere, and this works with the network off.
-          </p>
-        </header>
+      <div className="band-bone band-edge corner-ticks px-6 py-16 md:px-12 md:py-24">
+        <div className="mx-auto max-w-[104rem]">
+          <header className="max-w-[46rem]">
+            <h1 className="display-serif text-4xl text-ink">Search</h1>
+            <p className="mt-8 text-lg text-ink">
+              The Journal, the Technique Library, the figures, the garments and
+              the policies are indexed in the page you are reading — no query is
+              sent anywhere, and this works with the network off.
+            </p>
+          </header>
 
-        <SearchClient index={index} />
+          <SearchClient index={index} />
+        </div>
       </div>
     </main>
   );

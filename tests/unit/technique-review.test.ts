@@ -162,7 +162,7 @@ describe("the publication gate", () => {
     const page = read("src/app/technique/[category]/[slug]/page.tsx");
     assert.match(page, /const published = isPublishedEntry\(entry\)/);
     assert.match(page, /\{!published && entry\.review \?/);
-    assert.match(page, /Drafted: \{entry\.review\.drafted\}/);
+    assert.match(page, /Draft\.<\/span> Nobody has yet read/);
     assert.match(page, /const jsonLd = published\s*\?/);
     assert.match(page, /robots: \{ index: false, follow: false \}/);
     assert.match(page, /const related = relatedEntries\(entry\)/);

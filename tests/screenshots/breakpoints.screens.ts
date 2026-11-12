@@ -49,6 +49,16 @@ for (const breakpoint of BREAKPOINTS) {
         await document.fonts.ready;
       });
 
+      // Facelift 2026-11: band children use the scroll-driven `reveal`
+      // animation (animation-timeline: view()), so a full-page capture taken
+      // at scroll-top would record everything below the fold at opacity 0.
+      // Sizing the viewport to the document puts every band "in view" and the
+      // animations complete; the capture then shows the page as a reader
+      // who scrolled it would see it.
+      const height = await page.evaluate(() => document.documentElement.scrollHeight);
+      await page.setViewportSize({ width: breakpoint.width, height: Math.min(height, 16000) });
+      await page.evaluate(() => new Promise((r) => requestAnimationFrame(() => setTimeout(r, 500))));
+
       await page.screenshot({
         path: path.join(OUT, breakpoint.name, `${route.name}.png`),
         fullPage: true,

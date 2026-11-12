@@ -5,29 +5,45 @@ import {
   type TechniqueReview,
 } from "./types.ts";
 import { armDrag } from "./entries/arm-drag.ts";
+import { armbarIsHipToShoulderDistance } from "./entries/armbar-is-hip-to-shoulder-distance.ts";
+import { backRetentionFollowingTheTurn } from "./entries/back-retention-following-the-turn.ts";
 import { bloodChokeVersusAirChoke } from "./entries/blood-choke-versus-air-choke.ts";
+import { butterflyGuardUnderPressure } from "./entries/butterfly-guard-under-pressure.ts";
 import { butterflyHookAsLever } from "./entries/butterfly-hook-as-lever.ts";
 import { calfSlicerFoldsTheKnee } from "./entries/calf-slicer-folds-the-knee.ts";
 import { closedGuardPostureBattle } from "./entries/closed-guard-posture-battle.ts";
 import { connectionInOpenGuard } from "./entries/connection-in-open-guard.ts";
 import { deLaRivaHook } from "./entries/de-la-riva-hook.ts";
+import { defendingTheGuillotine } from "./entries/defending-the-guillotine.ts";
 import { elbowKneeEscape } from "./entries/elbow-knee-escape.ts";
 import { fiftyFiftyBothHeelsExposed } from "./entries/fifty-fifty-both-heels-exposed.ts";
+import { escapingBackControl } from "./entries/escaping-back-control.ts";
+import { escapingSideControl } from "./entries/escaping-side-control.ts";
 import { framesVersusBlocks } from "./entries/frames-versus-blocks.ts";
 import { gettingHipsUnderneath } from "./entries/getting-hips-underneath.ts";
+import { guardRetentionIsTheKneeBetween } from "./entries/guard-retention-is-the-knee-between.ts";
+import { guillotineIsABrokenPosture } from "./entries/guillotine-is-a-broken-posture.ts";
+import { headAndArmStrangles } from "./entries/head-and-arm-strangles.ts";
 import { insidePosition } from "./entries/inside-position.ts";
+import { kimuraIsAGripFirst } from "./entries/kimura-is-a-grip-first.ts";
 import { kneeCutPass } from "./entries/knee-cut-pass.ts";
 import { kneeShield } from "./entries/knee-shield.ts";
 import { kneebarIsAnArmbarOnTheLeg } from "./entries/kneebar-is-an-armbar-on-the-leg.ts";
 import { legEntanglementAsControl } from "./entries/leg-entanglement-as-control.ts";
 import { legLockDefenceKneeLine } from "./entries/leg-lock-defence-knee-line.ts";
 import { saddleTrapsTheKnee } from "./entries/saddle-traps-the-knee.ts";
+import { mountIsAHipPin } from "./entries/mount-is-a-hip-pin.ts";
+import { positionalHierarchy } from "./entries/positional-hierarchy.ts";
+import { pressurePassingVersusLoosePassing } from "./entries/pressure-passing-versus-loose-passing.ts";
+import { rearNakedStrangle } from "./entries/rear-naked-strangle.ts";
+import { retentionLadderFrameAngleInvertRecover } from "./entries/retention-ladder-frame-angle-invert-recover.ts";
 import { seatBeltAndHooks } from "./entries/seat-belt-and-hooks.ts";
 import { seatedGuardHandsInTheFight } from "./entries/seated-guard-hands-in-the-fight.ts";
 import { straightAnkleLockIsALever } from "./entries/straight-ankle-lock-is-a-lever.ts";
 import { sweepingTowardTheMissingPost } from "./entries/sweeping-toward-the-missing-post.ts";
 import { toeHoldFigureFourOnTheFoot } from "./entries/toe-hold-figure-four-on-the-foot.ts";
 import { twoOnOneControlsOneArm } from "./entries/two-on-one-controls-one-arm.ts";
+import { triangleClosesAtTheShoulder } from "./entries/triangle-closes-at-the-shoulder.ts";
 import { underhookHalfGuard } from "./entries/underhook-half-guard.ts";
 import { underhookOrOverhook } from "./entries/underhook-or-overhook.ts";
 
@@ -38,29 +54,45 @@ import { underhookOrOverhook } from "./entries/underhook-or-overhook.ts";
  */
 export const ENTRIES: TechniqueEntry[] = [
   armDrag,
+  armbarIsHipToShoulderDistance,
+  backRetentionFollowingTheTurn,
   bloodChokeVersusAirChoke,
+  butterflyGuardUnderPressure,
   butterflyHookAsLever,
   calfSlicerFoldsTheKnee,
   closedGuardPostureBattle,
   connectionInOpenGuard,
   deLaRivaHook,
+  defendingTheGuillotine,
   elbowKneeEscape,
   fiftyFiftyBothHeelsExposed,
+  escapingBackControl,
+  escapingSideControl,
   framesVersusBlocks,
   gettingHipsUnderneath,
+  guardRetentionIsTheKneeBetween,
+  guillotineIsABrokenPosture,
+  headAndArmStrangles,
   insidePosition,
+  kimuraIsAGripFirst,
   kneeCutPass,
   kneeShield,
   kneebarIsAnArmbarOnTheLeg,
   legEntanglementAsControl,
   legLockDefenceKneeLine,
   saddleTrapsTheKnee,
+  mountIsAHipPin,
+  positionalHierarchy,
+  pressurePassingVersusLoosePassing,
+  rearNakedStrangle,
+  retentionLadderFrameAngleInvertRecover,
   seatBeltAndHooks,
   seatedGuardHandsInTheFight,
   straightAnkleLockIsALever,
   sweepingTowardTheMissingPost,
   toeHoldFigureFourOnTheFoot,
   twoOnOneControlsOneArm,
+  triangleClosesAtTheShoulder,
   underhookHalfGuard,
   underhookOrOverhook,
 ];

@@ -1,16 +1,25 @@
 import assert from "node:assert/strict";
+import { randomUUID } from "node:crypto";
 import { readFileSync } from "node:fs";
-import { after, before, describe, it } from "node:test";
+import { after, before, describe, it, mock } from "node:test";
 
-import { handleShippoWebhook, refuseShippoWebhook } from "../../src/lib/shipping/webhook.ts";
+import {
+  applyTrackingStatus,
+  handleShippoWebhook,
+  refuseShippoWebhook,
+} from "../../src/lib/shipping/webhook.ts";
+import { closePool, isDatabaseConfigured, query } from "../../src/lib/db/client.ts";
+
+const HAS_DB = isDatabaseConfigured();
 
 /**
  * The Shippo webhook's front door. The secret is a path segment and the
  * webhook is unsigned, so what matters is that nobody without the secret can
  * tell the endpoint from a missing route — by any method.
  *
- * Nothing here reaches the database: every request either fails the secret
- * check or carries an event the handler does not act on.
+ * The first block never reaches the database: every request either fails the
+ * secret check or carries an event the handler does not act on. The second
+ * drives real tracking events into real orders.
  */
 
 const ROUTE = "src/app/api/webhooks/shippo/[token]/route.ts";
@@ -102,5 +111,125 @@ describe("who the Shippo webhook answers", () => {
       `${ROUTE} must export GET and HEAD and answer each with refuseShippoWebhook()`,
     );
     assert.match(source, /export async function POST\(/);
+  });
+});
+
+describe("what a tracking event does to an order", { skip: !HAS_DB && "no DATABASE_URL" }, () => {
+  const created: string[] = [];
+
+  async function order(status: string, trackingNumber: string): Promise<string> {
+    const id = randomUUID();
+    created.push(id);
+    await query(
+      `insert into "order" (
+         id, status, email, ship_name, ship_line1, ship_city, ship_state, ship_postal,
+         subtotal_cents, shipping_cents, tax_cents, total_cents,
+         stripe_session_id, stripe_mode, tracking_number
+       ) values ($1, $2, 'buyer@example.com', 'Sam Fadda', '1 Test Street', 'Los Angeles', 'CA', '90015',
+                 8900, 700, 0, 9600, $3, 'test', $4)`,
+      [id, status, `cs_test_${randomUUID()}`, trackingNumber],
+    );
+    return id;
+  }
+
+  const row = async (id: string) =>
+    (
+      await query<{ status: string; flagged_reason: string | null; delivered: boolean }>(
+        `select status, flagged_reason, delivered_at is not null as delivered from "order" where id = $1`,
+        [id],
+      )
+    )[0]!;
+
+  function tracked(trackingNumber: string, status: string, test = true) {
+    return post(SECRET, {
+      event: "track_updated",
+      test,
+      data: { tracking_number: trackingNumber, tracking_status: { status } },
+    });
+  }
+
+  let quiet: ReturnType<typeof mock.method>;
+
+  before(() => {
+    process.env.SHIPPO_WEBHOOK_TOKEN = SECRET;
+    process.env.SHIPPO_API_TOKEN = "shippo_test_neverSentAnywhere";
+    quiet = mock.method(console, "error", () => {});
+  });
+
+  after(async () => {
+    quiet.mock.restore();
+    delete process.env.SHIPPO_WEBHOOK_TOKEN;
+    delete process.env.SHIPPO_API_TOKEN;
+    await query(`delete from "order" where id = any($1::text[])`, [created]);
+    await closePool();
+  });
+
+  it("DELIVERED moves a shipped order forward, once", async () => {
+    const number = `9400${randomUUID().slice(0, 8)}`;
+    const id = await order("shipped", number);
+
+    assert.equal((await handleShippoWebhook(tracked(number, "DELIVERED"), SECRET)).status, 200);
+    assert.deepEqual(await row(id), { status: "delivered", flagged_reason: null, delivered: true });
+    assert.equal(await applyTrackingStatus(number, "DELIVERED"), 0, "a replay changes nothing");
+  });
+
+  it("never resurrects a cancelled order, or skips an order that has not shipped", async () => {
+    const cancelled = `9400${randomUUID().slice(0, 8)}`;
+    const cancelledId = await order("cancelled", cancelled);
+    const early = `9400${randomUUID().slice(0, 8)}`;
+    const earlyId = await order("in_process", early);
+
+    await handleShippoWebhook(tracked(cancelled, "DELIVERED"), SECRET);
+    await handleShippoWebhook(tracked(early, "DELIVERED"), SECRET);
+    await handleShippoWebhook(tracked(cancelled, "RETURNED"), SECRET);
+
+    assert.deepEqual(await row(cancelledId), { status: "cancelled", flagged_reason: null, delivered: false });
+    assert.equal((await row(earlyId)).status, "in_process");
+  });
+
+  it("RETURNED and FAILURE flag the order instead of being dropped", async () => {
+    const returned = `9400${randomUUID().slice(0, 8)}`;
+    const returnedId = await order("shipped", returned);
+    const failed = `9400${randomUUID().slice(0, 8)}`;
+    const failedId = await order("delivered", failed);
+
+    assert.equal((await handleShippoWebhook(tracked(returned, "RETURNED"), SECRET)).status, 200);
+    assert.equal((await handleShippoWebhook(tracked(failed, "FAILURE"), SECRET)).status, 200);
+
+    assert.deepEqual(await row(returnedId), {
+      status: "shipped",
+      flagged_reason: "delivery-problem",
+      delivered: false,
+    });
+    assert.equal((await row(failedId)).flagged_reason, "delivery-problem");
+  });
+
+  it("does not hide a chargeback behind a returned parcel", async () => {
+    const number = `9400${randomUUID().slice(0, 8)}`;
+    const id = await order("shipped", number);
+    await query(`update "order" set flagged_reason = 'disputed' where id = $1`, [id]);
+
+    await handleShippoWebhook(tracked(number, "RETURNED"), SECRET);
+    assert.equal((await row(id)).flagged_reason, "disputed");
+  });
+
+  it("ignores an event from the other mode, and a number that is not ours", async () => {
+    const number = `9400${randomUUID().slice(0, 8)}`;
+    const id = await order("shipped", number);
+
+    // A live event while the token is a test token: a preview sharing a hook.
+    assert.equal((await handleShippoWebhook(tracked(number, "DELIVERED", false), SECRET)).status, 200);
+    assert.equal((await row(id)).status, "shipped");
+
+    assert.equal(await applyTrackingStatus(`9400${randomUUID()}`, "RETURNED"), 0);
+    assert.equal(await applyTrackingStatus(number, "TRANSIT"), 0, "in transit is not news");
+  });
+
+  it("finds the order by an index, not a scan of every order", async () => {
+    const index = await query<{ indexdef: string }>(
+      "select indexdef from pg_indexes where indexname = 'order_tracking_number_idx'",
+    );
+    assert.equal(index.length, 1, "0011 creates order_tracking_number_idx");
+    assert.match(index[0]!.indexdef, /\(tracking_number\)/);
   });
 });

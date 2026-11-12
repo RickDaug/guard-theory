@@ -1,19 +1,31 @@
 "use server";
 
 import { headers } from "next/headers";
-import { getWaitlistStore } from "@/lib/waitlist";
+import {
+  confirmByToken,
+  getWaitlistStore,
+  purgeUnconfirmed,
+  sendConfirmation,
+} from "@/lib/waitlist";
 import { parseSignup } from "@/lib/waitlist/validate";
-import { checkRateLimit } from "@/lib/rate-limit";
-import type { WaitlistFormState } from "@/lib/waitlist/form-state";
+import { callerKey, takeRateLimit } from "@/lib/rate-limit-db";
+import {
+  CONFIRMATION_MAIL_BUCKET,
+  CONFIRM_BUCKET,
+  WAITLIST_BUCKET,
+  addressMailKey,
+} from "@/lib/public-limits";
+import type { ConfirmFormState, WaitlistFormState } from "@/lib/waitlist/form-state";
 
+/** A keyed hash of the caller's address, for the Postgres limiter. */
 async function clientKey(): Promise<string> {
   const list = await headers();
-  // Behind a proxy the first entry is the client. Falls back to a shared bucket
-  // rather than to something spoofable-but-trusted.
-  const forwarded = list.get("x-forwarded-for");
-  const ip = forwarded?.split(",")[0]?.trim();
-  return ip && ip.length > 0 ? `waitlist:${ip}` : "waitlist:unknown";
+  // Behind a proxy the first entry is the client.
+  return callerKey(list.get("x-forwarded-for")?.split(",")[0]?.trim());
 }
+
+/** One signup in this many also deletes pending rows nobody confirmed. */
+const PURGE_ONE_IN = 20;
 
 export async function joinWaitlist(
   _previous: WaitlistFormState,
@@ -26,16 +38,15 @@ export async function joinWaitlist(
     // Reports success without storing anything, so a bot learns nothing.
     return {
       status: "success",
-      message: "You're on the list.",
+      message: "Check your email.",
       errors: {},
       alreadyOnList: false,
     };
   }
 
-  const limit = checkRateLimit(await clientKey(), {
-    limit: 5,
-    windowMs: 10 * 60 * 1000,
-  });
+  // Counted in Postgres, which every instance shares. The in-memory limiter it
+  // replaces was per instance and emptied by every cold start.
+  const limit = await takeRateLimit(WAITLIST_BUCKET, await clientKey());
 
   if (!limit.allowed) {
     return {
@@ -74,12 +85,52 @@ export async function joinWaitlist(
     };
   }
 
+  if (result.confirm) {
+    // Per address, so a thousand callers cannot mail one inbox, and under a
+    // daily ceiling across every address. Refused, the row stays pending and
+    // the reader is told the same thing: a link already sent still works.
+    const mail = await takeRateLimit(CONFIRMATION_MAIL_BUCKET, addressMailKey(result.confirm.email));
+
+    if (mail.allowed) {
+      await sendConfirmation(result.confirm);
+    } else {
+      console.warn("[guard-theory] waitlist: confirmation email not sent: rate limit");
+    }
+
+    if (Math.random() * PURGE_ONE_IN < 1) {
+      await purgeUnconfirmed().catch((error: unknown) => {
+        console.error(
+          "[guard-theory] could not purge unconfirmed signups:",
+          error instanceof Error ? error.message : error,
+        );
+      });
+    }
+  }
+
   return {
     status: "success",
     message: result.alreadyOnList
       ? "You were already on the list. Nothing has changed."
-      : "You're on the list.",
+      : "Check your email.",
     errors: {},
     alreadyOnList: result.alreadyOnList,
   };
+}
+
+/**
+ * The Confirm button on /first-edition/confirm. The only place a pending
+ * signup becomes confirmed, and a POST: opening the link does nothing.
+ */
+export async function confirmWaitlist(
+  _previous: ConfirmFormState,
+  formData: FormData,
+): Promise<ConfirmFormState> {
+  const limit = await takeRateLimit(CONFIRM_BUCKET, await clientKey());
+
+  if (!limit.allowed) {
+    return { status: "busy" };
+  }
+
+  const token = formData.get("t");
+  return { status: await confirmByToken(typeof token === "string" ? token : "") };
 }

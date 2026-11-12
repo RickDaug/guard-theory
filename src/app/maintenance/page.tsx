@@ -21,11 +21,11 @@ export default function MaintenancePage() {
       }
       primary={{ href: "/", label: "Try the home page" }}
     >
-      <p className="text-lg text-steel">
+      <p className="text-lg text-chalk">
         We are making a change and the site is briefly offline. Nothing you
         submitted has been lost.
       </p>
-      <p className="text-base text-steel">
+      <p className="text-base text-chalk">
         If you joined the First Edition list, you are still on it. Try again in a
         few minutes.
       </p>

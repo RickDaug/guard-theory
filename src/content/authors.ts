@@ -35,9 +35,10 @@ export const AUTHORS: Author[] = [
     id: EDITORIAL_AUTHOR_ID,
     kind: "organization",
     name: "Guard Theory editorial",
-    // Printed after the name as written, not lower-cased: "AI" stays capitals.
-    role: "written with AI assistance",
-    bio: "Researched and drafted with AI assistance, and published under the sourcing rules in our editorial policy. The sources are listed above.",
+    // Not printed on the byline: a person's role follows their name, the
+    // publication's does not.
+    role: "editorial",
+    bio: "Published under the sourcing rules in our editorial policy. The sources are listed above.",
   },
   {
     id: "rick-r",

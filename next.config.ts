@@ -1,61 +1,93 @@
+import { existsSync, readFileSync } from "node:fs";
+import { join } from "node:path";
 import type { NextConfig } from "next";
+import {
+  HASH_MANIFEST_FILE,
+  buildPolicy,
+  developmentPolicy,
+  fallbackSource,
+  literalSource,
+  type CspHashManifest,
+} from "./src/lib/csp.ts";
+
+/**
+ * The per-page CSP rules.
+ *
+ * `npm run build` (scripts/build.mjs) runs `next build` twice. The first pass,
+ * GT_CSP_PASS=collect, emits no per-page rules; the script then hashes every
+ * inline script in the prerendered HTML into HASH_MANIFEST_FILE, and the second
+ * pass turns that into one rule per page. A plain `next build` without the
+ * manifest refuses to proceed rather than ship pages whose scripts are blocked.
+ *
+ * Order matters: when two rules set the same header, the later one wins, so the
+ * fallback comes first and each page's own rule overrides it.
+ */
+function contentSecurityPolicyRules(isDev: boolean) {
+  if (isDev) {
+    return [
+      {
+        source: fallbackSource(),
+        headers: [{ key: "Content-Security-Policy", value: developmentPolicy() }],
+      },
+    ];
+  }
+
+  const collecting = process.env.GT_CSP_PASS === "collect";
+  const manifestPath = join(process.cwd(), HASH_MANIFEST_FILE);
+
+  if (!collecting && !existsSync(manifestPath)) {
+    throw new Error(
+      `${HASH_MANIFEST_FILE} is missing. Build with \`npm run build\` (scripts/build.mjs), not \`next build\` directly: the CSP needs each page's script hashes.`,
+    );
+  }
+
+  const manifest: CspHashManifest = collecting
+    ? { pages: {}, fallback: [] }
+    : JSON.parse(readFileSync(manifestPath, "utf8"));
+
+  // A custom portal path is served by rewrite, which the proxy never sees, so
+  // it cannot get a nonce. Those pages keep the old 'unsafe-inline' policy —
+  // an explicit, portal-only exception rather than a broken portal.
+  const portal = (process.env.PORTAL_PATH ?? "").trim().replace(/^\/+|\/+$/g, "");
+  const customPortal = portal && portal !== "crew" ? portal : null;
+
+  const rules = [
+    {
+      source: fallbackSource(customPortal ? [customPortal] : []),
+      headers: [
+        { key: "Content-Security-Policy", value: buildPolicy(manifest.fallback) },
+      ],
+    },
+    ...Object.entries(manifest.pages).map(([pathname, hashes]) => ({
+      source: literalSource(pathname),
+      headers: [{ key: "Content-Security-Policy", value: buildPolicy(hashes) }],
+    })),
+  ];
+
+  if (customPortal) {
+    const legacy = buildPolicy(["'unsafe-inline'"]);
+    rules.push(
+      { source: `/${customPortal}`, headers: [{ key: "Content-Security-Policy", value: legacy }] },
+      {
+        source: `/${customPortal}/:path*`,
+        headers: [{ key: "Content-Security-Policy", value: legacy }],
+      },
+    );
+  }
+
+  return rules;
+}
+
 
 /**
  * Security headers.
  *
- * Everything here is enforcing, not report-only. The one deliberate compromise
- * is `script-src`, explained below — it is stated rather than hidden, because a
- * CSP that quietly permits what it claims to forbid is worse than none.
+ * Everything here is enforcing, not report-only. The Content-Security-Policy is
+ * not in this list: it differs per page and is assembled in `headers()` below
+ * from src/lib/csp.ts, which explains how `script-src` manages without
+ * 'unsafe-inline' while the content pages stay static.
  */
 const securityHeaders = [
-  {
-    key: "Content-Security-Policy",
-    value: [
-      "default-src 'self'",
-
-      // Fonts are self-hosted through next/font, so no font CDN is reachable.
-      "font-src 'self'",
-
-      // No third-party images, no tracking pixels. data: is needed for the
-      // inline SVG favicon Next serves.
-      "img-src 'self' data:",
-
-      // Tailwind emits a stylesheet; Next injects small inline style blocks for
-      // streaming, which cannot carry a hash without dynamic rendering.
-      "style-src 'self' 'unsafe-inline'",
-
-      // No XHR or WebSocket anywhere in the app. Same-origin only covers the
-      // App Router's own RSC payload requests.
-      "connect-src 'self'",
-
-      // Nothing on this site is embedded, and nothing embeds this site.
-      "frame-ancestors 'none'",
-      "frame-src 'none'",
-      "object-src 'none'",
-
-      // Forms post to server actions on this origin and nowhere else. This is
-      // what stops an injected form from exfiltrating a waitlist submission.
-      "form-action 'self'",
-
-      // Prevents a <base> tag injection retargeting every relative URL.
-      "base-uri 'self'",
-
-      // KNOWN COMPROMISE. Next's App Router injects inline bootstrap and
-      // hydration scripts. Removing 'unsafe-inline' requires either a
-      // per-request nonce from middleware — which forces every page to render
-      // dynamically and gives up the static prerendering the performance
-      // budget depends on — or build-time hashing of scripts Next generates.
-      //
-      // Note that <script type="application/ld+json"> is unaffected either way:
-      // CSP applies to executable script, and structured data is not executed.
-      //
-      // Tracked in docs/technical-architecture.md. Do not quietly delete this
-      // comment to make the policy look stricter than it is.
-      "script-src 'self' 'unsafe-inline'",
-
-      "upgrade-insecure-requests",
-    ].join("; "),
-  },
   {
     key: "Referrer-Policy",
     value: "strict-origin-when-cross-origin",
@@ -96,8 +128,39 @@ const securityHeaders = [
   },
 ];
 
+/**
+ * The one host product photographs are fetched from: NEXT_PUBLIC_BLOB_HOSTNAME
+ * when it is set, otherwise the public host of the store named in
+ * BLOB_READ_WRITE_TOKEN (`vercel_blob_rw_<store id>_<secret>` →
+ * `<store id>.public.blob.vercel-storage.com`). Read at BUILD time, so a store
+ * connected after the last deploy needs a redeploy before its photographs show.
+ *
+ * The same decision as blobHostname() in src/lib/images/host.ts, written out
+ * here because this file is loaded before the path aliases exist.
+ * tests/unit/images.test.ts runs both against the same inputs.
+ */
+export function photographHost(env: Record<string, string | undefined> = process.env): string | null {
+  const explicit = env.NEXT_PUBLIC_BLOB_HOSTNAME?.trim().toLowerCase();
+  if (explicit) return explicit;
+
+  const parts = (env.BLOB_READ_WRITE_TOKEN ?? "").trim().split("_");
+  const storeId = parts[3];
+  const isToken = parts.length >= 5 && parts[0] === "vercel" && parts[1] === "blob" && parts[2] === "rw";
+
+  return isToken && storeId && /^[A-Za-z0-9]+$/.test(storeId)
+    ? `${storeId.toLowerCase()}.public.blob.vercel-storage.com`
+    : null;
+}
+
+const PHOTOGRAPH_HOST = photographHost();
+
 const nextConfig: NextConfig = {
   poweredByHeader: false,
+
+  // Both build passes must produce byte-identical pages, or the hashes the first
+  // collects will not match what the second ships. The build ID is inside every
+  // page's RSC payload, so scripts/build.mjs fixes it for both passes.
+  generateBuildId: async () => process.env.GT_BUILD_ID || null,
 
   experimental: {
     // `next build`'s default type-check step runs inside a forked jest-worker
@@ -119,6 +182,17 @@ const nextConfig: NextConfig = {
     // mechanism changes. See docs/technical-architecture.md (or AGENTS.md's
     // "Gotchas" section) for how this was diagnosed.
     useTypeScriptCli: true,
+
+    // Product photographs are uploaded through a server action (the Crew
+    // Portal's product editor). The default 1 MB would refuse every one; the
+    // upload's own limit is 4 MB (src/lib/images/validate.ts), plus room for
+    // multipart framing, and 4.5 MB is also Vercel's ceiling for a function's
+    // request body, so nothing larger could arrive anyway. This limit is
+    // global: the public actions (waitlist, contact, cart) validate and rate
+    // limit their own fields and read nothing near this size.
+    serverActions: {
+      bodySizeLimit: "4.5mb",
+    },
   },
 
   images: {
@@ -145,11 +219,11 @@ const nextConfig: NextConfig = {
     //
     // The hostname is pinned rather than wildcarded: `remotePatterns` treats an
     // omitted pathname as `**`, which Next's own documentation warns against.
-    remotePatterns: process.env.NEXT_PUBLIC_BLOB_HOSTNAME
+    remotePatterns: PHOTOGRAPH_HOST
       ? [
           {
             protocol: "https" as const,
-            hostname: process.env.NEXT_PUBLIC_BLOB_HOSTNAME,
+            hostname: PHOTOGRAPH_HOST,
             port: "",
             pathname: "/**",
           },
@@ -173,6 +247,7 @@ const nextConfig: NextConfig = {
           ? [...securityHeaders, { key: "X-Robots-Tag", value: "noindex" }]
           : securityHeaders,
       },
+      ...contentSecurityPolicyRules(process.env.NODE_ENV === "development"),
     ];
   },
 
@@ -227,6 +302,16 @@ const nextConfig: NextConfig = {
         source: "/:path*",
         has: [{ type: "host", value: "guard-theory.vercel.app" }],
         destination: "https://guardtheory.net/:path*",
+        permanent: true,
+      },
+      {
+        // 2026-09-29: the leg-locks category was created and this entry moved
+        // into it from submissions. It had been live and in the sitemap since
+        // 2026-09-24, so its old address is kept as a one-hop 308.
+        // tests/unit/technique-redirects.test.ts holds every /technique/
+        // redirect to a live destination and a dead source.
+        source: "/technique/submissions/leg-entanglement-as-control",
+        destination: "/technique/leg-locks/leg-entanglement-as-control",
         permanent: true,
       },
     ];

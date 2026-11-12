@@ -9,6 +9,12 @@ import { ButtonLink } from "@/components/ui/Button";
  */
 export const metadata: Metadata = {
   title: "Page not found",
+  // Next writes `<meta name="robots" content="noindex">` into every 404 it
+  // serves, the whole document and the shell alike (NonIndex, in app-render).
+  // This route was also inheriting the layout's `index, follow`, so a 404 said
+  // both. Null withdraws it from the layout's robots rather than adding a third
+  // tag beside Next's; tests/e2e/not-found.spec.ts asserts exactly one remains.
+  robots: null,
 };
 
 /**

@@ -36,6 +36,11 @@ const TARGETS = [
   // Added because it was the one page under the gate and the gate could not
   // see it: this list was chosen when the site had three page types.
   { name: "search", url: "/search", skipSeo: true },
+  // The commerce pages. The product page was already here; the listing and the
+  // cart were not, so a regression on either could merge unseen. The cart is
+  // noindex by design, so its SEO score measures that choice, not the page.
+  { name: "shop", url: "/shop" },
+  { name: "cart", url: "/cart", skipSeo: true },
 ];
 
 /**
@@ -135,7 +140,9 @@ try {
 }
 
 console.log("building with indexing enabled…\n");
-await run(process.platform === "win32" ? "npx.cmd" : "npx", ["next", "build"], {
+// scripts/build.mjs, not a bare `next build`: the CSP's per-page script hashes
+// come from its two passes, and without them every page's scripts are blocked.
+await run(process.execPath, ["scripts/build.mjs"], {
   env: AUDIT_ENV,
   stdio: "ignore",
 });
@@ -184,13 +191,37 @@ try {
     let lastReport = "";
 
     for (let run = 0; run < RUNS; run += 1) {
-      const result = await lighthouse(
-        `${BASE}${target.url}`,
-        { port: chrome.port, output: "html", logLevel: "error" },
-        undefined,
-      );
+      /**
+       * A run that produces no performance score is not a slow page, it is a
+       * run that did not measure: the trace was lost or a metric could not be
+       * computed, and the category comes back null. Counting that as 0 let one
+       * dead run out of three drag a median from 90 to 81 on a page whose
+       * bytes had not changed (PR #97, twice). So a scoreless run is taken
+       * again, up to MAX_ATTEMPTS. If every attempt is scoreless the 0 stands
+       * and the gate fails, because then something really is wrong.
+       */
+      const MAX_ATTEMPTS = 3;
+      let result;
 
-      if (!result) throw new Error(`lighthouse returned nothing for ${target.url}`);
+      for (let attempt = 1; attempt <= MAX_ATTEMPTS; attempt += 1) {
+        result = await lighthouse(
+          `${BASE}${target.url}`,
+          { port: chrome.port, output: "html", logLevel: "error" },
+          undefined,
+        );
+
+        if (!result) throw new Error(`lighthouse returned nothing for ${target.url}`);
+        if (result.lhr.categories.performance?.score != null) break;
+
+        const why =
+          result.lhr.runtimeError?.message ??
+          result.lhr.runWarnings?.join("; ") ??
+          "no reason given";
+        console.warn(
+          `${target.name}: run ${run + 1} attempt ${attempt} returned no performance score (${why})${attempt < MAX_ATTEMPTS ? ", retrying" : ""}`,
+        );
+      }
+
       lastReport = Array.isArray(result.report) ? result.report[0] : result.report;
 
       for (const category of Object.keys(THRESHOLDS)) {

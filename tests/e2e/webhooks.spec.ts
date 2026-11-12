@@ -42,6 +42,17 @@ test.describe("the Shippo webhook", () => {
     expect(response.status()).toBe(404);
   });
 
+  test("a GET or HEAD gets the same 404, not a 405 that names the method", async ({ request }) => {
+    // The live site answered GET /api/webhooks/shippo/<anything> with 405 —
+    // Next's own answer for an unexported method — which confirmed the path
+    // existed to anyone who asked. Now every method without the secret reads
+    // as a missing route.
+    for (const method of ["get", "head"] as const) {
+      const response = await request[method]("/api/webhooks/shippo/not-the-secret");
+      expect(response.status(), method).toBe(404);
+    }
+  });
+
   test("is not reachable without a secret segment at all", async ({ request }) => {
     const response = await request.post("/api/webhooks/shippo", {
       data: { event: "track_updated" },

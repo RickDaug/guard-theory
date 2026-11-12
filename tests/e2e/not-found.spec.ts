@@ -76,6 +76,13 @@ for (const path of BOGUS) {
     expect(await page.title(), `${path} is titled as if it were another page`).toMatch(
       /not found/i,
     );
+
+    // One robots tag, and it says noindex. Next writes its own `noindex` into
+    // every 404, and the not-found route used to inherit the layout's
+    // `index, follow` beside it — two tags, contradicting each other.
+    const robots = page.locator('meta[name="robots"]');
+    await expect(robots, `${path} must carry exactly one robots meta`).toHaveCount(1);
+    await expect(robots, `${path} must be noindex`).toHaveAttribute("content", /noindex/);
   });
 }
 
@@ -84,7 +91,13 @@ test.describe("a wrong product address", () => {
     const response = await page.goto(SHELL_ONLY, { waitUntil: "load" });
     expect(response?.status()).toBe(404);
     expect(await page.title()).toMatch(/not found/i);
-    await expect(page.locator('meta[name="robots"][content*="noindex"]').first()).toHaveCount(1);
+
+    // The shell inherits the not-found route's metadata, so it gets the same
+    // single noindex tag as a whole-document 404 — asserted as exactly one,
+    // because `.first()` here once let the layout's `index, follow` through.
+    const robots = page.locator('meta[name="robots"]');
+    await expect(robots).toHaveCount(1);
+    await expect(robots).toHaveAttribute("content", /noindex/);
   });
 
   test.describe("with JavaScript", () => {

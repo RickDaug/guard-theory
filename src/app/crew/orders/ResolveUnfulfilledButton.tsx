@@ -1,9 +1,10 @@
 "use client";
 
-import { useActionState } from "react";
+import { useActionState, useId } from "react";
 import { resolveUnfulfilled } from "./actions";
 import { PORTAL_INITIAL_STATE } from "@/lib/portal/form-state";
 import { Button } from "@/components/ui/Button";
+import { FormFeedback } from "@/components/ui/FormFeedback";
 
 /**
  * Closes a paid-with-no-order row.
@@ -14,6 +15,7 @@ import { Button } from "@/components/ui/Button";
  */
 export function ResolveUnfulfilledButton({ id }: { id: string }) {
   const [state, formAction, pending] = useActionState(resolveUnfulfilled, PORTAL_INITIAL_STATE);
+  const feedbackId = useId();
 
   return (
     <form action={formAction} className="flex flex-col items-start gap-2">
@@ -21,11 +23,7 @@ export function ResolveUnfulfilledButton({ id }: { id: string }) {
       <Button type="submit" intent="outline" disabled={pending}>
         {pending ? "Saving…" : "I have dealt with this"}
       </Button>
-      {state.status === "error" ? (
-        <p role="status" className="text-sm text-steel">
-          {state.message}
-        </p>
-      ) : null}
+      <FormFeedback id={feedbackId} state={state} inline />
     </form>
   );
 }

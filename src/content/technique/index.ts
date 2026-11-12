@@ -1,20 +1,83 @@
-import { CATEGORIES, type CategorySlug, type TechniqueEntry } from "./types.ts";
+import {
+  CATEGORIES,
+  type CategorySlug,
+  type TechniqueEntry,
+  type TechniqueReview,
+} from "./types.ts";
+import { americanaIsTheKimuraReversed } from "./entries/americana-is-the-kimura-reversed.ts";
 import { armDrag } from "./entries/arm-drag.ts";
+import { armbarDefenceStartsEarly } from "./entries/armbar-defence-starts-early.ts";
+import { armbarIsHipToShoulderDistance } from "./entries/armbar-is-hip-to-shoulder-distance.ts";
+import { backRetentionFollowingTheTurn } from "./entries/back-retention-following-the-turn.ts";
 import { bloodChokeVersusAirChoke } from "./entries/blood-choke-versus-air-choke.ts";
+import { bodyLockPassLocksTheHips } from "./entries/body-lock-pass-locks-the-hips.ts";
+import { bodyTriangleControlsTheRibs } from "./entries/body-triangle-controls-the-ribs.ts";
+import { butterflyGuardUnderPressure } from "./entries/butterfly-guard-under-pressure.ts";
 import { butterflyHookAsLever } from "./entries/butterfly-hook-as-lever.ts";
+import { closedGuardAttacksShareOneAngle } from "./entries/closed-guard-attacks-share-one-angle.ts";
+import { butterflyHookToLegEntanglement } from "./entries/butterfly-hook-to-leg-entanglement.ts";
+import { calfSlicerFoldsTheKnee } from "./entries/calf-slicer-folds-the-knee.ts";
 import { closedGuardPostureBattle } from "./entries/closed-guard-posture-battle.ts";
 import { connectionInOpenGuard } from "./entries/connection-in-open-guard.ts";
+import { crucifixBothArmsOut } from "./entries/crucifix-both-arms-out.ts";
+import { deLaRivaBackTake } from "./entries/de-la-riva-back-take.ts";
 import { deLaRivaHook } from "./entries/de-la-riva-hook.ts";
+import { deepHalfGuard } from "./entries/deep-half-guard.ts";
+import { defendingTheGuillotine } from "./entries/defending-the-guillotine.ts";
+import { doubleLegIsALevelChange } from "./entries/double-leg-is-a-level-change.ts";
 import { elbowKneeEscape } from "./entries/elbow-knee-escape.ts";
+import { fiftyFiftyBothHeelsExposed } from "./entries/fifty-fifty-both-heels-exposed.ts";
+import { escapingBackControl } from "./entries/escaping-back-control.ts";
+import { escapingSideControl } from "./entries/escaping-side-control.ts";
+import { escapingTurtle } from "./entries/escaping-turtle.ts";
 import { framesVersusBlocks } from "./entries/frames-versus-blocks.ts";
 import { gettingHipsUnderneath } from "./entries/getting-hips-underneath.ts";
+import { granbyRollTurnsPressure } from "./entries/granby-roll-turns-pressure.ts";
+import { guardRetentionIsTheKneeBetween } from "./entries/guard-retention-is-the-knee-between.ts";
+import { guillotineIsABrokenPosture } from "./entries/guillotine-is-a-broken-posture.ts";
+import { headAndArmStrangles } from "./entries/head-and-arm-strangles.ts";
+import { heelHookIsRotation } from "./entries/heel-hook-is-rotation.ts";
+import { hipBumpSweep } from "./entries/hip-bump-sweep.ts";
 import { insidePosition } from "./entries/inside-position.ts";
+import { kimuraIsAGripFirst } from "./entries/kimura-is-a-grip-first.ts";
 import { kneeCutPass } from "./entries/knee-cut-pass.ts";
 import { kneeShield } from "./entries/knee-shield.ts";
+import { legDragTurnsTheHips } from "./entries/leg-drag-turns-the-hips.ts";
 import { legEntanglementAsControl } from "./entries/leg-entanglement-as-control.ts";
+import { lockdownStretchesTheBase } from "./entries/lockdown-stretches-the-base.ts";
+import { kneebarIsAnArmbarOnTheLeg } from "./entries/kneebar-is-an-armbar-on-the-leg.ts";
+import { legLockDefenceKneeLine } from "./entries/leg-lock-defence-knee-line.ts";
+import { rearBodyLockMatReturn } from "./entries/rear-body-lock-mat-return.ts";
+import { saddleTrapsTheKnee } from "./entries/saddle-traps-the-knee.ts";
+import { mountIsAHipPin } from "./entries/mount-is-a-hip-pin.ts";
+import { noGiGripsAreOnATimer } from "./entries/no-gi-grips-are-on-a-timer.ts";
+import { northSouthChoke } from "./entries/north-south-choke.ts";
+import { omoplataIsAKimuraWithTheLeg } from "./entries/omoplata-is-a-kimura-with-the-leg.ts";
+import { passingHalfGuardFromTheHead } from "./entries/passing-half-guard-from-the-head.ts";
+import { positionalHierarchy } from "./entries/positional-hierarchy.ts";
+import { pressurePassingVersusLoosePassing } from "./entries/pressure-passing-versus-loose-passing.ts";
+import { rearNakedStrangle } from "./entries/rear-naked-strangle.ts";
+import { retentionLadderFrameAngleInvertRecover } from "./entries/retention-ladder-frame-angle-invert-recover.ts";
+import { reverseDeLaRiva } from "./entries/reverse-de-la-riva.ts";
 import { seatBeltAndHooks } from "./entries/seat-belt-and-hooks.ts";
+import { sideControlPinsTwoEscapes } from "./entries/side-control-pins-two-escapes.ts";
+import { singleLegForJiuJitsu } from "./entries/single-leg-for-jiu-jitsu.ts";
+import { singleLegXGuard } from "./entries/single-leg-x-guard.ts";
+import { snapDownToFrontHeadlock } from "./entries/snap-down-to-front-headlock.ts";
 import { sweepingTowardTheMissingPost } from "./entries/sweeping-toward-the-missing-post.ts";
+import { trapAndRollRemovesAPost } from "./entries/trap-and-roll-removes-a-post.ts";
+import { seatedGuardHandsInTheFight } from "./entries/seated-guard-hands-in-the-fight.ts";
+import { sprawlHipsBackAndDown } from "./entries/sprawl-hips-back-and-down.ts";
+import { straightAnkleLockIsALever } from "./entries/straight-ankle-lock-is-a-lever.ts";
+import { toeHoldFigureFourOnTheFoot } from "./entries/toe-hold-figure-four-on-the-foot.ts";
+import { twoOnOneControlsOneArm } from "./entries/two-on-one-controls-one-arm.ts";
+import { triangleClosesAtTheShoulder } from "./entries/triangle-closes-at-the-shoulder.ts";
+import { triangleDefencePosture } from "./entries/triangle-defence-posture.ts";
 import { underhookHalfGuard } from "./entries/underhook-half-guard.ts";
+import { whizzerIsAnOverhookOnTheHip } from "./entries/whizzer-is-an-overhook-on-the-hip.ts";
+import { wrestlingUpTechnicalStandUp } from "./entries/wrestling-up-technical-stand-up.ts";
+import { underhookOrOverhook } from "./entries/underhook-or-overhook.ts";
+import { xGuardUnderTheirBase } from "./entries/x-guard-under-their-base.ts";
 
 /**
  * The registry. Entries are imported explicitly rather than globbed so that the
@@ -22,30 +85,203 @@ import { underhookHalfGuard } from "./entries/underhook-half-guard.ts";
  * quietly disappearing from the sitemap.
  */
 export const ENTRIES: TechniqueEntry[] = [
+  americanaIsTheKimuraReversed,
   armDrag,
+  armbarDefenceStartsEarly,
+  armbarIsHipToShoulderDistance,
+  backRetentionFollowingTheTurn,
   bloodChokeVersusAirChoke,
+  bodyLockPassLocksTheHips,
+  bodyTriangleControlsTheRibs,
+  butterflyGuardUnderPressure,
   butterflyHookAsLever,
+  closedGuardAttacksShareOneAngle,
+  butterflyHookToLegEntanglement,
+  calfSlicerFoldsTheKnee,
   closedGuardPostureBattle,
   connectionInOpenGuard,
+  crucifixBothArmsOut,
+  deLaRivaBackTake,
   deLaRivaHook,
+  deepHalfGuard,
+  defendingTheGuillotine,
+  doubleLegIsALevelChange,
   elbowKneeEscape,
+  fiftyFiftyBothHeelsExposed,
+  escapingBackControl,
+  escapingSideControl,
+  escapingTurtle,
   framesVersusBlocks,
   gettingHipsUnderneath,
+  granbyRollTurnsPressure,
+  guardRetentionIsTheKneeBetween,
+  guillotineIsABrokenPosture,
+  headAndArmStrangles,
+  heelHookIsRotation,
+  hipBumpSweep,
   insidePosition,
+  kimuraIsAGripFirst,
   kneeCutPass,
   kneeShield,
+  legDragTurnsTheHips,
   legEntanglementAsControl,
+  lockdownStretchesTheBase,
+  kneebarIsAnArmbarOnTheLeg,
+  legLockDefenceKneeLine,
+  rearBodyLockMatReturn,
+  saddleTrapsTheKnee,
+  mountIsAHipPin,
+  noGiGripsAreOnATimer,
+  northSouthChoke,
+  omoplataIsAKimuraWithTheLeg,
+  passingHalfGuardFromTheHead,
+  positionalHierarchy,
+  pressurePassingVersusLoosePassing,
+  rearNakedStrangle,
+  retentionLadderFrameAngleInvertRecover,
+  reverseDeLaRiva,
   seatBeltAndHooks,
+  sideControlPinsTwoEscapes,
+  singleLegForJiuJitsu,
+  singleLegXGuard,
+  snapDownToFrontHeadlock,
   sweepingTowardTheMissingPost,
+  trapAndRollRemovesAPost,
+  seatedGuardHandsInTheFight,
+  sprawlHipsBackAndDown,
+  straightAnkleLockIsALever,
+  toeHoldFigureFourOnTheFoot,
+  twoOnOneControlsOneArm,
+  triangleClosesAtTheShoulder,
+  triangleDefencePosture,
   underhookHalfGuard,
+  whizzerIsAnOverhookOnTheHip,
+  wrestlingUpTechnicalStandUp,
+  underhookOrOverhook,
+  xGuardUnderTheirBase,
 ];
 
 export const ENTRIES_BY_SLUG = new Map(ENTRIES.map((e) => [e.slug, e]));
 
-export function entriesInCategory(category: CategorySlug): TechniqueEntry[] {
-  return ENTRIES.filter((entry) => entry.category === category).sort((a, b) =>
-    a.title.localeCompare(b.title),
+/**
+ * The publication gate.
+ *
+ * An entry with no `review` predates the gate and is published. An entry with
+ * one is published only once a person has set `approvedBy`. Everything a
+ * reader or a crawler is offered — the category listings and their counts,
+ * the sitemap, the search index, cross-links from the other collections, the
+ * related-entries list on a published page — goes through this predicate.
+ * `getEntry` does not, so the draft still renders at its own address for the
+ * person who has to read it before signing it off.
+ */
+export function isPublishedEntry(entry: TechniqueEntry): boolean {
+  return entry.review === undefined || entry.review.approvedBy !== null;
+}
+
+/** The published subset of any list of entries, in the order given. */
+export function publishedEntries(entries: TechniqueEntry[]): TechniqueEntry[] {
+  return entries.filter(isPublishedEntry);
+}
+
+export const PUBLISHED_ENTRIES: TechniqueEntry[] = publishedEntries(ENTRIES);
+
+export function entriesInCategory(
+  category: CategorySlug,
+  entries: TechniqueEntry[] = PUBLISHED_ENTRIES,
+): TechniqueEntry[] {
+  return publishedEntries(entries)
+    .filter((entry) => entry.category === category)
+    .sort((a, b) => a.title.localeCompare(b.title));
+}
+
+/**
+ * The addresses the sitemap offers. Drafts are left out for the same reason
+ * Journal drafts are: offering a crawler a page that is itself noindex is a
+ * contradiction, and offering an unsigned draft as though it were finished is
+ * the thing the gate exists to prevent.
+ */
+export function publishedEntryPaths(entries: TechniqueEntry[] = ENTRIES): string[] {
+  return publishedEntries(entries).map(
+    (entry) => `/technique/${entry.category}/${entry.slug}`,
   );
+}
+
+/**
+ * The entries a page may list as related. A draft may point at published
+ * entries and render the links; a published entry's link to a draft resolves
+ * to nothing, because a reader must not be led from a signed-off page to an
+ * unsigned one.
+ */
+export function relatedEntries(
+  entry: TechniqueEntry,
+  pool: TechniqueEntry[] = ENTRIES,
+): TechniqueEntry[] {
+  const bySlug = pool === ENTRIES ? ENTRIES_BY_SLUG : new Map(pool.map((e) => [e.slug, e]));
+  return entry.relatedSlugs
+    .map((slug) => bySlug.get(slug))
+    .filter((e): e is TechniqueEntry => e !== undefined && isPublishedEntry(e));
+}
+
+/** The shortest a ledger line can be and still say who, when and what. */
+export const REVIEW_LEDGER_MINIMUM = 40;
+
+/**
+ * What is wrong with an entry's review ledger, if anything. Asserted empty
+ * over the registry by tests/unit/technique-review.test.ts.
+ *
+ * Each line of the ledger has to be long enough to be a record rather than a
+ * tick — "checked" is not a fact audit. A sign-off has to name a person and
+ * carry a real date, and the date cannot be in the future: a signature dated
+ * for next week is a promise to read something, not a record of having read
+ * it. An entry with no `review` predates the gate and has nothing to check.
+ */
+export function findReviewProblems(
+  entries: TechniqueEntry[] = ENTRIES,
+  today: Date = new Date(),
+): Array<{ slug: string; problem: string }> {
+  const problems: Array<{ slug: string; problem: string }> = [];
+  const ledger = ["drafted", "factAudit", "voiceAudit"] as const;
+
+  for (const entry of entries) {
+    const review = entry.review;
+    if (!review) continue;
+
+    for (const line of ledger) {
+      if (review[line].trim().length < REVIEW_LEDGER_MINIMUM) {
+        problems.push({
+          slug: entry.slug,
+          problem: `review.${line} is ${review[line].trim().length} characters; a ledger line says who, when and what`,
+        });
+      }
+    }
+
+    const approval = review.approvedBy;
+    if (approval === null) continue;
+
+    if (approval.name.trim().length === 0) {
+      problems.push({ slug: entry.slug, problem: "review.approvedBy names nobody" });
+    }
+    // Round-tripped, not just parsed: V8 reads "2026-02-30" as 2 March rather
+    // than refusing it, so a parse alone lets an impossible date through.
+    const parsed = new Date(approval.date);
+    const isoDay =
+      /^\d{4}-\d{2}-\d{2}$/.test(approval.date) &&
+      !Number.isNaN(parsed.getTime()) &&
+      parsed.toISOString().slice(0, 10) === approval.date;
+    if (!isoDay) {
+      problems.push({
+        slug: entry.slug,
+        problem: `review.approvedBy.date "${approval.date}" is not an ISO date`,
+      });
+    } else if (Date.parse(approval.date) > today.getTime()) {
+      problems.push({
+        slug: entry.slug,
+        problem: `review.approvedBy.date ${approval.date} is in the future`,
+      });
+    }
+  }
+
+  return problems;
 }
 
 export function getCategory(slug: string) {
@@ -78,4 +314,4 @@ export function findDanglingRelatedSlugs(): Array<{ from: string; to: string }> 
 }
 
 export { CATEGORIES };
-export type { CategorySlug, TechniqueEntry };
+export type { CategorySlug, TechniqueEntry, TechniqueReview };

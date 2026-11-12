@@ -9,12 +9,13 @@ import type { PublishedArticle } from "../types.ts";
 export const theDropoutNumberNobodyCanSource: PublishedArticle = {
   status: "published",
   publishedAt: "2026-08-04",
-  authorId: "rick-r",
+  updatedAt: "2026-09-29",
+  authorId: "guard-theory-editorial",
   slug: "the-dropout-number-nobody-can-source",
   category: "training-culture",
   title: "The dropout number nobody can source",
   standfirst:
-    "Ninety per cent of white belts quit, or seventy, or seventy-five, or ninety-five, depending on which page you landed on, and following each version back to its origin is more instructive than any of them.",
+    "Ninety per cent of white belts quit, or seventy, or seventy-five, depending on which page you landed on, and ninety-five never reach black; following each version back to its origin is more instructive than any of them.",
   metaDescription:
     "Ninety per cent of white belts quit - or seventy, or seventy-five, depending on the page. Following each number back to its origin is the instructive part.",
   sections: [
@@ -33,7 +34,7 @@ export const theDropoutNumberNobodyCanSource: PublishedArticle = {
       paragraphs: [
         "The useful exercise is not deciding which figure is right. It is opening each page and reading what it says about where its number came from.",
         "BJJ Fanatics is the most honest of them, and says so in the sentence immediately before the number: it is hard to measure the actual figure of how many white belts quit. What follows is explicitly a generous guess, converted into a percentage by subtraction. Nothing was counted.",
-        "HeavyBJJ does count something. The page describes a total of 221 students of whom 53 reached blue belt, which it renders as roughly seventy-six per cent quitting, and states that the wider table is made of estimates based on a survey at the author's gym and information from his coaches. That is one room, one coach's records, and an honest label on it. It is also, elsewhere on the same page, a comparison table putting BJJ at ninety-nine per cent dropout against judo at seventy-five and karate at fifty, with no source given for any of the five figures in it.",
+        "HeavyBJJ does count something. The page describes a total of 221 students of whom 53 reached blue belt, which it renders as roughly seventy-six per cent quitting, and states that the wider table is made of estimates based on a survey at the author's gym and information from his coaches. That is one room, counted from class photographs, and an honest label on it. It is also, elsewhere on the same page, a comparison table putting BJJ at ninety-nine per cent dropout against judo at seventy-five and karate at fifty, with no source given for any of the five figures in it.",
         "Jiu Jitsu Haus gives no source for its belt-by-belt series at all, and works an example from a round three million practitioners worldwide. BJJ Analytics, the most-cited quantitative page in this space, carries one line about provenance under each chart: data compiled from IBJJF, surveys, and industry research. There is no sample size, no survey instrument, no date range, no definition of a practitioner, and no explanation of how a federation's competition registrations could produce a retention rate for people who never competed. Its headline figure is five million practitioners.",
         "So the honest inventory is one guess, one gym's records, one unsourced series, one uncited total, and one aggregate whose method is a sentence fragment. That is the entire evidentiary base for a number people repeat as though it came out of a register.",
       ],
@@ -53,7 +54,7 @@ export const theDropoutNumberNobodyCanSource: PublishedArticle = {
       paragraphs: [
         "There is one hard document in this area, and it does not measure retention. It constrains it from one side.",
         "The IBJJF's General System of Graduation, in the June 2026 version, sets minimum periods for adult ranks. White belt has no minimum. Blue belt is two years, purple a year and a half, brown a year, with named exceptions that reduce or remove the minimum for certain juvenile and world-champion histories. Those periods are counted from the day the athlete completes registration of each rank with the federation, and the document is explicit that the time from white to black is at the professor's discretion while the federation will only recognise a graduation that meets the mandatory minimums.",
-        "Add the adult minimums and you get four and a half years of registered time from blue belt onward, with the white belt period unbounded. That tells you something real: any claim that a typical black belt takes about a decade is at least consistent with the rules, and any claim of a much faster route through the ranks is not, for registration purposes.",
+        "Add the adult minimums and you get four and a half years of registered time from blue belt onward, with the white belt period unbounded. That tells you something real: any claim that a typical black belt takes about a decade is at least consistent with the rules, and any claim of a much faster route through the ranks is not, outside the named exceptions for world champions and juvenile rank histories.",
         "What it does not tell you is how many people started. A promotion rate is not a quit rate. You can know exactly how long a rank takes and know nothing at all about how many people abandoned the attempt, because the people who left were never registered as anything.",
       ],
     },
@@ -62,7 +63,7 @@ export const theDropoutNumberNobodyCanSource: PublishedArticle = {
       heading: "What a serious count looks like in this sport",
       paragraphs: [
         "It helps to see what a properly designed attempt at counting something in jiu-jitsu looks like, and how much it still concedes.",
-        "Stegerhoek and colleagues published a cross-sectional study of injury prevalence in BJJ in BMJ Open Sport and Exercise Medicine in 2025. It reached 881 participants, of whom 817, or ninety per cent, were male, with an average age of 30.8 years. It was a retrospective survey distributed online and via posters at Dutch competitions, collecting data on the previous twelve months, over a data collection window of one month in early 2024. The paper defines what counts as an injury in advance, reports confidence intervals, and closes by recommending that future studies follow practitioners prospectively, because a retrospective survey cannot establish cause.",
+        "Stegerhoek and colleagues published a cross-sectional study of injury prevalence in BJJ in BMJ Open Sport and Exercise Medicine in 2025. It reached 881 participants, of whom 817, or about 93 per cent, were male, with an average age of 30.8 years. It was a retrospective survey distributed online and via posters at Dutch competitions, collecting data on the previous twelve months, over a data collection window of one month in early 2024. The paper defines what counts as an injury in advance, reports confidence intervals, and closes by recommending that future studies follow practitioners prospectively, because a retrospective survey cannot establish cause.",
         "That is a real study, and it is about the easier question. It still recruits people who were present to be recruited, still relies on memory, and still cannot say what fraction of everyone who ever trained it represents. If that is what careful looks like for injury, a retention figure produced from unspecified surveys and industry research is not in the same category of claim.",
       ],
     },
@@ -81,6 +82,7 @@ export const theDropoutNumberNobodyCanSource: PublishedArticle = {
         "We do not know what fraction of people who start jiu-jitsu stop, and neither does anybody who has published a figure. That is the finding, and it is not a rhetorical flourish. No page examined for this article named a defined starting population, a time window and a definition of quitting, and without those three things the number being reported is not a rate.",
         "Two things are supportable. Attrition is high enough that every gym owner recognises the description, which is evidence of a phenomenon and not a measurement of it. And the graduation rules bound how quickly anybody can be recognised at each rank, which makes the pipeline long by design regardless of who leaves.",
         "The practical use of all this is narrow and worth having. When somebody quotes you a dropout figure, the question is not whether it sounds right. It is what the denominator was, over what window, and who counted. If the answer is a page that says data compiled from surveys and industry research, you have learned what the page is, and the number should not survive the sentence you use it in.",
+        "Correction, 29 September 2026: an earlier version of this article listed ninety-five per cent among the white-belt dropout figures; that figure is for quitting before black belt, the very swap the article warns about. It also rounded the share of male participants in the Stegerhoek study to ninety per cent, following the paper's abstract; its own table gives 92.7. Both have been corrected, and the rule book's exceptions to the minimum times have been noted.",
       ],
     },
   ],

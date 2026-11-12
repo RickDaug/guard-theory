@@ -63,7 +63,9 @@ These are in addition to each brief's own "must not claim" list.
 - **No ranking of people.** No "greatest", "best ever", "top five". `/figures` is alphabetical by
   design and the copy must not undo that.
 - **No invented statistic.** No search volumes, no "90% of people", no "most grapplers".
-- **No AI-generated prose.** `/policies/editorial` states this publicly.
+- **AI-assisted drafts carry the editorial byline, never a person's name.** Owner decision
+  2026-09-29 (`docs/owner-decisions.md` section 2). A draft stays unpublished until a person has
+  read it. This replaced an earlier "No AI-generated prose" rule that the decision superseded.
 - **Banned constructions** (enforced by `tests/unit/content.test.ts`): "in the ever-evolving world
   of", "whether you're a seasoned practitioner", "it is important to note", "this comprehensive
   guide will delve into", "game-changer", "legendary", "tapestry", "revolutioniz*".

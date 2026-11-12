@@ -1,4 +1,4 @@
-import type { DraftArticle } from "../types.ts";
+import type { PublishedArticle } from "../types.ts";
 
 /**
  * Handoff 04 cut a submission-only section from the rulesets article because
@@ -14,8 +14,10 @@ import type { DraftArticle } from "../types.ts";
  *
  * Draft: no author has read this piece, so it carries no byline and no date.
  */
-export const submissionOnlyAndTheOvertimeProblem: DraftArticle = {
-  status: "draft",
+export const submissionOnlyAndTheOvertimeProblem: PublishedArticle = {
+  status: "published",
+  publishedAt: "2026-11-11",
+  authorId: "guard-theory-editorial",
   slug: "submission-only-and-the-overtime-problem",
   category: "competition-analysis",
   title: "Submission-only, and the overtime problem",

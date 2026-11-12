@@ -1,13 +1,29 @@
+import { pageMetadata } from "@/lib/metadata";
 import type { Metadata } from "next";
-import { UtilityPage } from "@/components/site/UtilityPage";
+import { StateSheet } from "@/components/product/StateSheet";
 import { ClearCartOnMount } from "@/components/cart/ClearCartOnMount";
 import { queryOne } from "@/lib/db/client";
 import { getMailProvider } from "@/lib/mail";
 import { formatMoney } from "@/lib/money";
+import { DISPATCH_WITHIN } from "@/content/policies/shipping-terms";
+import { confirmedView, type ConfirmedOrderRow } from "@/lib/orders/confirmed-view";
 
+/*
+ * Built by pageMetadata like every other route, so a link to this page (it
+ * gets pasted: it is where a buyer lands) carries its own URL and the share
+ * card rather than the home page's og:url and no image. The title and
+ * description claim no order, because the page itself only shows one when it
+ * finds one: the bare URL answers with "we do not have an order to show".
+ * noindex AND nofollow, as before — nothing on it is for a crawler.
+ */
 export const metadata: Metadata = {
-  title: "Order confirmed",
-  description: "Your Guard Theory order has been received.",
+  ...pageMetadata({
+    title: "Your order",
+    description:
+      "Where a Guard Theory order is confirmed after payment, with its order number once the payment has reached us.",
+    path: "/order/confirmed",
+    indexable: false,
+  }),
   robots: { index: false, follow: false },
 };
 
@@ -26,15 +42,15 @@ export const metadata: Metadata = {
  * Reaching it with no session id at all returns 200 with an explanation. The
  * links crawl fetches it that way, and more importantly a person can arrive
  * here from history.
+ *
+ * The session id in the URL never expires, so what it reveals is limited:
+ * the email is masked, and after a day only the order number is shown
+ * (src/lib/orders/confirmed-view.ts; security audit 2026-09-29, S3-2).
  */
 export const dynamic = "force-dynamic";
 
-type OrderRow = {
+type OrderRow = ConfirmedOrderRow & {
   id: string;
-  number: string;
-  email: string;
-  total_cents: number;
-  currency: string;
   stripe_mode: string;
 };
 
@@ -52,7 +68,7 @@ export default async function OrderConfirmedPage({
   if (sessionId) {
     try {
       order = await queryOne<OrderRow>(
-        `select id, number, email, total_cents, currency, stripe_mode
+        `select id, number, email, total_cents, currency, stripe_mode, created_at
            from "order" where stripe_session_id = $1`,
         [sessionId],
       );
@@ -66,12 +82,14 @@ export default async function OrderConfirmedPage({
 
   // "We have sent a confirmation" is only said when one was: a provider that
   // actually delivers, and a row in email_log saying it went. With no provider
-  // connected every message is logged rather than sent, and the log row still
-  // reads "sent".
+  // connected a message is logged rather than sent and recorded as
+  // 'not-delivered' (0008_email_not_delivered.sql); rows written before that
+  // migration read 'sent' either way, which is why the provider is asked too.
   const mailDelivers = getMailProvider().delivers;
   let confirmationSent = false;
+  const view = order ? confirmedView(order) : null;
 
-  if (order && mailDelivers) {
+  if (order && view?.detail && mailDelivers) {
     try {
       const row = await queryOne<{ id: string }>(
         `select id from email_log
@@ -85,7 +103,7 @@ export default async function OrderConfirmedPage({
   }
 
   return (
-    <UtilityPage
+    <StateSheet
       eyebrow="First Edition"
       title={
         order ? (
@@ -103,48 +121,60 @@ export default async function OrderConfirmedPage({
         )
       }
       primary={{ href: "/shop", label: "Back to the shop" }}
-      secondary={{ href: "/policies/shipping", label: "Read the shipping policy" }}
+      // What a buyer wants next: the terms of the parcel, then something to
+      // read while it is on its way.
+      links={[
+        { href: "/policies/shipping", label: "Read the shipping policy" },
+        { href: "/policies/returns", label: "Returns policy" },
+        { href: "/technique", label: "Technique Library" },
+      ]}
     >
       {/* The cart has done its job. Emptying it here rather than before the
           redirect means a buyer who abandons Stripe still comes back to it.
           Only when this page was reached with a session id that names a real
           order: the bare URL sits in browser history, and opening it used to
           empty whatever was in the cart that day. */}
-      {order ? <ClearCartOnMount /> : null}
+      {view?.detail ? <ClearCartOnMount /> : null}
 
-      {order ? (
+      {order && view && !view.detail ? (
+        // An old link, from history or a log. The number is enough to find the
+        // order by; the details are in the confirmation email.
+        <p className="text-lg text-ink">
+          {`This is order number ${view.number}. Its details are in the confirmation email. If you need anything, write to us with the number.`}
+        </p>
+      ) : order && view?.detail ? (
         <>
           {order.stripe_mode === "test" ? (
-            <p className="border-l-2 border-signal-lift bg-graphite px-5 py-4 text-base text-chalk">
+            <p className="border-l-[3px] border-signal bg-bone-raised px-5 py-4 text-base text-ink">
               This was a test order. No money moved and nothing will be shipped.
             </p>
           ) : null}
-          <p className="text-lg text-steel">
+          <p className="text-lg text-ink">
             {confirmationSent
-              ? `Your order is number ${order.number}. We have sent a confirmation to ${order.email}.`
-              : `Your order is number ${order.number}. Keep it: it is how we find your order if you write to us.`}
+              ? `Your order is number ${view.number}. We have sent a confirmation to ${view.maskedEmail}.`
+              : `Your order is number ${view.number}. Keep it: it is how we find your order if you write to us.`}
           </p>
-          <p className="text-base text-steel">
-            {`Total charged: ${formatMoney(order.total_cents, order.currency)}, including tax and shipping.`}
+          <p className="text-base text-slate">
+            {`Total charged: ${formatMoney(view.totalCents, view.currency)}, including tax and shipping.`}
           </p>
         </>
       ) : (
         // No order on record for this address. That is the ordinary state for a
         // moment after paying, and also what anyone opening this URL cold gets —
         // so it claims neither a payment nor an email, because it knows of neither.
-        <p className="text-lg text-steel">
+        <p className="text-lg text-ink">
           We do not have an order to show here yet. If you have just paid, it can take a moment to
           reach us. Reload this page to see your order number.
         </p>
       )}
 
-      {order ? (
-        <p className="text-base text-steel">
+      {view?.detail ? (
+        <p className="text-base text-slate">
           {mailDelivers
-            ? "Orders are packed and dispatched within two business days. You will get a second email with a tracking number when the parcel leaves us."
-            : "Orders are packed and dispatched within two business days."}
+            ? `Orders are packed and dispatched within ${DISPATCH_WITHIN}. You will get a second email with a tracking number when the parcel leaves us.`
+            : `Orders are packed and dispatched within ${DISPATCH_WITHIN}.`}
         </p>
       ) : null}
-    </UtilityPage>
+    </StateSheet>
   );
 }

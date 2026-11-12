@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { UtilityPage } from "@/components/site/UtilityPage";
+import { StateSheet } from "@/components/product/StateSheet";
 
 export const metadata: Metadata = {
   title: "No longer available",
@@ -16,7 +16,7 @@ export const metadata: Metadata = {
  */
 export default function ProductUnavailablePage() {
   return (
-    <UtilityPage
+    <StateSheet
       eyebrow="First Edition"
       title={
         <>
@@ -26,15 +26,15 @@ export default function ProductUnavailablePage() {
         </>
       }
       primary={{ href: "/first-edition", label: "Join the list for the next one" }}
-      secondary={{ href: "/shop", label: "See what else is being made" }}
+      links={[{ href: "/shop", label: "See what else is being made" }]}
     >
-      <p className="text-lg text-steel">
+      <p className="text-lg text-ink">
         This garment is not currently available.
       </p>
-      <p className="text-base text-steel">
+      <p className="text-base text-slate">
         We do not quietly restock and call it a new release. When it returns, the
         page will say so, and the list hears first.
       </p>
-    </UtilityPage>
+    </StateSheet>
   );
 }

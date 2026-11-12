@@ -1,4 +1,4 @@
-import type { DraftArticle } from "../types.ts";
+import type { PublishedArticle } from "../types.ts";
 
 /**
  * The piece where the honest answer is "nothing, yet", written by a rash guard
@@ -14,8 +14,10 @@ import type { DraftArticle } from "../types.ts";
  *
  * Draft: no author has read this piece, so it carries no byline and no date.
  */
-export const whatToWearToYourFirstNoGiClass: DraftArticle = {
-  status: "draft",
+export const whatToWearToYourFirstNoGiClass: PublishedArticle = {
+  status: "published",
+  publishedAt: "2026-11-11",
+  authorId: "guard-theory-editorial",
   slug: "what-to-wear-to-your-first-no-gi-class",
   category: "training-culture",
   title: "What to wear to your first no-gi class",

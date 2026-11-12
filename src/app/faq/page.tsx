@@ -31,15 +31,11 @@ const FAQS = [
   },
   {
     q: "Why are there drawings instead of photographs?",
-    a: "Because a production flat states how a garment is built and a photograph only shows how it looks. These are the drawings a factory is given — seam construction, sleeve geometry, hem.",
+    a: "Because a drawing shows how a garment is built, and a photograph only shows how it looks.",
   },
   {
     q: "How do I know what size I am?",
-    a: "The size and fit guide has the full chart, plus what to check when you try one on. If a garment does not match those measurements, return postage is ours both ways.",
-  },
-  {
-    q: "Will the rash guards be competition legal?",
-    a: "That is the design constraint we started from rather than one we work around.",
+    a: "The size and fit guide covers what to check when you try one on, and the returns policy covers exchanging a size.",
   },
   {
     q: "Is the Technique Library a substitute for classes?",
@@ -47,7 +43,7 @@ const FAQS = [
   },
   {
     q: "Who writes the Journal?",
-    a: "Rick R and Steven P. Every published article carries a byline, a publication date and the sources it was built from, because a piece nobody will put their name to is not worth reading. A piece with no byline is a draft that nobody has yet put their name to.",
+    a: "Guard Theory editorial. Every published article carries a byline, a publication date and the sources it was built from. The byline names the publication rather than a person; a person's name goes on a piece only when that person wrote it or has read it and agreed to put their name to it. The editorial policy explains how articles are sourced.",
   },
   {
     q: "Do you take sponsored posts or affiliate commission?",
@@ -59,7 +55,7 @@ const FAQS = [
   },
   {
     q: "I found a mistake in an article.",
-    a: "Tell us and point at the claim. Factual errors get corrected in the piece with a dated note — we do not quietly edit a page and pretend it never said what it said.",
+    a: "Tell us and point at the claim. Factual errors get corrected in the piece with a dated note — we do not quietly edit a page and pretend it never said what it said. The corrections policy lists every piece that carries one.",
   },
 ];
 
@@ -84,35 +80,47 @@ export default function FaqPage() {
       <div className="mx-auto max-w-[104rem]">
         <Breadcrumbs trail={[{ href: "/faq", label: "FAQ" }]} />
 
-        <header className="mt-10 mb-16 max-w-[46rem]">
-          <h1 className="display-condensed text-4xl text-chalk">
-            Frequently asked
-          </h1>
-          <p className="mt-8 text-lg text-steel">
-            Short answers, and the reasoning behind them where the reasoning is
-            the useful part.
+        {/* The sheet: a contents page of the monograph. Each question is a
+            row — question in the margin, answer at the reading measure. */}
+        <div className="band-bone band-edge mt-10 px-7 py-14 sm:px-16 sm:py-20">
+          <header className="max-w-[46rem]">
+            <h1 className="display-serif text-4xl text-ink">
+              Frequently asked
+            </h1>
+            <div aria-hidden="true" className="mt-8 h-1 w-16 bg-signal" />
+            <p className="mt-8 text-lg text-ink">
+              Short answers, and the reasoning behind them where the reasoning is
+              the useful part.
+            </p>
+          </header>
+
+          <dl className="m-0 mt-16 border-t border-steel p-0">
+            {FAQS.map((item) => (
+              <div
+                key={item.q}
+                className="grid gap-x-12 gap-y-3 border-b border-steel py-8 lg:grid-cols-12"
+              >
+                <dt className="display-condensed text-lg text-ink lg:col-span-5">
+                  {item.q}
+                </dt>
+                <dd className="m-0 max-w-[38rem] text-base text-ink lg:col-span-7">
+                  {item.a}
+                </dd>
+              </div>
+            ))}
+          </dl>
+
+          <p className="mt-14 text-base text-ink">
+            Something not answered here?{" "}
+            <Link
+              href="/contact"
+              className="text-signal-dim underline decoration-steel underline-offset-[5px] transition-colors duration-[140ms] ease-[var(--ease-control)] hover:decoration-signal-dim"
+            >
+              Ask us
+            </Link>
+            .
           </p>
-        </header>
-
-        <dl className="m-0 grid max-w-[70rem] grid-cols-1 gap-px bg-steel-dim p-0 lg:grid-cols-2">
-          {FAQS.map((item) => (
-            <div key={item.q} className="bg-ink p-8">
-              <dt className="display-condensed text-lg text-chalk">{item.q}</dt>
-              <dd className="m-0 mt-4 text-base text-steel">{item.a}</dd>
-            </div>
-          ))}
-        </dl>
-
-        <p className="mt-14 text-base text-steel">
-          Something not answered here?{" "}
-          <Link
-            href="/contact"
-            className="text-chalk underline decoration-steel-dim underline-offset-[5px] transition-colors duration-[140ms] ease-[var(--ease-control)] hover:decoration-signal-lift"
-          >
-            Ask us
-          </Link>
-          .
-        </p>
+        </div>
       </div>
 
       <script

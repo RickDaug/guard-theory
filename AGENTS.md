@@ -102,6 +102,10 @@ are listed for the owner in `docs/owner-decisions.md` §13 instead.
 
 - Registries in `src/content/*/index.ts` import entries **explicitly**. Add the
   import when you add an entry, or the build tells you.
+- A Technique Library entry drafted with assistance carries `review` and is a
+  draft — unlisted, `noindex, nofollow`, no Article schema — until a person
+  sets `review.approvedBy` in a commit. The process end to end, brief to
+  sign-off, is `docs/technique-pipeline.md`.
 - Diagrams are `aria-hidden`. Their content lives in a real, keyboard-reachable
   key beneath them. Never put meaning only in the drawing.
 - Interactive targets need 24×24 CSS px minimum (WCAG 2.2 SC 2.5.8). `min-h-6`
@@ -202,6 +206,17 @@ are listed for the owner in `docs/owner-decisions.md` §13 instead.
   of headroom under parallel workers, not a database problem; and a script that
   calls `process.exit()` without `closePool()` wedges the socket for the *next*
   run, so the failure appears one command later than its cause.
+- **PGlite hangs up after any statement that errors, and the NEXT query pays
+  for it.** `select 1/0` fails as it should; the query after it gets
+  `ECONNRESET`, and the one after that is fine. Real Postgres does not do this.
+  A test that expects a constraint violation therefore has to absorb one query
+  afterwards (see the unique-index test in `tests/unit/announcement.test.ts`),
+  or its next assertion fails for a reason that has nothing to do with it. The
+  same one-connection limit means two database test files cannot run side by
+  side locally: `node --test --test-concurrency=1 "tests/unit/*.test.ts"`. And
+  under `next dev` a page and a route handler are separate bundles with a pool
+  each, so hitting both against PGlite makes the second one report
+  "unavailable". Restart `db:local` rather than debugging the route.
 - **The PGlite wedge was a leaked connection slot, and Playwright caused it.**
   pglite-socket 0.2.11 frees a slot only on its handler's `close` event, and its
   error path strips the socket's `close` listener first — so a client that dies
@@ -288,6 +303,16 @@ are listed for the owner in `docs/owner-decisions.md` §13 instead.
   curl -s https://guardtheory.net/unsubscribe | grep -oi "use the link"
   ```
 
+- **`npm run build` is two `next build` passes, and a bare `next build`
+  refuses to run.** The CSP lists each static page's inline-script hashes
+  (`src/lib/csp.ts`, `scripts/build.mjs`); the first pass collects them into the
+  gitignored `.csp-hashes.json`, the second ships them, and a check fails the
+  build if any page's scripts are not covered. If that check fails with "build
+  output changed between passes", something renders non-deterministically at
+  build time (a timestamp, a random ID) — fix that, do not loosen the policy. A
+  new page that renders per request must live under a `DYNAMIC_PREFIXES` path
+  (proxy nonce) or the build fails; add the prefix there and to the proxy
+  matcher together (a unit test keeps them equal).
 - **Write control-character regexes with escape sequences**, not literal bytes.
   A class written as backslash-u-0000 through backslash-u-001F is fine; typing
   the actual bytes makes the source file read as binary to `grep` and `git

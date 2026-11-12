@@ -14,7 +14,7 @@ This section is newer than everything below it. Where they disagree, this is rig
 authors supplied by the owner, and twenty articles are published under them. §0 is kept for the
 record of why nothing was published before that date.
 
-**Briefs written (11 of 18):**
+**Briefs written (13 of 18):**
 
 | Brief | Slug | State |
 | --- | --- | --- |
@@ -29,13 +29,15 @@ record of why nothing was published before that date.
 | B10 | `why-the-underhook-decides-half-guard` | **draft**, written 2026-09-18 |
 | B12 | `what-to-wear-to-your-first-no-gi-class` | **draft**, written 2026-09-18 |
 | B18 | `submission-only-and-the-overtime-problem` | **draft**, written 2026-09-18 |
+| B1 | `where-the-guard-came-from` | **draft**, written 2026-09-29 (PR: journal batch 5) |
+| B5 | `the-arm-drag-as-a-system` | **draft**, written 2026-09-29 (PR: journal batch 5) |
 
 The three drafts are publish-ready in the sense of §0.3: sourced, reviewed against their briefs'
 "must not claim" lists, and passing `tests/unit/content.test.ts`. They are drafts because a byline
 belongs to a person, and neither author has read them. Publishing each is a three-line change
 (`status`, `publishedAt`, `authorId`) made on the day an author signs it off, with that day's date.
 
-**Briefs still unwritten (7):** B1, B2, B3, B5, B6, B8, B16. Handoff 07 §5 records why B2 and B3
+**Briefs still unwritten (5):** B2, B3, B6, B8, B16. (B1 and B5 were drafted on 2026-09-29.) Handoff 07 §5 records why B2 and B3
 (thin sourcing), B6 and B8 (duplicate intent with published pieces) were passed over; none of that
 has changed. B16 still waits on owner-decision item 3.
 

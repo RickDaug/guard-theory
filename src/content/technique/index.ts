@@ -14,6 +14,7 @@ import { bodyTriangleControlsTheRibs } from "./entries/body-triangle-controls-th
 import { butterflyGuardUnderPressure } from "./entries/butterfly-guard-under-pressure.ts";
 import { butterflyHookAsLever } from "./entries/butterfly-hook-as-lever.ts";
 import { closedGuardAttacksShareOneAngle } from "./entries/closed-guard-attacks-share-one-angle.ts";
+import { calfSlicerFoldsTheKnee } from "./entries/calf-slicer-folds-the-knee.ts";
 import { closedGuardPostureBattle } from "./entries/closed-guard-posture-battle.ts";
 import { connectionInOpenGuard } from "./entries/connection-in-open-guard.ts";
 import { crucifixBothArmsOut } from "./entries/crucifix-both-arms-out.ts";
@@ -23,6 +24,7 @@ import { deepHalfGuard } from "./entries/deep-half-guard.ts";
 import { defendingTheGuillotine } from "./entries/defending-the-guillotine.ts";
 import { doubleLegIsALevelChange } from "./entries/double-leg-is-a-level-change.ts";
 import { elbowKneeEscape } from "./entries/elbow-knee-escape.ts";
+import { fiftyFiftyBothHeelsExposed } from "./entries/fifty-fifty-both-heels-exposed.ts";
 import { escapingBackControl } from "./entries/escaping-back-control.ts";
 import { escapingSideControl } from "./entries/escaping-side-control.ts";
 import { escapingTurtle } from "./entries/escaping-turtle.ts";
@@ -62,14 +64,17 @@ import { singleLegXGuard } from "./entries/single-leg-x-guard.ts";
 import { snapDownToFrontHeadlock } from "./entries/snap-down-to-front-headlock.ts";
 import { sweepingTowardTheMissingPost } from "./entries/sweeping-toward-the-missing-post.ts";
 import { trapAndRollRemovesAPost } from "./entries/trap-and-roll-removes-a-post.ts";
+import { seatedGuardHandsInTheFight } from "./entries/seated-guard-hands-in-the-fight.ts";
 import { straightAnkleLockIsALever } from "./entries/straight-ankle-lock-is-a-lever.ts";
 import { sweepingTowardTheMissingPost } from "./entries/sweeping-toward-the-missing-post.ts";
+import { toeHoldFigureFourOnTheFoot } from "./entries/toe-hold-figure-four-on-the-foot.ts";
 import { twoOnOneControlsOneArm } from "./entries/two-on-one-controls-one-arm.ts";
 import { triangleClosesAtTheShoulder } from "./entries/triangle-closes-at-the-shoulder.ts";
 import { triangleDefencePosture } from "./entries/triangle-defence-posture.ts";
 import { underhookHalfGuard } from "./entries/underhook-half-guard.ts";
 import { whizzerIsAnOverhookOnTheHip } from "./entries/whizzer-is-an-overhook-on-the-hip.ts";
 import { wrestlingUpTechnicalStandUp } from "./entries/wrestling-up-technical-stand-up.ts";
+import { underhookOrOverhook } from "./entries/underhook-or-overhook.ts";
 
 /**
  * The registry. Entries are imported explicitly rather than globbed so that the
@@ -87,6 +92,7 @@ export const ENTRIES: TechniqueEntry[] = [
   butterflyGuardUnderPressure,
   butterflyHookAsLever,
   closedGuardAttacksShareOneAngle,
+  calfSlicerFoldsTheKnee,
   closedGuardPostureBattle,
   connectionInOpenGuard,
   crucifixBothArmsOut,
@@ -96,6 +102,7 @@ export const ENTRIES: TechniqueEntry[] = [
   defendingTheGuillotine,
   doubleLegIsALevelChange,
   elbowKneeEscape,
+  fiftyFiftyBothHeelsExposed,
   escapingBackControl,
   escapingSideControl,
   escapingTurtle,
@@ -135,14 +142,17 @@ export const ENTRIES: TechniqueEntry[] = [
   snapDownToFrontHeadlock,
   sweepingTowardTheMissingPost,
   trapAndRollRemovesAPost,
+  seatedGuardHandsInTheFight,
   straightAnkleLockIsALever,
   sweepingTowardTheMissingPost,
+  toeHoldFigureFourOnTheFoot,
   twoOnOneControlsOneArm,
   triangleClosesAtTheShoulder,
   triangleDefencePosture,
   underhookHalfGuard,
   whizzerIsAnOverhookOnTheHip,
   wrestlingUpTechnicalStandUp,
+  underhookOrOverhook,
 ];
 
 export const ENTRIES_BY_SLUG = new Map(ENTRIES.map((e) => [e.slug, e]));

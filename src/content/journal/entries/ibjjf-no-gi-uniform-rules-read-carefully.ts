@@ -17,6 +17,7 @@ import type { PublishedArticle } from "../types.ts";
 export const ibjjfNoGiUniformRulesReadCarefully: PublishedArticle = {
   status: "published",
   publishedAt: "2026-08-19",
+  updatedAt: "2026-09-29",
   authorId: "guard-theory-editorial",
   slug: "ibjjf-no-gi-uniform-rules-read-carefully",
   category: "competition-analysis",
@@ -30,7 +31,7 @@ export const ibjjfNoGiUniformRulesReadCarefully: PublishedArticle = {
       paragraphs: [
         "The IBJJF publishes its rule book as a PDF at ibjjf.com/books-videos. Everything below is quoted from that file. It is worth being specific about which file, because the site and the document do not quite agree: the download page labels it v6.0, the PDF is named 2024JUN_IBJJF_Rules_EN.pdf, and the footer printed on every page of the document itself reads VERSION 6.1 2024. We cite the footer, because the footer is on the thing you are actually reading.",
         "That is a small discrepancy and it does not change a single requirement. It is worth noticing anyway, because it is the first sign of the problem this piece is about. A rule book is a versioned document that supersedes itself, and almost everything written about it downstream — product descriptions, gym advice, blog summaries — is undated. When a summary and the PDF disagree, the PDF wins, and the only way to know they disagree is to open it.",
-        "The no-gi requirements sit in section 8, under Uniform. The clause that does the work is 8.1.16. Two further clauses in 8.3 apply to no-gi as well and are routinely missed, because they are filed under general requirements rather than under the no-gi heading.",
+        "The no-gi requirements sit in section 8, under Uniform. The clause that does the work is 8.1.16. Several clauses in 8.3 apply to no-gi as well and are routinely missed, because they are filed under general requirements rather than under the no-gi heading.",
       ],
     },
     {
@@ -48,7 +49,7 @@ export const ibjjfNoGiUniformRulesReadCarefully: PublishedArticle = {
       heading: "The requirement that is not there",
       paragraphs: [
         "Nothing in 8.1.16 says anything about sleeves. Not their length, not their presence.",
-        "This is worth stating carefully, because it is an absence and absences are easy to assert and hard to check. The word \"sleeve\" does appear in the rule book, repeatedly — at 8.1.7, which requires that a gi top's sleeves come to no more than 2 cm from the athlete's wrist; in the measurement list at 8.1.11, which checks sleeve length, sleeve width and the slack in a gi sleeve; and in the grip prohibitions, which describe grabbing the opening of an opponent's sleeve. Every one of those is a gi clause. The no-gi attire clause does not mention sleeves at all.",
+        "This is worth stating carefully, because it is an absence and absences are easy to assert and hard to check. The word \"sleeve\" does appear in the rule book, repeatedly — at 8.1.7, which requires that a gi top's sleeves come to no more than 2 cm from the athlete's wrist; in the measurement list at 8.1.11, which checks sleeve length, sleeve width and the slack in a gi sleeve; in the grip prohibitions, which describe grabbing the opening of an opponent's sleeve; and at 8.1.4, which says the elastic shirt women wear under the gi \"can be short or long sleeved\", the only place the book addresses sleeve length on a stretch top, and there it permits both. Every one of those is a gi clause. The no-gi attire clause does not mention sleeves at all.",
         "So a long sleeve rash guard and a short sleeve rash guard are, as far as this document is concerned, the same garment. Both satisfy 8.1.16 if they are elastic, skin tight, long enough in the torso and correct in colour. If you have been told that one of them is required, or that one of them is banned, that instruction did not come from here.",
         "What the clause does exclude, by requiring a shirt that covers the torso to the waistband, is competing bare-chested. It says nothing explicit about sleeveless tops, which is a genuine gap rather than a hidden rule — the clause requires a shirt with a stated torso length and stated colours, and stops.",
       ],
@@ -97,7 +98,8 @@ export const ibjjfNoGiUniformRulesReadCarefully: PublishedArticle = {
       paragraphs: [
         "There is a reason the no-gi category looks the way it does, and it is largely this clause. Black, white, black and white, or the rank colour, is not a shared aesthetic preference among a dozen brands. It is a colour requirement with four options in it, and the category converged on it because competitors buy garments they can compete in.",
         "That is a constraint worth designing inside rather than around, and it is the constraint Guard Theory started from. It also means the interesting decisions are elsewhere: in construction, in how a garment behaves when it is being gripped and dragged, in whether the specification is published at all. The rule book has already decided the colours.",
-        "One practical closing note. Requirements differ by division and by event, they are versioned, and this article describes one document as it stood on the date below. Before an event, download the current PDF and read clause 8.1.16 yourself. It is four paragraphs long. Everything written about it, including this, is longer.",
+        "One practical closing note. Requirements differ by division and by event, they are versioned, and this article describes one document as it stood on the date below. Before an event, download the current PDF and read clause 8.1.16 yourself. It is a page long. Everything written about it, including this, is longer.",
+        "Correction, 29 September 2026: an earlier version of this article described clause 8.1.16 as four paragraphs long; it has five and a note. The list of places the word sleeve appears has also been completed with 8.1.4, which is a gi clause and permits either sleeve length.",
       ],
     },
   ],
@@ -137,7 +139,7 @@ export const ibjjfNoGiUniformRulesReadCarefully: PublishedArticle = {
   ],
   contestedNotes: [
     "The IBJJF download page labels the current rule book v6.0 while the footer printed on the document reads VERSION 6.1 2024. This article quotes the footer. The discrepancy does not affect any requirement quoted here.",
-    "That the rule book states no sleeve-length requirement for no-gi is an absence rather than a statement, and absences can be created by a bad search. It was checked by extracting the full text of the PDF and reading every occurrence of the word \"sleeve\" in the document, all of which are gi clauses.",
+    "That the rule book states no sleeve-length requirement for no-gi is an absence rather than a statement, and absences can be created by a bad search. It was checked by extracting the full text of the PDF and reading every occurrence of the word \"sleeve\" in the document, all of which are gi clauses, including 8.1.4, which permits a short- or long-sleeved elastic shirt under the gi.",
     "The ten per cent rank-colour requirement is quoted exactly as written. The rule does not define what the proportion is measured against, and this article does not supply a definition the document does not contain.",
   ],
 };

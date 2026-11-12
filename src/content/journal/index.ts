@@ -22,6 +22,35 @@ import { theKimuraAsAControlBeforeItIsAFinish } from "./entries/the-kimura-as-a-
 import { theRearNakedStrangleFromBackControl } from "./entries/the-rear-naked-strangle-from-back-control.ts";
 import { theTriangleAndTheAngle } from "./entries/the-triangle-and-the-angle.ts";
 import { whyTheUnderhookDecidesHalfGuard } from "./entries/why-the-underhook-decides-half-guard.ts";
+import { basePostureAndStructure } from "./entries/base-posture-and-structure.ts";
+import { jiuJitsuJujutsuAndTheSpellingOfTheName } from "./entries/jiu-jitsu-jujutsu-and-the-spelling-of-the-name.ts";
+import { positionBeforeSubmissionAndWhatThePointsTableTeaches } from "./entries/position-before-submission-and-what-the-points-table-teaches.ts";
+import { survivalFirstAndTheOrderThingsAreLearnedIn } from "./entries/survival-first-and-the-order-things-are-learned-in.ts";
+import { theBridgeAndTheHipEscape } from "./entries/the-bridge-and-the-hip-escape.ts";
+import { whatATapIs } from "./entries/what-a-tap-is.ts";
+import { closedGuardAndWhatTheLockedAnklesBuy } from "./entries/closed-guard-and-what-the-locked-ankles-buy.ts";
+import { leaveYourEgoAtTheDoor } from "./entries/leave-your-ego-at-the-door.ts";
+import { leverageAndTheSmallerPerson } from "./entries/leverage-and-the-smaller-person.ts";
+import { maximumEfficiencyAndMutualWelfare } from "./entries/maximum-efficiency-and-mutual-welfare.ts";
+import { sportOrSelfDefenceAndWhatJiuJitsuIsFor } from "./entries/sport-or-self-defence-and-what-jiu-jitsu-is-for.ts";
+import { theSixTiesANoGiBeginnerNeedsNamesFor } from "./entries/the-six-ties-a-no-gi-beginner-needs-names-for.ts";
+import { theTechnicalStandUp } from "./entries/the-technical-stand-up.ts";
+import { beginnersMindAndTheWhiteBelt } from "./entries/beginners-mind-and-the-white-belt.ts";
+import { flowAndTheTwoThingsTheWordMeans } from "./entries/flow-and-the-two-things-the-word-means.ts";
+import { humanChessAndWhatTheComparisonGetsRight } from "./entries/human-chess-and-what-the-comparison-gets-right.ts";
+import { lineageAndWhyJiuJitsuAsksWhoTaughtYou } from "./entries/lineage-and-why-jiu-jitsu-asks-who-taught-you.ts";
+import { ossProfessorAndTheBow } from "./entries/oss-professor-and-the-bow.ts";
+import { sweepSubmitOrStand } from "./entries/sweep-submit-or-stand.ts";
+import { takedownOrGuardPull } from "./entries/takedown-or-guard-pull.ts";
+import { whatCountsAsAPin } from "./entries/what-counts-as-a-pin.ts";
+import { advantagesPenaltiesAndTheClock } from "./entries/advantages-penalties-and-the-clock.ts";
+import { overUnderOrAround } from "./entries/over-under-or-around.ts";
+import { rollingAsPlay } from "./entries/rolling-as-play.ts";
+import { sideControlFromTheTop } from "./entries/side-control-from-the-top.ts";
+import { stranglesAndJointLocks } from "./entries/strangles-and-joint-locks.ts";
+import { thePlateau } from "./entries/the-plateau.ts";
+import { toriAndUke } from "./entries/tori-and-uke.ts";
+import { whatATournamentTests } from "./entries/what-a-tournament-tests.ts";
 import { whySportJiuJitsuDoesNotTransferDirectlyToMma } from "./entries/why-sport-jiu-jitsu-does-not-transfer-directly-to-mma.ts";
 
 /**
@@ -52,6 +81,35 @@ export const ARTICLES: Article[] = [
   theTriangleAndTheAngle,
   whySportJiuJitsuDoesNotTransferDirectlyToMma,
   whyTheUnderhookDecidesHalfGuard,
+  basePostureAndStructure,
+  jiuJitsuJujutsuAndTheSpellingOfTheName,
+  positionBeforeSubmissionAndWhatThePointsTableTeaches,
+  survivalFirstAndTheOrderThingsAreLearnedIn,
+  theBridgeAndTheHipEscape,
+  whatATapIs,
+  closedGuardAndWhatTheLockedAnklesBuy,
+  leaveYourEgoAtTheDoor,
+  leverageAndTheSmallerPerson,
+  maximumEfficiencyAndMutualWelfare,
+  sportOrSelfDefenceAndWhatJiuJitsuIsFor,
+  theSixTiesANoGiBeginnerNeedsNamesFor,
+  theTechnicalStandUp,
+  beginnersMindAndTheWhiteBelt,
+  flowAndTheTwoThingsTheWordMeans,
+  humanChessAndWhatTheComparisonGetsRight,
+  lineageAndWhyJiuJitsuAsksWhoTaughtYou,
+  ossProfessorAndTheBow,
+  sweepSubmitOrStand,
+  takedownOrGuardPull,
+  whatCountsAsAPin,
+  advantagesPenaltiesAndTheClock,
+  overUnderOrAround,
+  rollingAsPlay,
+  sideControlFromTheTop,
+  stranglesAndJointLocks,
+  thePlateau,
+  toriAndUke,
+  whatATournamentTests,
 ];
 
 const BY_SLUG = new Map(ARTICLES.map((article) => [article.slug, article]));

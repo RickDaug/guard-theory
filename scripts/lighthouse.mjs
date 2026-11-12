@@ -36,6 +36,11 @@ const TARGETS = [
   // Added because it was the one page under the gate and the gate could not
   // see it: this list was chosen when the site had three page types.
   { name: "search", url: "/search", skipSeo: true },
+  // The commerce pages. The product page was already here; the listing and the
+  // cart were not, so a regression on either could merge unseen. The cart is
+  // noindex by design, so its SEO score measures that choice, not the page.
+  { name: "shop", url: "/shop" },
+  { name: "cart", url: "/cart", skipSeo: true },
 ];
 
 /**

@@ -1,0 +1,204 @@
+name: Uptime
+
+# An outside check that guardtheory.net answers, every ten minutes.
+#
+# Six plain HTTPS GETs from a GitHub runner, which is nowhere near Vercel's
+# own view of itself: the home page, the shop, one technique page, the
+# sitemap, robots.txt, and the reconcile cron asked WITHOUT its bearer token.
+# That last one must answer 401 — which proves a serverless function booted
+# and ran its auth check, without ever doing the reconcile work. The pages can
+# be served from Vercel's cache; the 401 cannot.
+#
+# Each check asserts the status code, a string that only the real page
+# contains (so a CDN error page or a parked domain does not count as up), and a
+# response-time budget. A failed check is tried once more, twenty seconds
+# later, before it counts.
+#
+# When something is down, ONE issue labelled `uptime` is opened, and commented
+# on only when the set of failing checks changes — not every ten minutes. When
+# every check passes again, the issue is commented on and closed. The job
+# itself stays green while it does this: the issue is the alarm, and a red run
+# every ten minutes would be an email every ten minutes. The job goes red only
+# if it could not do its own work (for example, could not reach the issues API).
+#
+# THIS REPOSITORY IS PUBLIC, and so are these logs. Nothing here prints a
+# response body or a header: only the check's name, its status code, its time
+# and whether it passed. Bodies are written to the runner's temp directory,
+# searched, and deleted. No secret is used — only the default GITHUB_TOKEN,
+# allowed to write issues and nothing else.
+#
+# If the technique page below is ever renamed or removed, change TECHNIQUE_PATH
+# to any URL from https://guardtheory.net/sitemap.xml under /technique/.
+#
+# GitHub only runs a `schedule` from the default branch, and switches it off
+# after sixty days without a commit to the repository — this workflow's own
+# runs do not count. It says so by email first. If that email arrives, push
+# anything, or press "Enable workflow" on the Actions tab. A quiet repository
+# means a silent monitor, not a healthy site.
+
+on:
+  schedule:
+    # :07, :17 ... :57 — off the top of the hour, which is when GitHub's
+    # scheduler is at its most delayed. Expect runs to drift by minutes anyway.
+    - cron: "7-59/10 * * * *"
+  workflow_dispatch:
+
+# A slow run finishes before the next one starts, so two runs never race to
+# open the same issue.
+concurrency:
+  group: uptime
+  cancel-in-progress: false
+
+permissions:
+  issues: write
+
+jobs:
+  check:
+    # Forks do not get to open issues here, and have no reason to watch prod.
+    if: github.repository == 'RickDaug/guard-theory'
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+
+    env:
+      BASE_URL: https://guardtheory.net
+      TECHNIQUE_PATH: /technique/passing/knee-cut-pass
+      GH_TOKEN: ${{ github.token }}
+      GH_REPO: ${{ github.repository }}
+
+    steps:
+      - name: Check the site
+        id: checks
+        run: |
+          set -uo pipefail
+
+          # name|path|expected status|string the body must contain|budget (s)
+          # An empty string means "don't look at the body".
+          checks=(
+            "home|/|200|Guard Theory|8"
+            "shop|/shop|200|Guard Theory|8"
+            "technique|${TECHNIQUE_PATH}|200|Guard Theory|8"
+            "sitemap|/sitemap.xml|200|<urlset|5"
+            "robots|/robots.txt|200|Sitemap:|5"
+            "cron-auth|/api/cron/reconcile|401||5"
+          )
+
+          body="$RUNNER_TEMP/uptime-body"
+          failures="$RUNNER_TEMP/uptime-failures"
+          : > "$failures"
+
+          # Sets $status, $time and $why. Returns 0 when the check passes.
+          probe() {
+            local path="$1" want="$2" needle="$3" budget="$4" out
+            rm -f "$body"
+            # No -L: a redirect where a page should be is itself a failure.
+            # curl's own error text is discarded; 000 says it did not connect.
+            out=$(curl -s -o "$body" -w '%{http_code} %{time_total}' \
+                    --connect-timeout 10 --max-time 20 \
+                    -A 'guard-theory-uptime (github.com/RickDaug/guard-theory)' \
+                    "${BASE_URL}${path}" 2>/dev/null) || true
+            status="${out%% *}"
+            time="${out##* }"
+            [ -n "$status" ] || status=000
+            [ -n "$time" ] && [ "$time" != "$out" ] || time=0
+            why=""
+            if [ "$status" != "$want" ]; then
+              why="status ${status}, expected ${want}"
+            elif [ -n "$needle" ] && ! grep -qiF -- "$needle" "$body" 2>/dev/null; then
+              why="expected text missing"
+            elif awk -v t="$time" -v b="$budget" 'BEGIN { exit !(t > b) }'; then
+              why="took ${time}s, budget ${budget}s"
+            fi
+            rm -f "$body"
+            [ -z "$why" ]
+          }
+
+          {
+            echo "| Check | Status | Time (s) | Result |"
+            echo "|---|---|---|---|"
+          } >> "$GITHUB_STEP_SUMMARY"
+
+          for c in "${checks[@]}"; do
+            IFS='|' read -r name path want needle budget <<< "$c"
+            if probe "$path" "$want" "$needle" "$budget"; then
+              result=pass
+            else
+              sleep 20
+              if probe "$path" "$want" "$needle" "$budget"; then
+                result="pass (on retry)"
+              else
+                result="FAIL: $why"
+                echo "::error title=Uptime: ${name}::${path} — ${why}"
+                printf '%s|%s|%s|%s\n' "$name" "$path" "$why" \
+                  "$(date -u +%Y-%m-%dT%H:%M:%SZ)" >> "$failures"
+              fi
+            fi
+            echo "${name}: ${status} in ${time}s — ${result}"
+            echo "| ${name} | ${status} | ${time} | ${result} |" >> "$GITHUB_STEP_SUMMARY"
+          done
+
+          if [ -s "$failures" ]; then
+            echo "failed=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "failed=false" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Open, update or close the uptime issue
+        env:
+          FAILED: ${{ steps.checks.outputs.failed }}
+          RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+        run: |
+          set -euo pipefail
+
+          failures="$RUNNER_TEMP/uptime-failures"
+          now=$(date -u +%Y-%m-%dT%H:%M:%SZ)
+          open=$(gh issue list --label uptime --state open --limit 1 \
+                   --json number --jq '.[0].number // empty')
+
+          if [ "$FAILED" != "true" ]; then
+            if [ -n "$open" ]; then
+              gh issue comment "$open" --body "All checks passing again at ${now}. [Run](${RUN_URL})"
+              gh issue close "$open" --reason completed
+              echo "Recovered; closed #${open}."
+            else
+              echo "All checks passing."
+            fi
+            exit 0
+          fi
+
+          # Which checks are failing, in a stable order: the marker that lets a
+          # later run tell "still the same outage" from "something changed".
+          sig=$(cut -d'|' -f1 "$failures" | sort | paste -sd, -)
+          marker="<!-- uptime-failing: ${sig} -->"
+
+          {
+            echo "Failing at ${now} ([run](${RUN_URL})):"
+            echo
+            echo "| Check | URL | Why | Failed at (UTC) |"
+            echo "|---|---|---|---|"
+            while IFS='|' read -r name path why at; do
+              echo "| ${name} | \`${BASE_URL}${path}\` | ${why} | ${at} |"
+            done < "$failures"
+            echo
+            echo "Checked every ten minutes by \`.github/workflows/uptime.yml\`. This issue closes itself when every check passes."
+            echo
+            echo "$marker"
+          } > "$RUNNER_TEMP/uptime-report.md"
+
+          if [ -z "$open" ]; then
+            # The label may not exist yet. --force makes this a no-op if it does.
+            gh label create uptime --color B60205 \
+              --description "guardtheory.net failed an external uptime check" --force
+            gh issue create --title "guardtheory.net is failing uptime checks" \
+              --label uptime --body-file "$RUNNER_TEMP/uptime-report.md"
+            exit 0
+          fi
+
+          # The newest comment, or the issue body if nobody has commented yet.
+          last=$(gh issue view "$open" --json body,comments \
+                   --jq '(.comments | last | .body) // .body')
+          if printf '%s' "$last" | grep -qF -- "$marker"; then
+            echo "Same checks still failing; #${open} already says so."
+          else
+            gh issue comment "$open" --body-file "$RUNNER_TEMP/uptime-report.md"
+            echo "Failing checks changed; commented on #${open}."
+          fi

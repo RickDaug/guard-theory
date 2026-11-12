@@ -14,12 +14,27 @@ import { formatMoney } from "@/lib/money";
 import { Button } from "@/components/ui/Button";
 import {
   AdvanceControl,
+  CancelControl,
   LabelControl,
   RefundControl,
   ResendControl,
+  RestockControl,
   TrackingControl,
+  type RestockableLine,
 } from "./OrderControls";
 import { isShippoConfigured } from "@/lib/shipping/shippo";
+import { orderParcelWeight, weightWarning } from "@/lib/shipping/weight";
+import { emailStatusView } from "@/lib/portal/email-status";
+import { DISPUTE_LABEL, FLAG_EXPLANATION, isFlagReason, type DisputeStatus } from "@/lib/orders/flags";
+import { EVENT_LABEL, listOrderEvents } from "@/lib/orders/events";
+
+function when(at: Date): string {
+  return new Intl.DateTimeFormat("en-US", {
+    dateStyle: "medium",
+    timeStyle: "short",
+    timeZone: "UTC",
+  }).format(new Date(at));
+}
 
 export const dynamic = "force-dynamic";
 
@@ -30,30 +45,25 @@ export const dynamic = "force-dynamic";
  * means nothing at 7am; "payment succeeded after the last one had already been
  * sold" tells you what happened and what you owe someone.
  */
-const FLAG_EXPLANATION: Record<string, string> = {
-  oversell:
-    "Payment succeeded after the last one had already been sold. The money was taken, so this person is owed either the garment or a refund. Yours to decide.",
-  reconciled:
-    "Recovered from Stripe because the webhook never delivered it. Check the items and the address read correctly before shipping.",
-  refunded: "Money has gone back to this customer. Left flagged so it is easy to find again.",
-};
-
 const TEMPLATE_LABEL: Record<string, string> = {
   "order-confirmation": "Confirmation",
   "order-in-process": "Being prepared",
   "order-shipped": "Shipped",
+  "order-cancelled": "Cancelled",
 };
 
 const NEXT_LABEL: Record<string, string> = {
   in_process: "Mark as being prepared",
   shipped: "Mark as shipped",
   delivered: "Mark as delivered",
-  cancelled: "Cancel this order",
 };
 
 export default async function OrderPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
-  await requirePortalPage(portalUrl(`/orders/${id}`));
+  const session = await requirePortalPage(portalUrl(`/orders/${id}`));
+  // Crew see the order and do the shipping; money and flags are the owner's.
+  // Hiding these is presentation — each action checks the role itself.
+  const owner = session.role === "owner";
 
   const order = await getOrder(id);
 
@@ -61,16 +71,34 @@ export default async function OrderPage({ params }: { params: Promise<{ id: stri
     notFound();
   }
 
-  const [items, emails] = await Promise.all([getOrderItems(order.id), orderEmails(order.id)]);
+  const labelDue = (order.status === "new" || order.status === "in_process") && !order.tracking_number;
+  const [items, emails, weight, events] = await Promise.all([
+    getOrderItems(order.id),
+    orderEmails(order.id),
+    labelDue ? orderParcelWeight(order.id) : Promise.resolve(null),
+    listOrderEvents(order.id),
+  ]);
   const remaining = order.total_cents - order.refunded_cents;
   const next = ALLOWED_TRANSITIONS[order.status];
+  const shipped = order.status === "shipped" || order.status === "delivered";
+  // Only a parcel that has gone can come back. Before that, stock follows the
+  // money on its own: a cancel or a full refund puts it back.
+  const restockable: RestockableLine[] = shipped
+    ? items
+        .map((item) => ({
+          itemId: item.id,
+          label: `${item.product_name}, size ${item.size_label}`,
+          left: item.quantity - item.restocked_quantity,
+        }))
+        .filter((line) => line.left > 0)
+    : [];
 
   return (
     <main id="main" className="px-6 py-16 md:px-12">
       <div className="mx-auto max-w-[70rem]">
         <Link
           href={portalUrl("/orders")}
-          className="display-plain text-sm text-steel no-underline hover:text-chalk"
+          className="display-plain inline-flex min-h-6 items-center text-sm text-steel no-underline hover:text-chalk"
         >
           Back to orders
         </Link>
@@ -84,17 +112,31 @@ export default async function OrderPage({ params }: { params: Promise<{ id: stri
           }`}
         </p>
 
+        {order.dispute_status && order.dispute_status in DISPUTE_LABEL ? (
+          // Said on its own, outside the flag: the flag is cleared once read,
+          // and a chargeback's outcome is still true after that.
+          <p className="display-plain mb-6 text-base text-chalk">
+            {DISPUTE_LABEL[order.dispute_status as DisputeStatus]}
+          </p>
+        ) : null}
+
         {order.flagged_reason ? (
           <div className="mb-12 border-l-2 border-signal-lift bg-graphite px-6 py-5">
             <p className="text-base text-chalk">
-              {FLAG_EXPLANATION[order.flagged_reason] ?? "This order needs a look."}
+              {isFlagReason(order.flagged_reason)
+                ? FLAG_EXPLANATION[order.flagged_reason]
+                : "This order needs a look."}
             </p>
-            <form action={clearFlag} className="mt-4">
-              <input type="hidden" name="id" value={order.id} />
-              <Button type="submit" intent="quiet">
-                I have dealt with this
-              </Button>
-            </form>
+            {owner ? (
+              <form action={clearFlag} className="mt-4">
+                <input type="hidden" name="id" value={order.id} />
+                <Button type="submit" intent="quiet">
+                  I have dealt with this
+                </Button>
+              </form>
+            ) : (
+              <p className="mt-4 text-sm text-steel">Ask the owner before shipping this one.</p>
+            )}
           </div>
         ) : null}
 
@@ -105,12 +147,12 @@ export default async function OrderPage({ params }: { params: Promise<{ id: stri
             </h2>
             <ul className="m-0 flex list-none flex-col gap-4 p-0">
               {items.map((item) => (
-                <li key={item.sku} className="flex justify-between gap-6">
+                <li key={item.id} className="flex justify-between gap-6">
                   <span className="text-base text-chalk">
                     {`${item.product_name} — ${item.product_kind}, size ${item.size_label}${
                       item.quantity > 1 ? ` × ${item.quantity}` : ""
-                    }`}
-                  </span>
+                    }${item.restocked_quantity > 0 ? ` (${item.restocked_quantity} back in stock)` : ""}`}
+                  </span>{" "}
                   <span className="text-base text-chalk tabular-nums">
                     {formatMoney(item.unit_cents * item.quantity, order.currency)}
                   </span>
@@ -183,12 +225,34 @@ export default async function OrderPage({ params }: { params: Promise<{ id: stri
           </h2>
 
           <div className="flex flex-col gap-10">
+            <div className="flex flex-wrap items-center gap-x-8 gap-y-4">
+              {order.label_url || order.shippo_transaction_id ? (
+                // A route of ours, not Shippo's link: it fetches a freshly
+                // signed URL (the stored one expires) and records who printed.
+                <a
+                  href={portalUrl(`/orders/${order.id}/label`)}
+                  target="_blank"
+                  rel="noopener"
+                  className="display-plain inline-flex min-h-6 items-center border border-steel-mid px-5 py-3 text-base text-chalk no-underline hover:border-chalk"
+                >
+                  Print label (4x6 PDF)
+                </a>
+              ) : null}
+              <Link
+                href={portalUrl(`/orders/${order.id}/packing-slip`)}
+                className="display-plain inline-flex min-h-6 items-center text-sm text-chalk underline underline-offset-[6px]"
+              >
+                Print packing slip
+              </Link>
+            </div>
+
             {order.status === "new" || order.status === "in_process" ? (
               <>
                 <LabelControl
                   id={order.id}
-                  labelUrl={order.label_url}
                   configured={isShippoConfigured()}
+                  weightOz={weight?.weightOz ?? null}
+                  weightWarning={weight ? weightWarning(weight) : null}
                 />
                 {order.label_claimed_at && !order.tracking_number ? (
                   <form action={releaseLabel} className="flex flex-col items-start gap-3">
@@ -216,27 +280,91 @@ export default async function OrderPage({ params }: { params: Promise<{ id: stri
               <p className="text-base text-steel">Nothing further. This order is finished.</p>
             ) : (
               <div className="flex flex-wrap gap-8">
-                {next.map((to) => (
-                  <AdvanceControl
-                    key={to}
-                    id={order.id}
-                    to={to}
-                    label={NEXT_LABEL[to] ?? to}
-                  />
-                ))}
+                {next.map((to) =>
+                  to === "cancelled" ? (
+                    owner ? (
+                    <CancelControl
+                      key={to}
+                      id={order.id}
+                      label={
+                        // A lost chargeback already returned the money: the
+                        // cancel refunds nothing (cancel.ts), and says so.
+                        remaining > 0 && order.dispute_status !== "lost"
+                          ? `Cancel and refund ${formatMoney(remaining, order.currency)}`
+                          : "Cancel this order"
+                      }
+                    />
+                    ) : null
+                  ) : (
+                    <AdvanceControl
+                      key={to}
+                      id={order.id}
+                      to={to}
+                      label={NEXT_LABEL[to] ?? to}
+                    />
+                  ),
+                )}
               </div>
             )}
 
-            {remaining > 0 ? (
+            {!owner ? (
+              remaining < order.total_cents ? (
+                <p className="text-base text-steel">
+                  {remaining > 0 ? "Part of this order has been refunded." : "This order has been refunded in full."}
+                </p>
+              ) : null
+            ) : order.dispute_status === "lost" ? (
+              <>
+              <p className="max-w-[46rem] text-base text-steel">
+                {shipped
+                  ? "The buyer's bank returned this payment through a lost chargeback, so there is nothing left to refund."
+                  : order.status === "cancelled"
+                    ? "The buyer's bank returned this payment through a lost chargeback. Nothing was refunded on top of it."
+                    : "The buyer's bank returned this payment through a lost chargeback. Do not ship it: cancel it, which refunds nothing more and puts the stock back."}
+              </p>
+              {restockable.length > 0 ? <RestockControl id={order.id} lines={restockable} /> : null}
+              </>
+            ) : remaining > 0 ? (
               <RefundControl
                 id={order.id}
                 remainingLabel={formatMoney(remaining, order.currency)}
                 refundedCents={order.refunded_cents}
+                restockLines={restockable}
+                stockNote={
+                  shipped
+                    ? undefined
+                    : "A full refund puts the stock back. A part refund does not."
+                }
               />
             ) : (
-              <p className="text-base text-steel">This order has been refunded in full.</p>
+              <>
+                <p className="text-base text-steel">This order has been refunded in full.</p>
+                {restockable.length > 0 ? (
+                  <RestockControl id={order.id} lines={restockable} />
+                ) : null}
+              </>
             )}
           </div>
+        </section>
+
+        <section aria-labelledby="history" className="mt-16">
+          <h2 id="history" className="display-condensed mb-6 text-xl text-chalk">
+            History
+          </h2>
+          <ol className="m-0 flex list-none flex-col gap-3 p-0">
+            <li className="flex flex-wrap items-baseline gap-x-6 gap-y-1">
+              <span className="text-base text-chalk">Paid and placed</span>{" "}
+              <span className="text-sm text-steel">{when(order.placed_at)}</span>
+            </li>
+            {events.map((event) => (
+              <li key={event.id} className="flex flex-wrap items-baseline gap-x-6 gap-y-1">
+                <span className="text-base text-chalk">
+                  {event.detail ? `${EVENT_LABEL[event.kind]}, ${event.detail}` : EVENT_LABEL[event.kind]}
+                </span>{" "}
+                <span className="text-sm text-steel">{`by ${event.actor_name} · ${when(event.created_at)}`}</span>
+              </li>
+            ))}
+          </ol>
         </section>
 
         <section aria-labelledby="messages" className="mt-16">
@@ -248,26 +376,35 @@ export default async function OrderPage({ params }: { params: Promise<{ id: stri
             <p className="text-base text-steel">Nothing has been sent yet.</p>
           ) : (
             <ul className="m-0 flex list-none flex-col gap-4 p-0">
-              {emails.map((email) => (
+              {emails.map((email) => {
+                const view = emailStatusView(email.status);
+
+                return (
                 <li key={email.id} className="flex flex-wrap items-baseline gap-x-6 gap-y-2">
                   <span className="text-base text-chalk">
                     {TEMPLATE_LABEL[email.template] ?? email.template}
-                  </span>
+                  </span>{" "}
                   <span
-                    className={`notation text-2xs ${
-                      email.status === "sent" ? "text-steel" : "text-signal-lift"
-                    }`}
+                    className={`notation text-2xs ${view.problem ? "text-signal-lift" : "text-steel"}`}
                   >
-                    {email.status === "sent" ? "Sent" : "Failed"}
+                    {view.label}
                   </span>
                   {email.error ? (
-                    <span className="text-sm text-steel">{email.error.slice(0, 120)}</span>
-                  ) : null}
+                    <>
+                      {" "}
+                      <span className="text-sm text-steel">{email.error.slice(0, 120)}</span>
+                    </>
+                  ) : null}{" "}
                   <span className="ml-auto">
-                    <ResendControl id={order.id} template={email.template} />
+                    <ResendControl
+                      id={order.id}
+                      template={email.template}
+                      templateLabel={TEMPLATE_LABEL[email.template] ?? email.template}
+                    />
                   </span>
                 </li>
-              ))}
+                );
+              })}
             </ul>
           )}
         </section>

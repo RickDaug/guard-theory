@@ -2,8 +2,9 @@ import { randomUUID } from "node:crypto";
 import type Stripe from "stripe";
 import type { PoolClient } from "pg";
 import { query, transaction } from "../db/client.ts";
-import type { PricedLine } from "../cart/types.ts";
+import { CHECKOUT_SESSION_MINUTES, type PricedLine } from "../cart/types.ts";
 import { orderStripeMode, stripeMode } from "../stripe/client.ts";
+import { raiseFlagSql, strongestFlag } from "./flags.ts";
 
 /**
  * Turning a paid Checkout Session into an order.
@@ -186,6 +187,72 @@ async function decrementStock(
 }
 
 /**
+ * The mode a session's money was taken in — from the session, not the key.
+ *
+ * `livemode` is on every Stripe object and is what actually happened. The key
+ * prefix is only what this deployment is configured with, and at cutover the
+ * key and the webhook secret are swapped by hand, one after the other: a live
+ * payment verified while the key still said sk_test_ used to be stamped `test`,
+ * hidden from real totals and treated as a rehearsal. The session wins, and a
+ * disagreement is logged and reported, so the order it makes is flagged
+ * `mode-mismatch` (0011_order_flags_and_tracking.sql) for the owner to see.
+ *
+ * A fixture or an object without `livemode` falls back to the key, as before.
+ */
+function sessionMode(session: Stripe.Checkout.Session): { mode: "test" | "live"; mismatch: boolean } {
+  if (typeof session.livemode !== "boolean") {
+    return { mode: orderStripeMode(), mismatch: false };
+  }
+
+  const mode = session.livemode ? "live" : "test";
+  const keyMode = stripeMode();
+
+  if (keyMode !== mode) {
+    console.error(
+      `[guard-theory] mode-mismatch: session ${session.id} is ${mode} but STRIPE_SECRET_KEY ` +
+        `is ${keyMode}. Recorded as ${mode}, which is what Stripe says it was. ` +
+        "Finish swapping the key and the webhook secret together.",
+    );
+  }
+
+  return { mode, mismatch: keyMode !== mode };
+}
+
+/**
+ * Why a paid session does not match the cart it was priced from, or null.
+ *
+ * Stripe's totals are what the order records — they include tax, which we do
+ * not compute — but the SUBTOTAL is ours: the priced lines in the intent. A
+ * session whose subtotal differs, whose currency is not USD (the only one
+ * checkout offers), or which Stripe says needed no payment, was not made by
+ * startCheckout from this intent as it stands: another Checkout on the same
+ * account naming our intent as client_reference_id, or Adaptive Pricing
+ * converting the currency. The order is still made, because money may have
+ * been taken, and flagged `amount-mismatch` (0014) for the owner. Security
+ * audit 2026-09-29, S3-5.
+ */
+export function amountMismatch(
+  session: Pick<Stripe.Checkout.Session, "amount_subtotal" | "currency" | "payment_status">,
+  snapshot: { subtotal_cents: number },
+): string | null {
+  const problems: string[] = [];
+  if (session.payment_status === "no_payment_required") {
+    problems.push("Stripe says no payment was required");
+  }
+  if ((session.currency ?? "").toLowerCase() !== "usd") {
+    problems.push(`currency is ${session.currency ?? "missing"}, not usd`);
+  }
+  if (typeof session.amount_subtotal !== "number") {
+    problems.push("the session has no subtotal");
+  } else if (session.amount_subtotal !== Number(snapshot.subtotal_cents)) {
+    problems.push(
+      `subtotal ${session.amount_subtotal} does not match the priced ${snapshot.subtotal_cents}`,
+    );
+  }
+  return problems.length === 0 ? null : problems.join("; ");
+}
+
+/**
  * Writes down a payment that could not become an order.
  *
  * Money was taken. Whatever went wrong on our side, the one outcome that is
@@ -193,6 +260,26 @@ async function decrementStock(
  * caller is allowed to tell Stripe the event was handled. Upserts on the
  * session id: the webhook and the reconciler will both find the same session.
  */
+/**
+ * When the order was paid, for placed_at — the "paid date" the sales export
+ * files a sale under, and the ship queue's "Paid X ago".
+ *
+ * A Checkout Session is paid somewhere between its creation and its expiry
+ * (CHECKOUT_SESSION_MINUTES, plus the two-minute rounding in
+ * sessionExpiresAt). An order recorded inside that window — the webhook, on
+ * time — is recorded as it is paid, and now() is exact. One recorded later —
+ * by the reconciler, up to 72 hours on, or by a webhook retried for days — was
+ * paid long before now(), which put a 31 March sale in April's filing. That
+ * one takes the session's creation time: at most the window early, where
+ * now() was up to three days late. Stripe's `created` is epoch seconds.
+ */
+export const PLACED_AT_SQL = `case
+  when $20::bigint is not null
+   and to_timestamp($20::bigint) < now() - make_interval(mins => ${CHECKOUT_SESSION_MINUTES + 3})
+  then to_timestamp($20::bigint)
+  else now()
+end`;
+
 export async function recordUnfulfilledPayment(
   session: Stripe.Checkout.Session,
   reason: string,
@@ -205,14 +292,22 @@ export async function recordUnfulfilledPayment(
      values ($1, $2, $3, $4, $5, $6, $7, $8)
      on conflict (stripe_session_id) do update set
        last_seen_at = now(),
-       reason = excluded.reason`,
+       -- A refund note written by applyRefundFromCharge (refund.ts) is kept,
+       -- so a replay does not show the payment as unrefunded until the refund
+       -- pass puts the note back.
+       reason = excluded.reason
+         || coalesce(substring(unfulfilled_payment.reason from ' — Stripe shows refunded: .*$'), '')`,
     [
       randomUUID(),
       session.id,
       typeof session.payment_intent === "string"
         ? session.payment_intent
         : (session.payment_intent?.id ?? null),
-      stripeMode(),
+      typeof session.livemode === "boolean"
+        ? session.livemode
+          ? "live"
+          : "test"
+        : stripeMode(),
       reason,
       session.amount_total ?? null,
       session.currency ? session.currency.toUpperCase() : null,
@@ -272,11 +367,30 @@ export async function fulfilCheckoutSession(
     return unfulfilled(session, "no email");
   }
 
-  const mode = orderStripeMode();
+  const { mode, mismatch } = sessionMode(session);
 
-  const result = await transaction<FulfilResult | { outcome: "intent-missing" }>(async (client) => {
-    // The unique constraint on stripe_session_id is what makes running this
-    // twice — webhook and reconciler, or two deliveries — safe.
+  type Early = { outcome: "intent-missing" } | { outcome: "paid-twice" };
+
+  const result = await transaction<FulfilResult | Early>(async (client) => {
+    // The intent row is locked FIRST, and everything below is decided under
+    // that lock. Every fulfilment of this cart — the same session from the
+    // webhook and the reconciler, or two sessions opened from two tabs —
+    // queues here, and the one behind sees what the one in front committed:
+    // its order, and consumed_at.
+    const intent = await client.query<{
+      lines_json: PricedLine[];
+      shipping_cents: number;
+      subtotal_cents: number;
+      consumed: boolean;
+      order_id: string | null;
+    }>(
+      `select lines_json, shipping_cents, subtotal_cents, consumed_at is not null as consumed,
+              order_id
+         from checkout_intent where id = $1
+          for update`,
+      [intentId],
+    );
+
     const existing = await client.query<{ id: string }>(
       `select id from "order" where stripe_session_id = $1`,
       [session.id],
@@ -286,14 +400,6 @@ export async function fulfilCheckoutSession(
       return { outcome: "already-recorded" as const, orderId: existing.rows[0]!.id };
     }
 
-    const intent = await client.query<{
-      lines_json: PricedLine[];
-      shipping_cents: number;
-      subtotal_cents: number;
-    }>("select lines_json, shipping_cents, subtotal_cents from checkout_intent where id = $1", [
-      intentId,
-    ]);
-
     const snapshot = intent.rows[0];
 
     if (!snapshot) {
@@ -302,8 +408,46 @@ export async function fulfilCheckoutSession(
       return { outcome: "intent-missing" as const };
     }
 
+    if (snapshot.consumed) {
+      // This cart already became an order, from a different session: two tabs,
+      // two Checkout Sessions, both paid. Not a second order — that would take
+      // the stock again for goods nobody asked for twice — but a payment to
+      // refund, written where the portal shows it: unfulfilled_payment is
+      // exactly "paid, and no order should be made from it". The FIRST order
+      // is flagged `duplicate-payment` as well, so whoever opens it before
+      // shipping sees that its buyer paid twice. Intents consumed before 0011
+      // carry no order_id, and only the row is written.
+      //
+      // Raised ONCE: only when this second payment has not been written down
+      // yet. The reconciler replays every complete session every fifteen
+      // minutes for 72 hours, and raising it on every replay brought the flag
+      // back after the owner had cleared it — as often as they cleared it.
+      // A crash between this commit and the row being written leaves no row,
+      // so the next replay raises it again: never lost, only never repeated.
+      const alreadyRecorded = await client.query(
+        "select 1 from unfulfilled_payment where stripe_session_id = $1",
+        [session.id],
+      );
+
+      if (snapshot.order_id && alreadyRecorded.rows.length === 0) {
+        await client.query(`update "order" set ${raiseFlagSql("$2")} where id = $1`, [
+          snapshot.order_id,
+          "duplicate-payment",
+        ]);
+      }
+      return { outcome: "paid-twice" as const };
+    }
+
     const lines = snapshot.lines_json;
     const orderId = randomUUID();
+
+    const mismatchedAmount = amountMismatch(session, snapshot);
+    if (mismatchedAmount) {
+      console.error(
+        `[guard-theory] amount-mismatch: session ${session.id} ${mismatchedAmount}. ` +
+          "Recorded as Stripe charged it and flagged for the owner.",
+      );
+    }
 
     // Stripe's totals are authoritative — they include the tax it calculated,
     // which we deliberately do not compute ourselves.
@@ -318,10 +462,12 @@ export async function fulfilCheckoutSession(
         id, status, email,
         ship_name, ship_line1, ship_line2, ship_city, ship_state, ship_postal, ship_country,
         phone, subtotal_cents, shipping_cents, tax_cents, total_cents, currency,
-        stripe_session_id, stripe_payment_intent, stripe_mode, flagged_reason
+        stripe_session_id, stripe_payment_intent, stripe_mode, flagged_reason, placed_at
       )
       values ($1, 'new', $2, $3, $4, $5, $6, $7, $8, $9, $10,
-              $11, $12, $13, $14, $15, $16, $17, $18, $19)
+              $11, $12, $13, $14, $15, $16, $17, $18, $19,
+              ${PLACED_AT_SQL})
+      on conflict (stripe_session_id) do nothing
       returning id, number
       `,
       [
@@ -345,23 +491,49 @@ export async function fulfilCheckoutSession(
           ? session.payment_intent
           : (session.payment_intent?.id ?? null),
         mode,
-        options.flagAs ?? null,
+        // Every reason that applies, and the one FLAG_PRECEDENCE ranks highest
+        // wins: a charge that does not match the cart outranks a half-swapped
+        // key, which outranks "recovered by the reconciler".
+        strongestFlag(
+          mismatchedAmount ? "amount-mismatch" : null,
+          mismatch ? "mode-mismatch" : null,
+          options.flagAs ?? null,
+        ),
+        typeof session.created === "number" ? session.created : null,
       ],
     );
 
-    let oversold = false;
+    if (inserted.rows.length === 0) {
+      // Another fulfilment of this session committed the order first. The
+      // intent lock above means this should not be reachable; if it is (an
+      // intent row deleted and recreated, a future path that skips the lock),
+      // the unique index turns it into a replay instead of a 500.
+      const winner = await client.query<{ id: string }>(
+        `select id from "order" where stripe_session_id = $1`,
+        [session.id],
+      );
+      return { outcome: "already-recorded" as const, orderId: winner.rows[0]!.id };
+    }
+
+    // Each line's id is kept so the decrement below can record against it how
+    // many units it actually took (0016): a cancel puts back exactly that, and
+    // an oversold line, which took nothing, puts back nothing.
+    const itemIds = new Map<PricedLine, string>();
 
     for (const line of lines) {
+      const itemId = randomUUID();
+      itemIds.set(line, itemId);
+
       await client.query(
         `
         insert into order_item (
           id, order_id, variant_id, product_name, product_kind,
-          size_label, sku, unit_cents, quantity
+          size_label, sku, unit_cents, quantity, stock_taken
         )
-        values ($1, $2, $3, $4, $5, $6, $7, $8, $9)
+        values ($1, $2, $3, $4, $5, $6, $7, $8, $9, 0)
         `,
         [
-          randomUUID(),
+          itemId,
           orderId,
           line.variantId,
           line.productName,
@@ -372,10 +544,26 @@ export async function fulfilCheckoutSession(
           line.quantity,
         ],
       );
+    }
 
+    // Stock rows are locked in one global order — by variant id — never in
+    // cart order. Two carts naming the same sizes the other way round used to
+    // each lock one row and wait on the other, and Postgres killed one of them
+    // as a deadlock: a 500 on a paid order, and a retry.
+    const byVariant = [...lines].sort((a, b) =>
+      a.variantId < b.variantId ? -1 : a.variantId > b.variantId ? 1 : 0,
+    );
+
+    let oversold = false;
+
+    for (const line of byVariant) {
       const decremented = await decrementStock(client, line.variantId, line.quantity);
 
-      if (!decremented) {
+      if (decremented) {
+        await client.query(`update order_item set stock_taken = quantity where id = $1`, [
+          itemIds.get(line),
+        ]);
+      } else {
         // Payment succeeded after stock hit zero. The order still exists,
         // because money was taken and the buyer is owed either the goods or a
         // refund — and which of those is the owner's judgement, not the code's.
@@ -384,14 +572,20 @@ export async function fulfilCheckoutSession(
     }
 
     if (oversold) {
-      await client.query(`update "order" set flagged_reason = 'oversell' where id = $1`, [orderId]);
+      await client.query(`update "order" set ${raiseFlagSql("$2")} where id = $1`, [
+        orderId,
+        "oversell",
+      ]);
       console.error(
         `[guard-theory] order ${inserted.rows[0]!.number} oversold: paid after stock reached zero. ` +
           "Flagged for manual resolution in the portal.",
       );
     }
 
-    await client.query("update checkout_intent set consumed_at = now() where id = $1", [intentId]);
+    await client.query(
+      "update checkout_intent set consumed_at = now(), order_id = $2 where id = $1",
+      [intentId, orderId],
+    );
 
     // If this session was earlier written down as paid-with-no-order, it has
     // one now.
@@ -411,6 +605,14 @@ export async function fulfilCheckoutSession(
 
   if (result.outcome === "intent-missing") {
     return unfulfilled(session, "intent not found");
+  }
+
+  if (result.outcome === "paid-twice") {
+    return unfulfilled(
+      session,
+      "duplicate payment: this cart was already paid for in another checkout session. " +
+        "Refund this payment.",
+    );
   }
 
   return result;

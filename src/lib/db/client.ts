@@ -38,6 +38,13 @@ export function isDatabaseConfigured(): boolean {
   return databaseUrl() !== undefined;
 }
 
+/** 15s by default; `DATABASE_QUERY_TIMEOUT_MS` overrides, and 0 turns it off. */
+export function queryTimeoutMs(env: NodeJS.ProcessEnv = process.env): number | undefined {
+  const raw = env.DATABASE_QUERY_TIMEOUT_MS?.trim();
+  const value = raw ? Number(raw) : 15_000;
+  return Number.isFinite(value) && value > 0 ? value : undefined;
+}
+
 function getPool(): Pool {
   if (pool) {
     return pool;
@@ -63,6 +70,13 @@ function getPool(): Pool {
     // pooler is what connections are supposed to be handed back to.
     idleTimeoutMillis: Number(process.env.DATABASE_POOL_IDLE_MS ?? 10_000),
     connectionTimeoutMillis: 10_000,
+    // A client-side ceiling on any one query. With `max: 1`, a query that
+    // never returns holds the only connection until the function is killed,
+    // and every other request in that instance queues behind it. On timeout
+    // `pool.query` rejects and discards the client, so the connection goes
+    // with it. Client-side on purpose: `options=-c statement_timeout=...` is a
+    // startup parameter, which Neon's pooled endpoint does not pass through.
+    query_timeout: queryTimeoutMs(),
     // Neon and Vercel Postgres require TLS. A local Postgres in CI does not
     // offer it, and `sslmode=disable` in the URL is how that is said.
     ssl: /sslmode=(disable|allow)/.test(connectionString)
@@ -107,6 +121,10 @@ export async function transaction<T>(
   fn: (client: PoolClient) => Promise<T>,
 ): Promise<T> {
   const client = await getPool().connect();
+  // A client whose ROLLBACK failed — most often because the query before it
+  // timed out and is still running server-side — is not safe to hand to the
+  // next request. Releasing it with the error makes the pool discard it.
+  let broken: Error | undefined;
 
   try {
     await client.query("BEGIN");
@@ -117,6 +135,7 @@ export async function transaction<T>(
     try {
       await client.query("ROLLBACK");
     } catch (rollbackError) {
+      broken = rollbackError instanceof Error ? rollbackError : new Error(String(rollbackError));
       console.error(
         "[guard-theory] rollback failed:",
         rollbackError instanceof Error ? rollbackError.message : rollbackError,
@@ -124,7 +143,7 @@ export async function transaction<T>(
     }
     throw error;
   } finally {
-    client.release();
+    client.release(broken);
   }
 }
 

@@ -22,6 +22,7 @@ type Ground = "ink" | "bone";
 const GROUND = {
   ink: {
     rule: "border-slate/25",
+    surface: "border border-steel-dim bg-ink-raised",
     heading: "text-chalk",
     title: "text-chalk decoration-steel-dim hover:decoration-signal-lift",
     // steel-dim is a hairline colour (2.4:1), never text - see globals.css.
@@ -30,6 +31,7 @@ const GROUND = {
   },
   bone: {
     rule: "border-slate/25",
+    surface: "border border-steel bg-bone-raised",
     heading: "text-ink",
     title: "text-ink decoration-slate/40 hover:decoration-signal-dim",
     label: "text-slate",
@@ -57,10 +59,16 @@ export function CrossLinks({
   links,
   ground = "ink",
   heading = "Elsewhere in Guard Theory",
+  surface = false,
 }: {
   links: ResolvedCrossLink[];
   ground?: Ground;
   heading?: string;
+  /**
+   * Draw the block as a raised surface (facelift 2026-11) rather than under a
+   * hairline: raised fill, hairline border, square corners, on either ground.
+   */
+  surface?: boolean;
 }) {
   if (links.length === 0) return null;
 
@@ -69,7 +77,11 @@ export function CrossLinks({
   return (
     <section
       aria-labelledby="crosslinks"
-      className={`mt-14 border-t ${tone.rule} pt-8`}
+      className={
+        surface
+          ? `mt-14 p-7 md:p-8 ${tone.surface}`
+          : `mt-14 border-t ${tone.rule} pt-8`
+      }
     >
       <h2
         id="crosslinks"

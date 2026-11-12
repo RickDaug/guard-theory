@@ -10,33 +10,44 @@ export const metadata: Metadata = pageMetadata({
   path: "/contact",
 });
 
+/**
+ * A bone sheet with the form on an ink plate.
+ *
+ * The plate is the point: the form's controls, labels, hints and errors are
+ * all tested against the dark surfaces (graphite fill, steel-mid border,
+ * signal-lift ring), so the form keeps its ground and the sheet carries the
+ * reading. Nothing in Field.tsx changes, and the one signal fill in view is
+ * the send button.
+ */
 export default function ContactPage() {
   return (
     <main id="main" tabIndex={-1} className="px-6 py-16 md:px-12">
       <div className="mx-auto max-w-[104rem]">
         <Breadcrumbs trail={[{ href: "/contact", label: "Contact" }]} />
 
-        <div className="mt-10 grid gap-16 lg:grid-cols-12 lg:gap-20">
-          <div className="lg:col-span-5">
-            <h1 className="display-condensed text-4xl text-chalk">Contact</h1>
+        <div className="band-bone band-edge mt-10 px-7 py-14 sm:px-16 sm:py-20">
+          <div className="grid gap-14 lg:grid-cols-12 lg:gap-20">
+            <div className="lg:col-span-5">
+              <h1 className="display-serif text-4xl text-ink">Contact</h1>
 
-            <div className="mt-10 flex max-w-[34rem] flex-col gap-6">
-              <p className="text-lg text-steel">
-                A person reads every message. No ticket number, no chatbot and no
-                automated reply pretending to be one.
-              </p>
+              <div className="mt-10 flex max-w-[34rem] flex-col gap-6">
+                <p className="text-lg text-ink">
+                  A person reads every message. No ticket number, no chatbot and no
+                  automated reply pretending to be one.
+                </p>
 
-              <p className="text-base text-steel">
-                If something on this site does not work for you — a control you
-                cannot reach by keyboard, text you cannot read — that is a bug,
-                and we would rather hear about it than not.
-              </p>
+                <p className="text-base text-ink">
+                  If something on this site does not work for you — a control you
+                  cannot reach by keyboard, text you cannot read — that is a bug,
+                  and we would rather hear about it than not.
+                </p>
+              </div>
             </div>
-          </div>
 
-          <div className="lg:col-span-6 lg:col-start-7">
-            <div className="border border-steel-dim p-7 sm:p-10">
-              <ContactForm />
+            <div className="lg:col-span-7 lg:col-start-6">
+              <div className="band-ink plate-grid corner-ticks p-7 sm:p-12">
+                <ContactForm />
+              </div>
             </div>
           </div>
         </div>

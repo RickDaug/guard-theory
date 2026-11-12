@@ -207,6 +207,53 @@ faster.
 
 ---
 
+## Addendum, November 2026 — the facelift
+
+The owner's call was that the site read as bland, and the diagnosis agreed: one
+ink field on every page, the drawings shown once each, the expanded cut of the
+typeface confined to a 14px wordmark. The premise above did not change. The
+logo, the five colours, the three typefaces and the copy did not change. What
+changed is how much of the system a page actually uses. The working brief is
+`docs/facelift-2026-11.md`; this is what it settled.
+
+**Pages are bands.** "Two grounds" above describes a bone sheet laid on an ink
+page. That still holds for an article or a technique entry. Landing and commerce
+pages now alternate full-width bands — `band-ink`, `band-bone`, occasionally
+`band-graphite` — so a page scrolls as a sequence of plates and sheets. Each
+utility sets ground, text colour and focus ring together, so a band is always a
+contrast-tested pair rather than a `bg-*` and a `text-*` composed by hand.
+
+**Chalk is body text on ink.** `steel` is for captions, counts and metadata. The
+old pages set paragraphs in steel, which made every one a mid-contrast wall.
+
+**The drawings are the imagery.** Every product card carries its flat on a small
+plate, and hover or focus draws the callouts in. A plate on a bone band is
+wrapped in `plate-on-paper`, which remaps its strokes for paper. The system
+map's geometry sits faint behind the home hero and the footer, `aria-hidden`.
+
+**The type contrast is visible.** `display-wide` (wdth 125) carries short
+statements — a band title, the footer's name — beside condensed headings.
+`eyebrow` is a sans label; Martian Mono went back to plate chrome, keys,
+specification tables and data. Library and Journal titles are set in Newsreader
+at display size (`display-serif`), so the study register looks like study.
+
+**Surfaces and motion.** Cards are raised surfaces with a hairline and a 2px
+lift, corner radius still 0. `reveal`, `link-rule` and `plate-draw` use the same
+two durations and one curve as before.
+
+**What integration found.** `npm run cls` failed the new home page at 0.1303,
+five runs out of five. Three boxes changed height when the fonts arrived: the
+hero headline, which wrapped to seven lines in the fallback face and four in
+Archivo; the hero's two links; and the category and difficulty line on a
+technique entry. None was a font-metric problem. Each was a wrap point, and the
+fixes take the decision away from glyph width: the headline is sized from its
+column (`16cqi`, a 6.25em budget against a longest line of 5.26em in Archivo
+and 6.04em in the fallback), and the two rows stack below `sm` instead of using
+`flex-wrap`. Home now measures 0.0022. A `flex-wrap` row holding text in two
+faces is the same latent bug as the long `notation` label in `AGENTS.md`.
+
+---
+
 ## What the design is measured against
 
 Not asserted — enforced:
@@ -220,8 +267,10 @@ Not asserted — enforced:
   let `signal` be listed as a text colour at all.
 - 21 routes pass axe with zero WCAG 2.2 A/AA violations.
 - Lighthouse on the production build: accessibility 100, best practices 100 and
-  SEO 100 on all six audited routes. Performance is 89–91, against a threshold of
-  90 — `figures` sits one point under, reproducibly. Measured against a
+  SEO 100 on every audited route (eight since the facelift; the cart and search
+  are noindex and not scored for SEO). Performance is 89–91, against a threshold
+  of 90 — after the facelift `home`, `product`, `shop` and `figures` sit one
+  point under on a five-run median. Measured against a
   same-session baseline the new identity costs about a point: the mark is a
   faithful trace rather than three geometric primitives, so it is 5.7kB of path
   data instead of 300 bytes, and the icon set it needs is larger than the one it
@@ -230,7 +279,7 @@ Not asserted — enforced:
   bought back in `fonts.ts` or not at all, and this project has already spent
   four rewrites there learning not to chase the model.
 - Layout stability is measured in a real browser rather than modelled:
-  `npm run cls` reports 0.0022–0.0362 across four routes, all "good". That
+  `npm run cls` reports 0.0022–0.0133 across four routes, all "good". That
   instrument caught a 0.1787 failure on the product page during this work, and
   `npm run cls:why` named the element responsible.
 - Screenshots at four breakpoints are committed to `docs/screenshots/` and

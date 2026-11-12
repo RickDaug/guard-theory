@@ -12,6 +12,7 @@ import type { PublishedArticle } from "../types.ts";
 export const theGuillotineFromTheFrontHeadlock: PublishedArticle = {
   status: "published",
   publishedAt: "2026-08-04",
+  updatedAt: "2026-09-29",
   authorId: "guard-theory-editorial",
   slug: "the-guillotine-from-the-front-headlock",
   category: "technique-notes",
@@ -26,7 +27,7 @@ export const theGuillotineFromTheFrontHeadlock: PublishedArticle = {
       heading: "The front headlock is a position, not an attack",
       paragraphs: [
         "Somebody shoots, you sprawl, and their head ends up under your chest with your arm around their neck. That is a position, and it has its own economy. From there you can circle behind, you can attack the arm, you can hold them there and make them carry your weight, or you can attack the neck.",
-        "The guillotine is one exit from that position and not the position itself. This distinction is worth insisting on because it is where most guillotines are lost. A person who treats the front headlock as a guillotine that has not happened yet will grip the neck immediately, commit both arms, and give away every other option in the position. A person who treats it as a control will take the neck when the neck is available and hold the position when it is not.",
+        "The guillotine is one exit from that position and not the position itself. This distinction is worth insisting on because it is where many guillotines are lost. A person who treats the front headlock as a guillotine that has not happened yet will grip the neck immediately, commit both arms, and give away every other option in the position. A person who treats it as a control will take the neck when the neck is available and hold the position when it is not.",
         "The rest of this article is about the version taken from that position. Guillotines from closed guard, from standing, and as counters to a takedown share mechanics with it, but they set different problems and this piece does not cover them.",
       ],
     },
@@ -37,7 +38,7 @@ export const theGuillotineFromTheFrontHeadlock: PublishedArticle = {
         "The difference is what sits inside the loop. In an arm-out guillotine your arms enclose the head and the neck alone. In an arm-in guillotine one of the opponent's arms is inside with the head, and the structure closes around both.",
         "Coaching material usually presents this as a choice between two variations with different finishing mechanics, and mechanically that is true. What is easy to miss is that at least one governing body treats it as a difference in kind. United World Wrestling's grappling rules list guillotines among the techniques not permitted in the under-13 and under-15 categories, and then make an exception in the same clause: except arm-in guillotine. Straight foot locks are excepted from the foot lock restriction in the same sentence, and calf slicers, bicep slicers and knee bars are excluded outright.",
         "A rule written that way says something a coaching preference cannot. Somebody drafting age restrictions for a world governing body decided that the arm-in version was the one that could be permitted to junior competitors and the arm-out version was not. That is a stronger statement about the arm than any argument about which one finishes more often, and it is the reason this article puts the distinction first.",
-        "It also gives beginners a default. If you are learning this and nobody has told you otherwise, learn the arm-in version first, and treat the arm-out version as something to add later under supervision.",
+        "It also gives beginners a default. If you are learning this and nobody has told you otherwise, learn the arm-in version first, because that is the version the one junior ruleset cited here permits, and add the arm-out version when your coach does.",
       ],
     },
     {
@@ -47,7 +48,7 @@ export const theGuillotineFromTheFrontHeadlock: PublishedArticle = {
         "The arms close the structure. They do not finish it. That sentence covers most of what goes wrong with this technique in a live round.",
         "The mechanism is a separation: the head is held at one end, the body is driven away from it at the other, and the distance between the two increases. The arms cannot produce that separation because they are already occupied holding the head. What produces it is the hips coming forward, or the body extending, or in the standing versions the attacker walking their hips through while the head stays where it is.",
         "The most common failure follows directly. The attacker gets the grip, feels resistance, and pulls harder with the arms, which shortens their own structure and brings their chest toward the head they are trying to move away from. The grip gets tighter and the technique gets worse. Meanwhile the arms fatigue quickly, and a guillotine held with tired arms is a guillotine about to be defended.",
-        "The diagnostic is your own posture. If your elbows are flaring out and your chest is curling down toward their head, you are pulling. If your hips have come forward and your chest has come up, the separation is happening. When a guillotine stalls, the useful adjustment is almost always at the hips, sometimes at the angle, and almost never at the hands.",
+        "The diagnostic is your own posture. If your elbows are flaring out and your chest is curling down toward their head, you are pulling. If your hips have come forward and your chest has come up, the separation is happening. When a guillotine stalls, the useful adjustment is usually at the hips, sometimes at the angle, and rarely at the hands.",
       ],
     },
     {
@@ -76,7 +77,8 @@ export const theGuillotineFromTheFrontHeadlock: PublishedArticle = {
       paragraphs: [
         "There is no published comparison of arm-in and arm-out finishing rates, no measurement of how often a front headlock produces a guillotine rather than a back take, and no data on where the position sits in the economy of a match.",
         "The nearest useful evidence is about a category rather than a technique. Spanias, Kirk and Ovretveit, coding 26 no-gi submission-only matches, found that time in dominant positions correlated with winning by upper-body submissions and did not correlate with winning by lower-body ones. A front headlock is not a dominant position under any of the scoring tables cited in this article, which is a mild reason to treat the guillotine as something you take when it appears rather than something you build a game around. That is an inference from a small sample and it is offered as one.",
-        "What stands without evidence is the mechanical account, because it does not require any. The arms hold, the hips separate, the arm inside the loop changes what the structure is, and the crank line is written in three rule books in nearly the same words. Everything else about this technique is a matter of preference, and preferences do not need citations as long as they are not printed as facts.",
+        "What stands without evidence is the mechanical account, because it does not require any. The arms hold, the hips separate, the arm inside the loop changes what the structure is, and the crank line is written into three rule books, in different words and in slightly different places. Everything else about this technique is a matter of preference, and preferences do not need citations as long as they are not printed as facts.",
+        "Correction, 29 September 2026: an earlier version of this article said three rule books draw the crank line in nearly the same words. They use different words, and ADCC permits the can opener that United World Wrestling prohibits, as the section above sets out. Several frequency claims have also been softened. It also cited the August 2025 text of the Unified Rules of MMA, since amended on 5 August 2026; the clause quoted here is unchanged.",
       ],
     },
   ],
@@ -104,10 +106,10 @@ export const theGuillotineFromTheFrontHeadlock: PublishedArticle = {
     },
     {
       title:
-        "Unified Rules of Mixed Martial Arts, August 2025: foul 6, spiking an opponent onto the head or neck, and the clause on elevating an opponent who is attempting a submission",
+        "Unified Rules of Mixed Martial Arts, as amended 5 August 2026: foul 6, spiking an opponent onto the head or neck, and the clause on elevating an opponent who is attempting a submission (unchanged from the 2025 text)",
       publisher: "Association of Boxing Commissions and Combative Sports",
-      url: "https://www.abcboxing.com/wp-content/uploads/2025/08/Unified-Rules-of-MMA-8.2025.pdf",
-      accessed: "2026-08-04",
+      url: "https://www.abcboxing.com/wp-content/uploads/2026/08/Unified-Rules-of-MMA-8.2026.pdf",
+      accessed: "2026-09-29",
     },
     {
       title:

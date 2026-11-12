@@ -1,7 +1,7 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
-import { requireSession } from "@/lib/portal/session";
+import { requireRole } from "@/lib/portal/session";
 import { query } from "@/lib/db/client";
 import {
   transitionOrder,
@@ -9,12 +9,19 @@ import {
   getOrderItems,
   toEmailShape,
   resolveUnfulfilledPayment,
+  saveTracking,
+  STATUS_LABEL,
 } from "@/lib/orders/manage";
+import { recordOrderEvent } from "@/lib/orders/events";
 import type { OrderStatus } from "@/lib/orders/manage";
 import { refundOrder } from "@/lib/orders/refund";
+import { cancelOrder } from "@/lib/orders/cancel";
+import { describeRestock, restockReturn, type RestockOutcome } from "@/lib/orders/restock";
 import { reconcileStripeSessions, recordReconcileRun } from "@/lib/orders/reconcile";
-import { sendEmail } from "@/lib/mail";
+import { getMailProvider, sendEmail } from "@/lib/mail";
+import { resendOutcome } from "@/lib/portal/email-status";
 import {
+  orderCancelled,
   orderConfirmation,
   orderInProcess,
   orderShipped,
@@ -25,9 +32,17 @@ import {
   isShippoConfigured,
   refreshLabelUrl,
   ShippoError,
+  shippoMode,
 } from "@/lib/shipping/shippo";
-import { claimLabelPurchase, releaseLabelClaim } from "@/lib/orders/label";
+import {
+  claimLabelPurchase,
+  labelRefusal,
+  recordBoughtLabel,
+  releaseLabelClaim,
+} from "@/lib/orders/label";
+import { orderParcelWeight, weightWarning } from "@/lib/shipping/weight";
 import type { PortalFormState } from "@/lib/portal/form-state";
+import { formatMoney } from "@/lib/money";
 
 /** Every action authorises itself. A proxy matcher is not a boundary for these. */
 
@@ -47,7 +62,7 @@ export async function advanceOrder(
   _previous: PortalFormState,
   formData: FormData,
 ): Promise<PortalFormState> {
-  await requireSession();
+  const actor = await requireRole("crew");
 
   const id = text(formData, "id");
   const to = text(formData, "to") as OrderStatus;
@@ -62,6 +77,7 @@ export async function advanceOrder(
     return { status: "error", message: result.reason };
   }
 
+  await recordOrderEvent(id, "status_changed", actor, `to ${STATUS_LABEL[to]}`);
   revalidateOrders(id);
 
   return {
@@ -72,12 +88,140 @@ export async function advanceOrder(
   };
 }
 
+/**
+ * The ticks on a return: `restock:<order_item id>` = how many go back. Only
+ * positive whole numbers are kept; the library caps each at what is left.
+ */
+function restockTicks(formData: FormData): Map<string, number> {
+  const ticks = new Map<string, number>();
+
+  for (const [key, value] of formData.entries()) {
+    if (!key.startsWith("restock:") || typeof value !== "string") continue;
+    const itemId = key.slice("restock:".length);
+    if (!/^[A-Za-z0-9-]{1,64}$/.test(itemId) || !/^\d{1,4}$/.test(value.trim())) continue;
+    const count = Number(value.trim());
+    if (count > 0) ticks.set(itemId, count);
+  }
+
+  return ticks;
+}
+
+/** The stock half of a success message, or nothing when no stock moved. */
+function restockSentence(restock: RestockOutcome | null, failed: boolean): string {
+  if (failed) {
+    return " The stock could not be updated, so set it by hand in Products.";
+  }
+
+  if (!restock) return "";
+
+  const parts: string[] = [];
+
+  if (restock.restocked.length > 0) {
+    parts.push(` Back in stock: ${describeRestock(restock.restocked)}.`);
+  }
+
+  if (restock.orphaned.length > 0) {
+    parts.push(
+      ` Not put back, because that size no longer exists in Products: ${describeRestock(restock.orphaned)}.`,
+    );
+  }
+
+  return parts.join("");
+}
+
+/**
+ * Cancel and refund, as one action (src/lib/orders/cancel.ts). If the refund
+ * does not go through, nothing is cancelled and the reason is shown.
+ */
+export async function cancelAndRefund(
+  _previous: PortalFormState,
+  formData: FormData,
+): Promise<PortalFormState> {
+  const actor = await requireRole("owner");
+
+  const id = text(formData, "id");
+
+  if (!id || id.length > 64) {
+    return { status: "error", message: "That order could not be identified." };
+  }
+
+  const result = await cancelOrder(id);
+
+  if (!result.ok) {
+    return { status: "error", message: result.reason };
+  }
+
+  revalidateOrders(id);
+
+  const order = await getOrder(id);
+  await recordOrderEvent(
+    id,
+    "cancelled",
+    actor,
+    result.refundedCents > 0 && order ? `${formatMoney(result.refundedCents, order.currency)} refunded` : null,
+  );
+  const money = result.chargeback
+    ? "Cancelled. Nothing was refunded: the buyer's bank already returned the payment through the lost chargeback."
+    : result.refundedCents > 0 && order
+      ? `Cancelled, and ${formatMoney(result.refundedCents, order.currency)} refunded to the card it came from.`
+      : "Cancelled. It had already been refunded in full.";
+  const label = result.hasLabel
+    ? " This order has a label: void it in Shippo to get the postage back."
+    : "";
+  const mail = result.emailed
+    ? " The customer has been told."
+    : " The email did not send — there is a Send again button under Messages.";
+
+  return {
+    status: "success",
+    message: `${money}${restockSentence(result.restock, result.restockFailed)}${label}${mail}`,
+  };
+}
+
+/** A return arrived after the order was already refunded in full. */
+export async function restockReturned(
+  _previous: PortalFormState,
+  formData: FormData,
+): Promise<PortalFormState> {
+  const actor = await requireRole("owner");
+
+  const id = text(formData, "id");
+
+  if (!id || id.length > 64) {
+    return { status: "error", message: "That order could not be identified." };
+  }
+
+  const ticks = restockTicks(formData);
+
+  if (ticks.size === 0) {
+    return { status: "error", message: "Tick what came back and is fit to sell again." };
+  }
+
+  const result = await restockReturn(id, ticks);
+
+  if (!result.ok) {
+    return { status: "error", message: result.reason };
+  }
+
+  if (result.restock.restocked.length > 0) {
+    await recordOrderEvent(id, "restocked", actor, describeRestock(result.restock.restocked));
+  }
+  revalidateOrders(id);
+
+  const sentence = restockSentence(result.restock, false).trim();
+
+  return {
+    status: "success",
+    message: sentence || "Nothing was put back. Those items are already back in stock.",
+  };
+}
+
 /** A paid-with-no-order row has been dealt with by hand. */
 export async function resolveUnfulfilled(
   _previous: PortalFormState,
   formData: FormData,
 ): Promise<PortalFormState> {
-  await requireSession();
+  await requireRole("owner");
 
   const id = text(formData, "id");
 
@@ -85,6 +229,7 @@ export async function resolveUnfulfilled(
     return { status: "error", message: "That payment could not be identified." };
   }
 
+  // Not an order: a payment with no order behind it, so no order history.
   const done = await resolveUnfulfilledPayment(id);
   revalidateOrders();
 
@@ -95,7 +240,7 @@ export async function resolveUnfulfilled(
 
 /** A person has looked in Shippo and there is no label: the order may be tried again. */
 export async function releaseLabel(formData: FormData): Promise<void> {
-  await requireSession();
+  const actor = await requireRole("crew");
 
   const id = text(formData, "id");
 
@@ -104,6 +249,7 @@ export async function releaseLabel(formData: FormData): Promise<void> {
   }
 
   await releaseLabelClaim(id);
+  await recordOrderEvent(id, "label_released", actor);
   revalidateOrders(id);
 }
 
@@ -112,7 +258,7 @@ export async function setTracking(
   _previous: PortalFormState,
   formData: FormData,
 ): Promise<PortalFormState> {
-  await requireSession();
+  const actor = await requireRole("crew");
 
   const id = text(formData, "id");
   const number = text(formData, "trackingNumber");
@@ -123,7 +269,7 @@ export async function setTracking(
   }
 
   if (!number) {
-    return { status: "error", message: "Enter the tracking number." };
+    return { status: "error", message: "Enter the tracking number.", field: "trackingNumber" };
   }
 
   // This string goes into an email and into a carrier URL. Carriers use
@@ -132,15 +278,12 @@ export async function setTracking(
     return {
       status: "error",
       message: "That does not look like a tracking number. Letters and digits only, 6 to 40 of them.",
+      field: "trackingNumber",
     };
   }
 
   if (!/^[A-Za-z0-9 .&-]{2,30}$/.test(carrier)) {
-    return { status: "error", message: "Write the carrier as a short name, like USPS or UPS." };
-  }
-
-  if (!(await getOrder(id))) {
-    return { status: "error", message: "That order no longer exists." };
+    return { status: "error", message: "Write the carrier as a short name, like USPS or UPS.", field: "trackingCarrier" };
   }
 
   const url =
@@ -148,11 +291,13 @@ export async function setTracking(
       ? `https://tools.usps.com/go/TrackConfirmAction?tLabels=${encodeURIComponent(number)}`
       : null;
 
-  await query(
-    `update "order" set tracking_number = $2, tracking_carrier = $3, tracking_url = $4 where id = $1`,
-    [id, number, carrier, url],
-  );
+  const saved = await saveTracking(id, { number, carrier, url });
 
+  if (!saved.ok) {
+    return { status: "error", message: saved.reason };
+  }
+
+  await recordOrderEvent(id, "tracking_set", actor, `${carrier} ${number}`);
   revalidateOrders(id);
   return { status: "success", message: "Tracking saved. You can mark this shipped now." };
 }
@@ -161,7 +306,7 @@ export async function issueRefund(
   _previous: PortalFormState,
   formData: FormData,
 ): Promise<PortalFormState> {
-  await requireSession();
+  const actor = await requireRole("owner");
 
   const id = text(formData, "id");
   const raw = text(formData, "amount");
@@ -176,7 +321,7 @@ export async function issueRefund(
     const cleaned = raw.replace(/[$,\s]/g, "");
 
     if (!/^\d+(\.\d{1,2})?$/.test(cleaned)) {
-      return { status: "error", message: "Write the amount as a number, like 20 or 20.00." };
+      return { status: "error", message: "Write the amount as a number, like 20 or 20.00.", field: "amount" };
     }
 
     const [whole, fraction = ""] = cleaned.split(".");
@@ -185,7 +330,7 @@ export async function issueRefund(
     // "99999999999999999999" passes the pattern and is not a number of cents
     // any more: past 2^53 the arithmetic above has already rounded it.
     if (!Number.isSafeInteger(amountCents) || amountCents <= 0) {
-      return { status: "error", message: "Enter an amount greater than zero." };
+      return { status: "error", message: "Enter an amount greater than zero.", field: "amount" };
     }
   }
 
@@ -193,20 +338,37 @@ export async function issueRefund(
   const seen = text(formData, "refundedCents");
   const expectedRefundedCents = /^\d{1,12}$/.test(seen) ? Number(seen) : undefined;
 
-  const result = await refundOrder(id, amountCents, { expectedRefundedCents });
+  const ticks = restockTicks(formData);
+
+  const result = await refundOrder(id, amountCents, {
+    expectedRefundedCents,
+    ...(ticks.size > 0 ? { restock: ticks } : {}),
+  });
 
   if (!result.ok) {
     return { status: "error", message: result.reason };
   }
 
+  const refunded = await getOrder(id);
+  await recordOrderEvent(
+    id,
+    "refunded",
+    actor,
+    // refundedCents is the order's running total, so that is what is said.
+    result.status === "full"
+      ? "in full"
+      : `${refunded ? formatMoney(result.refundedCents, refunded.currency) : `${result.refundedCents} cents`} refunded so far`,
+  );
   revalidateOrders(id);
+
+  const money =
+    result.status === "full"
+      ? "Refunded in full. The money goes back to the card it came from."
+      : "Partly refunded. The money goes back to the card it came from.";
 
   return {
     status: "success",
-    message:
-      result.status === "full"
-        ? "Refunded in full. The money goes back to the card it came from."
-        : "Partly refunded. The money goes back to the card it came from.",
+    message: `${money}${restockSentence(result.restock, result.restockFailed)}`,
   };
 }
 
@@ -215,7 +377,7 @@ export async function resendEmail(
   _previous: PortalFormState,
   formData: FormData,
 ): Promise<PortalFormState> {
-  await requireSession();
+  const actor = await requireRole("crew");
 
   const id = text(formData, "id");
   const template = text(formData, "template");
@@ -245,25 +407,47 @@ export async function resendEmail(
       }),
       order.id,
     );
+  } else if (template === "order-cancelled") {
+    if (order.status !== "cancelled") {
+      return { status: "error", message: "This order is not cancelled." };
+    }
+    // Resent as a record of where the money stands: everything has been
+    // refunded, and none of it by this message.
+    sent = await sendEmail(
+      "order-cancelled",
+      orderCancelled(shape, {
+        refundedCents: 0,
+        earlierRefundCents: order.refunded_cents,
+        chargeback: order.dispute_status === "lost",
+      }),
+      order.id,
+    );
   } else {
     return { status: "error", message: "That is not a message this order sends." };
   }
 
+  await recordOrderEvent(order.id, "email_resent", actor, template);
   revalidateOrders(order.id);
 
-  return sent
-    ? { status: "success", message: "Sent." }
-    : { status: "error", message: "It did not send. The reason is on the order, under Messages." };
+  // sendEmail reports true for the log-only provider as well, so "Sent." is
+  // only said when a provider that delivers is connected.
+  return resendOutcome(sent, getMailProvider().delivers);
 }
 
 /** Clears a flag once the owner has dealt with whatever it was for. */
 export async function clearFlag(formData: FormData): Promise<void> {
-  await requireSession();
+  const actor = await requireRole("owner");
 
   const id = text(formData, "id");
 
   if (id) {
-    await query(`update "order" set flagged_reason = null where id = $1`, [id]);
+    const cleared = await query<{ id: string }>(
+      `update "order" set flagged_reason = null where id = $1 and flagged_reason is not null returning id`,
+      [id],
+    );
+    if (cleared.length > 0) {
+      await recordOrderEvent(id, "flag_cleared", actor);
+    }
     revalidateOrders(id);
   }
 }
@@ -272,7 +456,7 @@ export async function runReconcile(
   _previous: PortalFormState,
   _formData: FormData,
 ): Promise<PortalFormState> {
-  await requireSession();
+  await requireRole("owner");
 
   const report = await reconcileStripeSessions();
   await recordReconcileRun(report).catch(() => {});
@@ -308,7 +492,7 @@ export async function buyLabel(
   _previous: PortalFormState,
   formData: FormData,
 ): Promise<PortalFormState> {
-  await requireSession();
+  const actor = await requireRole("crew");
 
   const id = text(formData, "id");
 
@@ -329,6 +513,14 @@ export async function buyLabel(
     return { status: "error", message: "That order no longer exists." };
   }
 
+  // Before anything is claimed or bought: the wrong mode, or an order that is
+  // not going anywhere, spends money on a label nobody will use.
+  const refusal = labelRefusal(order, shippoMode());
+
+  if (refusal) {
+    return { status: "error", message: refusal };
+  }
+
   // Buying a second label for the same parcel is real money and two barcodes
   // on one box. The claim is one atomic UPDATE, taken BEFORE Shippo is called:
   // of two simultaneous clicks, exactly one gets past this line.
@@ -339,6 +531,8 @@ export async function buyLabel(
       gone: "That order no longer exists.",
       "has-tracking":
         "This order already has a tracking number. Clear it first if the label was wrong.",
+      "not-shippable":
+        "This order is not waiting to ship any more — it was cancelled, refunded in full, had its stock put back, or has a chargeback against it. No label was bought. Reload to see why.",
       "in-progress": "A label is already being bought for this order. Give it a moment, then reload.",
       abandoned:
         "A label purchase for this order was started and never finished, so it may have gone through. " +
@@ -349,6 +543,21 @@ export async function buyLabel(
   }
 
   let label;
+  let weight;
+
+  try {
+    // Summed from the sizes' weights; the fixed weight, and a sentence saying
+    // so, when any line has none. Read inside the try: a failure here is
+    // before Shippo, so the claim is released below like any refusal.
+    weight = await orderParcelWeight(order.id);
+  } catch (error) {
+    console.error(
+      "[guard-theory] could not read the parcel weight:",
+      error instanceof Error ? error.message : error,
+    );
+    await releaseLabelClaim(order.id).catch(() => {});
+    return { status: "error", message: "We could not read this order's weights. Nothing has been bought." };
+  }
 
   try {
     label = await buyUspsLabel(
@@ -364,6 +573,7 @@ export async function buyLabel(
         email: order.email,
       },
       order.id,
+      weight.weightOz,
     );
   } catch (error) {
     console.error(
@@ -385,32 +595,28 @@ export async function buyLabel(
     };
   }
 
-  await query(
-    `update "order"
-        set tracking_number = $2, tracking_carrier = $3, tracking_url = $4,
-            label_url = $5, shippo_transaction_id = $6
-      where id = $1`,
-    [
-      order.id,
-      label.trackingNumber,
-      label.carrier,
-      label.trackingUrl,
-      label.labelUrl,
-      label.transactionId,
-    ],
-  );
+  // Paid for from here on. A failed save keeps the claim and says what was bought.
+  const saved = await recordBoughtLabel(order.id, label);
 
   revalidateOrders(order.id);
 
+  if (!saved.ok) {
+    return { status: "error", message: saved.message };
+  }
+
+  await recordOrderEvent(order.id, "label_bought", actor, `${label.amount} ${label.currency}`);
+
   return {
     status: "success",
-    message: `Label bought, ${label.amount} ${label.currency}. Print it, then mark this shipped.`,
+    message: weight.measured
+      ? `Label bought for ${weight.weightOz} oz, ${label.amount} ${label.currency}. Print it, then mark this shipped.`
+      : `Label bought, ${label.amount} ${label.currency}. ${weightWarning(weight)} Print it, then mark this shipped.`,
   };
 }
 
 /** A freshly-signed link to the label PDF, because the stored one expires. */
 export async function labelLink(formData: FormData): Promise<void> {
-  await requireSession();
+  await requireRole("crew");
 
   const id = text(formData, "id");
   const order = id ? await getOrder(id) : undefined;

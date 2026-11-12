@@ -3,7 +3,7 @@ import type { TechniqueEntry } from "../types.ts";
 export const gettingHipsUnderneath: TechniqueEntry = {
   slug: "getting-hips-underneath",
   category: "guard-retention",
-  title: "Getting the hips back underneath",
+  title: "Guard retention: the hips back underneath",
   summary:
     "Guard is recovered by moving your hips back under the opponent's centre of mass, and most retention failures are the moment your hips stopped travelling and your legs started reaching.",
   metaDescription:

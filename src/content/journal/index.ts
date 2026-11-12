@@ -35,6 +35,14 @@ import { maximumEfficiencyAndMutualWelfare } from "./entries/maximum-efficiency-
 import { sportOrSelfDefenceAndWhatJiuJitsuIsFor } from "./entries/sport-or-self-defence-and-what-jiu-jitsu-is-for.ts";
 import { theSixTiesANoGiBeginnerNeedsNamesFor } from "./entries/the-six-ties-a-no-gi-beginner-needs-names-for.ts";
 import { theTechnicalStandUp } from "./entries/the-technical-stand-up.ts";
+import { beginnersMindAndTheWhiteBelt } from "./entries/beginners-mind-and-the-white-belt.ts";
+import { flowAndTheTwoThingsTheWordMeans } from "./entries/flow-and-the-two-things-the-word-means.ts";
+import { humanChessAndWhatTheComparisonGetsRight } from "./entries/human-chess-and-what-the-comparison-gets-right.ts";
+import { lineageAndWhyJiuJitsuAsksWhoTaughtYou } from "./entries/lineage-and-why-jiu-jitsu-asks-who-taught-you.ts";
+import { ossProfessorAndTheBow } from "./entries/oss-professor-and-the-bow.ts";
+import { sweepSubmitOrStand } from "./entries/sweep-submit-or-stand.ts";
+import { takedownOrGuardPull } from "./entries/takedown-or-guard-pull.ts";
+import { whatCountsAsAPin } from "./entries/what-counts-as-a-pin.ts";
 import { whySportJiuJitsuDoesNotTransferDirectlyToMma } from "./entries/why-sport-jiu-jitsu-does-not-transfer-directly-to-mma.ts";
 
 /**
@@ -78,6 +86,14 @@ export const ARTICLES: Article[] = [
   sportOrSelfDefenceAndWhatJiuJitsuIsFor,
   theSixTiesANoGiBeginnerNeedsNamesFor,
   theTechnicalStandUp,
+  beginnersMindAndTheWhiteBelt,
+  flowAndTheTwoThingsTheWordMeans,
+  humanChessAndWhatTheComparisonGetsRight,
+  lineageAndWhyJiuJitsuAsksWhoTaughtYou,
+  ossProfessorAndTheBow,
+  sweepSubmitOrStand,
+  takedownOrGuardPull,
+  whatCountsAsAPin,
 ];
 
 const BY_SLUG = new Map(ARTICLES.map((article) => [article.slug, article]));

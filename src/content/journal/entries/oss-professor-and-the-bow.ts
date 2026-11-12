@@ -1,4 +1,4 @@
-import type { DraftArticle } from "../types.ts";
+import type { PublishedArticle } from "../types.ts";
 
 /**
  * A foundational culture piece on three customs a newcomer meets and nobody
@@ -34,8 +34,10 @@ import type { DraftArticle } from "../types.ts";
  * Draft: no one has read and signed off this piece, so it carries no byline
  * and no date.
  */
-export const ossProfessorAndTheBow: DraftArticle = {
-  status: "draft",
+export const ossProfessorAndTheBow: PublishedArticle = {
+  status: "published",
+  publishedAt: "2026-11-11",
+  authorId: "guard-theory-editorial",
   slug: "oss-professor-and-the-bow",
   category: "training-culture",
   title: "Oss, professor and the bow",

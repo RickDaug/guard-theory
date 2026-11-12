@@ -1,4 +1,4 @@
-import type { DraftArticle } from "../types.ts";
+import type { PublishedArticle } from "../types.ts";
 
 /**
  * The beginner-question piece. Search demand puts the belt system and the
@@ -24,8 +24,10 @@ import type { DraftArticle } from "../types.ts";
  * editorial" byline (authorId "guard-theory-editorial"; owner, 2026-09-29),
  * once a person has reviewed them.
  */
-export const howLongToBlueBeltAndOtherFirstWeekQuestions: DraftArticle = {
-  status: "draft",
+export const howLongToBlueBeltAndOtherFirstWeekQuestions: PublishedArticle = {
+  status: "published",
+  publishedAt: "2026-11-11",
+  authorId: "guard-theory-editorial",
   slug: "how-long-to-blue-belt-and-other-first-week-questions",
   category: "training-culture",
   title:

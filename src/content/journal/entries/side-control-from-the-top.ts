@@ -1,4 +1,4 @@
-import type { DraftArticle } from "../types.ts";
+import type { PublishedArticle } from "../types.ts";
 
 /**
  * A foundational technique note: the top player's side of a position the site
@@ -28,8 +28,10 @@ import type { DraftArticle } from "../types.ts";
  *
  * Draft: no author has read this piece, so it carries no byline and no date.
  */
-export const sideControlFromTheTop: DraftArticle = {
-  status: "draft",
+export const sideControlFromTheTop: PublishedArticle = {
+  status: "published",
+  publishedAt: "2026-11-11",
+  authorId: "guard-theory-editorial",
   slug: "side-control-from-the-top",
   category: "technique-notes",
   title: "Side control from the top",

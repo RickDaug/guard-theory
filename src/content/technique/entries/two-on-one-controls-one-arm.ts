@@ -50,6 +50,6 @@ export const twoOnOneControlsOneArm: TechniqueEntry = {
       "Fact audit, assisted (Claude Code agent), 2026-09-29: two-point arm control, Russian-tie naming and weight-shift branches confirmed; REVISE (2), fixes applied: grip-escape line corrected to the thumb-finger opening of the wrist grip; seated hip direction removed as frame-ambiguous in the key mechanic and the seated drill (coach to confirm if a side is ever stated). Fact re-check, assisted (Claude Code agent), 2026-10-06: the sources found (Fanatic Wrestling's two-on-one and Georgi Ivanov articles, Digitsu's Russian Tie page) use Russian tie as another name for the two-on-one, not for a tighter form of it, so 'in its tighter wrestling form' became 'in wrestling'; the tighter grip is still described as mechanics.",
     voiceAudit:
       "Voice audit, assisted (Claude Code agent), 2026-09-29: mechanics clean (title 43, meta 153); REVISE (2), fixes applied: title moved off the 'X: phrase' template to 'The two-on-one trades two hands for one arm', and the safety opener no longer repeats no-gi-grips-are-on-a-timer's 'two hands on one arm' line; 'The cost is plain:' colon reveal cut; the arm-drag entry's 'standing, from a seated guard and from butterfly' list reworded.",
-    approvedBy: null,
+    approvedBy: { name: "Rick D.", date: "2026-11-11" },
   },
 };

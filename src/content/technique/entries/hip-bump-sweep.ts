@@ -56,6 +56,6 @@ export const hipBumpSweep: TechniqueEntry = {
       "Fact audit, assisted (Claude Code agent), 2026-09-29: post, overwrap, diagonal toward the wrapped arm and mount finish confirmed and consistent with closed-guard-attacks-share-one-angle; kimura and guillotine branches confirmed; 'base is widest' claim and mixed direction frame corrected in coreConcept and commonErrors ('straight back ... both knees catch it'). Fact re-check, assisted (Claude Code agent), 2026-10-06: 'sit-up sweep' sourced to Digitsu's Hip Bump Sweep page, which also lists the guillotine and kimura follow-ups when the top player drives forward; no other naming, ruleset or historical claims; no changes.",
     voiceAudit:
       "Voice audit, assisted (Claude Code agent), 2026-09-29: mechanics clean (title 38, meta 158); POS closer that coreConcept restated cut; 'each defence moves them into the next attack' (a batch-1 closed-guard line) cut; 'nothing depends on cloth' lead-in dropped; 'some gyms' and 'many coaches' naming cut; two load-shaped safety sentences and the live-rounds step varied.",
-    approvedBy: null,
+    approvedBy: { name: "Rick D.", date: "2026-11-11" },
   },
 };

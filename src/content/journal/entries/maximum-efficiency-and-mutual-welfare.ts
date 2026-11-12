@@ -1,4 +1,4 @@
-import type { DraftArticle } from "../types.ts";
+import type { PublishedArticle } from "../types.ts";
 
 /**
  * A philosophy piece on judo's two stated principles and what Brazilian
@@ -27,8 +27,10 @@ import type { DraftArticle } from "../types.ts";
  * Draft: no one has read and signed off this piece, so it carries no byline
  * and no date.
  */
-export const maximumEfficiencyAndMutualWelfare: DraftArticle = {
-  status: "draft",
+export const maximumEfficiencyAndMutualWelfare: PublishedArticle = {
+  status: "published",
+  publishedAt: "2026-11-11",
+  authorId: "guard-theory-editorial",
   slug: "maximum-efficiency-and-mutual-welfare",
   category: "bjj-history",
   title: "Maximum efficiency, mutual welfare, and what jiu-jitsu kept",

@@ -1,4 +1,4 @@
-import type { DraftArticle } from "../types.ts";
+import type { PublishedArticle } from "../types.ts";
 
 /**
  * A foundational piece on the two roles in a drilled repetition, and on the
@@ -31,8 +31,10 @@ import type { DraftArticle } from "../types.ts";
  * Draft: no one has read and signed off this piece, so it carries no byline
  * and no date.
  */
-export const toriAndUke: DraftArticle = {
-  status: "draft",
+export const toriAndUke: PublishedArticle = {
+  status: "published",
+  publishedAt: "2026-11-11",
+  authorId: "guard-theory-editorial",
   slug: "tori-and-uke",
   category: "training-culture",
   title: "Tori and uke: the job of the partner being drilled on",

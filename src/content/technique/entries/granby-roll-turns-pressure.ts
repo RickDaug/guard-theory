@@ -56,6 +56,6 @@ export const granbyRollTurnsPressure: TechniqueEntry = {
       "Fact audit, assisted (Claude Code agent), 2026-09-29: shoulder-to-shoulder diagonal and head-turned-away confirmed; fixes applied: straight-roll consequence corrected (facing, not place) in keyMechanics[2] and commonErrors[1]; 'stops working' head-post claim recast as a safety choice; name origin correctly cut. Fact re-check, assisted (Claude Code agent), 2026-10-06: the shoulder walk and the half granby were presented as one movement under two names; sources (Grapplearts, Evolve, JitsuIQ) treat them as distinct, so the sentence now names both separately; name origin stays cut (sources disagree on the Granby school).",
     voiceAudit:
       "Voice audit, assisted (Claude Code agent), 2026-09-29: mechanics clean (title 41, meta 148); fixes applied: last-step label standardised to 'Live rounds:'; the error that restated a key mechanic reworded to name its consequence (consistent with the fact fix); 'many gyms call' attribution varied.",
-    approvedBy: null,
+    approvedBy: { name: "Rick D.", date: "2026-11-11" },
   },
 };

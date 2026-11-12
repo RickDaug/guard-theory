@@ -55,6 +55,6 @@ export const noGiGripsAreOnATimer: TechniqueEntry = {
       "Fact audit, assisted (Claude Code agent), 2026-09-28: grip-fatigue and friction mechanics checked as general mechanics; 'both major rulesets' replaced with the house 'most rulesets; check yours'; an unverifiable 'has not been measured' claim cut. Fact re-check, assisted (Claude Code agent), 2026-10-06: 'most no-gi rulesets forbid holding the shorts or the shirt' re-checked: the ADCC rules page bars holding the T-shirt or shorts; no changes.",
     voiceAudit:
       "Voice audit, assisted (Claude Code agent), 2026-09-28: REVISE (5), all applied; 'honest', throat-clearing and the sentence addressed to searchers cut, the loan metaphor kept to the core concept, the closer hedged; safety note reopened on the fingers and their load. Consistency pass, 2026-09-29 (Claude Code agent), against the corrected Journal article grip-decay-and-the-half-life-of-a-no-gi-grip: the closer's 'position is something you own' becomes 'position is paid for elsewhere', and 'all of which hold through ... grip strength' becomes 'which hold mostly through angle and bone', since a clasped body lock still closes the hands; the critical-torque framing (finite reserve above the threshold) re-checked against the Sports 12(3):66 text.",
-    approvedBy: null,
+    approvedBy: { name: "Rick D.", date: "2026-11-11" },
   },
 };

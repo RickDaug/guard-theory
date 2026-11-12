@@ -1,4 +1,4 @@
-import type { DraftArticle } from "../types.ts";
+import type { PublishedArticle } from "../types.ts";
 
 /**
  * A foundational piece on the name. What is sourced: the variant spellings and
@@ -24,8 +24,10 @@ import type { DraftArticle } from "../types.ts";
  * Draft: no one has read and signed off this piece, so it carries no byline
  * and no date.
  */
-export const jiuJitsuJujutsuAndTheSpellingOfTheName: DraftArticle = {
-  status: "draft",
+export const jiuJitsuJujutsuAndTheSpellingOfTheName: PublishedArticle = {
+  status: "published",
+  publishedAt: "2026-11-11",
+  authorId: "guard-theory-editorial",
   slug: "jiu-jitsu-jujutsu-and-the-spelling-of-the-name",
   category: "bjj-history",
   title: "Jiu-jitsu, jujutsu, and the spelling of the name",

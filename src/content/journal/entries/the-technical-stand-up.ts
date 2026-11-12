@@ -1,4 +1,4 @@
-import type { DraftArticle } from "../types.ts";
+import type { PublishedArticle } from "../types.ts";
 
 /**
  * A technique note, so the argument is ours and is labelled as ours. What is
@@ -24,8 +24,10 @@ import type { DraftArticle } from "../types.ts";
  *
  * Draft: no author has read this piece, so it carries no byline and no date.
  */
-export const theTechnicalStandUp: DraftArticle = {
-  status: "draft",
+export const theTechnicalStandUp: PublishedArticle = {
+  status: "published",
+  publishedAt: "2026-11-11",
+  authorId: "guard-theory-editorial",
   slug: "the-technical-stand-up",
   category: "technique-notes",
   title: "The technical stand-up, and getting up as a skill",

@@ -55,6 +55,6 @@ export const saddleTrapsTheKnee: TechniqueEntry = {
       "Fact audit, assisted (Claude Code agent), 2026-09-29: leg geometry confirmed and consistent with leg-entanglement-as-control; 'close to' reaping hedge and adult brown/black no-gi scope match IBJJF v6.1 p. 29 rows 17/19 and p. 32; REVISE (2), fixes applied: hip-turn direction removed (disputed, as in heel-hook-is-rotation); standing-reap load framed toward the other leg and the inside-knee ligament named. Knee-line wording aligned to 'behind your thighs'. Fact re-check, assisted (Claude Code agent), 2026-10-06: the four names sourced to Grapplearts' Modern Leglock Position Cheatsheets (Biernacki and Kesting: '7: The 411 (Aka Inside Sankaku, Honey Hole, Saddle)', which also names the inside, there 'reverse', heel hook as its main finish); unsourced etymology of 'inside sankaku' cut; IBJJF v6.1 (June 2024, current) p. 29 rows 17 and 19 and the p. 32 reaping definition re-read, matching the leg-locks category note.",
     voiceAudit:
       "Voice audit, assisted (Claude Code agent), 2026-09-29: mechanics clean (title 32, meta 157); REVISE (8), fixes applied: name list and 'harder to find' search talk cut from the opening; count-announcing core opener, ruleset boilerplate closer and 'the entry carries its own load' cut; lines copied from leg-entanglement-as-control and heel-hook-is-rotation rewritten, the self-loading roll in the fact audit's framing.",
-    approvedBy: null,
+    approvedBy: { name: "Rick D.", date: "2026-11-11" },
   },
 };

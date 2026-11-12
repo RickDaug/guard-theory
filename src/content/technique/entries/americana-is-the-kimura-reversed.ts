@@ -56,6 +56,6 @@ export const americanaIsTheKimuraReversed: TechniqueEntry = {
       "Fact audit, assisted (Claude Code agent), 2026-09-29: shared figure-four and opposite rotations confirmed (americana outward, kimura inward, consistent with kimura-is-a-grip-first); keylock/ude garami naming confirmed; one safety-note absolute hedged ('faster than the attacker intends'); optional 'simply lifts' hedged to 'tends to lift'. Fact re-check, assisted (Claude Code agent), 2026-10-06: naming corrected from 'usually identified with judo's ude garami' to one form of ude garami, a judo name that also covers the kimura (gyaku ude garami), per the ude-garami naming summary on Wikipedia; rotation directions and side-control/mount framing unchanged.",
     voiceAudit:
       "Voice audit, assisted (Claude Code agent), 2026-09-29: mechanics clean (meta 158); title moved off the submissions page's 'one A, N Bs' template; wry POS closer cut; safety opener no longer shares the batch's 'takes the load' shape; doubled 'which is why' and filler 'simply' trimmed; 'many coaches describe' naming cut; live-rounds step reworded off the batch's 'notice whether' shape.",
-    approvedBy: null,
+    approvedBy: { name: "Rick D.", date: "2026-11-11" },
   },
 };

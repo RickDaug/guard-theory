@@ -56,6 +56,6 @@ export const deLaRivaBackTake: TechniqueEntry = {
       "Fact audit, assisted (Claude Code agent), 2026-09-28: all ledger rows checked, no changes; berimbolo reported as terminology; knee and neck safety notes confirmed. Fact re-check, assisted (Claude Code agent), 2026-10-06: no rules, history or naming claims beyond berimbolo as gym terminology; no changes.",
     voiceAudit:
       "Voice audit, assisted (Claude Code agent), 2026-09-28: PASS; the optional batch change applied, so the safety note opens on the knee and its load rather than on 'the structure'.",
-    approvedBy: null,
+    approvedBy: { name: "Rick D.", date: "2026-11-11" },
   },
 };

@@ -56,6 +56,6 @@ export const heelHookIsRotation: TechniqueEntry = {
       "Fact audit, assisted (Claude Code agent), 2026-09-28: knee-line and rotation mechanics confirmed; inside/outside heel-direction clauses cut as frame-dependent and contradicted between sources, left for a leg-lock coach to confirm; heel-exposure step scoped to trapped toes. Fact re-check, assisted (Claude Code agent), 2026-10-06: the 'check your ruleset' line re-read against the IBJJF Rules Book (June 2024, still the current edition on ibjjf.com) and the ADCC rules pages, which vary heel-hook legality by organisation, belt, age and gi/no-gi as the entry says; the unsourced 'a knee can be badly hurt before it hurts' reduced to 'gives far less warning', matching the published leg-entanglement entry and Journal piece.",
     voiceAudit:
       "Voice audit, assisted (Claude Code agent), 2026-09-28: REVISE (4), all applied; self-referential core and safety sentences cut, the 'one of three things' opener and ominous closer replaced, the pointer to another entry removed, the 'one inch' drill unit dropped.",
-    approvedBy: null,
+    approvedBy: { name: "Rick D.", date: "2026-11-11" },
   },
 };

@@ -1,4 +1,4 @@
-import type { DraftArticle } from "../types.ts";
+import type { PublishedArticle } from "../types.ts";
 
 /**
  * A philosophy piece on the argument about whether jiu-jitsu is a sport or a
@@ -25,8 +25,10 @@ import type { DraftArticle } from "../types.ts";
  *
  * Draft: no author has read this piece, so it carries no byline and no date.
  */
-export const sportOrSelfDefenceAndWhatJiuJitsuIsFor: DraftArticle = {
-  status: "draft",
+export const sportOrSelfDefenceAndWhatJiuJitsuIsFor: PublishedArticle = {
+  status: "published",
+  publishedAt: "2026-11-11",
+  authorId: "guard-theory-editorial",
   slug: "sport-or-self-defence-and-what-jiu-jitsu-is-for",
   category: "training-culture",
   title: "Sport or self-defence, and what jiu-jitsu is for",

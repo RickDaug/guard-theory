@@ -55,6 +55,6 @@ export const doubleLegIsALevelChange: TechniqueEntry = {
       "Fact audit, assisted (Claude Code agent), 2026-09-29: level change, penetration step and head-outside mechanics confirmed; flagged turn-the-corner direction confirmed against published finishes; fixes applied: 'is allowed to' reworded to 'can'; two sentences readable as scoring claims (keyMechanics[6], commonErrors[3]) reworded; landing hedged in the safety note. Fact re-check, assisted (Claude Code agent), 2026-10-06: no rules, scoring, history or naming claims beyond mechanics; no changes.",
     voiceAudit:
       "Voice audit, assisted (Claude Code agent), 2026-09-29: mechanics clean (title 32, meta 150); fixes applied: phrasings shared with the batch-1 single leg entry rewritten (ruleset 'judged by', between-their-legs landing, static 'Check the head' step, head-up-before-you-pull safety line); title restatement cut from the opening; 'Many coaches teach' attribution and the fixed 'notice' last step rewritten.",
-    approvedBy: null,
+    approvedBy: { name: "Rick D.", date: "2026-11-11" },
   },
 };

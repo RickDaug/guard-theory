@@ -1,4 +1,4 @@
-import type { DraftArticle } from "../types.ts";
+import type { PublishedArticle } from "../types.ts";
 
 /**
  * B3. Built around the only contemporary documents we could read: three pages
@@ -32,8 +32,10 @@ import type { DraftArticle } from "../types.ts";
  * and no date. AI-assisted pieces are published under the "Guard Theory
  * editorial" byline (owner, 2026-09-29), once a person has reviewed them.
  */
-export const oswaldoFaddaAndTheLineageOutsideTheFamily: DraftArticle = {
-  status: "draft",
+export const oswaldoFaddaAndTheLineageOutsideTheFamily: PublishedArticle = {
+  status: "published",
+  publishedAt: "2026-11-11",
+  authorId: "guard-theory-editorial",
   slug: "oswaldo-fadda-and-the-lineage-outside-the-family",
   category: "influential-practitioners",
   title: "Oswaldo Fadda, and the lineage called non-Gracie",

@@ -1,4 +1,4 @@
-import type { DraftArticle } from "../types.ts";
+import type { PublishedArticle } from "../types.ts";
 
 /**
  * A philosophy piece that takes the word play, as grapplers use it, at its
@@ -36,8 +36,10 @@ import type { DraftArticle } from "../types.ts";
  * Draft: no one has read and signed off this piece, so it carries no byline
  * and no date.
  */
-export const rollingAsPlay: DraftArticle = {
-  status: "draft",
+export const rollingAsPlay: PublishedArticle = {
+  status: "published",
+  publishedAt: "2026-11-11",
+  authorId: "guard-theory-editorial",
   slug: "rolling-as-play",
   category: "training-culture",
   title: "Rolling as play",

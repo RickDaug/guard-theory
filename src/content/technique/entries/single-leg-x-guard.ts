@@ -55,6 +55,6 @@ export const singleLegXGuard: TechniqueEntry = {
       "Fact audit, assisted (Claude Code agent), 2026-09-29: two-legs-on-one-leg control, hip foot, ashi garami/SLX naming (hedged) and leg-lock rule deferral confirmed; sweep direction reduced to 'back, behind the standing heel'; inside-hook height (knee vs thigh) cut to 'behind the trapped leg' pending coach confirmation, since sources vary. Fact re-check, assisted (Claude Code agent), 2026-10-06: the three naming usages are now each sourced, BJJEE's introduction to basic leg lock positions ('Ashi garami, also known as the single leg x-guard'), Danaher in his BJJEE interview ('many variations of ashi garami') and Digitsu's ashi garami family page, and Grapplearts' Modern Leglock Position Cheatsheets ('Superficially similar to the Single Leg X Guard position'); the unsourced third usage, 'separate sweeping from attacking the foot', was replaced with the Grapplearts one; SLX abbreviation per Digitsu.",
     voiceAudit:
       "Voice audit, assisted (Claude Code agent), 2026-09-29: mechanics clean (title 34, meta 154); title no longer restated as the coreConcept opener; 'Each part has one job' setup and a popularity clause cut; rules sentence copied from the heel hook and leg entanglement entries reworded; 'many coaches/rooms' cut; 'carries load too' safety shape varied.",
-    approvedBy: null,
+    approvedBy: { name: "Rick D.", date: "2026-11-11" },
   },
 };

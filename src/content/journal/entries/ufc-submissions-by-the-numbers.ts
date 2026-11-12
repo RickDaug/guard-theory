@@ -1,4 +1,4 @@
-import type { DraftArticle } from "../types.ts";
+import type { PublishedArticle } from "../types.ts";
 
 /**
  * The numbers piece. Six datasets, each cited with its own scope, and no
@@ -22,8 +22,10 @@ import type { DraftArticle } from "../types.ts";
  * editorial" byline (authorId "guard-theory-editorial"; owner, 2026-09-29),
  * once a person has reviewed them.
  */
-export const ufcSubmissionsByTheNumbers: DraftArticle = {
-  status: "draft",
+export const ufcSubmissionsByTheNumbers: PublishedArticle = {
+  status: "published",
+  publishedAt: "2026-11-11",
+  authorId: "guard-theory-editorial",
   slug: "ufc-submissions-by-the-numbers",
   category: "mma-and-jiu-jitsu",
   title: "What actually finishes fights: the most common UFC submissions",

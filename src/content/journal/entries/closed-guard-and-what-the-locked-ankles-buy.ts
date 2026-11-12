@@ -1,4 +1,4 @@
-import type { DraftArticle } from "../types.ts";
+import type { PublishedArticle } from "../types.ts";
 
 /**
  * A mechanics piece, not a history. The argument is ours and is labelled as
@@ -22,8 +22,10 @@ import type { DraftArticle } from "../types.ts";
  *
  * Draft: no author has read this piece, so it carries no byline and no date.
  */
-export const closedGuardAndWhatTheLockedAnklesBuy: DraftArticle = {
-  status: "draft",
+export const closedGuardAndWhatTheLockedAnklesBuy: PublishedArticle = {
+  status: "published",
+  publishedAt: "2026-11-11",
+  authorId: "guard-theory-editorial",
   slug: "closed-guard-and-what-the-locked-ankles-buy",
   category: "guard-systems",
   title: "Closed guard, and what the locked ankles buy",

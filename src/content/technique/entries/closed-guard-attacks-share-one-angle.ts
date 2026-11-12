@@ -56,6 +56,6 @@ export const closedGuardAttacksShareOneAngle: TechniqueEntry = {
       "Fact audit, assisted (Claude Code agent), 2026-09-28: shared-angle mechanics confirmed; near/far leg descriptions for armbar and triangle corrected to be relative to the controlled arm (armbar: leg on the controlled arm's side over the head; triangle: leg on the free arm's side over that shoulder). Revision re-read the whole entry for the same reference; the added defence-to-next-attack order uses only the entry's own arm readings. Fact re-check, assisted (Claude Code agent), 2026-10-06: no rules, history or naming claims; armbar and triangle leg sides re-checked against the corrected Journal armbar and triangle pieces; no changes.",
     voiceAudit:
       "Voice audit, assisted (Claude Code agent), 2026-09-28: REVISE (4), all applied. 'Closed guard' repetition cut to title, summary, meta and one core sentence; unsourced 'most ... fail' hedged to 'usually'; absolute core opener and 'column' jargon replaced; per-finish detail and the hip-escape step shortened to reduce overlap with the submission entries in PR #22, with the entry refocused on sequencing; last training step reworded.",
-    approvedBy: null,
+    approvedBy: { name: "Rick D.", date: "2026-11-11" },
   },
 };

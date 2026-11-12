@@ -55,6 +55,6 @@ export const whizzerIsAnOverhookOnTheHip: TechniqueEntry = {
       "Fact audit, assisted (Claude Code agent), 2026-09-28: all ledger rows checked, no changes; whizzer and underhook mechanics and the shoulder safety note confirmed. Fact re-check, assisted (Claude Code agent), 2026-10-06: terminology only (whizzer, dogfight) stated as gym usage; no changes.",
     voiceAudit:
       "Voice audit, assisted (Claude Code agent), 2026-09-28: REVISE (4), all applied; the filler triad on the name cut, 'about a second' and 'honest' removed, the coined 'whizzerer' replaced, 'most gyms' hedged; safety note reopened on the shoulder and its load.",
-    approvedBy: null,
+    approvedBy: { name: "Rick D.", date: "2026-11-11" },
   },
 };

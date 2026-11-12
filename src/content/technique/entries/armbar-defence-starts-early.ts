@@ -55,6 +55,6 @@ export const armbarDefenceStartsEarly: TechniqueEntry = {
       "Fact audit, assisted (Claude Code agent), 2026-09-29: staged defence and escape set confirmed against armbar-is-hip-to-shoulder-distance and the Journal the-armbar-from-closed-guard; stack-from-posture consistent with triangle-defence-posture; no rule stated; REVISE (2), fixes applied: 'cannot stack from mount' scoped to an attacker still mounted, with stacking allowed once they fall back; clasp-breaking safety line reassigned to the attacker working against it. Fact re-check, assisted (Claude Code agent), 2026-10-06: no rule, history or naming claim beyond the common name 'hitchhiker'; hips-to-shoulder finish consistent with the corrected Journal the-armbar-from-closed-guard; no change.",
     voiceAudit:
       "Voice audit, assisted (Claude Code agent), 2026-09-29: mechanics clean; REVISE (5), fixes applied: title moved off the comma-colon template and the defensive page's '[X] defence' run; 'earlier ones cost less' frame shared with triangle-defence-posture trimmed; three-escape list mirroring armbar-is-hip-to-shoulder-distance and 'the same drive bent at the waist' stack line rewritten; kneebar's 'little warning between' safety phrasing and a 'remember that' varied; recall-style last step made an instruction.",
-    approvedBy: null,
+    approvedBy: { name: "Rick D.", date: "2026-11-11" },
   },
 };

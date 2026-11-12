@@ -1,4 +1,4 @@
-import type { DraftArticle } from "../types.ts";
+import type { PublishedArticle } from "../types.ts";
 
 /**
  * A philosophy piece that treats the sport's founding promise as a claim and
@@ -26,8 +26,10 @@ import type { DraftArticle } from "../types.ts";
  *
  * Draft: no author has read this piece, so it carries no byline and no date.
  */
-export const leverageAndTheSmallerPerson: DraftArticle = {
-  status: "draft",
+export const leverageAndTheSmallerPerson: PublishedArticle = {
+  status: "published",
+  publishedAt: "2026-11-11",
+  authorId: "guard-theory-editorial",
   slug: "leverage-and-the-smaller-person",
   category: "training-culture",
   title: "Leverage, and the promise made to the smaller person",

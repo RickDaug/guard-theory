@@ -1,4 +1,4 @@
-import type { DraftArticle } from "../types.ts";
+import type { PublishedArticle } from "../types.ts";
 
 /**
  * A foundational piece on the opening choice of a match, read from three rule
@@ -25,8 +25,10 @@ import type { DraftArticle } from "../types.ts";
  *
  * Draft: no author has read this piece, so it carries no byline and no date.
  */
-export const takedownOrGuardPull: DraftArticle = {
-  status: "draft",
+export const takedownOrGuardPull: PublishedArticle = {
+  status: "published",
+  publishedAt: "2026-11-11",
+  authorId: "guard-theory-editorial",
   slug: "takedown-or-guard-pull",
   category: "competition-analysis",
   title: "Takedown or guard pull: the first decision of a match",

@@ -1,4 +1,4 @@
-import type { DraftArticle } from "../types.ts";
+import type { PublishedArticle } from "../types.ts";
 
 /**
  * B8. Argued from rule text, division by division, because legality below the
@@ -26,8 +26,10 @@ import type { DraftArticle } from "../types.ts";
  * and no date. AI-assisted pieces are published under the "Guard Theory
  * editorial" byline (owner, 2026-09-29), once a person has reviewed them.
  */
-export const howTheGuardReorganisedAroundLegEntanglements: DraftArticle = {
-  status: "draft",
+export const howTheGuardReorganisedAroundLegEntanglements: PublishedArticle = {
+  status: "published",
+  publishedAt: "2026-11-11",
+  authorId: "guard-theory-editorial",
   slug: "how-the-guard-reorganised-around-leg-entanglements",
   category: "guard-systems",
   title: "How the guard reorganised around leg entanglements",

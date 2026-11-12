@@ -1,4 +1,4 @@
-import type { DraftArticle } from "../types.ts";
+import type { PublishedArticle } from "../types.ts";
 
 /**
  * A foundational piece, read from four documents. What is sourced is every
@@ -22,8 +22,10 @@ import type { DraftArticle } from "../types.ts";
  *
  * Draft: no author has read this piece, so it carries no byline and no date.
  */
-export const whatCountsAsAPin: DraftArticle = {
-  status: "draft",
+export const whatCountsAsAPin: PublishedArticle = {
+  status: "published",
+  publishedAt: "2026-11-11",
+  authorId: "guard-theory-editorial",
   slug: "what-counts-as-a-pin",
   category: "competition-analysis",
   title: "What counts as a pin in judo, wrestling and jiu-jitsu",

@@ -1,4 +1,4 @@
-import type { DraftArticle } from "../types.ts";
+import type { PublishedArticle } from "../types.ts";
 
 /**
  * B1. The history piece on the position the brand is named after, built from
@@ -25,8 +25,10 @@ import type { DraftArticle } from "../types.ts";
  * editorial" byline (authorId "guard-theory-editorial"; owner, 2026-09-29),
  * once a person has reviewed them.
  */
-export const whereTheGuardCameFrom: DraftArticle = {
-  status: "draft",
+export const whereTheGuardCameFrom: PublishedArticle = {
+  status: "published",
+  publishedAt: "2026-11-11",
+  authorId: "guard-theory-editorial",
   slug: "where-the-guard-came-from",
   category: "bjj-history",
   title: "Where the guard came from, and who invented it",

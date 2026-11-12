@@ -1,4 +1,4 @@
-import type { DraftArticle } from "../types.ts";
+import type { PublishedArticle } from "../types.ts";
 
 /**
  * A foundational training-culture piece that treats "survive first" as a claim
@@ -26,8 +26,10 @@ import type { DraftArticle } from "../types.ts";
  * Draft: no one has read and signed off this piece, so it carries no byline
  * and no date.
  */
-export const survivalFirstAndTheOrderThingsAreLearnedIn: DraftArticle = {
-  status: "draft",
+export const survivalFirstAndTheOrderThingsAreLearnedIn: PublishedArticle = {
+  status: "published",
+  publishedAt: "2026-11-11",
+  authorId: "guard-theory-editorial",
   slug: "survival-first-and-the-order-things-are-learned-in",
   category: "training-culture",
   title: "Survival first, and the order things are learned in",

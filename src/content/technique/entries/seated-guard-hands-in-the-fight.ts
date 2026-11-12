@@ -56,6 +56,6 @@ export const seatedGuardHandsInTheFight: TechniqueEntry = {
       "Fact audit, assisted (Claude Code agent), 2026-09-29: posture, head-height contest and connection list confirmed against the corrected Journal seated-guard-and-supine-guard and two-on-one-controls-one-arm; posted-hand orientation (fingers away from the opponent) confirmed as the wrist-safe one; no rule stated, correctly. PASS, no changes required. Fact re-check, assisted (Claude Code agent), 2026-10-06: no rule claim, consistent with the corrected Journal seated-guard-and-supine-guard (no stalling claim made here); 'were built on cloth', an unsourced history claim, reduced to how those guards work in the gi.",
     voiceAudit:
       "Voice audit, assisted (Claude Code agent), 2026-09-29: mechanics clean; REVISE (5), fixes applied: title moved off the wh-template; 'worth having... not because' slogan and grips-timer 'spends' vocabulary cut; run-on safety opener split and generic chin line cut; push-flat chin-tuck line shared with butterfly-guard-under-pressure and guard-retention cut; 'near the height of theirs' kept to two uses.",
-    approvedBy: null,
+    approvedBy: { name: "Rick D.", date: "2026-11-11" },
   },
 };

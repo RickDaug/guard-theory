@@ -54,6 +54,6 @@ export const omoplataIsAKimuraWithTheLeg: TechniqueEntry = {
       "Fact audit, assisted (Claude Code agent), 2026-09-28: all ledger rows checked, no changes required; kimura-equivalence, hip-height and roll-escape mechanics confirmed. Optional note taken: 'your chest stops the torso' in the kimura comparison became 'your body stops the torso'. Fact re-check, assisted (Claude Code agent), 2026-10-06: no naming or history claims in the entry; the unsourced comparison that the omoplata gives less warning than an arm-applied kimura reduced to 'can reach the end of the shoulder's travel quickly'.",
     voiceAudit:
       "Voice audit, assisted (Claude Code agent), 2026-09-28: REVISE (2), both applied. 'Then one of two things happens' cut, as it echoed the heel-hook entry in PR #19; core closer 'every other detail is decoration' replaced with 'nothing else holds the lock'.",
-    approvedBy: null,
+    approvedBy: { name: "Rick D.", date: "2026-11-11" },
   },
 };

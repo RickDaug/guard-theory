@@ -56,6 +56,6 @@ export const singleLegForJiuJitsu: TechniqueEntry = {
       "Fact audit, assisted (Claude Code agent), 2026-09-28: shot, lift and finish mechanics confirmed; the wrestling-scoring claim corrected for folkstyle mat scoring; the 'most grapplers' frequency claim hedged to 'many'. Fact re-check, assisted (Claude Code agent), 2026-10-06: no rule-book citations; 'lets the bottom player pull guard' holds generally, though the ADCC rules page penalises a guard pull within three seconds of one's own shot; no changes.",
     voiceAudit:
       "Voice audit, assisted (Claude Code agent), 2026-09-28: REVISE (3), all applied; frequency hedged, the 'honest difference' sentence stated plainly, the wry referee closer cut; safety note reopened on the caught knee without the three-structures count.",
-    approvedBy: null,
+    approvedBy: { name: "Rick D.", date: "2026-11-11" },
   },
 };

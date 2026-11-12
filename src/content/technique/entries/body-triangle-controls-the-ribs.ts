@@ -56,6 +56,6 @@ export const bodyTriangleControlsTheRibs: TechniqueEntry = {
       "Fact audit, assisted (Claude Code agent), 2026-09-29: ring/hook mechanics, lock height and ankle-counter deferral confirmed; 'survives a turning escape' changed to hook-stripping, and the ring stated as still turnable, to match seat-belt-and-hooks ('can be turned into'); top-leg pairing with the fall side cut and left to the coach (sources disagree); 'body lock' alias cut. Fact re-check, assisted (Claude Code agent), 2026-10-06: unsourced claim that the ankle counter's legality varies by belt and ruleset replaced with a check-your-division instruction; 'adductors' physiology claim reduced to 'the legs'; no scoring claim made, consistent with the published IBJJF advantage-not-four-points line in taking-the-back-from-turtle.",
     voiceAudit:
       "Voice audit, assisted (Claude Code agent), 2026-09-29: mechanics clean (meta 156); title changed to the hooks comparison the entry teaches (old title contradicted KM1's below-the-ribs placement, and was one of four colon titles on back control); 'one problem, three of its own' setup cut; safety opener varied; duplicate ruleset reminder, 'Most rooms call' and an 'exactly' removed; live-rounds step varied.",
-    approvedBy: null,
+    approvedBy: { name: "Rick D.", date: "2026-11-11" },
   },
 };

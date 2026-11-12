@@ -56,6 +56,6 @@ export const xGuardUnderTheirBase: TechniqueEntry = {
       "Fact audit, assisted (Claude Code agent), 2026-09-29: X-guard geometry (ankle at the shoulder, hip and knee hooks on the other leg) and sweeps confirmed; single-leg X contrast matches single-leg-x-guard; Marcelo Garcia 'associated with, predates him' matches the Figures profile. PASS, no changes required. Fact re-check, assisted (Claude Code agent), 2026-10-06: 'although X-guard predates him' cut, because no source consulted establishes who first used the position (published accounts disagree, some crediting Garcia with creating it, others crediting earlier judo use, none citing evidence) and the corrected marcelo-garcia figure entry withdrew the same claim; 'associated with' and the butterfly-guard pairing kept, as the figure entry states them on BJJ Heroes's authority; no rule claim.",
     voiceAudit:
       "Voice audit, assisted (Claude Code agent), 2026-09-29: mechanics clean; REVISE (6), fixes applied: 'usually compared with single-leg X' mirror of SLX's comparison reworded; two 'simply' cut; rise-with-the-leg mechanic and hook-behind-the-calf error shared with single-leg-x-guard and the butterfly entry reworded; vague heel-hook-agreement safety closer cut; last step made an instruction so it no longer twins the butterfly entry's.",
-    approvedBy: null,
+    approvedBy: { name: "Rick D.", date: "2026-11-11" },
   },
 };

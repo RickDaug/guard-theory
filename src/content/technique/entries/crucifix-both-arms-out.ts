@@ -55,6 +55,6 @@ export const crucifixBothArmsOut: TechniqueEntry = {
       "Fact audit, assisted (Claude Code agent), 2026-09-29: all ledger rows checked, no changes; near-arm legs / far-wrist arms confirmed against published crucifix instruction; safety note covers the no-hands tap and the neck-crank strangles. Fact re-check, assisted (Claude Code agent), 2026-10-06: no rules, history or naming claims beyond mechanics; no changes.",
     voiceAudit:
       "Voice audit, assisted (Claude Code agent), 2026-09-29: mechanics clean (meta 158); two self-referential sentences cut ('named here rather than taught', 'belongs with back control'); unclear 'all round' doors metaphor tightened; safety opener merged so it no longer shares the batch's 'carries the load' shape; title moved off the back-control colon template; live-rounds step varied.",
-    approvedBy: null,
+    approvedBy: { name: "Rick D.", date: "2026-11-11" },
   },
 };

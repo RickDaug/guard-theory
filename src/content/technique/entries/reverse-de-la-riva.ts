@@ -55,6 +55,6 @@ export const reverseDeLaRiva: TechniqueEntry = {
       "Fact audit, assisted (Claude Code agent), 2026-09-29: all ledger rows checked, no changes; inside hook and knee direction confirmed and consistent with de-la-riva-hook; SLX conversion confirmed; inversions named, not taught. Fact re-check, assisted (Claude Code agent), 2026-10-06: BJJ Heroes' Reverse De La Riva Guard page gives kiss of the dragon and reverse berimbolo as two names for one back take ('Kiss of the Dragon (Reverse Berimbolo)'), so the sentence presenting them as two different routes was corrected; the reverse de la Riva name and its link to that back take are sourced to the same page.",
     voiceAudit:
       "Voice audit, assisted (Claude Code agent), 2026-09-29: mechanics clean (title 38, meta 159); retired 'second exposure' safety device removed; all three 'many players/gyms' attributions in the coreConcept paragraph reworded; ruleset boilerplate reworded for the leg-lock rule at stake; live-rounds step varied.",
-    approvedBy: null,
+    approvedBy: { name: "Rick D.", date: "2026-11-11" },
   },
 };

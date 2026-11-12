@@ -130,10 +130,32 @@ describe("product photographs go through next/image", () => {
 
 describe("the Content-Security-Policy and the optimizer's host list", () => {
   it("img-src stays same-origin: the Blob host is never in it", async () => {
-    const headers = await nextConfig.headers!();
-    const csp = headers[0]!.headers.find((header) => header.key === "Content-Security-Policy")!.value;
-    assert.match(csp, /(^|; )img-src 'self' data:(;|$)/);
-    assert.doesNotMatch(csp, /vercel-storage/);
+    // The policy is no longer one header on the first rule: it is a fallback
+    // rule plus one rule per prerendered page, each built from that page's
+    // script hashes (src/lib/csp.ts). The per-page rules need the manifest a
+    // build writes, which a unit run does not have, so this asks for the
+    // collecting pass — same builder, no per-page rules — and then checks
+    // EVERY policy that comes back rather than the first one.
+    const before = process.env.GT_CSP_PASS;
+    process.env.GT_CSP_PASS = "collect";
+    let policies: string[];
+    try {
+      const rules = await nextConfig.headers!();
+      policies = rules.flatMap((rule) =>
+        rule.headers
+          .filter((header) => header.key === "Content-Security-Policy")
+          .map((header) => header.value),
+      );
+    } finally {
+      if (before === undefined) delete process.env.GT_CSP_PASS;
+      else process.env.GT_CSP_PASS = before;
+    }
+
+    assert.ok(policies.length > 0, "no Content-Security-Policy rule at all");
+    for (const csp of policies) {
+      assert.match(csp, /(^|; )img-src 'self' data:(;|$)/);
+      assert.doesNotMatch(csp, /vercel-storage/);
+    }
   });
 
   it("remotePatterns is one pinned https host, or nothing", () => {

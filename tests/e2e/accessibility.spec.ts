@@ -100,10 +100,18 @@ test.describe("keyboard and structure", () => {
     await page.goto("/");
 
     // The drawing itself is decorative...
-    await expect(page.locator("figure svg[aria-hidden='true']")).toHaveCount(1);
+    //
+    // Scoped to the system map's own figure since the home page started
+    // carrying the garment flats as well (facelift 2026-11). Those are figures
+    // too, so a page-wide count of one would now fail for a reason that has
+    // nothing to do with this test — and every drawing on the page still has
+    // to be hidden from assistive tech, which the second assertion holds.
+    const keys = page.getByRole("button", { name: /open guard/i });
+    const map = page.locator("figure", { has: keys });
+    await expect(map.locator("svg[aria-hidden='true']")).toHaveCount(1);
+    await expect(page.locator("figure svg:not([aria-hidden='true'])")).toHaveCount(0);
 
     // ...and its content is carried by buttons in the tab order.
-    const keys = page.getByRole("button", { name: /open guard/i });
     await expect(keys).toHaveCount(1);
 
     await keys.focus();

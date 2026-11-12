@@ -9,7 +9,8 @@ import type { PublishedArticle } from "../types.ts";
 export const deLaRivaAndTheGuardThatTookHisName: PublishedArticle = {
   status: "published",
   publishedAt: "2026-08-04",
-  authorId: "rick-r",
+  updatedAt: "2026-09-29",
+  authorId: "guard-theory-editorial",
   slug: "de-la-riva-and-the-guard-that-took-his-name",
   category: "influential-practitioners",
   title: "De la Riva, and the guard that took his name",
@@ -44,7 +45,7 @@ export const deLaRivaAndTheGuardThatTookHisName: PublishedArticle = {
       paragraphs: [
         "Now the part that most published accounts of this position present as settled, and that is not.",
         "The standard story is that the guard got its name from the press after a match with Royler Gracie at the Copa Cantao. BJJ Heroes tells that story twice, on two pages, with three different dates. Its biography of de la Riva places the match in 1985. Its feature on the position places the same final around 1986. The caption on a photograph in that feature dates the image of the two men to 1987. One site, one story, three years.",
-        "The two pages also describe the outcome differently, and this article is not going to state one. A specific result in a Brazilian regional tournament of the mid-1980s is precisely the kind of claim that this publication does not repeat without a primary record, and no primary record was found. What can be said is narrower and still substantial: a match between the two is described by one source, the position was in use in it, and the name entered circulation through press coverage rather than through anybody naming it deliberately.",
+        "The two pages agree on the winner and differ in detail, one giving a method and the other not, and this article still does not state a result. A specific result in a Brazilian regional tournament of the mid-1980s is precisely the kind of claim that this publication does not repeat without a primary record, and no primary record was found. What can be said is narrower and still substantial: a match between the two is described by one source, the position was in use in it, and the name entered circulation through press coverage rather than through anybody naming it deliberately.",
         "There is a second contested claim in the same feature. It reports that the outside hook was not an innovation in grappling as such, having appeared earlier in a form of competitive judo, and that it is said to have been created by Oda Tsunetane. The evidence offered for the judo antecedent is video footage of competitions from the late 1970s, sourced to research posted by a named researcher on a social media page. That may well be right, and it is the sort of claim that ought to be checkable, but a social media post is not a record this article can rest a historical assertion on. The antecedent is reported here as an assertion made by that source and not as an established fact.",
       ],
     },
@@ -53,7 +54,7 @@ export const deLaRivaAndTheGuardThatTookHisName: PublishedArticle = {
       heading: "The name came afterwards",
       paragraphs: [
         "Both accounts agree that the position was not called the de la Riva guard by the people who first used it. BJJ Heroes reports that training partners called it guarda pudim, pudding guard, because of the wobble it induced in the passer's base.",
-        "De la Riva's own recollection, given to Grapplearts, goes further than that. Asked about the period, he says: \"We never gave it names back then and just used to call all of it the open guard.\" The same interview notes that he was simultaneously developing half guard and butterfly guard material that never acquired a name at all.",
+        "De la Riva's own recollection, given to Grapplearts, goes further than that. Asked about the period, he says: \"We never gave it names back then and just used to call all of it the open guard.\" The same interview notes that he was also developing a sophisticated half guard and butterfly guard game that, it says, is known mainly to his students.",
         "That single sentence is worth more than most of the origin story around it. The vocabulary a technique is taught in is almost always applied later, by other people, for their own reasons, and the granularity of modern position names is a product of instruction and media rather than of how the material was discovered. Somebody solving a problem on the mat in the early 1980s was not inventing a named guard. They were finding a way to stop being passed, and the name arrived when other people needed to talk about it.",
         "The practical consequence is a reading habit. When a source tells you a position was invented in a particular year, ask whether it is dating the mechanic or dating the name. They are usually different events, and the second one is the one that leaves a record.",
       ],
@@ -76,6 +77,7 @@ export const deLaRivaAndTheGuardThatTookHisName: PublishedArticle = {
         "What the sources support: that a specific practitioner developed a specific mechanic in a specific gym, under a specific pressure, in the first half of the 1980s; that the people around him named it before the press did; and that the mechanic became common enough that an entire family of open-guard positions is now organised around it. That is a genuine and unusually well-attested technical contribution, and it does not require anybody to be called the best at anything.",
         "What the sources do not support, and what this article therefore does not say: that he invented the outside hook outright, since at least one source asserts an earlier judo antecedent and neither the assertion nor its refutation could be verified; that any particular match had any particular outcome; that later developments of the position belong to him rather than to the people who built them; or that this guard is better than any other.",
         "The separation between originating a mechanic and developing it is the part most often collapsed, and it is worth keeping. A position that has been worked on by three decades of competitors is a collective object with a name attached to one person. That is how most of the technical vocabulary of this sport came to exist, and the naming convention flatters the record more than the record deserves.",
+        "Correction, 29 September 2026: an earlier version of this article said the two BJJ Heroes pages describe the outcome of the Copa Cantao match differently. They name the same winner and differ only in detail. It also said the half guard and butterfly guard game de la Riva developed never acquired a name, which the interview does not say. Both sentences have been corrected.",
       ],
     },
   ],
@@ -120,7 +122,7 @@ export const deLaRivaAndTheGuardThatTookHisName: PublishedArticle = {
   ],
   contestedNotes: [
     "The date of the Copa Cantao match usually credited with naming the position is given three different ways by a single source. BJJ Heroes dates it to 1985 in its biography of de la Riva, to around 1986 in its feature on the position, and captions a photograph of the two competitors 1987. No primary record was located, and this article states no date.",
-    "The two BJJ Heroes pages also describe the outcome of that match differently. No competition result is asserted here, in line with the house rule against repeating a result that cannot be traced to a primary or federation record.",
+    "The two BJJ Heroes pages name the same winner of that match but differ in detail: only one gives a method. No competition result is asserted here, in line with the house rule against repeating a result that cannot be traced to a primary or federation record.",
     "The claim that the outside hook appeared earlier in competitive judo, and was created by Oda Tsunetane, is made by BJJ Heroes on the strength of late-1970s video footage sourced to a researcher's social media page. It is reported as that source's assertion and is not treated as established.",
     "Accounts of who first taught de la Riva differ in emphasis: Grapplearts names Marcus Soares at an affiliate school before a move to Carlson Gracie's main academy, while BJJ Heroes describes the Carlson Gracie academy in Copacabana as the starting point. The two are compatible but are not identical, and both are reported.",
     "Community reference sites are the only sources available for most of the biography here. They reproduce one another, and two such sites agreeing is not two independent sources. The one direct quotation used is from an interview conducted by Grapplearts.",

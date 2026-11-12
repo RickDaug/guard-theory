@@ -1,12 +1,17 @@
+import type { SpecSource } from "./types.ts";
+
 /**
  * The size chart.
  *
- * Garment measurements, taken flat and doubled for chest — the convention a
- * customer can actually check against a rash guard they already own. "To fit
- * chest" is the body measurement the size is cut for.
+ * EMPTY, deliberately. A six-size chart of garment measurements was published
+ * here from 2026-08-04 to 2026-09-29. Nobody supplied it: the owner confirmed
+ * that neither they nor the manufacturer gave those numbers, so they were an
+ * invention a buyer would have sized against. See docs/owner-decisions.md §3.
  *
- * These are the specification the garments are made to. Production tolerance
- * is ±1cm; anything outside that is a fault and covered by the returns policy.
+ * Rows go back only with SIZE_CHART_SOURCE set to "owner", measured from
+ * production garments or taken from the manufacturer's graded spec. That
+ * pairing is asserted in tests/unit/content.test.ts, and /size-and-fit renders
+ * the chart only when there are rows.
  */
 
 export type SizeRow = {
@@ -22,17 +27,13 @@ export type SizeRow = {
   shortSleeveCm: number;
 };
 
-export const SIZE_CHART: SizeRow[] = [
-  { size: "XS", toFitChestIn: "32–34", toFitChestCm: "81–86", bodyLengthCm: 64, longSleeveCm: 80, shortSleeveCm: 40 },
-  { size: "S", toFitChestIn: "35–37", toFitChestCm: "89–94", bodyLengthCm: 66, longSleeveCm: 82, shortSleeveCm: 41 },
-  { size: "M", toFitChestIn: "38–40", toFitChestCm: "97–102", bodyLengthCm: 68, longSleeveCm: 84, shortSleeveCm: 42 },
-  { size: "L", toFitChestIn: "41–43", toFitChestCm: "104–109", bodyLengthCm: 70, longSleeveCm: 86, shortSleeveCm: 43 },
-  { size: "XL", toFitChestIn: "44–46", toFitChestCm: "112–117", bodyLengthCm: 72, longSleeveCm: 88, shortSleeveCm: 44 },
-  { size: "XXL", toFitChestIn: "47–49", toFitChestCm: "119–124", bodyLengthCm: 74, longSleeveCm: 90, shortSleeveCm: 45 },
-];
+/** Who supplied SIZE_CHART. Must be "owner" for the chart to have rows. */
+export const SIZE_CHART_SOURCE: SpecSource = null;
 
-export const FIT_NOTES = [
-  "Cut athletic. If you are between sizes and prefer a little room through the chest, take the larger.",
-  "The body is cut long on purpose so the hem stays under a waistband through a scramble.",
-  "Measurements are of the garment, unstretched. A rash guard is meant to be worn under tension.",
-];
+export const SIZE_CHART: SizeRow[] = [];
+
+/**
+ * Notes printed under the chart. Empty for the same reason: "cut athletic" and
+ * "the body is cut long" are claims about a pattern nobody supplied.
+ */
+export const FIT_NOTES: string[] = [];

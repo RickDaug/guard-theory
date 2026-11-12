@@ -8,6 +8,7 @@
 #   FAKE_DUMP        the file `pg_dump` writes to stdout
 #   FAKE_DUMP_ERROR  if set, pg_dump prints it to stderr and fails
 #   FAKE_TOC         what `pg_restore --list` prints
+#   FAKE_LOG         if set, the pg_dump command line is appended to it
 
 case "$*" in
   *server_version_num*)
@@ -15,6 +16,7 @@ case "$*" in
     echo " ${FAKE_VERSION} "
     ;;
   *pg_dump*)
+    [ -z "${FAKE_LOG:-}" ] || echo "$*" >>"$FAKE_LOG"
     if [ -n "${FAKE_DUMP_ERROR:-}" ]; then
       echo "$FAKE_DUMP_ERROR" >&2
       exit 1

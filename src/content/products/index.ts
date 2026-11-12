@@ -12,5 +12,5 @@ export function getProduct(slug: string): Product | undefined {
   return PRODUCTS.find((product) => product.slug === slug);
 }
 
-export type { ConstructionPoint, Product, Specification } from "./types.ts";
-export { STATUS_LABEL } from "./types.ts";
+export type { ConstructionPoint, Product, Specification, SpecSource } from "./types.ts";
+export { DRAWN_SPECIFICATION_LABELS, STATUS_LABEL } from "./types.ts";

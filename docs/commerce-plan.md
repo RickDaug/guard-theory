@@ -609,6 +609,7 @@ Events handled:
 | `checkout.session.completed` | the order |
 | `checkout.session.async_payment_succeeded` | not reachable for US card-only, handled anyway because it costs three lines and its absence is a silent failure if a payment method is ever added |
 | `charge.refunded` | keeps `refund_status` true even when a refund is issued from the Stripe dashboard rather than the portal |
+| `charge.dispute.created` / `charge.dispute.closed` | a chargeback flags the order `disputed` and records how it ended (`dispute_status`, 0011), so a disputed order is not shipped unread |
 
 Idempotency, atomic stock and the oversell rule are in §7.
 

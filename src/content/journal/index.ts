@@ -43,6 +43,14 @@ import { ossProfessorAndTheBow } from "./entries/oss-professor-and-the-bow.ts";
 import { sweepSubmitOrStand } from "./entries/sweep-submit-or-stand.ts";
 import { takedownOrGuardPull } from "./entries/takedown-or-guard-pull.ts";
 import { whatCountsAsAPin } from "./entries/what-counts-as-a-pin.ts";
+import { advantagesPenaltiesAndTheClock } from "./entries/advantages-penalties-and-the-clock.ts";
+import { overUnderOrAround } from "./entries/over-under-or-around.ts";
+import { rollingAsPlay } from "./entries/rolling-as-play.ts";
+import { sideControlFromTheTop } from "./entries/side-control-from-the-top.ts";
+import { stranglesAndJointLocks } from "./entries/strangles-and-joint-locks.ts";
+import { thePlateau } from "./entries/the-plateau.ts";
+import { toriAndUke } from "./entries/tori-and-uke.ts";
+import { whatATournamentTests } from "./entries/what-a-tournament-tests.ts";
 import { whySportJiuJitsuDoesNotTransferDirectlyToMma } from "./entries/why-sport-jiu-jitsu-does-not-transfer-directly-to-mma.ts";
 
 /**
@@ -94,6 +102,14 @@ export const ARTICLES: Article[] = [
   sweepSubmitOrStand,
   takedownOrGuardPull,
   whatCountsAsAPin,
+  advantagesPenaltiesAndTheClock,
+  overUnderOrAround,
+  rollingAsPlay,
+  sideControlFromTheTop,
+  stranglesAndJointLocks,
+  thePlateau,
+  toriAndUke,
+  whatATournamentTests,
 ];
 
 const BY_SLUG = new Map(ARTICLES.map((article) => [article.slug, article]));

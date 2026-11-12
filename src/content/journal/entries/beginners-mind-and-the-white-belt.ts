@@ -43,7 +43,7 @@ export const beginnersMindAndTheWhiteBelt: DraftArticle = {
   title: "Beginner's mind, and what the white belt is for",
   metaTitle: "Beginner's mind and the white belt",
   standfirst:
-    "Jiu-jitsu borrowed beginner's mind from a Zen talk and uses it as a word for humility. The talk is about something else, the nearest research is about chess, and the federation's white belt is comes with no requirement at all.",
+    "Jiu-jitsu borrowed beginner's mind from a Zen talk and uses it as a word for humility. The talk is about something else, the nearest research is about chess, and the federation's white belt comes with no requirement at all.",
   metaDescription:
     "Beginner's mind is used in jiu-jitsu as a word for humility. What the Zen talk said, what the white belt formally is, and what two chess studies found.",
   sections: [

@@ -51,7 +51,7 @@ export const triangleDefencePosture: TechniqueEntry = {
     drafted:
       "assisted draft, 2026-09-29, from technique batch 2 target list (E)",
     factAudit:
-      "Fact audit, assisted (Claude Code agent), 2026-09-29: posture/arm/angle order, stack-from-posture and two-sided-neck safety confirmed; no contradiction with triangle-closes-at-the-shoulder (same angle side, same turn to the free side); 'most rulesets prohibit slamming' replaced by a ruleset deferral that states no rule.",
+      "Fact audit, assisted (Claude Code agent), 2026-09-29: posture/arm/angle order, stack-from-posture and two-sided-neck safety confirmed; no contradiction with triangle-closes-at-the-shoulder (same angle side, same turn to the free side); 'most rulesets prohibit slamming' replaced by a ruleset deferral that states no rule. Fact re-check, assisted (Claude Code agent), 2026-10-06: the ruleset deferral holds, since the IBJJF table (v6.1, p. 29 row 21) bars slams in every division while ADCC's professional rules allow a slam when locked in a submission and its other divisions do not; angle side and free-side turn re-checked against the published triangle-closes-at-the-shoulder and the-triangle-and-the-angle, no conflict; no changes.",
     voiceAudit:
       "Voice audit, assisted (Claude Code agent), 2026-09-29: mechanics clean (meta 157); title moved off the guillotine defence template; four lines shared with the batch-1 triangle and guillotine-defence entries rewritten (safety opener now the defender's tap signal, arms-together KM, a prescriptive last step, blood-choke restatement cut as a duplicate of the safety note); 'Defending it means' closer varied.",
     approvedBy: null,

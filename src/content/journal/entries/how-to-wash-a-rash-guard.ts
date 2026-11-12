@@ -9,6 +9,7 @@ import type { PublishedArticle } from "../types.ts";
 export const howToWashARashGuard: PublishedArticle = {
   status: "published",
   publishedAt: "2026-08-04",
+  updatedAt: "2026-09-29",
   authorId: "guard-theory-editorial",
   slug: "how-to-wash-a-rash-guard",
   category: "equipment-and-apparel",
@@ -23,7 +24,7 @@ export const howToWashARashGuard: PublishedArticle = {
       heading: "Two materials, one garment",
       paragraphs: [
         "A rash guard is not made of one thing, and it does not fail as one thing. The bulk of the yarn is a synthetic filament, usually polyester, doing the job of holding a shape and taking abrasion. Threaded through it is a much smaller percentage of elastane, the fibre also sold as spandex and under the Lycra trademark, doing the job of returning the fabric to its original dimensions after it has been stretched.",
-        "Those two components fail in different ways and on different timescales. The polyester loses surface, pills and eventually thins where it is abraded. The elastane loses return. When people say a top has gone baggy at the elbows, or that it no longer sits flat across the shoulders, they are describing a loss of return, which is a property of the small fibre rather than the large one.",
+        "Those two components fail in different ways and on different timescales. The polyester loses surface, pills and eventually thins where it is abraded. The elastane loses return. When people say a top has gone baggy at the elbows, or that it no longer sits flat across the shoulders, they are describing a loss of return, which depends mostly on the small fibre and on how the fabric is built around it.",
         "That distinction decides what is worth caring about in a wash cycle. It also explains why so much laundry advice is unfalsifiable: it treats the garment as one material and then attributes any change in it to whichever variable the writer wanted to talk about.",
       ],
     },
@@ -33,8 +34,8 @@ export const howToWashARashGuard: PublishedArticle = {
       paragraphs: [
         "Two pieces of published work do most of the useful work here, and neither of them tested a rash guard.",
         "Jovanovic and colleagues, writing in Materials in 2022, knitted plated weft fabrics from polyamide with elastane percentages ranging from zero to forty-three per cent, then cyclically loaded them and calculated unrecovered elongation, elastic elongation and a hysteresis index. Their result was that the elastane percentage significantly affects the size of the elastic region of the fabric, the range within which unrecovered deformation completely disappears, and has no effect on the hysteresis index. Their conclusion was that the elastane percentage has to be optimised for each fabric design rather than simply increased.",
-        "Sular and Oner, in Fibres and Textiles in Eastern Europe in 2019, took the question directly to the washing machine. They laundered twelve elastane knitted fabrics according to ISO 6330, in a home-type front-loading machine at forty degrees with a non-phosphate detergent, and measured cyclic deformation after zero, five, fifteen and twenty-five wash cycles at four different recovery times. They report that the effect of repeated washing on residual extension is gradual rather than sudden, that five and fifteen cycles were the significant thresholds in their fabrics, and that fabric construction, specifically the ground yarn and the gimped elastane yarn, changed how much residual extension a fabric was left with. They also cite earlier work by Lau and colleagues reporting resilience values decreasing by ten to twenty per cent after sixteen washing cycles.",
-        "Read those two together and the finding that matters is not about temperature or detergent at all. It is that washing a stretch knit changes its recovery whatever you do, that the change accumulates gradually, and that the fabric's own construction determines how fast. A forty-degree wash with a mild detergent, which is close to the gentlest realistic domestic cycle, was enough to produce measurable change.",
+        "Sular and Oner, in Fibres and Textiles in Eastern Europe in 2019, took the question directly to the washing machine. They put twelve elastane knitted fabrics through repeated home laundering and measured cyclic deformation after zero, five, fifteen and twenty-five wash cycles at four different recovery times. They report that five and fifteen cycles were the significant points across their fabrics, and that fabric construction, specifically the viscose ground yarn and the polyamide and elastane gimped yarn, changed how much residual extension a fabric was left with.",
+        "Read those two together and the finding that matters is not about temperature or detergent at all. It is that ordinary home laundering changes a stretch knit's recovery, that the change builds over repeated cycles, and that the fabric's own construction determines how much.",
         "One honest limitation. The Jovanovic fabrics were polyamide and elastane; the Sular and Oner fabrics were viscose with polyamide and elastane gimped yarns. Neither is the polyester-dominant knit that most rash guards are made from, and neither study was designed to describe one. They tell you which property to watch. They do not tell you what your top does.",
       ],
     },
@@ -61,11 +62,11 @@ export const howToWashARashGuard: PublishedArticle = {
       heading: "What we could not source",
       paragraphs: [
         "Four claims that appear in nearly every published guide to washing stretch sportswear were cut from this article, and it is worth naming them rather than quietly leaving them out.",
-        "A specific maximum wash temperature. There is a great deal of confident writing about thirty degrees against forty, and we could not open a study that tested wash temperature against elastic recovery in this fabric class. The one laundering study we could read used forty degrees throughout and did not vary it.",
-        "Detergent chemistry. The claim that alkaline or enzymatic detergents attack elastane specifically is repeated everywhere. The laundering study used a non-phosphate detergent and did not compare formulations, so we have nothing to report.",
-        "Chlorine. Chlorinated water is frequently blamed for elastane failure. The nearest study we could reach tested ultraviolet light and seawater rather than chlorine, and a 1987 paper on swimwear degradation that covers light, seawater and chlorine could not be opened for this pass. The claim may well be right. We cannot show it.",
-        "Fabric softener. No source found in either direction.",
-        "None of those four is a claim we can make, and none of them is refuted by the absence of evidence either. The point of listing them is that the writing you will find elsewhere states all four as fact, and that should tell you something about how it was produced.",
+        "A specific maximum wash temperature. There is a great deal of confident writing about thirty degrees against forty, and we could not find a study that tested wash temperature against elastic recovery in this fabric class. The one laundering study above did not compare temperatures.",
+        "Detergent chemistry. The claim that alkaline or enzymatic detergents attack elastane specifically is repeated everywhere. The laundering study did not compare formulations, so we have nothing to report.",
+        "Chlorine. Chlorinated water is frequently blamed for elastane failure. One 2024 study, by Potočić Matković and colleagues in Polymers, left nine polyamide- and polyester-elastane swimwear knits in a chlorinated outdoor pool for 200 and 300 hours. Breaking force fell by 12.4 per cent after 200 hours in chlorine and by 65.7 per cent after 300, while breaking elongation barely moved. That is a measured strength loss from long immersion. It is not a measure of recovery, and hundreds of hours in a pool is not a training top's exposure, so it does not support a rule about washing.",
+        "Fabric softener. We found finishing studies on softeners and moisture management in knits, but none on household softener and elastane recovery.",
+        "None of those four is a laundry rule we can give you, and none of them is refuted by the absence of evidence either. The point of listing them is that the writing you will find elsewhere states all four as fact, and that should tell you something about how it was produced.",
       ],
     },
     {
@@ -73,18 +74,19 @@ export const howToWashARashGuard: PublishedArticle = {
       heading: "Reading the care label as a specification",
       paragraphs: [
         "The most useful document you already own is the label, provided you read it as what it is rather than as advice.",
-        "The care symbol system is administered by GINETEX, whose five symbols are protected trademarks and which describes itself as the origin of the ISO 3758 international standard on care labelling using symbols. The fourth edition of that standard, ISO 3758:2023, was published in December 2023 and replaced the 2012 edition.",
+        "The care symbol system is administered by GINETEX, whose five symbols are protected trademarks in most countries and which describes itself as the origin of the ISO 3758 international standard on care labelling using symbols. The fourth edition of that standard, ISO 3758:2023, was published in December 2023 and replaced the 2012 edition.",
         "Two things GINETEX says about the symbols change how you should read them. The symbols indicate the maximum permitted treatment, not the recommended one, which means gentler handling than the label shows is always allowed and the number in the wash tub is a ceiling rather than a target. And care labelling is not a guarantee of quality: the label tells you what the manufacturer says the garment will tolerate, and the standard governs how that is expressed, not whether it is true.",
-        "There are also published test methods behind the properties a manufacturer would need in order to know. ASTM D2594 covers stretch properties of knitted fabrics having low power and measures both fabric stretch and fabric growth, the residual extension left after the load comes off. AATCC runs proficiency-testing programmes for textile properties including colourfastness. Almost nobody publishes results from any of them, including us, and that absence is why the checks you can run yourself carry more weight than they should have to.",
+        "There are also published test methods behind the properties a manufacturer would need in order to know. ASTM D2594 covers stretch properties of knitted fabrics having low power and measures both fabric stretch and fabric growth, the residual extension left after the load comes off. AATCC publishes colourfastness test methods, including one for chlorinated pool water, TM162. Almost nobody publishes results from any of them, and that absence is why the checks you can run yourself carry more weight than they should have to.",
       ],
     },
     {
       id: "what-this-adds-up-to",
       heading: "What this adds up to",
       paragraphs: [
-        "The measured variable is the number of wash cycles, not the ones people argue about. Recovery declines gradually with repeated laundering in the one study that tested it, at a mild temperature with a mild detergent, and construction changes the rate. Ultraviolet exposure is a documented degradation pathway for related fabrics. Odour is substantially a property of the fibre. Everything else in this article is a gap in the record rather than a rule.",
-        "We are not going to tell you that any washing routine sanitises anything, prevents anything, or extends the life of a garment by a number of months, because we have no evidence for any of those sentences and neither does anybody selling you a detergent. We are also not going to publish a lifespan figure for our own garment, because it does not exist yet.",
+        "The measured variable is the number of wash cycles, not the ones people argue about. Recovery declines with repeated home laundering in the one study that tested it, and construction changes how much. Ultraviolet exposure is a documented degradation pathway for related fabrics. Odour is substantially a property of the fibre. Everything else in this article is a gap in the record rather than a rule.",
+        "We are not going to tell you that any washing routine sanitises anything, prevents anything, or extends the life of a garment by a number of months, because we have no evidence for any of those sentences and neither does anybody selling you a detergent.",
         "If you want one thing to take from this, take the reframing rather than a rule. Each wash spends a little of a finite property, and the property being spent is return rather than strength. That is worth knowing when you decide how many training tops you want in rotation, and it is the only part of this that the evidence actually supports.",
+        "Correction, 29 September 2026: an earlier version of this article said the laundering study washed at forty degrees with a mild detergent, and that we had found no study of chlorine. The publisher's copy of the laundering paper has gone, and the method details could not be checked against what remains, so they have been removed. A 2024 chlorine study has since been found and is described above.",
       ],
     },
   ],
@@ -98,10 +100,10 @@ export const howToWashARashGuard: PublishedArticle = {
     },
     {
       title:
-        "Vildan Sular and Eren Oner, Impact of Repeated Home Laundering on the Cyclic Deformation Performance of Elastane Knitted Sportswear Fabrics, Fibres and Textiles in Eastern Europe (2019), doi 10.5604/01.3001.0012.7513",
-      publisher: "Fibres and Textiles in Eastern Europe (publisher file)",
-      url: "https://publisherspanel.com/api/files/view/663399.pdf",
-      accessed: "2026-08-03",
+        "Vildan Sular and Eren Oner, Impact of Repeated Home Laundering on the Cyclic Deformation Performance of Elastane Knitted Sportswear Fabrics, Fibres and Textiles in Eastern Europe 27(1):91-99 (2019), doi 10.5604/01.3001.0012.7513. Abstract only: the publisher's full text no longer resolves",
+      publisher: "ResearchGate (abstract record)",
+      url: "https://www.researchgate.net/publication/330873125_Impact_of_Repeated_Home_Laundering_on_the_Cyclic_Deformation_Performance_of_Elastane_Knitted_Sportswear_Fabrics",
+      accessed: "2026-09-29",
     },
     {
       title: "Impact of Artificial Weathering on Swimwear Fabric, Fibers and Polymers (2024)",
@@ -131,17 +133,33 @@ export const howToWashARashGuard: PublishedArticle = {
       accessed: "2026-08-03",
     },
     {
-      title: "AATCC test methods and standards development",
+      title: "AATCC TM162-2011e2, Colorfastness to Water: Chlorinated Pool",
       publisher: "AATCC",
-      url: "https://www.aatcc.org/testing",
-      accessed: "2026-08-03",
+      url: "https://members.aatcc.org/store/tm162/562/",
+      accessed: "2026-09-29",
+    },
+    {
+      title:
+        "Potočić Matković VM, Salopek Čubrić I, Krstović K. The Impact of Chlorinated Water and Sun Exposure on the Durability and Performance of Swimwear Materials. Polymers 16(21):3050 (2024). doi:10.3390/polym16213050",
+      publisher: "MDPI, via PubMed Central",
+      url: "https://pmc.ncbi.nlm.nih.gov/articles/PMC11548456/",
+      accessed: "2026-09-29",
+    },
+    {
+      title:
+        "The Effect of Softeners Applications on Moisture Management Properties of Polyester/Cotton Blended Sandwich Weft-Knitted Fabric Structure, Coatings 11(5):575 (2021)",
+      publisher: "MDPI",
+      url: "https://doi.org/10.3390/coatings11050575",
+      accessed: "2026-09-29",
     },
   ],
   relatedSlugs: ["how-a-bjj-rash-guard-should-fit"],
   contestedNotes: [
     "Neither elastane study cited here tested a polyester-dominant knit. Jovanovic and colleagues used polyamide with elastane; Sular and Oner used viscose ground yarns with polyamide and elastane gimped yarns. Rash guards are typically polyester-dominant, so both results are applied here as indications of which property to watch rather than as descriptions of any rash guard.",
     "The artificial-weathering study was conducted on warp-knitted swimwear fabric over 120 and 240 hours of accelerated exposure. It establishes ultraviolet light as a degradation pathway for that fabric family. It does not quantify what ordinary line drying does, and this article draws no drying rule from it.",
-    "No source was found for a specific maximum wash temperature, for detergent chemistry, for chlorine, or for fabric softener in relation to elastane recovery. Those claims are stated as unsourced and omitted rather than softened. A 1987 paper on the degradation of swimwear fabrics by light, seawater and chlorine exists and could not be opened during this pass; it should be revisited before any chlorine claim is added.",
+    "No source was found for a specific maximum wash temperature, for detergent chemistry, or for fabric softener in relation to elastane recovery. Those claims are stated as unsourced and omitted rather than softened.",
+    "The one chlorine study cited, Potočić Matković and colleagues (2024), measured breaking force, breaking elongation, thickness, mass and moisture management in swimwear knits after 200 and 300 hours in chlorinated pool water. It did not measure elastic recovery and did not test laundering, so no washing rule is drawn from it. A 1987 paper on the degradation of swimwear fabrics by light, seawater and chlorine exists and could not be opened.",
+    "The Sular and Oner laundering paper is cited from its abstract. The publisher's full-text link used when this article was first written no longer resolves, and neither does the DOI's landing page, so only what the abstract states is reported here.",
     "The odour study is reported as an odour-panel and microbiology finding only. This article makes no hygiene, infection or health claim, and none should be inferred from it.",
   ],
 };

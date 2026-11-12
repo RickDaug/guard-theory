@@ -1,14 +1,17 @@
 import { createHash, randomBytes, scrypt, timingSafeEqual, type ScryptOptions } from "node:crypto";
 
 /**
- * One password, one admin, no library.
+ * Passwords and sessions, no library.
  *
  * `docs/technical-architecture.md` asks for no dependency that solves a problem
  * the site does not have. Auth.js and Better Auth solve OAuth providers,
  * account linking, multi-user roles, password reset and email verification.
- * There is one admin, one password, no reset flow and no third party, so nearly
- * all of that surface would be unused — and unused auth surface is still
- * attack surface.
+ * This portal was one admin and one password when that was decided. Since
+ * 2026-10-05 it has a handful of crew accounts with two roles and an
+ * owner-started set-password link (src/lib/portal/users.ts, roles.ts) — still
+ * no OAuth, no self-service sign-up, no account linking and no third party, so
+ * most of a library's surface would still be unused, and unused auth surface
+ * is still attack surface.
  *
  * What is genuinely hard about passwords is the hashing, and Node's standard
  * library already has the right primitive.

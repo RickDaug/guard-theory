@@ -152,6 +152,11 @@ export const TEXT_ON_GROUND: Array<{
 
   // Fills.
   { fgToken: "chalk", fg: CHALK, bgToken: "signal", bg: SIGNAL },
+  // The signal button's hover. It used to fade to 85% opacity, which let the
+  // ground through and took chalk below 4.5:1 while the pointer rested on it —
+  // axe caught it on the cart, where the pointer is still on the button after
+  // a refused checkout. Darkening to signal-dim raises the contrast instead.
+  { fgToken: "chalk", fg: CHALK, bgToken: "signal-dim", bg: "#2161C9" },
   { fgToken: "ink", fg: INK, bgToken: "orchid", bg: "#D0BCD5" },
   { fgToken: "ink", fg: INK, bgToken: "chalk", bg: CHALK },
 

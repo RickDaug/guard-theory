@@ -18,7 +18,7 @@ export const underhookHalfGuard: TechniqueEntry = {
     "Be on your side before you swim the arm in. The shoulder on the underhook side has to be off the mat, or the underhook has no body behind it.",
     "Reach deep: the hand goes to their far lat or around the waist, with your elbow high behind their armpit. A shallow underhook at the ribs is easy to whizzer and easy to pummel out.",
     "Put your head low against their ribs or hip on the underhook side and keep it tight to them. A head that floats out in the open is available to the crossface and to the front headlock.",
-    "Keep hold of the trapped leg while you come up, and move your hook from a lockdown or a triangle to something you can base on. The legs stop them stepping away from the underhook; they also have to let you get to a knee.",
+    "Keep hold of the trapped leg while you come up, and move your hook from a lockdown (the 10th Planet term) or a triangle to something you can base on. The legs stop them stepping away from the underhook; they also have to let you get to a knee.",
     "Come up in stages: elbow, then hand, then knee. Each stage is a base you can stop on if the whizzer gets heavy, instead of one lunge that either works or collapses.",
     "Once you are up, finish by getting behind their hip. Driving straight into them is a pushing contest with the person who has gravity; circling toward their back makes the whizzer the only thing holding them in front of you.",
     "When the whizzer is too heavy to come up against, change the question. Dropping back under them, or freeing the arm and recovering the knee shield, keeps you in half guard with your shoulders still off the mat.",

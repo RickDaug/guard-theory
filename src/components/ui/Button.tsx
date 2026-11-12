@@ -1,5 +1,5 @@
 import Link from "next/link";
-import type { ComponentPropsWithoutRef, ReactNode } from "react";
+import type { ComponentPropsWithoutRef, ComponentPropsWithRef, ReactNode } from "react";
 
 /**
  * Three intents, and they are genuinely different jobs rather than three
@@ -25,7 +25,9 @@ const INTENT: Record<Intent, string> = {
   // chalk, not ink: the brand blue is a mid-luminance colour, so a dark label
   // on it reads 3.6:1 and a near-white one reads 4.7:1. chalk's value was set
   // by this pairing.
-  signal: "bg-signal px-7 py-3.5 text-chalk hover:opacity-85",
+  // Hover darkens to signal-dim rather than fading: a fade lets the ground
+  // through and took the label below 4.5:1 (see TEXT_ON_GROUND).
+  signal: "bg-signal px-7 py-3.5 text-chalk hover:bg-signal-dim",
   outline:
     "border border-steel-mid px-7 py-3.5 text-chalk hover:border-signal-lift hover:text-signal-lift",
   quiet:
@@ -35,7 +37,7 @@ const INTENT: Record<Intent, string> = {
 type ButtonProps = {
   intent?: Intent;
   children: ReactNode;
-} & ComponentPropsWithoutRef<"button">;
+} & ComponentPropsWithRef<"button">;
 
 export function Button({
   intent = "signal",
@@ -83,7 +85,7 @@ type ButtonLinkProps = {
   intent?: Intent;
   href: string;
   children: ReactNode;
-} & Omit<ComponentPropsWithoutRef<typeof Link>, "href">;
+} & Omit<ComponentPropsWithRef<typeof Link>, "href">;
 
 export function ButtonLink({
   intent = "signal",

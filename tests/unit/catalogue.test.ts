@@ -14,6 +14,14 @@ import { closePool, isDatabaseConfigured, query } from "../../src/lib/db/client.
  * is a draft. The listing used to skip drafts and fall back to the registry
  * only for an EMPTY table — so that exact state rendered "Two garments." over
  * an empty list.
+ *
+ * `node --test` runs the unit files in parallel against ONE database, and
+ * several of them (checkout, fulfil, webhook, cron, hardening) insert their own
+ * active, priced fixture products for the length of their run. Those are real
+ * portal-style products and the listing is right to show them — so every
+ * assertion here is over the rows this file controls: the registry garments and
+ * its own portal draft. Counting the whole listing made the result depend on
+ * which other file happened to be mid-run, and it failed in CI that way.
  */
 
 const HAS_DB = isDatabaseConfigured();
@@ -24,6 +32,12 @@ describe("the shop listing", { skip: !HAS_DB && "no DATABASE_URL" }, () => {
   let saved: Saved[] = [];
   const strayId = randomUUID();
   const straySlug = `portal-draft-${strayId.slice(0, 8)}`;
+
+  // The listing, narrowed to what this file owns. A duplicate registry entry,
+  // a listed archive or the portal draft leaking in are all still caught; a
+  // concurrent file's fixture product is not this test's business.
+  const ownSlugs = new Set([...PRODUCTS.map((p) => p.slug), straySlug]);
+  const listOwn = async () => (await listProductViews()).filter((v) => ownSlugs.has(v.slug));
 
   const setAll = (status: string, price: number | null) =>
     query("update product set status = $1, price_cents = $2 where slug = any($3::text[])", [
@@ -66,7 +80,7 @@ describe("the shop listing", { skip: !HAS_DB && "no DATABASE_URL" }, () => {
   it("straight after the seed, lists every registry garment as content only", async () => {
     await setAll("draft", null);
 
-    const views = await listProductViews();
+    const views = await listOwn();
 
     assert.deepEqual(
       views.map((v) => v.slug).sort(),
@@ -83,7 +97,7 @@ describe("the shop listing", { skip: !HAS_DB && "no DATABASE_URL" }, () => {
     const first = PRODUCTS[0]!.slug;
     await query("update product set status = 'active', price_cents = 8900 where slug = $1", [first]);
 
-    const views = await listProductViews();
+    const views = await listOwn();
     const active = views.find((v) => v.slug === first);
 
     assert.equal(active?.commerce?.priceCents, 8900);
@@ -96,7 +110,7 @@ describe("the shop listing", { skip: !HAS_DB && "no DATABASE_URL" }, () => {
     const first = PRODUCTS[0]!.slug;
     await query("update product set status = 'archived' where slug = $1", [first]);
 
-    const slugs = (await listProductViews()).map((v) => v.slug);
+    const slugs = (await listOwn()).map((v) => v.slug);
     assert.equal(slugs.includes(first), false);
     assert.equal(slugs.length, PRODUCTS.length - 1);
   });

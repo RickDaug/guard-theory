@@ -4,7 +4,8 @@ import {
   indexableJournalCategorySlugs,
   indexableTechniqueCategorySlugs,
 } from "@/content/category-gate";
-import { PRODUCTS } from "@/content/products";
+import { listProductViews } from "@/lib/catalogue";
+import { isProductIndexable } from "@/lib/catalogue/structured-data";
 import { POLICIES } from "@/content/policies";
 import { publishedArticles } from "@/content/journal";
 import { FIGURES } from "@/content/figures";
@@ -21,7 +22,18 @@ import { absoluteUrl } from "@/lib/site";
  * yet, and a build timestamp on every URL is a lie that tells crawlers
  * everything changed whenever we deploy.
  */
-export default function sitemap(): MetadataRoute.Sitemap {
+/**
+ * Products are read from the same listing /shop renders, per request: a product
+ * the owner activates in the portal has no registry entry, and one archived
+ * there must leave the sitemap the moment it leaves the shop — not at the next
+ * deploy. With no database the listing is the registry, so the build is
+ * unchanged. Drafts created in the portal are never listed.
+ */
+export const dynamic = "force-dynamic";
+
+export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
+  const products = (await listProductViews()).filter(isProductIndexable);
+
   const staticRoutes = [
     "/",
     "/shop",
@@ -39,7 +51,7 @@ export default function sitemap(): MetadataRoute.Sitemap {
 
   return [
     ...staticRoutes.map((path) => ({ url: absoluteUrl(path) })),
-    ...PRODUCTS.map((product) => ({ url: absoluteUrl(`/shop/${product.slug}`) })),
+    ...products.map((product) => ({ url: absoluteUrl(`/shop/${product.slug}`) })),
     // Category pages enter the sitemap only once they clear the three-entry
     // gate, and they are computed from the same predicate that sets their
     // robots meta — a page cannot be noindex and offered to a crawler at the

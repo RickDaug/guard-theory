@@ -62,3 +62,25 @@ export function hasCustomPortalPath(): boolean {
   const custom = configured();
   return custom !== "" && custom !== "crew";
 }
+
+/**
+ * Whether a GET reached a portal route from another site's page.
+ *
+ * Server actions are POSTs that Next checks for origin; a route handler's GET
+ * is not, and the session cookie is SameSite=Lax, so it rides along on a
+ * top-level navigation from anywhere. A GET that does something — the label
+ * route fetches a fresh Shippo URL and writes "label opened to print, by
+ * <name>" into the order's history — must not do it for a link on someone
+ * else's page, or anyone can write history in a signed-in person's name.
+ *
+ * Sec-Fetch-Site is sent by every current browser and cannot be set by a page.
+ * `same-origin` is the portal's own link; `none` is a typed address or a
+ * bookmark. Anything else, `same-site` included (a sibling subdomain is not
+ * this site), is refused. A request without the header (an old browser, curl
+ * with a stolen cookie) is let through: the header is a defence against
+ * someone else's page, not a substitute for the session.
+ */
+export function isCrossSiteRequest(headers: Headers): boolean {
+  const site = headers.get("sec-fetch-site");
+  return site !== null && site !== "same-origin" && site !== "none";
+}

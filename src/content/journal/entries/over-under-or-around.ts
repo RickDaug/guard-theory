@@ -1,4 +1,4 @@
-import type { DraftArticle } from "../types.ts";
+import type { PublishedArticle } from "../types.ts";
 
 /**
  * A foundational piece for a reader who is learning to pass guard. The count
@@ -32,8 +32,10 @@ import type { DraftArticle } from "../types.ts";
  *
  * Draft: no author has read this piece, so it carries no byline and no date.
  */
-export const overUnderOrAround: DraftArticle = {
-  status: "draft",
+export const overUnderOrAround: PublishedArticle = {
+  status: "published",
+  publishedAt: "2026-11-11",
+  authorId: "guard-theory-editorial",
   slug: "over-under-or-around",
   category: "guard-systems",
   title: "Over, under or around: the ways past the legs",

@@ -1,4 +1,4 @@
-import type { DraftArticle } from "../types.ts";
+import type { PublishedArticle } from "../types.ts";
 
 /**
  * A foundational piece on the one convention the sport rests on. What is
@@ -24,8 +24,10 @@ import type { DraftArticle } from "../types.ts";
  *
  * Draft: no author has read this piece, so it carries no byline and no date.
  */
-export const whatATapIs: DraftArticle = {
-  status: "draft",
+export const whatATapIs: PublishedArticle = {
+  status: "published",
+  publishedAt: "2026-11-11",
+  authorId: "guard-theory-editorial",
   slug: "what-a-tap-is",
   category: "training-culture",
   title: "What a tap is",

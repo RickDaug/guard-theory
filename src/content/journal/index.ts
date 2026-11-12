@@ -2,7 +2,10 @@ import { CATEGORIES, isPublished, readingTimeMinutes } from "./types.ts";
 import type { Article, JournalCategorySlug } from "./types.ts";
 import { deLaRivaAndTheGuardThatTookHisName } from "./entries/de-la-riva-and-the-guard-that-took-his-name.ts";
 import { gripDecayAndTheHalfLifeOfANoGiGrip } from "./entries/grip-decay-and-the-half-life-of-a-no-gi-grip.ts";
+import { howTheGuardReorganisedAroundLegEntanglements } from "./entries/how-the-guard-reorganised-around-leg-entanglements.ts";
+import { oswaldoFaddaAndTheLineageOutsideTheFamily } from "./entries/oswaldo-fadda-and-the-lineage-outside-the-family.ts";
 import { howToWashARashGuard } from "./entries/how-to-wash-a-rash-guard.ts";
+import { howLongToBlueBeltAndOtherFirstWeekQuestions } from "./entries/how-long-to-blue-belt-and-other-first-week-questions.ts";
 import { seatedGuardAndSupineGuard } from "./entries/seated-guard-and-supine-guard.ts";
 import { theDropoutNumberNobodyCanSource } from "./entries/the-dropout-number-nobody-can-source.ts";
 import { whatToWearToYourFirstNoGiClass } from "./entries/what-to-wear-to-your-first-no-gi-class.ts";
@@ -16,12 +19,15 @@ import { longSleeveOrShortSleeve } from "./entries/long-sleeve-or-short-sleeve.t
 import { maedaAndTheArrivalOfJudoInBrazil } from "./entries/maeda-and-the-arrival-of-judo-in-brazil.ts";
 import { submissionOnlyAndTheOvertimeProblem } from "./entries/submission-only-and-the-overtime-problem.ts";
 import { takingTheBackFromTurtle } from "./entries/taking-the-back-from-turtle.ts";
+import { theArmDragAsASystem } from "./entries/the-arm-drag-as-a-system.ts";
 import { theArmbarFromClosedGuard } from "./entries/the-armbar-from-closed-guard.ts";
 import { theGuillotineFromTheFrontHeadlock } from "./entries/the-guillotine-from-the-front-headlock.ts";
 import { theKimuraAsAControlBeforeItIsAFinish } from "./entries/the-kimura-as-a-control-before-it-is-a-finish.ts";
 import { theRearNakedStrangleFromBackControl } from "./entries/the-rear-naked-strangle-from-back-control.ts";
 import { theTriangleAndTheAngle } from "./entries/the-triangle-and-the-angle.ts";
+import { ufcSubmissionsByTheNumbers } from "./entries/ufc-submissions-by-the-numbers.ts";
 import { whyTheUnderhookDecidesHalfGuard } from "./entries/why-the-underhook-decides-half-guard.ts";
+import { whereTheGuardCameFrom } from "./entries/where-the-guard-came-from.ts";
 import { basePostureAndStructure } from "./entries/base-posture-and-structure.ts";
 import { jiuJitsuJujutsuAndTheSpellingOfTheName } from "./entries/jiu-jitsu-jujutsu-and-the-spelling-of-the-name.ts";
 import { positionBeforeSubmissionAndWhatThePointsTableTeaches } from "./entries/position-before-submission-and-what-the-points-table-teaches.ts";
@@ -63,22 +69,28 @@ export const ARTICLES: Article[] = [
   gripDecayAndTheHalfLifeOfANoGiGrip,
   guardRetentionAsASystem,
   howABjjRashGuardShouldFit,
+  howLongToBlueBeltAndOtherFirstWeekQuestions,
   howNoGiRulesetsReshapedTechniqueSelection,
   ibjjfNoGiUniformRulesReadCarefully,
   longSleeveOrShortSleeve,
   howToWashARashGuard,
+  howTheGuardReorganisedAroundLegEntanglements,
   maedaAndTheArrivalOfJudoInBrazil,
+  oswaldoFaddaAndTheLineageOutsideTheFamily,
   seatedGuardAndSupineGuard,
   submissionOnlyAndTheOvertimeProblem,
   theDropoutNumberNobodyCanSource,
   whatTheEarlyUfcTournamentsDemonstrated,
   whatToWearToYourFirstNoGiClass,
   takingTheBackFromTurtle,
+  theArmDragAsASystem,
   theArmbarFromClosedGuard,
   theGuillotineFromTheFrontHeadlock,
   theKimuraAsAControlBeforeItIsAFinish,
   theRearNakedStrangleFromBackControl,
   theTriangleAndTheAngle,
+  ufcSubmissionsByTheNumbers,
+  whereTheGuardCameFrom,
   whySportJiuJitsuDoesNotTransferDirectlyToMma,
   whyTheUnderhookDecidesHalfGuard,
   basePostureAndStructure,

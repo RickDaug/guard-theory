@@ -1,4 +1,4 @@
-import type { DraftArticle } from "../types.ts";
+import type { PublishedArticle } from "../types.ts";
 
 /**
  * A philosophy piece about one word doing two jobs: flow as a kind of round
@@ -29,8 +29,10 @@ import type { DraftArticle } from "../types.ts";
  * Draft: no one has read and signed off this piece, so it carries no byline
  * and no date.
  */
-export const flowAndTheTwoThingsTheWordMeans: DraftArticle = {
-  status: "draft",
+export const flowAndTheTwoThingsTheWordMeans: PublishedArticle = {
+  status: "published",
+  publishedAt: "2026-11-11",
+  authorId: "guard-theory-editorial",
   slug: "flow-and-the-two-things-the-word-means",
   category: "training-culture",
   title: "Flow, and the two things the word means",

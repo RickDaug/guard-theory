@@ -1,4 +1,4 @@
-import type { DraftArticle } from "../types.ts";
+import type { PublishedArticle } from "../types.ts";
 
 /**
  * A foundational piece on how a match that nobody submits is decided, read
@@ -32,8 +32,10 @@ import type { DraftArticle } from "../types.ts";
  *
  * Draft: no author has read this piece, so it carries no byline and no date.
  */
-export const advantagesPenaltiesAndTheClock: DraftArticle = {
-  status: "draft",
+export const advantagesPenaltiesAndTheClock: PublishedArticle = {
+  status: "published",
+  publishedAt: "2026-11-11",
+  authorId: "guard-theory-editorial",
   slug: "advantages-penalties-and-the-clock",
   category: "competition-analysis",
   title: "Advantages, penalties and the clock",

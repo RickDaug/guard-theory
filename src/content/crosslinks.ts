@@ -72,6 +72,23 @@ export const CROSS_LINKS: CrossLink[] = [
     basis: "Named in the article as the room the guard was developed in.",
   },
   {
+    a: journal("the-arm-drag-as-a-system"),
+    b: figure("marcelo-garcia"),
+    basis: "The article is about the arm-drag-to-back chain his game was built on.",
+  },
+  {
+    a: journal("where-the-guard-came-from"),
+    b: figure("helio-gracie"),
+    basis:
+      "The article sets out three accounts of his role in the guard in the 1930s and credits none.",
+  },
+  {
+    a: journal("where-the-guard-came-from"),
+    b: figure("mitsuyo-maeda"),
+    basis:
+      "The article reports Pedreira's account that Maeda considered his own groundwork weak.",
+  },
+  {
     a: journal("what-the-early-ufc-tournaments-demonstrated"),
     b: figure("royce-gracie"),
     basis:
@@ -116,8 +133,20 @@ export const CROSS_LINKS: CrossLink[] = [
     basis:
       "Her profile cites the closed guard as her recorded favourite position.",
   },
+  {
+    a: journal("oswaldo-fadda-and-the-lineage-outside-the-family"),
+    b: figure("oswaldo-fadda"),
+    basis:
+      "The article is about Fadda's academy, his challenge to the Gracie academy and the dispute over his teacher's lineage.",
+  },
 
   // ── Journal ↔ Technique Library ────────────────────────────────────────
+  {
+    a: journal("how-the-guard-reorganised-around-leg-entanglements"),
+    b: technique("leg-entanglement-as-control"),
+    basis:
+      "The article cites the entry's argument that an entanglement is a pin on one leg, worth winning before any submission; the entry names knee reaping and the 2021 IBJJF permission.",
+  },
   {
     a: journal("the-rear-naked-strangle-from-back-control"),
     b: technique("seat-belt-and-hooks"),
@@ -211,6 +240,30 @@ export const CROSS_LINKS: CrossLink[] = [
     b: technique("seat-belt-and-hooks"),
     basis:
       "The article names the entry as the control that back-start overtime begins from.",
+  },
+  {
+    a: journal("the-arm-drag-as-a-system"),
+    b: technique("arm-drag"),
+    basis:
+      "The article quotes the entry's description of the drag as a redirection of an arm already extended.",
+  },
+  {
+    a: journal("the-arm-drag-as-a-system"),
+    b: technique("butterfly-hook-as-lever"),
+    basis:
+      "The article uses the entry's point that a hook only lifts once the opponent's weight is loaded onto it.",
+  },
+  {
+    a: journal("the-arm-drag-as-a-system"),
+    b: technique("seat-belt-and-hooks"),
+    basis:
+      "The article uses the entry's ordering, chest connection before hooks, for the end of the chain.",
+  },
+  {
+    a: journal("ufc-submissions-by-the-numbers"),
+    b: technique("seat-belt-and-hooks"),
+    basis:
+      "The article says the rear naked choke does not exist without the seat belt first; the entry says the back is most often lost while hunting that strangle.",
   },
   {
     a: journal("why-the-underhook-decides-half-guard"),

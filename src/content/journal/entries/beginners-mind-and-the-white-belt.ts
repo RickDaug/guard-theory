@@ -1,4 +1,4 @@
-import type { DraftArticle } from "../types.ts";
+import type { PublishedArticle } from "../types.ts";
 
 /**
  * A philosophy piece that takes a borrowed phrase back to where it can be
@@ -36,8 +36,10 @@ import type { DraftArticle } from "../types.ts";
  * Draft: no one has read and signed off this piece, so it carries no byline
  * and no date.
  */
-export const beginnersMindAndTheWhiteBelt: DraftArticle = {
-  status: "draft",
+export const beginnersMindAndTheWhiteBelt: PublishedArticle = {
+  status: "published",
+  publishedAt: "2026-11-11",
+  authorId: "guard-theory-editorial",
   slug: "beginners-mind-and-the-white-belt",
   category: "training-culture",
   title: "Beginner's mind, and what the white belt is for",

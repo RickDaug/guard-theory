@@ -1,4 +1,4 @@
-import type { DraftArticle } from "../types.ts";
+import type { PublishedArticle } from "../types.ts";
 
 /**
  * A foundational piece for a reader who has just learned what a guard is. The
@@ -26,8 +26,10 @@ import type { DraftArticle } from "../types.ts";
  *
  * Draft: no author has read this piece, so it carries no byline and no date.
  */
-export const sweepSubmitOrStand: DraftArticle = {
-  status: "draft",
+export const sweepSubmitOrStand: PublishedArticle = {
+  status: "published",
+  publishedAt: "2026-11-11",
+  authorId: "guard-theory-editorial",
   slug: "sweep-submit-or-stand",
   category: "guard-systems",
   title: "Sweep, submit or stand: the three things a guard is for",

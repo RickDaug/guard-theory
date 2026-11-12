@@ -1,4 +1,4 @@
-import type { DraftArticle } from "../types.ts";
+import type { PublishedArticle } from "../types.ts";
 
 /**
  * A philosophy piece that treats the sport's most repeated sentence as a claim.
@@ -27,8 +27,10 @@ import type { DraftArticle } from "../types.ts";
  *
  * Draft: no author has read this piece, so it carries no byline and no date.
  */
-export const leaveYourEgoAtTheDoor: DraftArticle = {
-  status: "draft",
+export const leaveYourEgoAtTheDoor: PublishedArticle = {
+  status: "published",
+  publishedAt: "2026-11-11",
+  authorId: "guard-theory-editorial",
   slug: "leave-your-ego-at-the-door",
   category: "training-culture",
   title: "Leave your ego at the door",

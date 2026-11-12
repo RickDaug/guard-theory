@@ -1,4 +1,4 @@
-import type { DraftArticle } from "../types.ts";
+import type { PublishedArticle } from "../types.ts";
 
 /**
  * A technique note on vocabulary, so the definitions it settles on are ours and
@@ -21,8 +21,10 @@ import type { DraftArticle } from "../types.ts";
  *
  * Draft: no author has read this piece, so it carries no byline and no date.
  */
-export const basePostureAndStructure: DraftArticle = {
-  status: "draft",
+export const basePostureAndStructure: PublishedArticle = {
+  status: "published",
+  publishedAt: "2026-11-11",
+  authorId: "guard-theory-editorial",
   slug: "base-posture-and-structure",
   category: "technique-notes",
   title: "Base, posture and structure",

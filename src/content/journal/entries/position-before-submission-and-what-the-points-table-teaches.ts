@@ -1,4 +1,4 @@
-import type { DraftArticle } from "../types.ts";
+import type { PublishedArticle } from "../types.ts";
 
 /**
  * A foundational piece, read from two documents. What is sourced is every
@@ -21,8 +21,10 @@ import type { DraftArticle } from "../types.ts";
  *
  * Draft: no author has read this piece, so it carries no byline and no date.
  */
-export const positionBeforeSubmissionAndWhatThePointsTableTeaches: DraftArticle = {
-  status: "draft",
+export const positionBeforeSubmissionAndWhatThePointsTableTeaches: PublishedArticle = {
+  status: "published",
+  publishedAt: "2026-11-11",
+  authorId: "guard-theory-editorial",
   slug: "position-before-submission-and-what-the-points-table-teaches",
   category: "competition-analysis",
   title: "Position before submission, and what the points table teaches",

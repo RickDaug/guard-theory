@@ -1,4 +1,4 @@
-import type { DraftArticle } from "../types.ts";
+import type { PublishedArticle } from "../types.ts";
 
 /**
  * A philosophy piece on the question of whether to compete. It does not answer
@@ -31,8 +31,10 @@ import type { DraftArticle } from "../types.ts";
  *
  * Draft: no author has read this piece, so it carries no byline and no date.
  */
-export const whatATournamentTests: DraftArticle = {
-  status: "draft",
+export const whatATournamentTests: PublishedArticle = {
+  status: "published",
+  publishedAt: "2026-11-11",
+  authorId: "guard-theory-editorial",
   slug: "what-a-tournament-tests",
   category: "training-culture",
   title: "What a tournament tests, and what it does not",

@@ -1,4 +1,4 @@
-import type { DraftArticle } from "../types.ts";
+import type { PublishedArticle } from "../types.ts";
 
 /**
  * A piece about lineage as an idea. It recites nobody's lineage, names no
@@ -26,8 +26,10 @@ import type { DraftArticle } from "../types.ts";
  * Draft: no one has read and signed off this piece, so it carries no byline
  * and no date.
  */
-export const lineageAndWhyJiuJitsuAsksWhoTaughtYou: DraftArticle = {
-  status: "draft",
+export const lineageAndWhyJiuJitsuAsksWhoTaughtYou: PublishedArticle = {
+  status: "published",
+  publishedAt: "2026-11-11",
+  authorId: "guard-theory-editorial",
   slug: "lineage-and-why-jiu-jitsu-asks-who-taught-you",
   category: "bjj-history",
   title: "Lineage, and why jiu-jitsu asks who taught you",

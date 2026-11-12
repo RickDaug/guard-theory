@@ -1,4 +1,4 @@
-import type { DraftArticle } from "../types.ts";
+import type { PublishedArticle } from "../types.ts";
 
 /**
  * A glossary piece on the two families of submission. What is sourced is every
@@ -25,8 +25,10 @@ import type { DraftArticle } from "../types.ts";
  *
  * Draft: no author has read this piece, so it carries no byline and no date.
  */
-export const stranglesAndJointLocks: DraftArticle = {
-  status: "draft",
+export const stranglesAndJointLocks: PublishedArticle = {
+  status: "published",
+  publishedAt: "2026-11-11",
+  authorId: "guard-theory-editorial",
   slug: "strangles-and-joint-locks",
   category: "technique-notes",
   title: "Strangles and joint locks: the two families of submission",

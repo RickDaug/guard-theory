@@ -1,4 +1,4 @@
-import type { DraftArticle } from "../types.ts";
+import type { PublishedArticle } from "../types.ts";
 
 /**
  * A philosophy piece that treats a piece of gym advice as a claim and goes
@@ -36,8 +36,10 @@ import type { DraftArticle } from "../types.ts";
  * Draft: no one has read and signed off this piece, so it carries no byline
  * and no date.
  */
-export const thePlateau: DraftArticle = {
-  status: "draft",
+export const thePlateau: PublishedArticle = {
+  status: "published",
+  publishedAt: "2026-11-11",
+  authorId: "guard-theory-editorial",
   slug: "the-plateau",
   category: "training-culture",
   title: "The plateau, and what a learning curve looks like",

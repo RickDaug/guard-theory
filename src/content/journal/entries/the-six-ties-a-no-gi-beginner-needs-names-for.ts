@@ -1,4 +1,4 @@
-import type { DraftArticle } from "../types.ts";
+import type { PublishedArticle } from "../types.ts";
 
 /**
  * A glossary note. It covers six ties because the one sentence we found that
@@ -20,8 +20,10 @@ import type { DraftArticle } from "../types.ts";
  *
  * Draft: no author has read this piece, so it carries no byline and no date.
  */
-export const theSixTiesANoGiBeginnerNeedsNamesFor: DraftArticle = {
-  status: "draft",
+export const theSixTiesANoGiBeginnerNeedsNamesFor: PublishedArticle = {
+  status: "published",
+  publishedAt: "2026-11-11",
+  authorId: "guard-theory-editorial",
   slug: "the-six-ties-a-no-gi-beginner-needs-names-for",
   category: "technique-notes",
   title: "The six ties a no-gi beginner needs names for",

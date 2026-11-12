@@ -119,12 +119,12 @@ export function WaitlistForm() {
       >
         <p className="notation text-2xs text-orchid">First Edition</p>
         <h2 className="display-condensed mt-5 text-2xl text-chalk">
-          {state.alreadyOnList ? "Already on the list" : "You're on the list"}
+          {state.alreadyOnList ? "Already on the list" : "Check your email"}
         </h2>
         <p className="mt-6 max-w-[34rem] text-base text-steel">
           {state.alreadyOnList
             ? "This address was already registered, so nothing has changed. You will hear from us once, when the First Edition opens."
-            : "You will hear from us once, when the First Edition opens. No newsletter, no drip sequence. Every message to the list includes a one-click unsubscribe."}
+            : "We have sent a link to that address. Open it and press Confirm to join; until then the address is not on the list. You will then hear from us once, when the First Edition opens. Every message to the list includes a one-click unsubscribe."}
         </p>
 
         {/* Somewhere to go. The form is gone and this panel replaced it, so

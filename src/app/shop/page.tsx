@@ -2,11 +2,10 @@ import type { Metadata } from "next";
 import { pageMetadata } from "@/lib/metadata";
 import Link from "next/link";
 import { Breadcrumbs } from "@/components/site/Breadcrumbs";
+import { ProductCard } from "@/components/product/ProductCard";
 import { ButtonLink } from "@/components/ui/Button";
-import { STATUS_LABEL } from "@/content/products";
 import { capitalise, numberWord } from "@/content/section-descriptions";
-import { effectivePriceCents, listProductViews, stockStatus } from "@/lib/catalogue";
-import { formatMoney } from "@/lib/money";
+import { listProductViews, stockStatus } from "@/lib/catalogue";
 
 export const metadata: Metadata = pageMetadata({
   title: "Shop — No-gi BJJ rash guards",
@@ -39,90 +38,103 @@ const ROADMAP = [
  */
 export const dynamic = "force-dynamic";
 
+/**
+ * The shop is a catalogue of plates: a bone sheet carrying the garments as
+ * cards, each with its flat on a small ink plate, then an ink band for the
+ * order the work is being done in. The breadcrumb strip stays on ink so its
+ * notation keeps the ground it was set for.
+ */
 export default async function ShopPage() {
   const products = await listProductViews();
   return (
-    <main id="main" tabIndex={-1} className="px-6 py-16 md:px-12">
-      <div className="mx-auto max-w-[104rem]">
-        <Breadcrumbs trail={[{ href: "/shop", label: "Shop" }]} />
-
-        <header className="mt-10 mb-16 max-w-[46rem]">
-          <p className="notation text-2xs text-orchid">First Edition</p>
-          <h1 className="display-condensed mt-6 text-4xl text-chalk">Shop</h1>
-          <p className="mt-8 text-lg text-steel">
-            {capitalise(numberWord(products.length))} garments, each drawn as a flat.
-          </p>
-          <div className="mt-10">
-            <ButtonLink href="/first-edition">
-              Join the First Edition list
-            </ButtonLink>
-          </div>
-        </header>
-
-        <section aria-labelledby="in-progress" className="mb-20">
-          <h2
-            id="in-progress"
-            className="display-condensed mb-10 text-2xl text-chalk"
-          >
-            In progress
-          </h2>
-
-          <ul className="m-0 grid list-none gap-px bg-steel-dim p-0 lg:grid-cols-2">
-            {products.map((product) => {
-              const availability = stockStatus(product);
-              const priceCents = effectivePriceCents(product);
-
-              return (
-                <li key={product.slug} className="bg-ink">
-                  <Link
-                    href={`/shop/${product.slug}`}
-                    aria-labelledby={`product-${product.slug}-title`}
-                    aria-describedby={`product-${product.slug}-summary`}
-                    className="group flex h-full flex-col p-8 no-underline transition-colors duration-[140ms] ease-[var(--ease-control)] hover:bg-ink-raised"
-                  >
-                    <span className="notation text-2xs text-steel">
-                      {availability === "purchasable"
-                        ? "Available"
-                        : availability === "sold-out"
-                          ? "Sold out"
-                          : STATUS_LABEL["coming-soon"]}
-                    </span>
-                    <h3 id={`product-${product.slug}-title`} className="display-condensed mt-5 text-xl text-chalk transition-colors duration-[140ms] ease-[var(--ease-control)] group-hover:text-signal-lift">
-                      {product.name} — {product.kind}
-                    </h3>
-                    <p id={`product-${product.slug}-summary`} className="mt-4 max-w-[34rem] text-sm text-steel">
-                      {product.summary}
-                    </p>
-                    {/* Rendered only when the owner has entered one. A product
-                        with no price says nothing about price. */}
-                    {priceCents !== null && product.commerce ? (
-                      <p className="display-condensed mt-6 text-lg text-chalk tabular-nums">
-                        {formatMoney(priceCents, product.commerce.currency)}
-                      </p>
-                    ) : null}
-                  </Link>
-                </li>
-              );
-            })}
-          </ul>
-        </section>
-
-        <section aria-labelledby="order" className="max-w-[70rem]">
-          <h2 id="order" className="display-condensed mb-10 text-2xl text-chalk">
-            The order we are working in
-          </h2>
-          <ul className="m-0 grid list-none gap-10 p-0 sm:grid-cols-3">
-            {ROADMAP.map((step) => (
-              <li key={step.heading}>
-                <h3 className="display-condensed text-lg text-chalk">
-                  {step.heading}
-                </h3>
-                <p className="mt-3 text-base text-steel">{step.body}</p>
-              </li>
-            ))}
-          </ul>
-        </section>
+    <main id="main" tabIndex={-1}>
+      <div className="band-ink px-6 md:px-12">
+        <div className="mx-auto max-w-[104rem] py-5">
+          <Breadcrumbs trail={[{ href: "/shop", label: "Shop" }]} />
+        </div>
       </div>
+
+      <div className="band-bone band-edge px-6 pt-14 pb-20 md:px-12 md:pt-20 md:pb-28">
+        <div className="mx-auto max-w-[104rem]">
+          <header className="mb-14 grid gap-8 md:mb-20 lg:grid-cols-12 lg:items-end">
+            <div className="lg:col-span-7">
+              <p className="eyebrow text-slate">First Edition</p>
+              <h1 className="display-condensed mt-5 text-4xl leading-[0.9] text-ink">Shop</h1>
+            </div>
+            <div className="lg:col-span-5 lg:pb-2">
+              <p className="max-w-[26rem] text-lg text-slate">
+                {capitalise(numberWord(products.length))} garments, each drawn as a flat.
+              </p>
+              <div className="mt-7">
+                <ButtonLink href="/first-edition">
+                  Join the First Edition list
+                </ButtonLink>
+              </div>
+            </div>
+          </header>
+
+          <section aria-labelledby="in-progress">
+            <div className="mb-8 flex flex-wrap items-baseline justify-between gap-x-8 gap-y-2 border-b border-steel pb-4">
+              <h2
+                id="in-progress"
+                className="display-condensed text-2xl text-ink"
+              >
+                {/* "In progress" is only true while nothing can be bought. */}
+                {products.some((product) => stockStatus(product) === "purchasable")
+                  ? "The garments"
+                  : "In progress"}
+              </h2>
+            </div>
+
+            <ul className="m-0 grid list-none gap-6 p-0 lg:grid-cols-2 lg:gap-8">
+              {products.map((product) => (
+                <ProductCard key={product.slug} product={product} />
+              ))}
+            </ul>
+          </section>
+        </div>
+      </div>
+
+      <section
+        aria-labelledby="order"
+        className="band-ink plate-grid corner-ticks px-6 py-20 md:px-12 md:py-28"
+      >
+        <div className="mx-auto max-w-[104rem]">
+          <div className="grid gap-12 lg:grid-cols-12 lg:gap-20">
+            <div className="lg:col-span-4">
+              <h2 id="order" className="display-condensed text-3xl leading-[0.95] text-chalk">
+                The order we are working in
+              </h2>
+            </div>
+
+            {/* A genuine sequence, so the labels stay. The steps sit on one
+                rule and read left to right; no numerals, because the words
+                already say which comes first. */}
+            <ol className="m-0 grid list-none gap-10 p-0 sm:grid-cols-3 sm:gap-8 lg:col-span-8">
+              {ROADMAP.map((step) => (
+                <li
+                  key={step.heading}
+                  className="reveal relative border-t border-steel-dim pt-6 before:absolute before:-top-px before:left-0 before:h-px before:w-10 before:bg-orchid before:content-['']"
+                >
+                  <h3 className="display-condensed text-xl text-chalk">
+                    {step.heading}
+                  </h3>
+                  <p className="mt-3 max-w-[22rem] text-base text-chalk">{step.body}</p>
+                </li>
+              ))}
+            </ol>
+          </div>
+
+          <p className="mt-16 text-base text-chalk md:mt-20">
+            <Link
+              href="/first-edition"
+              className="link-rule inline-flex min-h-6 items-center text-signal-lift"
+            >
+              Join the First Edition list
+            </Link>
+          </p>
+        </div>
+      </section>
     </main>
   );
 }

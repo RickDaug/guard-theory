@@ -19,6 +19,9 @@ const NO_MATCH_EXITS = [
  * Three states, three different messages: nothing typed yet, typed and found
  * nothing, typed and found something. An empty screen is an invitation to act,
  * so the first two say what to do next.
+ *
+ * Drawn on bone (the study register): the field is a tall control with a
+ * steel-mid border, the results a contents list under steel hairlines.
  */
 export function SearchClient({ index }: { index: SearchDocument[] }) {
   const [query, setQuery] = useState("");
@@ -34,9 +37,9 @@ export function SearchClient({ index }: { index: SearchDocument[] }) {
   const hasQuery = trimmed.length > 0;
 
   return (
-    <div>
-      <div className="flex max-w-[36rem] flex-col gap-2">
-        <label htmlFor={inputId} className="display-plain text-sm text-chalk">
+    <div className="mt-14">
+      <div className="flex max-w-[40rem] flex-col gap-3">
+        <label htmlFor={inputId} className="display-plain text-sm text-ink">
           Search Guard Theory
         </label>
         <input
@@ -47,11 +50,11 @@ export function SearchClient({ index }: { index: SearchDocument[] }) {
           autoComplete="off"
           aria-describedby={statusId}
           placeholder="guard retention, rash guard, privacy…"
-          className="w-full border border-steel-mid bg-graphite px-4 py-3 text-base text-chalk placeholder:text-steel transition-colors duration-[140ms] ease-[var(--ease-control)] focus:border-signal-lift"
+          className="w-full border border-steel-mid bg-bone-raised px-5 py-4 text-lg text-ink placeholder:text-slate transition-colors duration-[140ms] ease-[var(--ease-control)] focus:border-signal-dim"
         />
       </div>
 
-      <p id={statusId} aria-live="polite" className="notation mt-6 text-2xs text-steel">
+      <p id={statusId} aria-live="polite" className="notation mt-6 text-2xs text-slate">
         {!hasQuery
           ? `${index.length} pages indexed. Start typing to filter them.`
           : results.length === 0
@@ -62,11 +65,11 @@ export function SearchClient({ index }: { index: SearchDocument[] }) {
       </p>
 
       {hasQuery && results.length === 0 ? (
-        <div className="mt-8 max-w-[36rem] border border-steel-dim p-8">
-          <h2 className="display-condensed text-xl text-chalk">
+        <div className="mt-8 max-w-[40rem] border border-steel bg-bone-raised p-8">
+          <h2 className="display-condensed text-xl text-ink">
             Nothing matches “{trimmed}”
           </h2>
-          <p className="mt-4 text-base text-steel">
+          <p className="mt-4 text-base text-slate">
             Search looks for every word you type, so fewer words usually finds
             more.
           </p>
@@ -78,7 +81,7 @@ export function SearchClient({ index }: { index: SearchDocument[] }) {
               <li key={exit.href}>
                 <Link
                   href={exit.href}
-                  className="display-plain inline-flex min-h-6 items-center text-sm text-chalk underline decoration-steel-dim underline-offset-[6px] transition-colors duration-[140ms] ease-[var(--ease-control)] hover:decoration-signal-lift"
+                  className="link-rule display-plain inline-flex min-h-6 items-center text-sm text-signal-dim"
                 >
                   {exit.label}
                 </Link>
@@ -89,20 +92,22 @@ export function SearchClient({ index }: { index: SearchDocument[] }) {
       ) : null}
 
       {results.length > 0 ? (
-        <ul className="m-0 mt-8 grid max-w-[70rem] list-none gap-px bg-steel-dim p-0 sm:grid-cols-2">
+        <ul className="m-0 mt-10 max-w-[70rem] list-none border-t border-steel p-0">
           {results.map((result) => (
-            <li key={result.id} className="bg-ink">
+            <li key={result.id} className="border-b border-steel">
               <Link
                 href={result.href}
-                className="group flex h-full flex-col p-7 no-underline transition-colors duration-[140ms] ease-[var(--ease-control)] hover:bg-ink-raised"
+                className="group grid gap-x-10 gap-y-1.5 py-6 no-underline md:grid-cols-[7rem_minmax(0,22rem)_minmax(0,1fr)] md:items-baseline"
               >
-                <span className="notation text-2xs text-steel">
+                <span className="notation text-2xs text-slate">
                   {result.kind}
                 </span>
-                <span className="display-condensed mt-4 text-lg text-chalk transition-colors duration-[140ms] ease-[var(--ease-control)] group-hover:text-signal-lift">
-                  {result.title}
+                <span className="display-condensed text-lg text-ink transition-colors duration-[140ms] ease-[var(--ease-control)] group-hover:text-signal-dim">
+                  <span className="link-rule group-hover:bg-[length:100%_1px] group-focus-visible:bg-[length:100%_1px]">
+                    {result.title}
+                  </span>
                 </span>
-                <span className="mt-3 text-sm text-steel">{result.summary}</span>
+                <span className="max-w-[38rem] text-sm text-slate">{result.summary}</span>
               </Link>
             </li>
           ))}

@@ -7,15 +7,24 @@ import { Breadcrumbs } from "@/components/site/Breadcrumbs";
 import { ButtonLink } from "@/components/ui/Button";
 import { BuyBox } from "@/components/product/BuyBox";
 import { GarmentFlat } from "@/components/product/GarmentFlat";
-import { PRODUCTS, STATUS_LABEL } from "@/content/products";
+import { ProductCard } from "@/components/product/ProductCard";
+import { ProductGallery } from "@/components/product/ProductGallery";
+import { STATUS_LABEL } from "@/content/products";
+import { ORIGIN_LABEL, productOrigin } from "@/content/products/origin";
+import { SIZE_CHART } from "@/content/products/size-chart";
 import {
   effectivePriceCents,
   getProductView,
-  hasPublishableOffer,
+  listProductViews,
+  productPhotographs,
   stockStatus,
 } from "@/lib/catalogue";
-import { toDecimalString } from "@/lib/money";
-import { absoluteUrl } from "@/lib/site";
+import {
+  CARE_ARTICLE_SLUG,
+  isProductIndexable,
+  productJsonLd,
+  productTitle,
+} from "@/lib/catalogue/structured-data";
 import { pageMetadata } from "@/lib/metadata";
 import { serializeJsonLd } from "@/lib/json-ld";
 
@@ -59,9 +68,10 @@ export async function generateMetadata({ params }: Params): Promise<Metadata> {
   if (!product) return notFoundMetadata;
 
   return pageMetadata({
-    title: `${product.name} — ${product.kind}`,
+    title: productTitle(product),
     description: product.metaDescription ?? product.summary,
     path: `/shop/${product.slug}`,
+    indexable: isProductIndexable(product),
   });
 }
 
@@ -80,6 +90,15 @@ export async function generateMetadata({ params }: Params): Promise<Metadata> {
  */
 export const dynamic = "force-dynamic";
 
+/** An inline link on the bone sheet. */
+const SHEET_LINK =
+  "text-signal-dim underline decoration-steel underline-offset-[5px] transition-colors duration-[140ms] ease-[var(--ease-control)] hover:decoration-signal-dim";
+
+/**
+ * Two registers side by side: the plate column on ink, because the drawing
+ * was tuned for that ground, and the specification column on bone, because a
+ * specification is a sheet. On narrow screens they stack as two bands.
+ */
 export default async function ProductPage({ params }: Params) {
   const { slug } = await params;
   const product = await loadProduct(slug);
@@ -87,59 +106,72 @@ export default async function ProductPage({ params }: Params) {
 
   const availability = stockStatus(product);
   const priceCents = effectivePriceCents(product);
-  const showOffer = hasPublishableOffer(product);
-  const other = PRODUCTS.filter((p) => p.slug !== product.slug);
+  const jsonLd = productJsonLd(product);
+  // Only photographs the owner uploaded, on the configured host, with alt
+  // text. None is the normal state for a garment not yet photographed, and
+  // then the page is exactly what it was: the flat, and nothing standing in.
+  const photographs = productPhotographs(product);
+  // The other garments as cards, read live rather than from the registry: a
+  // card states availability, and that is only true when it comes from the
+  // same source the shop reads.
+  const other = (await listProductViews()).filter((p) => p.slug !== product.slug);
+  // 16 CFR 303.34: the listing states the origin in the FTC's form. Only
+  // from a value the owner typed; with none, the page says nothing about
+  // origin, and the portal's go-live check keeps the product off sale.
+  const origin = productOrigin(product.specifications);
+  // The origin line is printed as its disclosure, not as the raw value, so the
+  // specification never says less (or other) than the sentence above it.
+  const specifications = product.specifications
+    .map((spec) =>
+      spec.label === ORIGIN_LABEL ? { ...spec, value: origin ? origin.disclosure : null } : spec,
+    )
+    .filter((spec) => spec.value);
+
+  const availabilityWord =
+    availability === "purchasable"
+      ? "Available"
+      : availability === "sold-out"
+        ? "Sold out"
+        : STATUS_LABEL["coming-soon"];
 
   return (
-    <main id="main" tabIndex={-1} className="px-6 py-16 md:px-12">
-      <div className="mx-auto max-w-[104rem]">
-        {showOffer && priceCents !== null && product.commerce ? (
-          <script
-            type="application/ld+json"
-            // Not executable script, so the Content-Security-Policy does not
-            // apply to it. Emitted only when hasPublishableOffer() is true, so
-            // every value below is one the owner entered.
-            dangerouslySetInnerHTML={{
-              __html: serializeJsonLd({
-                "@context": "https://schema.org",
-                "@type": "Product",
-                name: `${product.name} — ${product.kind}`,
-                description: product.summary,
-                sku: product.commerce.variants[0]?.sku,
-                url: absoluteUrl(`/shop/${product.slug}`),
-                offers: {
-                  "@type": "Offer",
-                  price: toDecimalString(priceCents),
-                  priceCurrency: product.commerce.currency,
-                  availability:
-                    availability === "purchasable"
-                      ? "https://schema.org/InStock"
-                      : "https://schema.org/OutOfStock",
-                  url: absoluteUrl(`/shop/${product.slug}`),
-                },
-              }),
-            }}
-          />
-        ) : null}
-
-        <Breadcrumbs
-          trail={[
-            { href: "/shop", label: "Shop" },
-            { href: `/shop/${product.slug}`, label: `${product.name} — ${product.kind}` },
-          ]}
+    <main id="main" tabIndex={-1}>
+      {jsonLd ? (
+        <script
+          type="application/ld+json"
+          // Not executable script, so the Content-Security-Policy does not
+          // apply to it. productJsonLd() returns null unless
+          // hasPublishableOffer() holds, so every value is one the owner
+          // entered or one a published policy states.
+          dangerouslySetInnerHTML={{ __html: serializeJsonLd(jsonLd) }}
         />
+      ) : null}
 
-        <div className="mt-10 grid gap-16 lg:grid-cols-12 lg:gap-20">
-          {/* Sticky on wide screens so the drawing stays with you while you
-              read the specification beside it. */}
-          {/* min-w-0 is load-bearing. A grid item's min-width is `auto`, which
-              resolves to its min-content width, and the truncating caption below
-              is `whitespace-nowrap` — so without this the track grows to the
-              full untruncated string and the caption never truncates at all. It
-              pushed the page 3px past the viewport at 390px, which the committed
-              mobile screenshot caught: every other one is 390 wide and this one
-              was 393. */}
-          <div className="min-w-0 lg:col-span-7 lg:sticky lg:top-8 lg:self-start">
+      <div className="band-ink px-6 md:px-12">
+        <div className="mx-auto max-w-[104rem] py-5">
+          <Breadcrumbs
+            trail={[
+              { href: "/shop", label: "Shop" },
+              { href: `/shop/${product.slug}`, label: `${product.name} — ${product.kind}` },
+            ]}
+          />
+        </div>
+      </div>
+
+      <div className="lg:grid lg:grid-cols-12">
+        {/* The plate column. Sticky on wide screens so the drawing stays with
+            you while you read the specification beside it. */}
+        {/* min-w-0 is load-bearing. A grid item's min-width is `auto`, which
+            resolves to its min-content width, and the truncating caption below
+            is `whitespace-nowrap` — so without this the track grows to the
+            full untruncated string and the caption never truncates at all. It
+            pushed the page 3px past the viewport at 390px, which the committed
+            mobile screenshot caught: every other one is 390 wide and this one
+            was 393. */}
+        <div className="band-ink plate-grid min-w-0 px-6 pt-10 pb-16 md:px-12 lg:col-span-7 lg:pb-24">
+          <div className="min-w-0 lg:sticky lg:top-28">
+            {/* Photographs sit alongside the flat, never instead of it. */}
+            <ProductGallery images={photographs} productName={`${product.name} ${product.kind.toLowerCase()}`} />
             {/**
              * One line, always — the same rule, and the same reason, as the
              * breadcrumb. At 390px this label fits on one line in the metric
@@ -165,40 +197,53 @@ export default async function ProductPage({ params }: Params) {
               reference="FIG. 02 / REV A"
             />
           </div>
+        </div>
 
-          <div className="lg:col-span-5">
-            <p className="notation text-2xs text-steel">
-              {availability === "purchasable"
-                ? "Available"
-                : availability === "sold-out"
-                  ? "Sold out"
-                  : STATUS_LABEL["coming-soon"]}
-            </p>
-            <h1 className="display-condensed mt-6 text-3xl text-chalk">
+        {/* The specification sheet. */}
+        <div className="band-bone band-edge px-6 pt-14 pb-20 md:px-12 lg:col-span-5 lg:border-l lg:border-steel-dim lg:pt-16 lg:pb-28">
+          <div className="max-w-[36rem]">
+            <p className="eyebrow text-slate">{product.kind}</p>
+            <h1 className="display-condensed mt-5 text-4xl leading-[0.9] text-ink">
               {product.name}
             </h1>
-            <p className="display-plain mt-3 text-lg text-steel">
-              {product.kind}
-            </p>
+            <p className="display-plain mt-5 text-sm text-ink">{availabilityWord}</p>
 
-            <p className="mt-8 max-w-[34rem] text-base text-steel">
+            <p className="mt-8 max-w-[34rem] text-base text-ink">
               {product.description}
             </p>
 
             {availability === "purchasable" && priceCents !== null && product.commerce ? (
-              <BuyBox
-                productName={product.name}
-                priceCents={priceCents}
-                compareAtCents={
-                  product.commerce.saleCents !== null ? product.commerce.priceCents : null
-                }
-                currency={product.commerce.currency}
-                variants={product.commerce.variants}
-              />
+              <>
+                <BuyBox
+                  productName={product.name}
+                  priceCents={priceCents}
+                  compareAtCents={
+                    product.commerce.saleCents !== null ? product.commerce.priceCents : null
+                  }
+                  currency={product.commerce.currency}
+                  variants={product.commerce.variants}
+                />
+                {/* What the price above does not include, said before the cart
+                    rather than discovered in it. Both sentences are the
+                    shipping policy's and the cart's own; the terms themselves
+                    are linked, not restated, so they cannot drift. */}
+                <p className="mt-5 max-w-[34rem] text-sm text-slate">
+                  Shipping is one flat rate per order, shown in your cart. Sales tax is added at
+                  checkout. Read the{" "}
+                  <Link href="/policies/shipping" className={SHEET_LINK}>
+                    shipping
+                  </Link>{" "}
+                  and{" "}
+                  <Link href="/policies/returns" className={SHEET_LINK}>
+                    returns
+                  </Link>{" "}
+                  policies.
+                </p>
+              </>
             ) : (
-              <div className="mt-10 border border-steel-dim p-6">
-                <p className="notation text-2xs text-orchid">First Edition</p>
-                <p className="mt-4 text-base text-steel">
+              <div className="corner-ticks mt-10 border border-steel bg-bone-raised p-6 sm:p-7">
+                <p className="eyebrow text-slate">First Edition</p>
+                <p className="mt-4 text-base text-ink">
                   {availability === "sold-out"
                     ? "That run is finished. We do not quietly restock and call it a new release."
                     : "Join the list and you will hear the moment it is available. One message, no newsletter."}
@@ -209,8 +254,14 @@ export default async function ProductPage({ params }: Params) {
               </div>
             )}
 
+            {origin ? (
+              <p className="mt-6 text-sm text-ink" data-origin-disclosure="">
+                {origin.disclosure}
+              </p>
+            ) : null}
+
             <section aria-labelledby="specs" className="mt-14">
-              <h2 id="specs" className="display-condensed mb-6 text-xl text-chalk">
+              <h2 id="specs" className="display-condensed mb-5 border-b border-steel pb-3 text-xl text-ink">
                 Specification
               </h2>
               <table className="w-full border-collapse text-left">
@@ -218,15 +269,18 @@ export default async function ProductPage({ params }: Params) {
                   Specification for {product.name}, {product.kind}.
                 </caption>
                 <tbody>
-                  {product.specifications.map((spec) => (
-                    <tr key={spec.label} className="border-b border-steel-dim">
+                  {/* A line with no value is not a line: a null means nobody has
+                      supplied that fact, and the page says nothing about it
+                      rather than printing a blank or a placeholder. */}
+                  {specifications.map((spec) => (
+                    <tr key={spec.label} className="border-b border-steel">
                       <th
                         scope="row"
-                        className="display-plain py-4 pr-6 align-top text-sm font-normal text-steel"
+                        className="display-plain w-[40%] py-3.5 pr-6 align-top text-sm font-normal text-slate"
                       >
                         {spec.label}
                       </th>
-                      <td className="py-4 align-top text-sm text-chalk">
+                      <td className="notation py-3.5 align-top text-xs text-ink">
                         {spec.value}
                       </td>
                     </tr>
@@ -236,49 +290,72 @@ export default async function ProductPage({ params }: Params) {
             </section>
 
             <section aria-labelledby="sizes" className="mt-14">
-              <h2 id="sizes" className="display-condensed mb-6 text-xl text-chalk">
-                Sizes
+              <h2 id="sizes" className="display-condensed mb-5 border-b border-steel pb-3 text-xl text-ink">
+                {product.sizeLabels.length > 0 ? "Sizes" : "Size and fit"}
               </h2>
-              <ul className="m-0 flex list-none flex-wrap gap-3 p-0">
-                {product.sizeLabels.map((size) => (
-                  <li
-                    key={size}
-                    className="notation border border-steel-dim px-4 py-2 text-2xs text-steel"
-                  >
-                    {size}
-                  </li>
-                ))}
-              </ul>
-              <p className="mt-6 max-w-[34rem] text-sm text-steel">
-                Full measurements are in the{" "}
-                <Link
-                  href="/size-and-fit"
-                  className="text-chalk underline decoration-steel-dim underline-offset-[5px] transition-colors duration-[140ms] ease-[var(--ease-control)] hover:decoration-signal-lift"
-                >
+              {/* Sizes come from the owner's variants. The registry carries
+                  none, because no size range has been supplied. */}
+              {product.sizeLabels.length > 0 ? (
+                <ul className="m-0 mb-6 flex list-none flex-wrap gap-3 p-0">
+                  {product.sizeLabels.map((size) => (
+                    <li
+                      key={size}
+                      className="notation inline-flex min-h-6 items-center border border-slate px-4 py-2 text-2xs text-ink"
+                    >
+                      {size}
+                    </li>
+                  ))}
+                </ul>
+              ) : null}
+              <p className="max-w-[34rem] text-sm text-slate">
+                {SIZE_CHART.length > 0 ? "Full measurements are in the" : "What to check when you try one on is in the"}{" "}
+                <Link href="/size-and-fit" className={SHEET_LINK}>
                   size and fit guide
                 </Link>
                 .
               </p>
             </section>
 
+            {/* docs/internal-linking-map.md Rule P-5: a PDP links to care and
+                to returns. The Technique Library link that rule also names is
+                left out until a product records which position its cut was
+                designed around — the registry does not say, and it is not
+                ours to guess. */}
+            <section aria-labelledby="care" className="mt-14">
+              <h2 id="care" className="display-condensed mb-5 border-b border-steel pb-3 text-xl text-ink">
+                Care and returns
+              </h2>
+              <ul className="m-0 flex list-none flex-col gap-3 p-0">
+                <li>
+                  <Link
+                    href={`/journal/${CARE_ARTICLE_SLUG}`}
+                    className={`inline-flex min-h-6 items-center text-base ${SHEET_LINK}`}
+                  >
+                    How to wash a rash guard
+                  </Link>
+                </li>
+                <li>
+                  <Link
+                    href="/policies/returns"
+                    className={`inline-flex min-h-6 items-center text-base ${SHEET_LINK}`}
+                  >
+                    Returns policy
+                  </Link>
+                </li>
+              </ul>
+            </section>
+
             {other.length > 0 ? (
               <section aria-labelledby="other" className="mt-14">
                 <h2
                   id="other"
-                  className="display-condensed mb-6 text-xl text-chalk"
+                  className="display-condensed mb-6 border-b border-steel pb-3 text-xl text-ink"
                 >
                   Also in the First Edition
                 </h2>
-                <ul className="m-0 flex list-none flex-col gap-3 p-0">
+                <ul className="m-0 grid list-none gap-6 p-0">
                   {other.map((item) => (
-                    <li key={item.slug}>
-                      <Link
-                        href={`/shop/${item.slug}`}
-                        className="text-base text-chalk underline decoration-steel-dim underline-offset-[5px] transition-colors duration-[140ms] ease-[var(--ease-control)] hover:decoration-signal-lift"
-                      >
-                        {item.name} — {item.kind}
-                      </Link>
-                    </li>
+                    <ProductCard key={item.slug} product={item} />
                   ))}
                 </ul>
               </section>

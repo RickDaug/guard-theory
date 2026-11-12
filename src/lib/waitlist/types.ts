@@ -27,8 +27,17 @@ export type WaitlistSignup = {
   submittedAt: string;
 };
 
+/** A pending signup that needs a confirmation link emailed to it. */
+export type ConfirmTarget = { id: string; email: string; firstName: string };
+
+/**
+ * `alreadyOnList`: the address is confirmed (or legacy) and subscribed, and
+ * nothing was changed. `confirm`: the row is pending — new, rejoining after an
+ * unsubscribe, or never confirmed — and the caller should email it a link.
+ * Null from a store that cannot confirm anything (no database).
+ */
 export type StoreResult =
-  | { ok: true; alreadyOnList: boolean }
+  | { ok: true; alreadyOnList: boolean; confirm: ConfirmTarget | null }
   | { ok: false; reason: "storage-unavailable" };
 
 export interface WaitlistStore {

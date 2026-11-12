@@ -43,7 +43,7 @@ Three clusters. Each has one pillar, supporting pages, and a defined link direct
 
 - **Pillar:** `/journal/why-guard-is-a-system-not-a-position`
 - **Structural hub:** `/technique` (the library index)
-- **Supporting:** all twelve `/technique/[category]` pages and their entries;
+- **Supporting:** all thirteen `/technique/[category]` pages and their entries;
   `/journal/*`; `/journal/*`
 - **Reinforcing:** `/manifesto` (the brand's version of the same argument),
   `/figures/*` (who developed which part of the system)
@@ -381,7 +381,9 @@ destroys the only asset we actually have: being the brand that knows the subject
 `/editorial-policy` page states our position publicly, which is both honest and a differentiator.
 Permitted uses of AI: research assistance, outlining, copy-editing suggestions, alt-text drafting
 for human review, and code. Not permitted: published prose, fabricated technical claims,
-fabricated sources.
+fabricated sources. A Technique Library draft prepared with writing assistance is not published
+prose until a named person has read it and signed it off in the source; how that draft is
+disclosed, audited and gated is `docs/technique-pipeline.md`, and the editorial policy says so.
 
 **Also not doing:**
 

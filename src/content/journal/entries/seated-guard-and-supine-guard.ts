@@ -9,7 +9,8 @@ import type { PublishedArticle } from "../types.ts";
 export const seatedGuardAndSupineGuard: PublishedArticle = {
   status: "published",
   publishedAt: "2026-08-04",
-  authorId: "steven-p",
+  updatedAt: "2026-09-29",
+  authorId: "guard-theory-editorial",
   slug: "seated-guard-and-supine-guard",
   category: "guard-systems",
   title: "Seated guard and supine guard are two different jobs",
@@ -33,18 +34,18 @@ export const seatedGuardAndSupineGuard: PublishedArticle = {
       heading: "What sitting up buys",
       paragraphs: [
         "The seated posture buys one thing above all: your upper body is in the fight. A head at the same height as the opponent's head can carry a collar tie, an underhook, an overhook or a two-on-one, and those are the connections that move a person rather than merely delay them.",
-        "That has a direct consequence for what the position can produce. Sitting up puts you on the near side of the opponent's base with your hands available, which is why the arm drag, the body lock and the wrestle-up all live in this posture and almost none of them live in the other one. The IBJJF pays for the last of those explicitly: the sweep clauses award two points when a bottom athlete gets to their feet, puts the opponent down and holds the top position, which is a scoring path that only exists if you were upright enough to stand up in the first place.",
-        "It also buys forward pressure. A seated player can advance into an opponent, close distance on their own terms and make the top player deal with an approach. From flat on your back there is no such thing as advancing; there is only waiting and reacting to whatever distance the top player chooses to give you.",
+        "That has a direct consequence for what the position can produce. Sitting up puts you on the near side of the opponent's base with your hands available, which is why the body lock and the wrestle-up live in this posture, and the arm drag is at its strongest here. The IBJJF pays for the last of those explicitly: the sweep clauses award two points when a bottom athlete gets to their feet, puts the opponent down and holds the top position, which is a scoring path that only exists if you were upright enough to stand up in the first place.",
+        "It also buys forward pressure. A seated player can advance into an opponent, close distance on their own terms and make the top player deal with an approach. From flat on your back advancing is slow and mostly a matter of the legs; mostly you wait and react to whatever distance the top player chooses to give you.",
       ],
     },
     {
       id: "what-sitting-up-costs",
       heading: "What sitting up costs, including on the scorecard",
       paragraphs: [
-        "The bill arrives at the head and the neck. An upright torso puts your head within reach of a front headlock, a snap-down and a spinning attack behind you, and every one of those is a route to your back rather than merely to a pass. The characteristic failure of the seated posture is not being passed; it is being turned over or getting your head trapped, which is a worse place to be than having somebody in your open guard.",
+        "The bill arrives at the head and the neck. An upright torso puts your head within reach of a front headlock, a snap-down and a spinning attack behind you, and each of those can become a route to your back or to a neck attack, not merely to a pass. The characteristic failure of the seated posture is not being passed; it is being turned over or getting your head trapped, which is a worse place to be than having somebody in your open guard.",
         "There is a second cost that most technical writing ignores entirely, and it is written into the rule books. Sitting down is not free.",
         "Under the IBJJF, it is a serious foul when an athlete kneels or sits and remains in that position, or pulls guard, without the establishment of a grip. The rule does not prohibit sitting; it prohibits sitting without having first attached yourself to somebody, which is a rule about connection dressed up as a rule about posture. Under ADCC rules, the charge is heavier: a competitor who voluntarily goes from a standing position to a non-standing position by any means and remains down for three seconds or more is penalised with a minus point, and, when both competitors are standing, one who puts one or both knees on the mat for more than three seconds draws the same.",
-        "So the seated posture is a position you can be penalised for arriving in, at both of the largest no-gi rulesets, on two different theories. Anybody building a game around it needs to know which of those theories applies at the event they have entered.",
+        "So the seated posture is a position you can be penalised for arriving in, under both the IBJJF and ADCC rules, on two different theories. Anybody building a game around it needs to know which of those theories applies at the event they have entered.",
       ],
     },
     {
@@ -53,7 +54,7 @@ export const seatedGuardAndSupineGuard: PublishedArticle = {
       paragraphs: [
         "The supine posture buys hip mobility and distance. With your shoulders on the mat you can turn your hips freely underneath you, invert, shrimp, bridge and re-face an opponent who is circling, and the legs have a much larger working envelope than they do when your seat is bearing the weight. That is the posture in which retention, as opposed to attack, actually happens.",
         "It also buys length. A supine player can keep a passer at the end of two legs, which is a longer barrier than any pair of arms, and can afford to give ground and recover it. The cost of a mistake is lower in the sense that being pushed backwards from supine is a normal event rather than a collapse.",
-        "What it gives up is everything the upper body was doing. From flat, your hands can frame, post and manage grips, but they cannot pull a person onto you with any authority, because you have no base to pull against. Your head is out of range of theirs. And the top player retains the option to simply stand up and stay standing, at which point a supine guard has no way to make anything happen and the referee's patience becomes a factor: the IBJJF's stalling framework treats a bottom player who holds without seeking to score or submit as one of its own examples of lack of combativeness, and ADCC's referees warn for passivity and then penalise it.",
+        "What it gives up is everything the upper body was doing. From flat, your hands can frame, post and manage grips, but they cannot pull a person onto you with any authority, because you have no base to pull against. Your head is out of range of theirs. And the top player retains the option to simply stand up and stay standing, at which point a supine guard has no way to make anything happen and the referee's patience becomes a factor: the IBJJF defines stalling as not pursuing positional progression, and ADCC's referees warn for passivity and then penalise it.",
       ],
     },
     {
@@ -62,7 +63,7 @@ export const seatedGuardAndSupineGuard: PublishedArticle = {
       paragraphs: [
         "Neither posture is a place you stay, which is why treating them as styles is the underlying error. In competitive no-gi, the time distribution is heavily toward ground exchanges in the first place: Spanias and colleagues, analysing matches from official no-gi submission-only tournaments with 26 regional and 26 international athletes, report a mean match duration of 278 seconds of which roughly 87 per cent was spent on the ground and 9 per cent standing. Whatever posture you favour, most of the match is spent below the waist height of a standing opponent and moving between configurations.",
         "The exchanges themselves are short. Andreato and colleagues, timing 22 gi matches at a regional event, report an effort-to-pause ratio of 6:1 with high-intensity actions lasting only a few seconds each. A posture is not something you hold for a round; it is something you are in for the length of one exchange, and the question is what state the next exchange leaves you in.",
-        "The failure is almost always in one direction. Going from supine to seated is a deliberate act that takes time and a free hand, and it fails when the top player is already leaning over you, because sitting up into somebody's chest is how a front headlock is donated. Going from seated to supine is usually not a decision at all; it is what happens when a seated player is flattened, and the cost is that you arrive on your back with your hips already behind the opponent's line rather than underneath it.",
+        "The costly failure tends to run in one direction. Going from supine to seated is a deliberate act that takes time and a free hand, and it fails when the top player is already leaning over you, because sitting up into somebody's chest is how a front headlock is donated. Going from seated to supine is usually not a decision at all; it is what happens when a seated player is flattened, and the cost is that you arrive on your back with your hips already behind the opponent's line rather than underneath it.",
         "That asymmetry is the practical heart of the piece. The transition you choose is cheap. The transition that is done to you is expensive, and it is expensive precisely because it lands you in the other posture in the worst version of it.",
       ],
     },
@@ -81,7 +82,8 @@ export const seatedGuardAndSupineGuard: PublishedArticle = {
       paragraphs: [
         "This is a framework, not a finding. Nobody has published a comparison of the two postures on any outcome measure, in either ruleset, and the notational work that does exist codes positions rather than trunk angles. The reasoning here is built from the definitions in two rule books, the penalties they attach, and the mechanics of what each posture can reach. It is an argument, and it should be read as one.",
         "Three claims are deliberately absent. That one posture is better: no source supports that and the question is probably not well formed. That one posture suits a body type: no source supports that either, and the versions of that claim in circulation are inferences from watching particular competitors. And anything about which is safer, which is a medical claim that neither the rule books nor the literature can support and which this publication does not make.",
-        "What remains is worth having anyway. The two postures do different jobs, are penalised differently, fail differently, and the transition between them is where most of the damage happens. If you have been switching between them without a reason, that is the thing to fix first, and a coach who has watched you roll will identify which of the two you default to under pressure faster than any article can.",
+        "What remains is worth having anyway. The two postures do different jobs, are penalised differently, fail differently, and the transition between them is where this account locates the risk. If you have been switching between them without a reason, that is the thing to fix first, and a coach who has watched you roll will identify which of the two you default to under pressure faster than any article can.",
+        "Correction, 29 September 2026: an earlier version of this article applied an IBJJF stalling example written for closed guard to a supine open guard. The sentence now cites the IBJJF's general definition of stalling. Several unsourced absolutes have also been softened.",
       ],
     },
   ],

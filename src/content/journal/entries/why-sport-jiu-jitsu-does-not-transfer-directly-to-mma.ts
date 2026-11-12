@@ -2,7 +2,7 @@ import type { PublishedArticle } from "../types.ts";
 
 /**
  * Argued entirely from rule documents: the ABC Unified Rules of MMA as amended
- * August 2025, the same document as it stood in July 2022, and Nevada's
+ * August 2026 (the clauses read are unchanged from the 2025 text), the same document as it stood in July 2022, and Nevada's
  * administrative code. No fighter is named. No fight result, record or
  * statistic about any individual appears anywhere in the piece, because none of
  * that is needed to make the argument and almost all of it is repeated
@@ -14,7 +14,8 @@ import type { PublishedArticle } from "../types.ts";
 export const whySportJiuJitsuDoesNotTransferDirectlyToMma: PublishedArticle = {
   status: "published",
   publishedAt: "2026-08-04",
-  authorId: "rick-r",
+  updatedAt: "2026-09-29",
+  authorId: "guard-theory-editorial",
   slug: "why-sport-jiu-jitsu-does-not-transfer-directly-to-mma",
   category: "mma-and-jiu-jitsu",
   title: "Why sport jiu-jitsu does not transfer directly to MMA",
@@ -30,7 +31,7 @@ export const whySportJiuJitsuDoesNotTransferDirectlyToMma: PublishedArticle = {
       paragraphs: [
         "The argument about grappling in mixed martial arts is usually conducted as a league table. Someone asserts that jiu-jitsu no longer works in the cage, someone else lists counter-examples, and both sides trade fight outcomes that neither has checked.",
         "There is a duller version of the question that can actually be answered. Sport grappling and mixed martial arts are governed by two different documents. Those documents specify different equipment, a different enclosure, a different clock and a different definition of what counts as doing well. Every one of those differences changes what a position is worth, and the changes can be read directly rather than inferred from results.",
-        "That is the whole method here. No fighter is named, no bout is described, and no record is cited, because none of that is necessary and most published versions of it are unverified. What follows is a reading of the Unified Rules of Mixed Martial Arts as amended in August 2025, the same document as it stood in July 2022, Nevada's administrative code for unarmed combat, and one published performance analysis. Anybody with three browser tabs can check it.",
+        "That is the whole method here. No fighter is named, no bout is described, and no record is cited, because none of that is necessary and most published versions of it are unverified. What follows is a reading of the Unified Rules of Mixed Martial Arts as amended in August 2026 (the clauses read here are unchanged from the 2025 text), the same document as it stood in July 2022, Nevada's administrative code for unarmed combat, and one published performance analysis. Anybody with three browser tabs can check it.",
         "The conclusion is narrow and, put plainly, unexciting: skill in one of these activities is skill priced by that activity's rules, and the two price lists differ in at least five specific ways.",
       ],
     },
@@ -40,7 +41,7 @@ export const whySportJiuJitsuDoesNotTransferDirectlyToMma: PublishedArticle = {
       paragraphs: [
         "Start at the smallest scale. Nevada's code requires that in mixed martial arts each combatant wears gloves weighing not less than four ounces and not more than eight. The Unified Rules add that other than the hands, no taping, covering or protective gear of any kind may be worn on the upper body, and permit a soft neoprene sleeve only over the knee and/or ankle.",
         "Then there is what may be held. Holding an opponent's gloves or shorts is a foul. The rule is precise about the distinction it is drawing: a fighter may hold or grab the opponent's hand, provided the control comes from actually gripping the hand rather than from the material of the glove. Holding your own gloves or shorts is legal. The trunks themselves are specified so as not to be useful: no exposed Velcro, no pockets, no zippers, and a hem that may not extend below the knee.",
-        "Alongside that sits the small-joint rule, which does something less obvious. It defines fingers and toes as small joints and wrists, ankles, knees, shoulders and elbows as large ones, and then states that grabbing the majority of fingers or toes at once is allowed. So the individual finger grip that a no-gi grappler might use on a hand is constrained, while the toe hold sits on the legal side of the same clause.",
+        "Alongside that sits the small-joint rule, which does something less obvious. It defines fingers and toes as small joints and wrists, ankles, knees, shoulders and elbows as large ones, and then states that grabbing the majority of fingers or toes at once is allowed. So the individual finger grip that a no-gi grappler might use on a hand is constrained, while a toe hold, which attacks the ankle (a large joint under the same clause), stays legal.",
         "None of this is exotic. It amounts to a hand that is padded, a body with nothing on it above the waist for men and a form-fitting rash guard and/or sports bra for women, and a rule set that has thought carefully about the difference between gripping a person and gripping their equipment. A grappler arriving from no-gi has already lost the cloth latch. What is new is that the gripping surface is itself partly enclosed in foam, and that the rules police the boundary between hand and glove closely enough to make it a scoring matter.",
       ],
     },
@@ -50,8 +51,8 @@ export const whySportJiuJitsuDoesNotTransferDirectlyToMma: PublishedArticle = {
       paragraphs: [
         "The foul list is the most useful page in the document, and it is most useful for what it does not contain.",
         "Kneeing or kicking the head of a grounded opponent is prohibited. Nothing in the list prohibits punching or elbowing the head of a grounded opponent. That single asymmetry rewrites the value of every position in which one person is above another, because the bottom position must now account for descending strikes that arrive from a range at which grappling connections are also available.",
-        "The definition of grounded has moved, and the move matters. In the July 2022 text a fighter was grounded when any part of the body other than the soles of the feet touched the floor, and the document specified that a flat palm down was sufficient. The version amended in August 2025 defines a grounded fighter as one with any part of their body other than their hands or feet in contact with the canvas. Hands no longer ground you. A hand posted while shooting, or while working out of a turtle, is now a hand that does not remove the legality of a knee or kick to the head.",
-        "That change was voted through by the Association of Boxing Commissions in July 2024, alongside the removal of the downward-pointing elbow strike from the foul list, with an implementation date of 1 November 2024. Both changes are legible in the documents themselves: the 2022 text carries the downward elbow as foul number ten, and the 2025 text has no such entry.",
+        "The definition of grounded has moved, and the move matters. In the July 2022 text a fighter was grounded when any part of the body other than the soles of the feet touched the floor, and the document specified that a flat palm down was sufficient. The current text, as amended in August 2026, defines a grounded fighter as one with any part of their body other than their hands or feet in contact with the canvas. Hands no longer ground you. A hand posted while shooting, or while working out of a turtle, is now a hand that does not remove the legality of a knee or kick to the head.",
+        "That change was voted through by the Association of Boxing Commissions in July 2024, alongside the removal of the downward-pointing elbow strike from the foul list, with a requested implementation date of 1 November 2024. Both changes are legible in the documents themselves: the 2022 text carries the downward elbow as foul number ten, and the 2025 and 2026 texts have no such entry.",
         "One caution about all of this. The Unified Rules are the most commonly used ruleset in the sport, not a universal one, and adoption of amendments is a matter for each jurisdiction. Anything said here describes the ABC document, not automatically the rules in force at a given event.",
       ],
     },
@@ -70,7 +71,7 @@ export const whySportJiuJitsuDoesNotTransferDirectlyToMma: PublishedArticle = {
       heading: "The clock is not the same clock",
       paragraphs: [
         "Under the Unified Rules a round lasts five minutes, with a one-minute rest between rounds, and no contest exceeds five rounds or twenty-five minutes. Nevada adds that, except with the approval of the Commission or its Executive Director, a non-championship contest must not exceed three rounds and a championship or special event five.",
-        "Compare that with the shapes a grappler is used to. In the no-gi submission-only events analysed by Spanias, Kirk and Ovretveit, the mean match ran 278 seconds from start to finish. At the other extreme, the ADCC ruleset as published runs its finals, absolute finals and superfights over twenty minutes, with no positive points available in the first ten. In one format the whole contest is shorter than a single MMA round. In the other, half the match is deliberately unscored so that nothing is gained by establishing a lead early.",
+        "Compare that with the shapes a grappler is used to. In 26 matches at two UK submission-only events analysed by Spanias, Kirk and Ovretveit, each scheduled for ten minutes, the mean match ended after 278 seconds. At the other extreme, the ADCC ruleset as published runs its finals, absolute finals and superfights over twenty minutes, with no positive points available in the first ten. In one format the average contest ended in less time than a single scheduled MMA round. In the other, half the match is deliberately unscored so that nothing is gained by establishing a lead early.",
         "The interruption is the part that transfers worst. A grappling match is continuous: a position built in minute four is still there in minute five, and slow work compounds. Mixed martial arts provides a one-minute rest between rounds, which means whatever position existed at the bell does not exist sixty seconds later. Positional work that pays off over eight minutes has no eight minutes to occupy.",
         "There is a modest empirical texture to this. Miarka and colleagues coded 645 rounds from professional bouts, matching winners and losers in 215 pairs per round, and reported medians for standing low-intensity time of about two and a half minutes in the first round and just over two minutes in the third. Half of each round, near enough, was spent standing at low intensity. Whatever else that describes, it is not the time budget of a grappling match.",
       ],
@@ -93,16 +94,17 @@ export const whySportJiuJitsuDoesNotTransferDirectlyToMma: PublishedArticle = {
         "What has been shown is that five specific constraints differ between the two activities and that each difference changes what a position pays. What has not been shown is that these differences explain any particular outcome, that they are the largest differences, or that they matter more than conditioning, striking, wrestling or the ordinary variance of a fight. No dataset exists that would settle any of that, and this article does not pretend one does.",
         "It is also worth saying what is not being claimed about people. No athlete competing in mixed martial arts is trained in one discipline, and describing anyone as a grappler who happens to be in a cage would be a claim about their preparation that this article has no basis to make. The argument is about rule documents, not about individuals.",
         "The usable version is short. Skill is priced by a ruleset, and moving between rulesets revalues it without changing it. A grappler moving into mixed martial arts has not become worse at grappling; they have taken a portfolio built for one price list into a market that pays differently for the same actions, and the parts that were worth the most under the first document are, by the text of the second, worth the least.",
+        "Correction, 29 September 2026: this article cited the August 2025 text of the Unified Rules, which was amended again on 5 August 2026. Every clause read here is unchanged, and the citations now point to the current text. An earlier version also compared the average length of the submission-only matches in one study with the scheduled length of an MMA round without saying so, and gave the reason a toe hold is legal imprecisely; both have been corrected.",
       ],
     },
   ],
   sources: [
     {
       title:
-        "Unified Rules of Mixed Martial Arts, as approved April 2001 and amended with nonsubstantial changes 6 August 2025: round duration, cage and ring attire, joint and body coverings, standing up or breaking fighters, fouls 12 and 14-16, judging criteria",
+        "Unified Rules of Mixed Martial Arts, as approved April 2001 and amended with rule changes 5 August 2026: round duration, cage and ring attire, joint and body coverings, standing up or breaking fighters, fouls 12 and 14-16, judging criteria (each unchanged from the 2025 text)",
       publisher: "Association of Boxing Commissions and Combative Sports",
-      url: "https://www.abcboxing.com/wp-content/uploads/2025/08/Unified-Rules-of-MMA-8.2025.pdf",
-      accessed: "2026-08-03",
+      url: "https://www.abcboxing.com/wp-content/uploads/2026/08/Unified-Rules-of-MMA-8.2026.pdf",
+      accessed: "2026-09-29",
     },
     {
       title:
@@ -159,8 +161,8 @@ export const whySportJiuJitsuDoesNotTransferDirectlyToMma: PublishedArticle = {
   ],
   contestedNotes: [
     "This article demonstrates that five constraints differ between the two rulesets. It does not demonstrate that those differences cause any competitive outcome, that they are the most important differences, or that they outweigh conditioning, striking or wrestling. No dataset exists that would test the causal claim, and none is asserted.",
-    "The Unified Rules of Mixed Martial Arts are the most commonly used ruleset in the sport but are not universal, and each jurisdiction adopts amendments on its own timetable. Statements here describe the ABC document as amended in August 2025, not necessarily the rules in force at any particular event.",
-    "The grounded-fighter definition and the status of the downward elbow both changed with effect from 1 November 2024. Anything written about mixed martial arts before that date, including most published explanations of the rules, describes a different document. The two ABC texts cited here are the primary evidence for the change; the ESPN and Combat Sports Law reports date and corroborate the vote.",
+    "The Unified Rules of Mixed Martial Arts are the most commonly used ruleset in the sport but are not universal, and each jurisdiction adopts amendments on its own timetable. Statements here describe the ABC document as amended in August 2026, not necessarily the rules in force at any particular event.",
+    "The grounded-fighter definition and the status of the downward elbow were changed by an ABC vote in July 2024 with a requested implementation date of 1 November 2024; each commission adopts them on its own timetable. Anything written about mixed martial arts before that date, including most published explanations of the rules, describes a different document. The two ABC texts cited here are the primary evidence for the change; the ESPN and Combat Sports Law reports date and corroborate the vote.",
     "Glove weights and enclosure dimensions are not specified in the ABC Unified Rules document at all. They are set by individual jurisdictions, and the figures given here are Nevada's. Other commissions may specify differently.",
     "The Miarka figures are sample medians from professional bouts coded by researchers, not universal properties of the sport, and the paper's coding of intensity is observer-dependent. They are cited to give a rough sense of a round's time budget and for nothing more.",
   ],

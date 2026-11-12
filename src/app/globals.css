@@ -256,3 +256,269 @@
     transform: translateY(0);
   }
 }
+
+/*
+ * The packing slip (src/app/crew/orders/[id]/packing-slip) is the one page
+ * meant for paper: no ground, no site chrome, and its own text set to black
+ * with print: utilities. Scoped by :has() so no other page's printing changes.
+ */
+@media print {
+  body:has([data-packing-slip]) {
+    background: none;
+  }
+
+  body:has([data-packing-slip]) :is(header, footer, .skip-link) {
+    display: none;
+  }
+}
+
+/* ==========================================================================
+   FACELIFT 2026-11 — bands, surfaces, type contrast, motion
+   See docs/facelift-2026-11.md. Each utility below is a complete, contrast-
+   tested pairing (ground + text + focus ring) or a single reusable behaviour.
+   No new colour is introduced here; everything resolves to a token above.
+   ========================================================================== */
+
+/* --- Bands: a full-width section with its own ground --------------------
+   A band sets ground, default text colour, the caption colour its children
+   may use, and the focus ring that clears 3:1 on it. Compose layout on top;
+   do not re-declare the ground. */
+@utility band-ink {
+  background-color: var(--color-ink);
+  color: var(--color-chalk);
+  --band-caption: var(--color-steel);
+  --band-hairline: var(--color-steel-dim);
+  --band-link: var(--color-signal-lift);
+  --focus-ring: var(--color-signal-lift);
+}
+
+@utility band-graphite {
+  background-color: var(--color-graphite);
+  color: var(--color-chalk);
+  --band-caption: var(--color-steel);
+  --band-hairline: var(--color-steel-mid);
+  --band-link: var(--color-signal-lift);
+  --focus-ring: var(--color-signal-lift);
+}
+
+@utility band-bone {
+  background-color: var(--color-bone);
+  color: var(--color-ink);
+  --band-caption: var(--color-slate);
+  --band-hairline: var(--color-steel);
+  --band-link: var(--color-signal-dim);
+  --focus-ring: var(--color-signal-dim);
+}
+
+/* Caption/metadata text that follows the band it sits in. */
+@utility text-caption {
+  color: var(--band-caption, var(--color-steel));
+}
+
+/* A hairline that follows the band it sits in. */
+@utility border-hairline {
+  border-color: var(--band-hairline, var(--color-steel-dim));
+}
+
+/* --- Band edge: a bone sheet laid on the ink desk -------------------------
+   A 1px rule plus a short soft shadow on the band's top edge. */
+@utility band-edge {
+  position: relative;
+
+  &::before {
+    content: "";
+    position: absolute;
+    inset: 0 0 auto 0;
+    height: 24px;
+    pointer-events: none;
+    background: linear-gradient(to bottom, rgb(27 23 37 / 0.18), rgb(27 23 37 / 0));
+  }
+}
+
+/* --- Plate grid: the dot field of a notation plate, as a band texture ----
+   Same geometry as Plate.tsx (30px pitch, 1.5px dots). Dots are the band's
+   hairline colour at low alpha so text contrast is unaffected. */
+@utility plate-grid {
+  background-image: radial-gradient(
+    circle at 0.75px 0.75px,
+    color-mix(in srgb, var(--band-hairline, var(--color-steel-dim)) 55%, transparent) 0.75px,
+    transparent 0.75px
+  );
+  background-size: 30px 30px;
+}
+
+/* --- Corner ticks: registration marks at a section's corners -------------
+   The plate's registration crosses, at page scale. Decorative; aria-free. */
+@utility corner-ticks {
+  position: relative;
+
+  &::before,
+  &::after {
+    content: "";
+    position: absolute;
+    width: 11px;
+    height: 11px;
+    pointer-events: none;
+    background:
+      linear-gradient(var(--band-hairline, var(--color-steel-dim)), var(--band-hairline, var(--color-steel-dim))) center / 100% 1px no-repeat,
+      linear-gradient(var(--band-hairline, var(--color-steel-dim)), var(--band-hairline, var(--color-steel-dim))) center / 1px 100% no-repeat;
+  }
+
+  &::before {
+    top: 12px;
+    left: 12px;
+  }
+
+  &::after {
+    right: 12px;
+    bottom: 12px;
+  }
+}
+
+/* --- Plates on paper -----------------------------------------------------
+   Every drawing paints with var(--color-steel / steel-dim / signal-lift /
+   ink / ink-raised), tuned for the ink ground. Wrapping a plate in this
+   remaps those variables for the paper ground, so the same component reads
+   on bone with no prop. Only use around a plate; it remaps text utilities
+   inside the wrapper too, by design. */
+@utility plate-on-paper {
+  --color-steel: #4b4359;        /* slate: the drawn line */
+  --color-steel-dim: #a499b3;    /* steel: grid dots and hairlines */
+  --color-steel-mid: #7c728a;
+  --color-signal-lift: #2161c9;  /* signal-dim: the live node */
+  --color-ink: #efe9f0;          /* bone: the plate field */
+  --color-ink-raised: #f6f2f7;   /* bone-raised: a filled shape */
+  --color-chalk: #1b1725;        /* ink: a label inside the plate */
+  --color-orchid: #4b4359;       /* annotation reads as slate on paper */
+}
+
+/* --- Surfaces -------------------------------------------------------------
+   A card is a surface: raised fill, hairline border, square corners. */
+@utility card-lift {
+  transition:
+    transform var(--tw-duration, 140ms) var(--ease-control),
+    border-color var(--tw-duration, 140ms) var(--ease-control),
+    background-color var(--tw-duration, 140ms) var(--ease-control);
+
+  @media (hover: hover) {
+    &:hover,
+    &:focus-within {
+      transform: translateY(-2px);
+    }
+  }
+}
+
+/* --- Type -----------------------------------------------------------------
+   The expanded cut, for short statements only. Pair it with display-condensed
+   in the same view: that contrast is the identity. */
+@utility display-wide {
+  font-family: var(--font-display);
+  font-variation-settings: "wdth" 125;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  line-height: 1;
+}
+
+/* A section label. Sans, not mono: an eyebrow is not data. */
+@utility eyebrow {
+  font-family: var(--font-display);
+  font-variation-settings: "wdth" 100;
+  font-weight: 500;
+  font-size: var(--text-xs);
+  line-height: 1.4;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+
+/* Long-form H1 on the study ground: Newsreader at display size. */
+@utility display-serif {
+  font-family: var(--font-body);
+  font-weight: 500;
+  letter-spacing: -0.01em;
+  line-height: 1.02;
+  text-wrap: balance;
+}
+
+/* A pull quote: once per piece at most, quoting the piece itself. */
+@utility pull-quote {
+  border-left: 3px solid var(--color-signal);
+  padding: 1rem 0 1rem 1.5rem;
+  font-family: var(--font-body);
+  font-size: var(--text-xl);
+  line-height: 1.35;
+  font-style: italic;
+  text-wrap: pretty;
+}
+
+/* --- Links: the underline grows from the left, like a leader line -------- */
+@utility link-rule {
+  text-decoration: none;
+  background-image: linear-gradient(currentColor, currentColor);
+  background-repeat: no-repeat;
+  background-size: 0% 1px;
+  background-position: 0 100%;
+  padding-bottom: 1px;
+  transition: background-size var(--tw-duration, 140ms) var(--ease-control);
+
+  &:hover,
+  &:focus-visible {
+    background-size: 100% 1px;
+  }
+}
+
+/* --- Reveal: a band's children enter as they scroll into view ------------
+   Scroll-driven, no JavaScript, progressive. Browsers without
+   animation-timeline see the content static. Reduced motion collapses the
+   duration globally (see above). */
+@keyframes gt-reveal {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@utility reveal {
+  @supports (animation-timeline: view()) {
+    animation: gt-reveal 420ms var(--ease-control) both;
+    animation-timeline: view();
+    animation-range: entry 0% entry 35%;
+  }
+}
+
+/* --- Plate draw-in: callouts and leader lines draw when a card is hovered -
+   Apply `plate-draw` to the card; any path/line/circle inside marked
+   `data-draw` is held un-drawn until hover or focus-within. */
+@utility plate-draw {
+  & [data-draw] {
+    stroke-dasharray: 1000;
+    stroke-dashoffset: 0;
+    transition: stroke-dashoffset 420ms var(--ease-control);
+  }
+
+  @media (hover: hover) {
+    & [data-draw] {
+      stroke-dashoffset: 1000;
+    }
+
+    &:hover [data-draw],
+    &:focus-within [data-draw] {
+      stroke-dashoffset: 0;
+    }
+  }
+}
+
+/* The scroll-driven reveal is bound to scroll position, not to time, so the
+   global duration collapse above does not reach it. Under reduced motion the
+   content is simply there. */
+@media (prefers-reduced-motion: reduce) {
+  .reveal {
+    animation: none !important;
+    opacity: 1;
+    transform: none;
+  }
+}

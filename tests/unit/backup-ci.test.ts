@@ -104,11 +104,22 @@ after(() => rmSync(tmp, { recursive: true, force: true }));
 describe("the scheduled backup", { skip: SKIP }, () => {
   it("writes one encrypted file that decrypts to the dump, and the guard passes it", () => {
     const out = path.join(tmp, "happy");
-    const result = backup({ BACKUP_DATABASE_URL: DB_URL, BACKUP_PASSPHRASE: PASSPHRASE }, out);
+    const log = path.join(tmp, "happy-docker.log");
+    writeFileSync(log, "");
+    const result = backup(
+      { BACKUP_DATABASE_URL: DB_URL, BACKUP_PASSPHRASE: PASSPHRASE, FAKE_LOG: posix(log) },
+      out,
+    );
 
     assert.equal(result.status, 0, result.output);
     assertNoSecret(result.output);
     assert.match(result.output, /dumping with postgres:17-alpine/);
+
+    // Neon's own schema is left out of the dump: a Neon database that already
+    // has it refuses to have it created again (restore check, 2026-10-05).
+    const dumped = readFileSync(log, "utf8");
+    assert.match(dumped, /pg_dump .*--exclude-schema=neon_auth/);
+    assert.ok(!dumped.includes(PASSWORD), "the URL is an argument, not an environment variable");
 
     const files = readdirSync(out).sort();
     assert.equal(files.length, 2);
@@ -187,6 +198,24 @@ describe("the scheduled backup", { skip: SKIP }, () => {
         FAKE_TOC: "215; 0 16400 TABLE DATA public _migration neondb_owner",
       },
       /no data entry for "waitlist_signup"/,
+    ],
+    [
+      "an archive that still holds Neon's neon_auth schema",
+      {
+        BACKUP_DATABASE_URL: DB_URL,
+        BACKUP_PASSPHRASE: PASSPHRASE,
+        FAKE_TOC: `${TOC}\n218; 0 16430 TABLE DATA neon_auth users_sync neondb_owner`,
+      },
+      /still holds Neon's neon_auth schema/,
+    ],
+    [
+      "an archive that still creates the neon_auth schema, even an empty one",
+      {
+        BACKUP_DATABASE_URL: DB_URL,
+        BACKUP_PASSPHRASE: PASSPHRASE,
+        FAKE_TOC: `5; 2615 16389 SCHEMA - neon_auth neondb_owner\n${TOC}`,
+      },
+      /still holds Neon's neon_auth schema/,
     ],
   ];
 

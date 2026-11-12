@@ -4,6 +4,38 @@ import type { CheckoutStart, PricedLine } from "../cart/types.ts";
 import { snapshotDrift } from "../cart/price.ts";
 import { createCheckoutSession } from "./checkout.ts";
 import { isStripeConfigured } from "./client.ts";
+import { isStoredImageUrl } from "../images/host.ts";
+
+/**
+ * Each line's primary photograph — the product's first, by sort_index — by
+ * variant id. A picture on the payment page is a courtesy, not part of the
+ * sale: if this read fails the session is created without images, never
+ * refused.
+ */
+async function primaryImages(lines: PricedLine[]): Promise<Record<string, string>> {
+  try {
+    const rows = await query<{ variant_id: string; blob_url: string }>(
+      `select distinct on (v.id) v.id as variant_id, pi.blob_url
+         from variant v
+         join product_image pi on pi.product_id = v.product_id
+        where v.id = any($1::text[])
+        order by v.id, pi.sort_index, pi.id`,
+      [lines.map((line) => line.variantId)],
+    );
+
+    return Object.fromEntries(
+      rows
+        .filter((row) => isStoredImageUrl(row.blob_url))
+        .map((row) => [row.variant_id, row.blob_url]),
+    );
+  } catch (error) {
+    console.error(
+      "[guard-theory] could not read product images for checkout:",
+      error instanceof Error ? error.message : error,
+    );
+    return {};
+  }
+}
 
 /**
  * The one hop from our origin to Stripe, as a value rather than a redirect.
@@ -97,6 +129,7 @@ export async function startCheckout(intentId: string): Promise<CheckoutStart> {
       // snapshot. When a second currency exists it becomes a column on the
       // intent, not a guess made here.
       currency: "USD",
+      imagesByVariant: await primaryImages(lines),
     });
 
     // The browser will navigate to whatever this is, so it is checked rather

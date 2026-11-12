@@ -82,8 +82,12 @@ describe("no form discards input", () => {
     const first = await store.add(signup);
     const second = await store.add({ ...signup, email: "repeat@example.com" });
 
-    assert.deepEqual(first, { ok: true, alreadyOnList: false });
-    assert.deepEqual(second, { ok: true, alreadyOnList: true }, "match must ignore case");
+    assert.deepEqual(first, { ok: true, alreadyOnList: false, confirm: null });
+    assert.deepEqual(
+      second,
+      { ok: true, alreadyOnList: true, confirm: null },
+      "match must ignore case",
+    );
   });
 
   it("the ephemeral escape hatch cannot be opened on Vercel", async () => {

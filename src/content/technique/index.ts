@@ -41,6 +41,10 @@ import { kneeShield } from "./entries/knee-shield.ts";
 import { legDragTurnsTheHips } from "./entries/leg-drag-turns-the-hips.ts";
 import { legEntanglementAsControl } from "./entries/leg-entanglement-as-control.ts";
 import { lockdownStretchesTheBase } from "./entries/lockdown-stretches-the-base.ts";
+import { kneebarIsAnArmbarOnTheLeg } from "./entries/kneebar-is-an-armbar-on-the-leg.ts";
+import { legEntanglementAsControl } from "./entries/leg-entanglement-as-control.ts";
+import { legLockDefenceKneeLine } from "./entries/leg-lock-defence-knee-line.ts";
+import { saddleTrapsTheKnee } from "./entries/saddle-traps-the-knee.ts";
 import { mountIsAHipPin } from "./entries/mount-is-a-hip-pin.ts";
 import { noGiGripsAreOnATimer } from "./entries/no-gi-grips-are-on-a-timer.ts";
 import { northSouthChoke } from "./entries/north-south-choke.ts";
@@ -58,6 +62,9 @@ import { singleLegXGuard } from "./entries/single-leg-x-guard.ts";
 import { snapDownToFrontHeadlock } from "./entries/snap-down-to-front-headlock.ts";
 import { sweepingTowardTheMissingPost } from "./entries/sweeping-toward-the-missing-post.ts";
 import { trapAndRollRemovesAPost } from "./entries/trap-and-roll-removes-a-post.ts";
+import { straightAnkleLockIsALever } from "./entries/straight-ankle-lock-is-a-lever.ts";
+import { sweepingTowardTheMissingPost } from "./entries/sweeping-toward-the-missing-post.ts";
+import { twoOnOneControlsOneArm } from "./entries/two-on-one-controls-one-arm.ts";
 import { triangleClosesAtTheShoulder } from "./entries/triangle-closes-at-the-shoulder.ts";
 import { triangleDefencePosture } from "./entries/triangle-defence-posture.ts";
 import { underhookHalfGuard } from "./entries/underhook-half-guard.ts";
@@ -107,6 +114,10 @@ export const ENTRIES: TechniqueEntry[] = [
   legDragTurnsTheHips,
   legEntanglementAsControl,
   lockdownStretchesTheBase,
+  kneebarIsAnArmbarOnTheLeg,
+  legEntanglementAsControl,
+  legLockDefenceKneeLine,
+  saddleTrapsTheKnee,
   mountIsAHipPin,
   noGiGripsAreOnATimer,
   northSouthChoke,
@@ -124,6 +135,9 @@ export const ENTRIES: TechniqueEntry[] = [
   snapDownToFrontHeadlock,
   sweepingTowardTheMissingPost,
   trapAndRollRemovesAPost,
+  straightAnkleLockIsALever,
+  sweepingTowardTheMissingPost,
+  twoOnOneControlsOneArm,
   triangleClosesAtTheShoulder,
   triangleDefencePosture,
   underhookHalfGuard,

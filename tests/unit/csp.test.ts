@@ -113,11 +113,11 @@ describe("which paths get which policy", () => {
 
   it("the static fallback never matches a proxied path, and matches everything else", () => {
     const regex = pathToRegexp(fallbackSource(), [], {});
-    for (const path of ["/cart", "/crew", "/crew/orders/7", "/shop", "/shop/rashguard", "/order/confirmed", "/unsubscribe"]) {
+    for (const path of ["/first-edition/confirm", "/crew", "/crew/orders/7", "/shop", "/shop/rashguard", "/order/confirmed", "/unsubscribe"]) {
       assert.equal(regex.test(path), false, path);
       assert.equal(isDynamicPath(path), true, path);
     }
-    for (const path of ["/", "/about", "/shopping", "/orders", "/technique/guard/x", "/api/health", "/no-such-page"]) {
+    for (const path of ["/", "/cart", "/first-edition", "/about", "/shopping", "/orders", "/technique/guard/x", "/api/health", "/no-such-page"]) {
       assert.equal(regex.test(path), true, path);
       assert.equal(isDynamicPath(path), false, path);
     }

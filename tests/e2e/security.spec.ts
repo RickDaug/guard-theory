@@ -74,6 +74,7 @@ const CSP_ROUTES = [
   "/shop",
   "/shop/theory-01-long-sleeve",
   "/cart",
+  "/first-edition/confirm",
   "/order/confirmed",
   "/no-such-page-csp-check",
 ];

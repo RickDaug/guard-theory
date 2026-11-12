@@ -22,7 +22,7 @@
  */
 import { spawnSync } from "node:child_process";
 import { randomBytes } from "node:crypto";
-import { existsSync, readFileSync, rmSync, writeFileSync } from "node:fs";
+import { existsSync, readdirSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 
 import {
@@ -59,27 +59,49 @@ function readJson(file) {
 }
 
 /** Prerendered HTML pages: request path -> html. */
+/**
+ * Every copy of every prerendered page's HTML, keyed by pathname.
+ *
+ * `next build` on its own writes a page to .next/server/app/<path>.html. Under
+ * Vercel's build adapter it does not: the HTML is in
+ * .next/server/route-cache/APP_PAGE/<key>/$/<path>.html, and .next/server/app
+ * holds no HTML at all. The first version of this script only looked in the
+ * first place, found nothing on Vercel, wrote an empty manifest, and then
+ * "verified" zero pages - which is how production shipped `script-src 'self'`
+ * with no hashes on 2026-11-11 (issue #85).
+ *
+ * A restored build cache can leave more than one <key> directory behind, so a
+ * page can have several copies. All of them are returned: collect() allows the
+ * scripts of every copy, and verify() checks every copy.
+ */
 function prerenderedPages() {
   const prerender = readJson("prerender-manifest.json");
   const pages = new Map();
 
+  const cacheRoot = join(nextDir, "server", "route-cache", "APP_PAGE");
+  const cacheDirs = existsSync(cacheRoot)
+    ? readdirSync(cacheRoot).map((key) => join(cacheRoot, key, "$"))
+    : [];
+
   for (const pathname of Object.keys(prerender.routes)) {
-    const file = join(nextDir, "server", "app", `${pathname === "/" ? "/index" : pathname}.html`);
-    if (existsSync(file)) pages.set(pathname, readFileSync(file, "utf8"));
+    const relative = `${pathname === "/" ? "/index" : pathname}.html`;
+    const copies = [join(nextDir, "server", "app", relative), ...cacheDirs.map((dir) => join(dir, relative))]
+      .filter((file) => existsSync(file))
+      .map((file) => readFileSync(file, "utf8"));
+    if (copies.length > 0) pages.set(pathname, copies);
   }
 
   return pages;
 }
 
-/** Special pages (404, global error) are served at arbitrary paths. */
 const isSpecial = (pathname) => pathname.startsWith("/_");
 
 function collect() {
   const pages = {};
   const fallback = new Set();
 
-  for (const [pathname, html] of prerenderedPages()) {
-    const hashes = hashesForHtml(html);
+  for (const [pathname, copies] of prerenderedPages()) {
+    const hashes = [...new Set(copies.flatMap((html) => hashesForHtml(html)))].sort();
     if (isSpecial(pathname)) hashes.forEach((h) => fallback.add(h));
     else pages[pathname] = hashes;
   }
@@ -109,7 +131,16 @@ function verify() {
   const pages = prerenderedPages();
   let largest = 0;
 
-  for (const [pathname, html] of pages) {
+  // A check that passes on nothing is not a check. Zero pages means the HTML
+  // was not where this script looked, not that there was nothing to hash.
+  if (pages.size === 0) {
+    console.error(
+      "\nCSP verification failed: no prerendered HTML was found, so no script could be hashed.\n",
+    );
+    process.exit(1);
+  }
+
+  for (const [pathname, copies] of pages) {
     // Special pages are checked at a path no page claims.
     const probe = isSpecial(pathname) ? "/__csp-probe-no-such-page" : pathname;
 
@@ -129,7 +160,7 @@ function verify() {
     if (sources.includes("'unsafe-inline'")) {
       problems.push(`${pathname}: script-src allows 'unsafe-inline'`);
     }
-    for (const hash of hashesForHtml(html)) {
+    for (const hash of new Set(copies.flatMap((html) => hashesForHtml(html)))) {
       if (!sources.includes(hash)) {
         problems.push(`${pathname}: inline script ${hash} is not in its policy (build output changed between passes?)`);
       }
@@ -166,21 +197,6 @@ rmSync(manifestPath, { force: true });
 
 console.log(`\n[build 1/2] collecting inline-script hashes (build id ${buildId})\n`);
 nextBuild({ GT_CSP_PASS: "collect" });
-// TEMPORARY DIAGNOSTIC (experiment branch): where does the prerendered HTML live on Vercel?
-{
-  const { execSync } = await import("node:child_process");
-  const sh = (c) => { try { return execSync(c, { encoding: "utf8", stdio: ["ignore", "pipe", "pipe"] }); } catch (e) { return "ERR " + (e.stderr || e.message); } };
-  if (process.platform !== "win32") {
-    console.log("[diag] cwd", process.cwd());
-    console.log("[diag] prerender routes", Object.keys(readJson("prerender-manifest.json").routes).length);
-    console.log("[diag] .next/server/app html:", sh("find .next/server/app -maxdepth 2 -name '*.html' | head -5; find .next/server/app -name '*.html' | wc -l"));
-    console.log("[diag] .next top:", sh("ls .next | head -40"));
-    console.log("[diag] html in .next:", sh("find .next -name '*.html' | head -8; find .next -name '*.html' | wc -l"));
-    console.log("[diag] .next ls:", sh("ls .next | tr '\n' ' '; echo; ls .next/output 2>&1 | head -20 | tr '\n' ' '; echo; find .next/output -maxdepth 3 | head -40 | tr '\n' ' '"));
-    console.log("[diag] rsc/meta:", sh("find .next -name 'technique*' -maxdepth 6 | head -12 | tr '\n' ' '"));
-    console.log("[diag] vercel output:", sh("ls -la /vercel/output .vercel/output 2>&1 | head -30"));
-  }
-}
 writeFileSync(manifestPath, `${JSON.stringify(collect(), null, 2)}\n`);
 
 console.log("\n[build 2/2] building with per-page script hashes\n");

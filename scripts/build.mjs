@@ -166,6 +166,19 @@ rmSync(manifestPath, { force: true });
 
 console.log(`\n[build 1/2] collecting inline-script hashes (build id ${buildId})\n`);
 nextBuild({ GT_CSP_PASS: "collect" });
+// TEMPORARY DIAGNOSTIC (experiment branch): where does the prerendered HTML live on Vercel?
+{
+  const { execSync } = await import("node:child_process");
+  const sh = (c) => { try { return execSync(c, { encoding: "utf8", stdio: ["ignore", "pipe", "pipe"] }); } catch (e) { return "ERR " + (e.stderr || e.message); } };
+  if (process.platform !== "win32") {
+    console.log("[diag] cwd", process.cwd());
+    console.log("[diag] prerender routes", Object.keys(readJson("prerender-manifest.json").routes).length);
+    console.log("[diag] .next/server/app html:", sh("find .next/server/app -maxdepth 2 -name '*.html' | head -5; find .next/server/app -name '*.html' | wc -l"));
+    console.log("[diag] .next top:", sh("ls .next | head -40"));
+    console.log("[diag] html anywhere:", sh("find . /vercel/output -path ./node_modules -prune -o \( -name 'index.html' -o -name 'technique.html' -o -name 'index.prerender-fallback.html' \) -print 2>/dev/null | head -20"));
+    console.log("[diag] vercel output:", sh("ls -la /vercel/output .vercel/output 2>&1 | head -30"));
+  }
+}
 writeFileSync(manifestPath, `${JSON.stringify(collect(), null, 2)}\n`);
 
 console.log("\n[build 2/2] building with per-page script hashes\n");

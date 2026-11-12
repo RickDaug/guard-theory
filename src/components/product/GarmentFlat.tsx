@@ -9,9 +9,12 @@ import type { ConstructionPoint } from "@/content/products/types";
  *
  * Guard Theory's product imagery is drawn rather than photographed. That is a
  * design decision, not a placeholder, and the copy states it as a standard
- * rather than as an apology: a production flat is what a factory is actually
- * given, it states construction instead of implying quality, and it says how the
- * garment is built — which is the part a photograph cannot show.
+ * rather than as an apology: a drawing shows how a garment is built, which is
+ * the part a photograph cannot show.
+ *
+ * The callouts are construction facts, so they appear only when a product has
+ * owner-supplied construction points. With none, the drawing stands alone and
+ * no key or caption is rendered (docs/owner-decisions.md §3).
  *
  * When real photography exists it will sit alongside this, not replace it —
  * the flat is the part that says how the garment is built.
@@ -116,8 +119,10 @@ export function GarmentFlat({
           strokeWidth={1.5}
         />
 
-        {/* Raglan seams, doubled to indicate flatlock */}
-        <g fill="none" stroke="var(--color-steel-dim)" strokeWidth={1.25}>
+        {/* Raglan seams, drawn doubled. `data-draw` is inert here; inside a
+            `plate-draw` card (ProductCard) the seams, leaders and rings draw
+            in on hover. Inherited by every path in the group. */}
+        <g data-draw="" fill="none" stroke="var(--color-steel-dim)" strokeWidth={1.25}>
           <path d="M 378 100 C 392 125, 400 150, 404 176" />
           <path d="M 373 102 C 387 127, 395 152, 399 178" />
           <path d="M 282 100 C 268 125, 260 150, 256 176" />
@@ -155,6 +160,7 @@ export function GarmentFlat({
                 fill="transparent"
               />
               <line
+                data-draw=""
                 x1={geometry.from[0]}
                 y1={geometry.from[1]}
                 x2={end[0]}
@@ -171,6 +177,7 @@ export function GarmentFlat({
                 className="transition-[fill] duration-[140ms] ease-[var(--ease-control)]"
               />
               <circle
+                data-draw=""
                 cx={geometry.ring[0]}
                 cy={geometry.ring[1]}
                 r={RING_R}
@@ -194,6 +201,7 @@ export function GarmentFlat({
         })}
       </Plate>
 
+      {points.length > 0 ? (
       <figcaption className="mt-8">
         <ul className="m-0 flex list-none flex-wrap gap-x-6 gap-y-3 p-0">
           {points.map((point) => {
@@ -238,6 +246,7 @@ export function GarmentFlat({
           )}
         </p>
       </figcaption>
+      ) : null}
     </figure>
   );
 }

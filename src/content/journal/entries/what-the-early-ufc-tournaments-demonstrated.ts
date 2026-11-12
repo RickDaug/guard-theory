@@ -9,7 +9,8 @@ import type { PublishedArticle } from "../types.ts";
 export const whatTheEarlyUfcTournamentsDemonstrated: PublishedArticle = {
   status: "published",
   publishedAt: "2026-08-04",
-  authorId: "rick-r",
+  updatedAt: "2026-09-29",
+  authorId: "guard-theory-editorial",
   slug: "what-the-early-ufc-tournaments-demonstrated",
   category: "mma-and-jiu-jitsu",
   title: "What the early UFC tournaments actually demonstrated",
@@ -32,7 +33,7 @@ export const whatTheEarlyUfcTournamentsDemonstrated: PublishedArticle = {
       id: "what-the-format-was",
       heading: "What the format was, according to a regulator",
       paragraphs: [
-        "The most reliable description of the early format does not come from a fan history. It comes from a state athletic commission explaining why it had refused to sanction the sport.",
+        "The most reliable description of the early format does not come from a fan history. It comes from a state athletic commission explaining why it had been hesitant to sanction the sport.",
         "In 2002, the New Jersey State Athletic Control Board published proposed rules for mixed martial arts, filed as proposal number PRN 2002-314, creating subchapters 24A and 24B of N.J.A.C. 13:46. The summary states that the board had been hesitant to sanction mixed martial arts events because of the lack of formal rules in the sport, and gives its examples: the sport generally did not divide contestants into weight classes, had contestants participate in several matches on the same evening, and did not provide time limits on either round or bout length.",
         "That is three design features from a body with no stake in the mythology. No weight classes. Several matches in a night. No time limits.",
         "The rules the board then proposed are the mirror image. Subchapter 24A.1 divides competitors into weight classes by pound bands. 24A.11 sets non-championship contests at three rounds of five minutes with a minute between them, and championship contests at five. 24A.12 makes the referee and the ringside physician the only people authorised to stop a contest. 24A.13 requires three judges and the ten-point must system, and then defines what the judges are to weigh, in order, beginning with effective striking and effective grappling.",
@@ -43,9 +44,9 @@ export const whatTheEarlyUfcTournamentsDemonstrated: PublishedArticle = {
       id: "the-modern-rules-forbid-the-experiment",
       heading: "The modern rules forbid the experiment",
       paragraphs: [
-        "The Unified Rules of Mixed Martial Arts, maintained by the Association of Boxing Commissions and Combative Sports, were approved in April 2001 and have been amended repeatedly since, most recently with non-substantial changes in August 2025.",
-        "Buried in the first clause is a sentence that quietly ends the tournament format for good. No contestant shall exceed competing more than five rounds and/or twenty-five minutes of fighting in a twenty-four hour period. A night in which one competitor fights three times is not merely out of fashion; it is prohibited by the rule set that every regulated promotion now runs under. Nevada, to take one commission, regulates the sport within its administrative code chapter on unarmed combat, which carries its own definition of mixed martial arts.",
-        "This matters for the argument, not just for the history. The original test can no longer be repeated in any sanctioned setting. Whatever the early events measured, they measured it once, in conditions nobody is permitted to reproduce, which puts the result permanently beyond replication. That is not a fatal objection to a finding. It is a reason to be careful about how much weight the finding is asked to bear.",
+        "The Unified Rules of Mixed Martial Arts, maintained by the Association of Boxing Commissions and Combative Sports, were approved in April 2001 and amended repeatedly since, most recently in August 2026.",
+        "Buried in the first clause is a sentence that quietly ends the tournament format wherever those rules apply. No contestant shall exceed competing more than five rounds and/or twenty-five minutes of fighting in a twenty-four hour period. A night in which one competitor fights three times is not merely out of fashion; it is prohibited by the Unified Rules, which most regulated promotions run under. Nevada, to take one commission, regulates the sport within its administrative code chapter on unarmed combat, which carries its own definition of mixed martial arts.",
+        "This matters for the argument, not just for the history. The original test can no longer be repeated under the Unified Rules. Whatever the early events measured, they measured it once, in conditions those rules do not permit, which puts the result permanently beyond replication. That is not a fatal objection to a finding. It is a reason to be careful about how much weight the finding is asked to bear.",
       ],
     },
     {
@@ -84,6 +85,7 @@ export const whatTheEarlyUfcTournamentsDemonstrated: PublishedArticle = {
         "The strong version of the argument has an expiry date built into it. If the early events proved that grappling beats striking, then the moment strikers learned to grapple, the proof stops applying, and everybody in the sport now trains both. The strong claim was true for about as long as the asymmetry it described.",
         "The narrow version does not expire. A discipline that leaves a range unaddressed can be steered into it. That was true in 1993, it is true now, and it applies just as well to a grappler with no striking defence as to a striker with no takedown defence. It also survives every subsequent rule change, because it is a statement about preparation rather than about a rule set.",
         "So the useful reading of the early tournaments is as a demonstration rather than a proof: a public, unrepeatable, badly controlled demonstration that changed what serious people trained. That is worth more than a slogan, and it has the advantage of being defensible when somebody asks you where the evidence is.",
+        "Correction, 29 September 2026: an earlier version of this article said the New Jersey board had refused to sanction the sport, when its own word was hesitant, and said every regulated promotion runs under the Unified Rules, which most, not all, do. It also cited the August 2025 text of those rules, since amended on 5 August 2026; the clause quoted here is unchanged.",
       ],
     },
   ],
@@ -97,10 +99,10 @@ export const whatTheEarlyUfcTournamentsDemonstrated: PublishedArticle = {
     },
     {
       title:
-        "Unified Rules of Mixed Martial Arts, as approved April 2001 and amended through August 2025, including the five-round and twenty-five-minute limit per twenty-four hours",
+        "Unified Rules of Mixed Martial Arts, as approved April 2001 and amended through 5 August 2026, including the five-round and twenty-five-minute limit per twenty-four hours (clause 1(c), unchanged from the 2025 text)",
       publisher: "Association of Boxing Commissions and Combative Sports",
-      url: "https://www.abcboxing.com/wp-content/uploads/2025/08/Unified-Rules-of-MMA-8.2025.pdf",
-      accessed: "2026-08-03",
+      url: "https://www.abcboxing.com/wp-content/uploads/2026/08/Unified-Rules-of-MMA-8.2026.pdf",
+      accessed: "2026-09-29",
     },
     {
       title:

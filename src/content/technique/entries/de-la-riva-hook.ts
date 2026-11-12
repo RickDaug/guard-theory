@@ -5,7 +5,9 @@ export const deLaRivaHook: TechniqueEntry = {
   category: "open-guard",
   title: "The de la Riva hook",
   summary:
-    "A leg wrapped around the outside of a standing passer's lead leg attaches one corner of their base to you, and everything else in the guard is built on that.",
+    "The de la Riva guard starts with a leg wrapped around the outside of a standing passer's lead leg, attaching one corner of their base to you; everything else is built on that.",
+  metaDescription:
+    "The de la Riva guard begins with an outside hook on a standing passer's lead leg, fixing one corner of their base to you. The rest is built on that.",
   difficulty: "Intermediate",
   relevance: "Gi and no-gi",
   positionAndProblem:
@@ -31,7 +33,7 @@ export const deLaRivaHook: TechniqueEntry = {
     "Holding the hook after the passer has dropped their knee to the mat through it, when the leg is now pinned under their weight and no longer controlling anything.",
   ],
   safetyNote:
-    "The knee at risk here is your own, on the hooking leg. That leg is bent, turned outward and threaded around someone else's, and the passer's standard answers all move their leg while yours is still wrapped around it: driving the knee outward and down to pin the hook, sitting their weight back onto it, or backstepping with your foot still caught inside their thigh. Each of those puts a sideways, twisting load through a bent knee, and the outer side of the knee and the meniscus are the structures most often named when this guard hurts the person playing it. Keep the hook light enough to come out, do not lock the foot deep against a heavier partner who passes by driving through it, and take the leg out the moment weight lands on it or the leg you are hooking starts to rotate. When you are the passer, free the hook before you drop weight or spin, rather than using your bodyweight to break it.",
+    "The knee at risk here is your own, on the hooking leg. That leg is bent, turned outward and threaded around someone else's, and the passer's standard answers all move their leg while yours is still wrapped around it: driving the knee outward and down to pin the hook, sitting their weight back onto it, or backstepping with your foot still caught inside their thigh. Each of those puts a sideways, twisting load through a bent knee. Keep the hook light enough to come out, do not lock the foot deep against a heavier partner who passes by driving through it, and take the leg out the moment weight lands on it or the leg you are hooking starts to rotate. When you are the passer, free the hook before you drop weight or spin, rather than using your bodyweight to break it.",
   trainingProgression: [
     "Static: partner stands with one foot forward and holds still. Set the hip angle, the hook, the ankle grip and the second foot, in that order, and have them try one slow step backwards to feel what the ankle grip is for.",
     "Cooperative: partner steps slowly left, right and back. Do nothing but stay attached, moving your hips so the hook keeps its depth.",

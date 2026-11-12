@@ -2,13 +2,17 @@
  * Promotional artwork for the pre-launch waitlist.
  *
  * Run: npm run brand:promo   (expects a production server on port 3100)
+ *      PROMO_BASE=https://guardtheory.net npm run brand:promo
+ *      photographs the live site instead, when a local build is not to hand —
+ *      the fonts and tokens it borrows are the ones main ships.
  *
  * WHY IT RENDERS THROUGH THE RUNNING SITE
  *
- * The identity lives in two things a normal SVG export cannot reach: the mark
- * geometry in src/lib/brand/logo.json, and the variable-font width axes in
- * globals.css — the wordmark is Archivo at wdth 125, headings at 66, notation at
- * 87.5. Rasterising an SVG through sharp would need those fonts installed
+ * The logo is the traced lockup in src/lib/brand/logo.json (mark, drawn
+ * wordmark and tagline, in the supplied artwork's own spacing). The rest of the
+ * card is set type, and that lives in something a normal SVG export cannot
+ * reach: the variable-font width axes in globals.css — headings at Archivo wdth
+ * 66, notation at Martian Mono wdth 87.5. Rasterising an SVG through sharp would need those fonts installed
  * system-wide and would still lose the axis settings.
  *
  * So this navigates a real browser to the real site, where next/font has already
@@ -25,25 +29,30 @@ import { chromium } from "@playwright/test";
 
 const ROOT = process.cwd();
 const OUT = path.join(ROOT, "brand-exports");
-const BASE = "http://127.0.0.1:3100";
+const BASE = process.env.PROMO_BASE ?? "http://127.0.0.1:3100";
 
 const logo = JSON.parse(
   await readFile(path.join(ROOT, "src", "lib", "brand", "logo.json"), "utf8"),
 );
 
 /**
- * The mark, from the single source of truth, in a square tile centred on the
- * ring rather than on the bounding box — the T overhangs to the right, so a
- * box-centred tile sits the mark visibly left of centre. Artwork needs the
- * breathing room baked in, which inline use gets from surrounding layout.
+ * The full lockup, from the single source of truth — mark over the drawn
+ * wordmark over the tagline, in the spacing of the supplied artwork. The three
+ * pieces share one coordinate system, so this is a viewBox rather than a
+ * layout. Fills are inline styles, not attributes: a presentation attribute
+ * does not resolve var(--color-*). docs/visual-identity.md: the drawn logotype is what anything a
+ * marketplace is handed carries; Archivo is for the interface. The tagline is
+ * a lighter token than the wordmark, as in the artwork and in
+ * public/brand/gt-lockup.svg.
  */
-function monogram(size, fill) {
-  const { ring, paths } = logo.mark;
-  const half = ring.rOuter * 1.12;
-  const d = paths.map((p) => `<path d="${p.d}"/>`).join("");
-  return `<svg viewBox="${ring.cx - half} ${ring.cy - half} ${half * 2} ${half * 2}"
-    width="${size}" height="${size}" fill="${fill}"
-    role="img" aria-label="Guard Theory">${d}</svg>`;
+function lockup(width, fill, taglineFill) {
+  const [, , w, h] = logo.lockup.viewBox.split(/\s+/).map(Number);
+  const mark = logo.mark.paths.map((p) => `<path d="${p.d}" style="fill:${fill}"/>`).join("");
+  return `<svg viewBox="${logo.lockup.viewBox}" width="${width}"
+    height="${Math.round((width * h) / w)}" role="img"
+    aria-label="Guard Theory, jiu jitsu equipment and apparel">${mark}
+    <path d="${logo.wordmark.d}" style="fill:${fill}"/>
+    <path d="${logo.tagline.d}" style="fill:${taglineFill}"/></svg>`;
 }
 
 /**
@@ -71,10 +80,10 @@ function ticks(inset, length, colour) {
  * @param {object} spec
  * @param {number} spec.w  logical width
  * @param {number} spec.h  logical height
- * @param {number} spec.mark  monogram size
+ * @param {number} spec.logo  lockup width
  * @param {number} spec.pad
  */
-function artwork({ w, h, mark, pad, wordmarkSize, headlineSize, gap, offsetY }) {
+function artwork({ w, h, logo: logoWidth, pad, headlineSize, ctaSize, gap, offsetY }) {
   const INK = "var(--color-ink)";
   const CHALK = "var(--color-chalk)";
   const STEEL = "var(--color-steel)";
@@ -91,29 +100,15 @@ function artwork({ w, h, mark, pad, wordmarkSize, headlineSize, gap, offsetY }) 
     <div style="position:absolute;inset:${pad}px;border:1px solid ${RULE}"></div>
     ${ticks(Math.round(pad * 0.42), Math.round(pad * 0.75), STEEL)}
 
-    <!-- offsetY is a MEASURED correction, not a judgement.
-         I first nudged this by eye, having read the composition as sitting low,
-         and moved it 12px the wrong way. Measuring the rendered PNG - lit rows
-         in the central band, excluding the rules - put the flexbox centre 9px
-         out at 3x, about 1.5 logical px. The eye was wrong by an order of
-         magnitude and in the wrong direction, so the number below comes from
-         the file rather than from looking at it. -->
+    <!-- offsetY nudges the group on the vertical axis when a measurement of
+         the rendered PNG (lit rows in the central band, excluding the rules)
+         says the flexbox centre is off. Measure it from the file; the eye was
+         once wrong by an order of magnitude and in the wrong direction. -->
     <div style="display:flex;flex-direction:column;align-items:center;
         gap:${gap}px;padding:0 ${Math.round(pad * 1.15)}px;text-align:center;
         transform:translateY(${offsetY}px)">
 
-      ${monogram(mark, "var(--color-chalk)")}
-
-      <div class="wordmark" style="color:${CHALK};font-size:${wordmarkSize}px;
-          line-height:1">Guard&nbsp;Theory</div>
-
-      <!-- Rule + eyebrow, the site's own pairing for a subtitle. -->
-      <div style="display:flex;align-items:center;gap:${gap * 0.9}px;width:100%">
-        <div style="flex:1;height:1px;background:${RULE}"></div>
-        <div class="notation" style="color:${STEEL};font-size:${Math.round(wordmarkSize * 0.62)}px;
-            white-space:nowrap">BJJ APPAREL</div>
-        <div style="flex:1;height:1px;background:${RULE}"></div>
-      </div>
+      ${lockup(logoWidth, CHALK, STEEL)}
 
       <div class="display-condensed" style="color:${CHALK};font-size:${headlineSize}px;
           line-height:0.92;margin-top:${Math.round(gap * 0.4)}px">Coming&nbsp;soon</div>
@@ -123,7 +118,7 @@ function artwork({ w, h, mark, pad, wordmarkSize, headlineSize, gap, offsetY }) 
           letter-spacing:0.01em">guardtheory.net</div>
 
       <div class="notation" style="color:${CHALK};
-          font-size:${Math.round(wordmarkSize * 0.6)}px;
+          font-size:${ctaSize}px;
           border:1px solid ${STEEL};padding:${Math.round(gap * 0.62)}px ${gap * 1.1}px;
           margin-top:${Math.round(gap * 0.3)}px;white-space:nowrap">
         JOIN THE WAIT LIST</div>
@@ -137,15 +132,15 @@ const SPECS = [
     name: "alibaba-logo",
     w: 620,
     h: 620,
-    mark: 122,
+    logo: 300,
     pad: 24,
     // The brand name reads larger than the promise. This is filed as a logo,
     // and COMING SOON at more than twice the wordmark made the announcement
     // the subject and the brand the caption.
-    wordmarkSize: 34,
+    ctaSize: 20,
     headlineSize: 54,
     gap: 19,
-    offsetY: -1.5,
+    offsetY: 0,
     scale: 3,
   },
   {
@@ -154,9 +149,9 @@ const SPECS = [
     name: "alibaba-logo-insert-card",
     w: 250,
     h: 350,
-    mark: 66,
+    logo: 160,
     pad: 13,
-    wordmarkSize: 17,
+    ctaSize: 10,
     headlineSize: 31,
     gap: 12,
     offsetY: 0,
@@ -205,7 +200,7 @@ await writeFile(
   `# Brand exports
 
 Generated by \`npm run brand:promo\`. Do not edit these PNGs by hand — change
-\`scripts/brand/promo.mjs\` or \`src/lib/brand/monogram.json\` and regenerate, so
+\`scripts/brand/promo.mjs\` or \`src/lib/brand/logo.json\` and regenerate, so
 the artwork cannot drift from the identity it is drawn from.
 
 | File | Pixels | Use |
@@ -213,10 +208,11 @@ the artwork cannot drift from the identity it is drawn from.
 | \`alibaba-logo.png\` | 1860 x 1860 | Marketplace store logo. Square, because every marketplace crops to one. |
 | \`alibaba-logo-insert-card.png\` | 750 x 1050 | 2.5 x 3.5in at 300dpi — a trading-card footprint, so it sits behind a slab in a mylar without folding. |
 
+The logo is the traced lockup from \`src/lib/brand/logo.json\` (mark, drawn
+wordmark and tagline), the same geometry as \`public/brand/gt-lockup.svg\`.
 Both are rendered through the running site, so every colour is a live brand
-token and every letterform is the shipped variable-font axis: the wordmark at
-Archivo wdth 125, the headline at wdth 66, the notation at Martian Mono wdth
-87.5.
+token and the set type is the shipped variable-font axis: the headline at
+Archivo wdth 66, the notation at Martian Mono wdth 87.5.
 `,
   "utf8",
 );

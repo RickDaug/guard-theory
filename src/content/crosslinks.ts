@@ -97,7 +97,8 @@ export const CROSS_LINKS: CrossLink[] = [
   {
     a: journal("the-rear-naked-strangle-from-back-control"),
     b: figure("roger-gracie"),
-    basis: "His profile records his finishes as chokes from the back and mount.",
+    basis:
+      "His profile records his finishes as chokes from the back and mount.",
   },
   {
     a: journal("the-guillotine-from-the-front-headlock"),
@@ -112,7 +113,8 @@ export const CROSS_LINKS: CrossLink[] = [
   {
     a: journal("the-armbar-from-closed-guard"),
     b: figure("kyra-gracie"),
-    basis: "Her profile cites the closed guard as her recorded favourite position.",
+    basis:
+      "Her profile cites the closed guard as her recorded favourite position.",
   },
 
   // ── Journal ↔ Technique Library ────────────────────────────────────────
@@ -241,6 +243,150 @@ export const CROSS_LINKS: CrossLink[] = [
       "The entry is the underhook game the article argues decides half guard.",
   },
 
+  // ── Journal (foundations, 2026-11) ↔ Technique Library and Figures ──────
+  {
+    a: journal("position-before-submission-and-what-the-points-table-teaches"),
+    b: technique("positional-hierarchy"),
+    basis:
+      "The article sets the points table beside the entry's question of whose hips are free.",
+  },
+  {
+    a: journal("the-bridge-and-the-hip-escape"),
+    b: technique("elbow-knee-escape"),
+    basis:
+      "The article quotes the entry's one-line statement of the hip escape.",
+  },
+  {
+    a: journal("the-bridge-and-the-hip-escape"),
+    b: technique("escaping-side-control"),
+    basis:
+      "The article quotes the entry on where half guard sits in the escape.",
+  },
+  {
+    a: journal("the-bridge-and-the-hip-escape"),
+    b: technique("mount-is-a-hip-pin"),
+    basis:
+      "The article quotes the entry's instruction to the top player about the bridge.",
+  },
+  {
+    a: journal("what-a-tap-is"),
+    b: technique("blood-choke-versus-air-choke"),
+    basis: "The article cites the entry's safety note on what a tap ends.",
+  },
+  {
+    a: journal("base-posture-and-structure"),
+    b: technique("closed-guard-posture-battle"),
+    basis: "The article quotes the entry's definition of base.",
+  },
+  {
+    a: journal("base-posture-and-structure"),
+    b: technique("frames-versus-blocks"),
+    basis: "The article quotes the entry on weight travelling along a frame.",
+  },
+  {
+    a: journal("base-posture-and-structure"),
+    b: technique("guillotine-is-a-broken-posture"),
+    basis: "The article cites the entry for control arriving before the choke.",
+  },
+  {
+    a: journal("survival-first-and-the-order-things-are-learned-in"),
+    b: technique("positional-hierarchy"),
+    basis: "The article says its reconstruction is built from this entry.",
+  },
+  {
+    a: journal("survival-first-and-the-order-things-are-learned-in"),
+    b: technique("frames-versus-blocks"),
+    basis: "The article says its reconstruction is built from this entry.",
+  },
+  {
+    a: journal("the-six-ties-a-no-gi-beginner-needs-names-for"),
+    b: technique("inside-position"),
+    basis: "The article places its six ties on the map the entry supplies.",
+  },
+  {
+    a: journal("the-six-ties-a-no-gi-beginner-needs-names-for"),
+    b: technique("arm-drag"),
+    basis:
+      "The article cites the entry's drill against a reach for the collar tie.",
+  },
+  {
+    a: journal("the-six-ties-a-no-gi-beginner-needs-names-for"),
+    b: technique("underhook-half-guard"),
+    basis: "The article cites the entry's use of underhook and overhook.",
+  },
+  {
+    a: journal("closed-guard-and-what-the-locked-ankles-buy"),
+    b: technique("closed-guard-posture-battle"),
+    basis:
+      "The article names the entry as its reference for the posture exchange.",
+  },
+  {
+    a: journal("the-technical-stand-up"),
+    b: technique("underhook-half-guard"),
+    basis:
+      "The article quotes the entry's list for the bottom player coming up.",
+  },
+  {
+    a: journal("what-counts-as-a-pin"),
+    b: technique("mount-is-a-hip-pin"),
+    basis:
+      "The article contrasts the rule books' pins with the entry's pin at the hips.",
+  },
+  {
+    a: journal("what-counts-as-a-pin"),
+    b: technique("positional-hierarchy"),
+    basis:
+      "The article names the entry as a source for locating a pin in the hips.",
+  },
+  {
+    a: journal("sweep-submit-or-stand"),
+    b: technique("sweeping-toward-the-missing-post"),
+    basis: "The article quotes the entry on removing a post before the sweep.",
+  },
+  {
+    a: journal("sweep-submit-or-stand"),
+    b: technique("retention-ladder-frame-angle-invert-recover"),
+    basis: "The article cites the entry's ordering of the recoveries.",
+  },
+  {
+    a: journal("over-under-or-around"),
+    b: technique("knee-cut-pass"),
+    basis: "The article quotes the entry on the knee cut's route.",
+  },
+  {
+    a: journal("over-under-or-around"),
+    b: technique("pressure-passing-versus-loose-passing"),
+    basis:
+      "The article sets its routes against the entry's two families of pass.",
+  },
+  {
+    a: journal("side-control-from-the-top"),
+    b: technique("escaping-side-control"),
+    basis:
+      "The article reads the entry's four-move escape from the top player's side.",
+  },
+  {
+    a: journal("strangles-and-joint-locks"),
+    b: technique("blood-choke-versus-air-choke"),
+    basis: "The article cites the entry on how strangle and choke are used.",
+  },
+  {
+    a: journal("strangles-and-joint-locks"),
+    b: technique("rear-naked-strangle"),
+    basis: "The article names the entry when it maps the Kodokan's terms.",
+  },
+  {
+    a: journal("leverage-and-the-smaller-person"),
+    b: figure("helio-gracie"),
+    basis:
+      "The article quotes Gracie Barra's sentence about him and says whose wording it is.",
+  },
+  {
+    a: journal("lineage-and-why-jiu-jitsu-asks-who-taught-you"),
+    b: figure("mitsuyo-maeda"),
+    basis: "The article's account of rank starts at Maeda's club in Belem.",
+  },
+
   // ── Technique Library ↔ Figures ────────────────────────────────────────
   {
     a: technique("arm-drag"),
@@ -265,7 +411,8 @@ export const CROSS_LINKS: CrossLink[] = [
   {
     a: technique("closed-guard-posture-battle"),
     b: figure("kyra-gracie"),
-    basis: "Her profile cites the closed guard as her recorded favourite position.",
+    basis:
+      "Her profile cites the closed guard as her recorded favourite position.",
   },
 ];
 

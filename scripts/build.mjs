@@ -175,7 +175,9 @@ nextBuild({ GT_CSP_PASS: "collect" });
     console.log("[diag] prerender routes", Object.keys(readJson("prerender-manifest.json").routes).length);
     console.log("[diag] .next/server/app html:", sh("find .next/server/app -maxdepth 2 -name '*.html' | head -5; find .next/server/app -name '*.html' | wc -l"));
     console.log("[diag] .next top:", sh("ls .next | head -40"));
-    console.log("[diag] html anywhere:", sh("find . /vercel/output -path ./node_modules -prune -o \( -name 'index.html' -o -name 'technique.html' -o -name 'index.prerender-fallback.html' \) -print 2>/dev/null | head -20"));
+    console.log("[diag] html in .next:", sh("find .next -name '*.html' | head -8; find .next -name '*.html' | wc -l"));
+    console.log("[diag] .next ls:", sh("ls .next | tr '\n' ' '; echo; ls .next/output 2>&1 | head -20 | tr '\n' ' '; echo; find .next/output -maxdepth 3 | head -40 | tr '\n' ' '"));
+    console.log("[diag] rsc/meta:", sh("find .next -name 'technique*' -maxdepth 6 | head -12 | tr '\n' ' '"));
     console.log("[diag] vercel output:", sh("ls -la /vercel/output .vercel/output 2>&1 | head -30"));
   }
 }

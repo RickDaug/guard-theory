@@ -53,7 +53,7 @@ export const snapDownToFrontHeadlock: TechniqueEntry = {
     drafted:
       "assisted draft, 2026-09-29, from technique batch 2 target list (C), snap-down-to-front-headlock; written by a Claude Code agent from the target brief and the house style fingerprint.",
     factAudit:
-      "Fact audit, assisted (Claude Code agent), 2026-09-29: snap, hip-distance and go-behind mechanics confirmed; flagged go-behind side (the held arm) confirmed against published front-headlock instruction; fixes applied: 'cannot shoot' hedged; neck attacks said to start from the position, not the existing grips.",
+      "Fact audit, assisted (Claude Code agent), 2026-09-29: snap, hip-distance and go-behind mechanics confirmed; flagged go-behind side (the held arm) confirmed against published front-headlock instruction; fixes applied: 'cannot shoot' hedged; neck attacks said to start from the position, not the existing grips. Fact re-check, assisted (Claude Code agent), 2026-10-06: cow catcher as a front-headlock move toward a turnover/pin checked against Evolve University and Fanatic Wrestling instruction; no changes.",
     voiceAudit:
       "Voice audit, assisted (Claude Code agent), 2026-09-29: no changes required; mechanics clean (title 31, meta 152, no dashes or banned constructions), no cross-entry repetition found against the 43 other entries; 'many rooms call' attribution varied as part of the batch pattern.",
     approvedBy: null,

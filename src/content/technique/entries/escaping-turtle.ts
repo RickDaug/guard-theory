@@ -53,7 +53,7 @@ export const escapingTurtle: TechniqueEntry = {
     drafted:
       "assisted draft, 2026-09-29, from technique batch 2 target list (C), escaping-turtle; written by a Claude Code agent from the target brief and the house style fingerprint.",
     factAudit:
-      "Fact audit, assisted (Claude Code agent), 2026-09-29: closed-turtle, sit-out/roll/stand choice and gi-versus-no-gi threats confirmed; fix applied: no-gi threat list hedged to 'the main threats'; rules claim correctly cut; consistent with the batch-2 crucifix and granby entries.",
+      "Fact audit, assisted (Claude Code agent), 2026-09-29: closed-turtle, sit-out/roll/stand choice and gi-versus-no-gi threats confirmed; fix applied: no-gi threat list hedged to 'the main threats'; rules claim correctly cut; consistent with the batch-2 crucifix and granby entries. Fact re-check, assisted (Claude Code agent), 2026-10-06: gi collar-choke versus no-gi threat distinction is the only non-mechanical claim and stands; no changes.",
     voiceAudit:
       "Voice audit, assisted (Claude Code agent), 2026-09-29: mechanics clean (meta 151); fixes applied: title moved off the escapes page's 'Escaping X: list' template to 'Turtle escapes, chosen by their weight' (38); 'waiting room' punchline cut; templated 'Escaping turtle means' closer and retired 'other exposure' safety device rewritten; 'many gyms call' and 'Many coaches teach' attributions and the last step varied.",
     approvedBy: null,

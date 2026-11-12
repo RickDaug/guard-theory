@@ -54,7 +54,7 @@ export const wrestlingUpTechnicalStandUp: TechniqueEntry = {
     drafted:
       "assisted draft, 2026-09-29, from technique batch 2 target list (C), wrestling-up-technical-stand-up; written by a Claude Code agent from the target brief and the house style fingerprint.",
     factAudit:
-      "Fact audit, assisted (Claude Code agent), 2026-09-29: all ledger rows checked, no changes required; base geometry, hip-first rise and wrestle-up confirmed; safety note names wrist, neck and frame exposures.",
+      "Fact audit, assisted (Claude Code agent), 2026-09-29: all ledger rows checked, no changes required; base geometry, hip-first rise and wrestle-up confirmed; safety note names wrist, neck and frame exposures. Fact re-check, assisted (Claude Code agent), 2026-10-06: no rules, history or naming claims beyond the standard 'standing up in base' alias; no changes.",
     voiceAudit:
       "Voice audit, assisted (Claude Code agent), 2026-09-29: mechanics clean (title 36, meta 145); fixes applied: reassuring 'carries little risk' closer cut from the safety note; one absolute ('only') hedged to 'mainly'; 'some gyms call' attribution and the fixed 'notice whether' last step varied.",
     approvedBy: null,
